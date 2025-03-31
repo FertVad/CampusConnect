@@ -1,20 +1,11 @@
 import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./index.css";
-import { createContext, useState } from "react";
-import { User } from "@shared/schema";
+import { useState } from "react";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "./lib/queryClient";
 import { Toaster } from "@/components/ui/toaster";
-
-// Create a context for storing the authenticated user
-export const UserContext = createContext<{
-  user: User | null;
-  setUser: (user: User | null) => void;
-}>({
-  user: null,
-  setUser: () => {}
-});
+import { AuthProvider } from "@/hooks/use-auth";
 
 // Wrap App in a special error boundary
 function AppWithErrorHandling() {
@@ -51,15 +42,13 @@ function AppWithErrorHandling() {
   
   // Otherwise, try to render the app
   try {
-    const [user, setUser] = useState<User | null>(null);
-    
     return (
-      <UserContext.Provider value={{ user, setUser }}>
-        <QueryClientProvider client={queryClient}>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
           <App />
           <Toaster />
-        </QueryClientProvider>
-      </UserContext.Provider>
+        </AuthProvider>
+      </QueryClientProvider>
     );
   } catch (err) {
     // If app rendering fails, update the error state

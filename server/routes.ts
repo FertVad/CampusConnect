@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { WebSocketServer } from "ws";
 import { WebSocket } from "ws";
+import { setupAuth } from "./auth";
 import { 
   loginSchema, insertUserSchema, 
   insertSubjectSchema, insertEnrollmentSchema, 
@@ -73,6 +74,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Set up WebSockets for real-time chat
   const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
+  
+  // Set up authentication
+  setupAuth(app);
   
   // Store active connections with user IDs
   const connections = new Map<number, WebSocket>();

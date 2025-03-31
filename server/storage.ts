@@ -5,9 +5,15 @@ import {
   Document, InsertDocument, Message, InsertMessage, Notification, InsertNotification,
   LoginCredentials
 } from "@shared/schema";
+import session from "express-session";
+import * as expressSession from 'express-session';
+import createMemoryStore from "memorystore";
+
+const MemoryStore = createMemoryStore(session);
 
 // Storage interface
 export interface IStorage {
+  sessionStore: expressSession.Store;
   // User management
   getUsers(): Promise<User[]>;
   getUser(id: number): Promise<User | undefined>;
@@ -136,6 +142,8 @@ export class MemStorage implements IStorage {
   private messageIdCounter: number;
   private notificationIdCounter: number;
   
+  sessionStore: expressSession.Store;
+  
   constructor() {
     this.users = new Map();
     this.subjects = new Map();
@@ -160,6 +168,10 @@ export class MemStorage implements IStorage {
     this.documentIdCounter = 1;
     this.messageIdCounter = 1;
     this.notificationIdCounter = 1;
+    
+    this.sessionStore = new MemoryStore({
+      checkPeriod: 86400000 // prune expired entries every 24h
+    });
     
     // Add some seed data
     this.seedData();
