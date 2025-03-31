@@ -10,6 +10,7 @@ import { Link } from 'wouter';
 import { apiRequest } from '@/lib/queryClient';
 import { Notification, User, Request } from '@shared/schema';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/hooks/use-auth';
 
 const AdminDashboard = () => {
   const { user } = useAuth();
