@@ -17,7 +17,7 @@ export interface IStorage {
   // User management
   getUsers(): Promise<User[]>;
   getUser(id: number): Promise<User | undefined>;
-  getUserByUsername(username: string): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: number, userData: Partial<InsertUser>): Promise<User | undefined>;
   deleteUser(id: number): Promise<boolean>;
@@ -186,8 +186,8 @@ export class MemStorage implements IStorage {
     return this.users.get(id);
   }
   
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(user => user.username === username);
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find(user => user.email === email);
   }
   
   async createUser(userData: InsertUser): Promise<User> {
@@ -212,7 +212,7 @@ export class MemStorage implements IStorage {
   }
   
   async authenticate(credentials: LoginCredentials): Promise<User | undefined> {
-    const user = await this.getUserByUsername(credentials.username);
+    const user = await this.getUserByEmail(credentials.email);
     if (!user) return undefined;
     
     // In a real app, we'd check password hash
@@ -722,7 +722,6 @@ export class MemStorage implements IStorage {
     const adminUser = this.createUser({
       firstName: "Admin",
       lastName: "User",
-      username: "admin",
       password: "admin123",
       email: "admin@eduportal.com",
       role: "admin"
@@ -731,7 +730,6 @@ export class MemStorage implements IStorage {
     const teacher1 = this.createUser({
       firstName: "David",
       lastName: "Miller",
-      username: "david",
       password: "teacher123",
       email: "david@eduportal.com",
       role: "teacher"
@@ -740,7 +738,6 @@ export class MemStorage implements IStorage {
     const teacher2 = this.createUser({
       firstName: "Sarah",
       lastName: "Johnson",
-      username: "sarah",
       password: "teacher123",
       email: "sarah@eduportal.com",
       role: "teacher"
@@ -749,7 +746,6 @@ export class MemStorage implements IStorage {
     const teacher3 = this.createUser({
       firstName: "Robert",
       lastName: "Chang",
-      username: "robert",
       password: "teacher123",
       email: "robert@eduportal.com",
       role: "teacher"
@@ -758,7 +754,6 @@ export class MemStorage implements IStorage {
     const student1 = this.createUser({
       firstName: "Alex",
       lastName: "Johnson",
-      username: "alex",
       password: "student123",
       email: "alex@eduportal.com",
       role: "student"
@@ -767,7 +762,6 @@ export class MemStorage implements IStorage {
     const student2 = this.createUser({
       firstName: "Emma",
       lastName: "Wilson",
-      username: "emma",
       password: "student123",
       email: "emma@eduportal.com",
       role: "student"

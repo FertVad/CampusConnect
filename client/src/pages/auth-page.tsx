@@ -15,7 +15,7 @@ import { Loader2 } from "lucide-react";
 
 // Login schema
 const loginSchema = z.object({
-  username: z.string().min(3, "Username must be at least 3 characters"),
+  email: z.string().email("Please enter a valid email"),
   password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
@@ -41,7 +41,7 @@ function LoginForm({ onTabChange }: { onTabChange: (tab: string) => void }) {
   const form = useForm<LoginData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      username: "",
+      email: "",
       password: "",
     },
   });
@@ -70,12 +70,12 @@ function LoginForm({ onTabChange }: { onTabChange: (tab: string) => void }) {
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
-              name="username"
+              name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Username</FormLabel>
+                  <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input placeholder="username" {...field} />
+                    <Input placeholder="email@example.com" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -132,7 +132,6 @@ function RegisterForm({ onTabChange }: { onTabChange: (tab: string) => void }) {
   const form = useForm<RegisterData>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
-      username: "",
       password: "",
       confirmPassword: "",
       email: "",
@@ -166,19 +165,6 @@ function RegisterForm({ onTabChange }: { onTabChange: (tab: string) => void }) {
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="username"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Username</FormLabel>
-                  <FormControl>
-                    <Input placeholder="username" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
             <FormField
               control={form.control}
               name="firstName"

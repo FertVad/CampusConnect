@@ -13,7 +13,6 @@ export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   firstName: text("first_name").notNull(),
   lastName: text("last_name").notNull(),
-  username: text("username").notNull().unique(),
   password: text("password").notNull(),
   email: text("email").notNull().unique(),
   role: roleEnum("role").notNull(),
@@ -224,7 +223,7 @@ export type InsertNotification = z.infer<typeof insertNotificationSchema>;
 
 // Login schema
 export const loginSchema = z.object({
-  username: z.string().min(1, "Username is required"),
+  email: z.string().email("Valid email is required"),
   password: z.string().min(1, "Password is required"),
 });
 
