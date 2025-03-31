@@ -3,6 +3,7 @@ import { useState, useEffect, useContext } from "react";
 import { User } from "@shared/schema";
 import { UserContext } from "./main";
 import Login from "@/pages/auth/Login";
+import Register from "@/pages/auth/Register";
 import Dashboard from "@/pages/dashboard/Dashboard";
 import Assignments from "@/pages/assignments/Assignments";
 import AssignmentDetail from "@/pages/assignments/AssignmentDetail";
@@ -34,7 +35,7 @@ function App() {
 
   // Redirect to login if not authenticated
   useEffect(() => {
-    if (!user && location !== "/login") {
+    if (!user && !location.startsWith("/login") && !location.startsWith("/register")) {
       setLocation("/login");
     }
   }, [user, location, setLocation]);
@@ -42,6 +43,7 @@ function App() {
   return (
     <Switch>
       <Route path="/login" component={Login} />
+      <Route path="/register" component={Register} />
       
       {/* Dashboard routes */}
       <Route path="/" component={Dashboard} />

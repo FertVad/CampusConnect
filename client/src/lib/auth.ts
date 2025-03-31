@@ -1,4 +1,29 @@
-import { LoginCredentials, User } from "@shared/schema";
+import { LoginCredentials, User, InsertUser } from "@shared/schema";
+
+export async function register(userData: InsertUser): Promise<User> {
+  const response = await fetch('/api/auth/register', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(userData)
+  });
+  
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ message: 'Registration failed' }));
+    throw new Error(errorData.message || 'Registration failed');
+  }
+  
+  const data = await response.json();
+  
+  if (data.user) {
+    // Store user data in localStorage
+    localStorage.setItem('user', JSON.stringify(data.user));
+    return data.user;
+  } else {
+    throw new Error('Registration failed');
+  }
+}
 
 export async function login(credentials: LoginCredentials): Promise<User> {
   const response = await fetch('/api/auth/login', {

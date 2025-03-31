@@ -1,10 +1,11 @@
 import React, { useState, useContext } from 'react';
-import { useLocation } from 'wouter';
+import { useLocation, Link } from 'wouter';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
 import { AlertCircle } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -110,6 +111,12 @@ const Login = () => {
             </form>
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
+            <div className="text-sm text-center w-full text-neutral-500 mb-4">
+              Don't have an account?{' '}
+              <Link href="/register" className="text-primary hover:underline">
+                Sign up
+              </Link>
+            </div>
             <div className="text-sm text-center text-neutral-500">
               <p>Demo Accounts:</p>
               <div className="flex justify-center flex-wrap gap-2 mt-2">
@@ -139,7 +146,5 @@ const Login = () => {
     </div>
   );
 };
-
-import { Badge } from '@/components/ui/badge';
 
 export default Login;

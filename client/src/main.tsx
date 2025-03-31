@@ -51,11 +51,15 @@ function AppWithErrorHandling() {
   
   // Otherwise, try to render the app
   try {
+    const [user, setUser] = useState<User | null>(null);
+    
     return (
-      <QueryClientProvider client={queryClient}>
-        <App />
-        <Toaster />
-      </QueryClientProvider>
+      <UserContext.Provider value={{ user, setUser }}>
+        <QueryClientProvider client={queryClient}>
+          <App />
+          <Toaster />
+        </QueryClientProvider>
+      </UserContext.Provider>
     );
   } catch (err) {
     // If app rendering fails, update the error state
@@ -66,14 +70,32 @@ function AppWithErrorHandling() {
 }
 
 // Modified app initialization with error handling
+console.log("App initialization started");
 try {
+  // Debug: Display rendering location
+  console.log("Rendering to element:", document.getElementById("root"));
+  
+  // Add a simple message directly to the body to confirm script execution
+  const debugElement = document.createElement('div');
+  debugElement.id = 'debug-message';
+  debugElement.textContent = 'App initializing...';
+  debugElement.style.padding = '10px';
+  debugElement.style.backgroundColor = '#f0f0f0';
+  debugElement.style.position = 'fixed';
+  debugElement.style.top = '0';
+  debugElement.style.left = '0';
+  debugElement.style.zIndex = '9999';
+  document.body.appendChild(debugElement);
+  
   createRoot(document.getElementById("root")!).render(<AppWithErrorHandling />);
+  console.log("App mounted successfully");
 } catch (err) {
   console.error("Failed to initialize app:", err);
   document.body.innerHTML = `
     <div style="display:flex;justify-content:center;align-items:center;height:100vh;flex-direction:column;padding:20px;text-align:center;">
       <h1 style="color:red;margin-bottom:16px;">Critical Error</h1>
       <p style="margin-bottom:16px;">The application failed to initialize. Please check your console for details.</p>
+      <pre style="background:#f0f0f0;padding:10px;margin-bottom:16px;text-align:left;overflow:auto;max-width:80%;">${err instanceof Error ? err.stack : String(err)}</pre>
       <button 
         onclick="window.location.reload()" 
         style="padding:8px 16px;background:#3b82f6;color:white;border:none;border-radius:4px;cursor:pointer;">
