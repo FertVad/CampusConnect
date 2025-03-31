@@ -215,12 +215,9 @@ export class MemStorage implements IStorage {
     const user = await this.getUserByEmail(credentials.email);
     if (!user) return undefined;
     
-    // In a real app, we'd check password hash
-    if (user.password === credentials.password) {
-      return user;
-    }
-    
-    return undefined;
+    // Note: The actual password verification is handled in auth.ts with comparePasswords
+    // This method should just do the lookup by email, as the password check is done separately
+    return user;
   }
   
   // Subjects

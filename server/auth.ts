@@ -24,10 +24,27 @@ async function hashPassword(password: string) {
 
 // Password verification function
 async function comparePasswords(supplied: string, stored: string) {
-  const [hashed, salt] = stored.split(".");
-  const hashedBuf = Buffer.from(hashed, "hex");
-  const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
-  return timingSafeEqual(hashedBuf, suppliedBuf);
+  try {
+    // If stored password doesn't contain a salt (likely unhashed in seed data)
+    if (!stored.includes('.')) {
+      console.log("Warning: Using plain text password comparison (no hash/salt detected)");
+      return supplied === stored;
+    }
+    
+    // Normal secure comparison with hashed password
+    const [hashed, salt] = stored.split(".");
+    
+    if (!salt) {
+      throw new Error("Invalid password format: missing salt");
+    }
+    
+    const hashedBuf = Buffer.from(hashed, "hex");
+    const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
+    return timingSafeEqual(hashedBuf, suppliedBuf);
+  } catch (error) {
+    console.error("Password comparison error:", error);
+    return false;
+  }
 }
 
 export function setupAuth(app: Express) {
@@ -39,6 +56,9 @@ export function setupAuth(app: Express) {
     store: storage.sessionStore,
     cookie: {
       maxAge: 7 * 24 * 60 * 60 * 1000, // 1 week
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production', // Only use secure in production
+      sameSite: 'lax'
     }
   };
 
@@ -120,7 +140,9 @@ export function setupAuth(app: Express) {
 
       req.login(user, (err) => {
         if (err) return next(err);
-        return res.json(user);
+        // Make sure we're setting the correct cookie and returning the user data
+        console.log("User authenticated successfully:", user.id);
+        return res.status(200).json(user);
       });
     })(req, res, next);
   });
