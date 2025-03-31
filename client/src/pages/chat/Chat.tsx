@@ -1,18 +1,18 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useParams } from 'wouter';
-import { UserContext } from '@/main';
+
 import MainLayout from '@/components/layouts/MainLayout';
 import ChatInterface from '@/components/chat/ChatInterface';
 import { Card, CardContent } from '@/components/ui/card';
 import { Message, User } from '@shared/schema';
+import { useAuth } from '@/hooks/use-auth';
 
 const Chat = () => {
   const { id } = useParams<{ id: string }>();
   const initialSelectedUserId = id ? parseInt(id) : null;
   
-  const userContext = useContext(UserContext);
-  const currentUser = userContext?.user;
+  const { user } = useAuth();
   const queryClient = useQueryClient();
   
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -20,13 +20,13 @@ const Chat = () => {
   // Get all users that can be messaged
   const { data: users = [], isLoading: isLoadingUsers } = useQuery<User[]>({
     queryKey: ['/api/users'],
-    enabled: !!currentUser,
+    enabled: !!user,
   });
   
   // Get messages between the current user and selected user
   const { data: messages = [], isLoading: isLoadingMessages } = useQuery<Message[]>({
-    queryKey: [`/api/messages/between/${currentUser?.id}/${selectedUser?.id}`],
-    enabled: !!currentUser && !!selectedUser,
+    queryKey: [`/api/messages/between/${user?.id}/${selectedUser?.id}`],
+    enabled: !!user && !!selectedUser,
     refetchInterval: 5000, // Poll for new messages every 5 seconds
   });
   
@@ -42,7 +42,7 @@ const Chat = () => {
   
   // Setup WebSocket connection for real-time messages
   useEffect(() => {
-    if (!currentUser) return;
+    if (!user) return;
     
     // This is for real-time updates from WebSocket
     // The actual WebSocket setup is in the ChatInterface component
@@ -51,13 +51,13 @@ const Chat = () => {
     const interval = setInterval(() => {
       if (selectedUser) {
         queryClient.invalidateQueries({
-          queryKey: [`/api/messages/between/${currentUser.id}/${selectedUser.id}`]
+          queryKey: [`/api/messages/between/${user.id}/${selectedUser.id}`]
         });
       }
     }, 10000);
     
     return () => clearInterval(interval);
-  }, [currentUser, selectedUser, queryClient]);
+  }, [user, selectedUser, queryClient]);
   
   const handleSelectUser = (user: User) => {
     setSelectedUser(user);
@@ -80,10 +80,10 @@ const Chat = () => {
             </div>
           </CardContent>
         </Card>
-      ) : currentUser ? (
+      ) : user ? (
         <div className="h-[calc(100vh-16rem)]">
           <ChatInterface
-            currentUser={currentUser}
+            currentUser={user}
             selectedUser={selectedUser}
             users={users}
             messages={messages}

@@ -1,5 +1,5 @@
-import React, { useContext } from 'react';
-import { UserContext } from '@/main';
+import React from 'react';
+import { useAuth } from '@/hooks/use-auth';
 import MainLayout from '@/components/layouts/MainLayout';
 import StudentDashboard from '@/components/dashboards/StudentDashboard';
 import TeacherDashboard from '@/components/dashboards/TeacherDashboard';
@@ -7,11 +7,10 @@ import AdminDashboard from '@/components/dashboards/AdminDashboard';
 import { Redirect } from 'wouter';
 
 const Dashboard = () => {
-  const userContext = useContext(UserContext);
-  const user = userContext?.user;
+  const { user } = useAuth();
   
   if (!user) {
-    return <Redirect to="/login" />;
+    return <Redirect to="/auth" />;
   }
   
   const getDashboardByRole = () => {

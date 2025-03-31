@@ -1,5 +1,5 @@
 import React, { useContext } from 'react';
-import { UserContext } from '@/main';
+
 import { useQuery } from '@tanstack/react-query';
 import StatusCard from '@/components/cards/StatusCard';
 import NotificationList from '@/components/notifications/NotificationList';
@@ -12,8 +12,8 @@ import { Notification, User, Request } from '@shared/schema';
 import { Button } from '@/components/ui/button';
 
 const AdminDashboard = () => {
-  const userContext = useContext(UserContext);
-  const user = userContext?.user;
+  const { user } = useAuth();
+  
   
   // Get all users
   const { data: users = [] } = useQuery<User[]>({

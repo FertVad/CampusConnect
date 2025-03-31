@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -10,8 +10,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { insertUserSchema, type InsertUser } from '@shared/schema';
-import { register as registerUser } from '@/lib/auth';
-import { UserContext } from '@/main';
+import { useAuth } from '@/hooks/use-auth';
+
 import { Link } from 'wouter';
 
 // Extend the insertUserSchema with additional validation rules
@@ -28,7 +28,14 @@ const Register = () => {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [_, setLocation] = useLocation();
-  const userContext = useContext(UserContext);
+  const { user, registerMutation } = useAuth();
+
+  // Redirect to dashboard if user is already logged in
+  useEffect(() => {
+    if (user) {
+      setLocation('/dashboard');
+    }
+  }, [user, setLocation]);
 
   const { register, handleSubmit, formState: { errors } } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
@@ -51,8 +58,7 @@ const Register = () => {
       // Remove confirmPassword as it's not part of the API schema
       const { confirmPassword, ...userData } = data;
       
-      const user = await registerUser(userData as InsertUser);
-      userContext?.setUser(user);
+      await registerMutation.mutateAsync(userData as InsertUser);
       setLocation('/dashboard');
     } catch (err: any) {
       console.error('Registration error:', err);

@@ -1,6 +1,6 @@
 import React, { useContext, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { UserContext } from '@/main';
+
 import MainLayout from '@/components/layouts/MainLayout';
 import GradeList from '@/components/grades/GradeList';
 import GradeForm from '@/components/grades/GradeForm';
@@ -13,8 +13,8 @@ import { z } from 'zod';
 import { insertGradeSchema } from '@shared/schema';
 
 const Grades = () => {
-  const userContext = useContext(UserContext);
-  const user = userContext?.user;
+  const { user } = useAuth();
+  
   const queryClient = useQueryClient();
   const { toast } = useToast();
   

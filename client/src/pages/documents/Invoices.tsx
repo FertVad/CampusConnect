@@ -1,6 +1,6 @@
 import React, { useContext, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { UserContext } from '@/main';
+
 import MainLayout from '@/components/layouts/MainLayout';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -26,8 +26,8 @@ const documentFormSchema = insertDocumentSchema.extend({
 });
 
 const Invoices = () => {
-  const userContext = useContext(UserContext);
-  const user = userContext?.user;
+  const { user } = useAuth();
+  
   const queryClient = useQueryClient();
   const { toast } = useToast();
   

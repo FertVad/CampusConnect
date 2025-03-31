@@ -1,6 +1,5 @@
-import { useContext } from 'react';
 import { Link, useLocation } from 'wouter';
-import { UserContext } from '@/main';
+import { useAuth } from '@/hooks/use-auth';
 import { 
   Home, Clock, FileText, BarChart2, 
   HelpCircle, Receipt, Award, MessageSquare, 
@@ -8,8 +7,7 @@ import {
 } from 'lucide-react';
 
 const Sidebar = () => {
-  const userContext = useContext(UserContext);
-  const user = userContext?.user;
+  const { user } = useAuth();
   const [location] = useLocation();
   
   // Menu items based on user role

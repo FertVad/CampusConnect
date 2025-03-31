@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation, Link } from 'wouter';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -10,14 +10,21 @@ import { AlertCircle } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { loginSchema, type LoginCredentials } from '@shared/schema';
-import { login } from '@/lib/auth';
-import { UserContext } from '@/main';
+import { useAuth } from '@/hooks/use-auth';
+
 
 const Login = () => {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [_, setLocation] = useLocation();
-  const userContext = useContext(UserContext);
+  const { user, loginMutation } = useAuth();
+
+  // Redirect to dashboard if user is already logged in
+  useEffect(() => {
+    if (user) {
+      setLocation('/dashboard');
+    }
+  }, [user, setLocation]);
 
   const { register, handleSubmit, formState: { errors } } = useForm<LoginCredentials>({
     resolver: zodResolver(loginSchema),
@@ -32,8 +39,7 @@ const Login = () => {
       setIsLoading(true);
       setError(null);
       
-      const user = await login(data);
-      userContext?.setUser(user);
+      await loginMutation.mutateAsync(data);
       setLocation('/dashboard');
     } catch (err) {
       console.error('Login error:', err);

@@ -1,5 +1,5 @@
 import React, { useContext } from 'react';
-import { UserContext } from '@/main';
+
 import { useQuery } from '@tanstack/react-query';
 import StatusCard from '@/components/cards/StatusCard';
 import AssignmentList from '@/components/assignments/AssignmentList';
@@ -15,8 +15,8 @@ import { Assignment, Notification } from '@shared/schema';
 import { apiRequest } from '@/lib/queryClient';
 
 const StudentDashboard = () => {
-  const userContext = useContext(UserContext);
-  const user = userContext?.user;
+  const { user } = useAuth();
+  
   
   // Get student assignments
   const { data: assignments = [] } = useQuery<Assignment[]>({

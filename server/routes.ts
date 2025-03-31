@@ -159,50 +159,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
   
-  // Auth Routes
-  app.post('/api/auth/login', async (req, res) => {
-    try {
-      const credentials = loginSchema.parse(req.body);
-      const user = await storage.authenticate(credentials);
-      
-      if (!user) {
-        return res.status(401).json({ message: "Invalid username or password" });
-      }
-      
-      // In a real app, we'd create a JWT token here
-      // For this demo, we'll just return the user
-      res.json({ user });
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Validation error", errors: error.errors });
-      }
-      res.status(500).json({ message: "Server error" });
-    }
-  });
-  
-  app.post('/api/auth/register', async (req, res) => {
-    try {
-      const userData = insertUserSchema.parse(req.body);
-      
-      // Check if username already exists
-      const existingUsername = await storage.getUserByUsername(userData.username);
-      if (existingUsername) {
-        return res.status(400).json({ message: "Username already exists" });
-      }
-      
-      // For a real app, we would hash the password here
-      // Create the new user
-      const user = await storage.createUser(userData);
-      
-      // Return the created user
-      res.status(201).json({ user });
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Validation error", errors: error.errors });
-      }
-      res.status(500).json({ message: "Server error" });
-    }
-  });
+  // Auth Routes are handled in server/auth.ts
   
   // User Routes
   app.get('/api/users', authenticateUser, requireRole(['admin']), async (req, res) => {

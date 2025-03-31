@@ -1,25 +1,17 @@
-import { useContext, useState } from 'react';
+import { useState } from 'react';
 import { Link, useLocation } from 'wouter';
-import { UserContext } from '@/main';
+import { useAuth } from '@/hooks/use-auth';
 import { Menu, Search, Bell, MessageSquare } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 const TopBar = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const userContext = useContext(UserContext);
-  const user = userContext?.user;
-  const setUser = userContext?.setUser;
+  const { user, logoutMutation } = useAuth();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   
   const handleLogout = () => {
-    localStorage.removeItem('user');
-    setUser?.(null);
-    setLocation('/login');
-    toast({
-      title: 'Logged out successfully',
-      description: 'You have been logged out of your account.',
-    });
+    logoutMutation.mutate();
   };
   
   const toggleSidebar = () => {

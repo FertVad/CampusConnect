@@ -1,7 +1,7 @@
 import React, { useContext } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams } from 'wouter';
-import { UserContext } from '@/main';
+
 import MainLayout from '@/components/layouts/MainLayout';
 import AssignmentDetails from '@/components/assignments/AssignmentDetails';
 import { Card, CardContent } from '@/components/ui/card';
@@ -14,8 +14,8 @@ const AssignmentDetail = () => {
   const { id } = useParams<{ id: string }>();
   const assignmentId = parseInt(id);
   
-  const userContext = useContext(UserContext);
-  const user = userContext?.user;
+  const { user } = useAuth();
+  
   const queryClient = useQueryClient();
   const { toast } = useToast();
   

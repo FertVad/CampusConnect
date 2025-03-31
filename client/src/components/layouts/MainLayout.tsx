@@ -1,8 +1,8 @@
-import { ReactNode, useContext } from 'react';
+import { ReactNode } from 'react';
 import Sidebar from './Sidebar';
 import TopBar from './TopBar';
 import MobileNavigation from './MobileNavigation';
-import { UserContext } from '@/main';
+import { useAuth } from '@/hooks/use-auth';
 import { Redirect } from 'wouter';
 
 interface MainLayoutProps {
@@ -12,11 +12,11 @@ interface MainLayoutProps {
 }
 
 const MainLayout = ({ children, title, subtitle }: MainLayoutProps) => {
-  const userContext = useContext(UserContext);
+  const { user } = useAuth();
   
   // Redirect if not logged in
-  if (!userContext?.user) {
-    return <Redirect to="/login" />;
+  if (!user) {
+    return <Redirect to="/auth" />;
   }
   
   return (

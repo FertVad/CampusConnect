@@ -1,29 +1,11 @@
 import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./index.css";
-import { useState, createContext } from "react";
+import { useState } from "react";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "./lib/queryClient";
 import { Toaster } from "@/components/ui/toaster";
-import { AuthProvider, useAuth } from "@/hooks/use-auth";
-import { User } from "@shared/schema";
-
-// Create UserContext that will be used across the application
-export const UserContext = createContext<{
-  user: User | null;
-  isLoading: boolean;
-} | null>(null);
-
-// UserContextProvider component
-function UserContextProvider({ children }: { children: React.ReactNode }) {
-  const { user, isLoading } = useAuth();
-  
-  return (
-    <UserContext.Provider value={{ user, isLoading }}>
-      {children}
-    </UserContext.Provider>
-  );
-}
+import { AuthProvider } from "@/hooks/use-auth";
 
 // Wrap App in a special error boundary
 function AppWithErrorHandling() {
@@ -63,10 +45,8 @@ function AppWithErrorHandling() {
     return (
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <UserContextProvider>
-            <App />
-            <Toaster />
-          </UserContextProvider>
+          <App />
+          <Toaster />
         </AuthProvider>
       </QueryClientProvider>
     );
