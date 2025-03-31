@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
-import { Redirect } from "wouter";
+import { Redirect, useLocation } from "wouter";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -36,6 +36,7 @@ type RegisterData = z.infer<typeof registerSchema>;
 
 function LoginForm({ onTabChange }: { onTabChange: (tab: string) => void }) {
   const { loginMutation } = useAuth();
+  const [, setLocation] = useLocation();
   
   const form = useForm<LoginData>({
     resolver: zodResolver(loginSchema),
@@ -48,6 +49,13 @@ function LoginForm({ onTabChange }: { onTabChange: (tab: string) => void }) {
   function onSubmit(data: LoginData) {
     loginMutation.mutate(data);
   }
+  
+  // Redirect to dashboard when login is successful
+  useEffect(() => {
+    if (loginMutation.isSuccess) {
+      setLocation("/");
+    }
+  }, [loginMutation.isSuccess, setLocation]);
 
   return (
     <Card className="border-0 shadow-none">
@@ -119,6 +127,7 @@ function LoginForm({ onTabChange }: { onTabChange: (tab: string) => void }) {
 
 function RegisterForm({ onTabChange }: { onTabChange: (tab: string) => void }) {
   const { registerMutation } = useAuth();
+  const [, setLocation] = useLocation();
   
   const form = useForm<RegisterData>({
     resolver: zodResolver(registerSchema),
@@ -138,6 +147,13 @@ function RegisterForm({ onTabChange }: { onTabChange: (tab: string) => void }) {
     const { confirmPassword, ...userData } = data;
     registerMutation.mutate(userData);
   }
+  
+  // Redirect to dashboard when registration is successful
+  useEffect(() => {
+    if (registerMutation.isSuccess) {
+      setLocation("/");
+    }
+  }, [registerMutation.isSuccess, setLocation]);
 
   return (
     <Card className="border-0 shadow-none">
