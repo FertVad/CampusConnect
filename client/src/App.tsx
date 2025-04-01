@@ -14,38 +14,101 @@ import NotFound from "@/pages/not-found";
 import AuthPage from "@/pages/auth-page";
 import { ProtectedRoute } from "@/lib/protected-route";
 
+import { MainLayout } from "@/components/layout/main-layout";
+
+// Wrap components with MainLayout for protected routes
+const ProtectedDashboard = () => (
+  <MainLayout>
+    <Dashboard />
+  </MainLayout>
+);
+
+const ProtectedAssignments = () => (
+  <MainLayout>
+    <Assignments />
+  </MainLayout>
+);
+
+const ProtectedAssignmentDetail = () => (
+  <MainLayout>
+    <AssignmentDetail />
+  </MainLayout>
+);
+
+const ProtectedSchedule = () => (
+  <MainLayout>
+    <Schedule />
+  </MainLayout>
+);
+
+const ProtectedGrades = () => (
+  <MainLayout>
+    <Grades />
+  </MainLayout>
+);
+
+const ProtectedUsers = () => (
+  <MainLayout>
+    <Users />
+  </MainLayout>
+);
+
+const ProtectedRequests = () => (
+  <MainLayout>
+    <Requests />
+  </MainLayout>
+);
+
+const ProtectedChat = () => (
+  <MainLayout>
+    <Chat />
+  </MainLayout>
+);
+
+const ProtectedInvoices = () => (
+  <MainLayout>
+    <Invoices />
+  </MainLayout>
+);
+
+const ProtectedCertificates = () => (
+  <MainLayout>
+    <Certificates />
+  </MainLayout>
+);
+
 function App() {
   return (
     <Switch>
       <Route path="/auth" component={AuthPage} />
       
       {/* Dashboard routes */}
-      <ProtectedRoute path="/" component={Dashboard} />
-      <ProtectedRoute path="/dashboard" component={Dashboard} />
+      <ProtectedRoute path="/" component={ProtectedDashboard} />
+      <ProtectedRoute path="/dashboard" component={ProtectedDashboard} />
       
       {/* Assignment routes */}
-      <ProtectedRoute path="/assignments" component={Assignments} />
-      <ProtectedRoute path="/assignments/:id" component={AssignmentDetail} />
+      <ProtectedRoute path="/assignments" component={ProtectedAssignments} />
+      <ProtectedRoute path="/assignments/:id" component={ProtectedAssignmentDetail} />
       
       {/* Schedule route */}
-      <ProtectedRoute path="/schedule" component={Schedule} />
+      <ProtectedRoute path="/schedule" component={ProtectedSchedule} />
       
       {/* Grades route */}
-      <ProtectedRoute path="/grades" component={Grades} />
+      <ProtectedRoute path="/grades" component={ProtectedGrades} />
       
       {/* User management route (admin only) */}
-      <ProtectedRoute path="/users" component={Users} />
+      <ProtectedRoute path="/users" component={ProtectedUsers} />
       
       {/* Requests route */}
-      <ProtectedRoute path="/requests" component={Requests} />
+      <ProtectedRoute path="/requests" component={ProtectedRequests} />
       
       {/* Chat route */}
-      <ProtectedRoute path="/chat" component={Chat} />
-      <ProtectedRoute path="/chat/:id" component={Chat} />
+      <ProtectedRoute path="/chat" component={ProtectedChat} />
+      <ProtectedRoute path="/chat/:id" component={ProtectedChat} />
       
       {/* Documents routes */}
-      <ProtectedRoute path="/invoices" component={Invoices} />
-      <ProtectedRoute path="/certificates" component={Certificates} />
+      <ProtectedRoute path="/invoices" component={ProtectedInvoices} />
+      <ProtectedRoute path="/certificates" component={ProtectedCertificates} />
       
       {/* Fallback to 404 */}
       <Route component={NotFound} />

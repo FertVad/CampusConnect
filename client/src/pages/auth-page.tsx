@@ -59,9 +59,9 @@ function LoginForm({ onTabChange }: { onTabChange: (tab: string) => void }) {
   }, [loginMutation.isSuccess, setLocation]);
 
   return (
-    <Card className="border-0 shadow-none">
+    <Card className="glass border-0 shadow-none">
       <CardHeader>
-        <CardTitle className="text-2xl">Login</CardTitle>
+        <CardTitle className="text-2xl bg-gradient-to-r from-indigo-400 to-emerald-300 text-transparent bg-clip-text">Login</CardTitle>
         <CardDescription>
           Enter your credentials to access your account
         </CardDescription>
@@ -76,7 +76,7 @@ function LoginForm({ onTabChange }: { onTabChange: (tab: string) => void }) {
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input placeholder="email@example.com" {...field} />
+                    <Input placeholder="email@example.com" className="glass" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -89,7 +89,7 @@ function LoginForm({ onTabChange }: { onTabChange: (tab: string) => void }) {
                 <FormItem>
                   <FormLabel>Password</FormLabel>
                   <FormControl>
-                    <Input type="password" placeholder="********" {...field} />
+                    <Input type="password" placeholder="********" className="glass" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -97,7 +97,7 @@ function LoginForm({ onTabChange }: { onTabChange: (tab: string) => void }) {
             />
             <Button 
               type="submit" 
-              className="w-full" 
+              className="w-full bg-primary hover:bg-primary/80" 
               disabled={loginMutation.isPending}
             >
               {loginMutation.isPending ? (
@@ -116,7 +116,7 @@ function LoginForm({ onTabChange }: { onTabChange: (tab: string) => void }) {
         <span className="text-muted-foreground">Don't have an account?</span>
         <Button 
           variant="link" 
-          className="px-2" 
+          className="px-2 text-indigo-400 hover:text-indigo-300" 
           onClick={() => onTabChange("register")}
         >
           Register
@@ -156,9 +156,9 @@ function RegisterForm({ onTabChange }: { onTabChange: (tab: string) => void }) {
   }, [registerMutation.isSuccess, setLocation]);
 
   return (
-    <Card className="border-0 shadow-none">
+    <Card className="glass border-0 shadow-none">
       <CardHeader>
-        <CardTitle className="text-2xl">Create an account</CardTitle>
+        <CardTitle className="text-2xl bg-gradient-to-r from-indigo-400 to-emerald-300 text-transparent bg-clip-text">Create an account</CardTitle>
         <CardDescription>
           Enter your information to register for a new account
         </CardDescription>
@@ -173,7 +173,7 @@ function RegisterForm({ onTabChange }: { onTabChange: (tab: string) => void }) {
                 <FormItem>
                   <FormLabel>First Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="John" {...field} />
+                    <Input placeholder="John" className="glass" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -186,7 +186,7 @@ function RegisterForm({ onTabChange }: { onTabChange: (tab: string) => void }) {
                 <FormItem>
                   <FormLabel>Last Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="Doe" {...field} />
+                    <Input placeholder="Doe" className="glass" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -199,7 +199,7 @@ function RegisterForm({ onTabChange }: { onTabChange: (tab: string) => void }) {
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input placeholder="email@example.com" {...field} />
+                    <Input placeholder="email@example.com" className="glass" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -216,11 +216,11 @@ function RegisterForm({ onTabChange }: { onTabChange: (tab: string) => void }) {
                     defaultValue={field.value}
                   >
                     <FormControl>
-                      <SelectTrigger>
+                      <SelectTrigger className="glass">
                         <SelectValue placeholder="Select a role" />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent>
+                    <SelectContent className="glass-modal">
                       <SelectItem value="student">Student</SelectItem>
                       <SelectItem value="teacher">Teacher</SelectItem>
                       <SelectItem value="admin">Administrator</SelectItem>
@@ -237,7 +237,7 @@ function RegisterForm({ onTabChange }: { onTabChange: (tab: string) => void }) {
                 <FormItem>
                   <FormLabel>Password</FormLabel>
                   <FormControl>
-                    <Input type="password" placeholder="********" {...field} />
+                    <Input type="password" placeholder="********" className="glass" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -250,7 +250,7 @@ function RegisterForm({ onTabChange }: { onTabChange: (tab: string) => void }) {
                 <FormItem>
                   <FormLabel>Confirm Password</FormLabel>
                   <FormControl>
-                    <Input type="password" placeholder="********" {...field} />
+                    <Input type="password" placeholder="********" className="glass" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -258,7 +258,7 @@ function RegisterForm({ onTabChange }: { onTabChange: (tab: string) => void }) {
             />
             <Button 
               type="submit" 
-              className="w-full" 
+              className="w-full bg-primary hover:bg-primary/80" 
               disabled={registerMutation.isPending}
             >
               {registerMutation.isPending ? (
@@ -277,7 +277,7 @@ function RegisterForm({ onTabChange }: { onTabChange: (tab: string) => void }) {
         <span className="text-muted-foreground">Already have an account?</span>
         <Button 
           variant="link" 
-          className="px-2" 
+          className="px-2 text-indigo-400 hover:text-indigo-300" 
           onClick={() => onTabChange("login")}
         >
           Login
@@ -297,16 +297,16 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="container flex h-screen">
+    <div className="container flex h-screen bg-zinc-900 text-gray-200">
       <div className="hidden lg:flex flex-col justify-center w-1/2 p-10">
         <div className="space-y-6">
-          <h1 className="text-5xl font-bold tracking-tight">College Management System</h1>
+          <h1 className="text-5xl font-bold tracking-tight bg-gradient-to-r from-indigo-400 to-emerald-300 text-transparent bg-clip-text">College Management System</h1>
           <p className="text-xl text-muted-foreground">
             A comprehensive platform for students, teachers, and administrators to manage college resources efficiently.
           </p>
           <div className="flex flex-col gap-4 mt-8">
             <div className="flex items-center gap-3">
-              <div className="rounded-full bg-primary/10 p-1 w-8 h-8 flex items-center justify-center">
+              <div className="rounded-full bg-primary/10 p-1 w-8 h-8 flex items-center justify-center glass">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   className="h-5 w-5 text-primary"
@@ -325,7 +325,7 @@ export default function AuthPage() {
               <span className="text-sm font-medium">Access course materials and assignments</span>
             </div>
             <div className="flex items-center gap-3">
-              <div className="rounded-full bg-primary/10 p-1 w-8 h-8 flex items-center justify-center">
+              <div className="rounded-full bg-primary/10 p-1 w-8 h-8 flex items-center justify-center glass">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   className="h-5 w-5 text-primary"
@@ -344,7 +344,7 @@ export default function AuthPage() {
               <span className="text-sm font-medium">Check grades and submit assignments</span>
             </div>
             <div className="flex items-center gap-3">
-              <div className="rounded-full bg-primary/10 p-1 w-8 h-8 flex items-center justify-center">
+              <div className="rounded-full bg-primary/10 p-1 w-8 h-8 flex items-center justify-center glass">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   className="h-5 w-5 text-primary"
@@ -363,7 +363,7 @@ export default function AuthPage() {
               <span className="text-sm font-medium">Communicate with teachers and students</span>
             </div>
             <div className="flex items-center gap-3">
-              <div className="rounded-full bg-primary/10 p-1 w-8 h-8 flex items-center justify-center">
+              <div className="rounded-full bg-primary/10 p-1 w-8 h-8 flex items-center justify-center glass">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   className="h-5 w-5 text-primary"
@@ -393,14 +393,14 @@ export default function AuthPage() {
             onValueChange={setActiveTab}
             className="w-full"
           >
-            <TabsList className="grid w-full grid-cols-2 mb-8">
-              <TabsTrigger value="login">Login</TabsTrigger>
-              <TabsTrigger value="register">Register</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 mb-8 glass">
+              <TabsTrigger value="login" className="data-[state=active]:bg-primary/20">Login</TabsTrigger>
+              <TabsTrigger value="register" className="data-[state=active]:bg-primary/20">Register</TabsTrigger>
             </TabsList>
-            <TabsContent value="login">
+            <TabsContent value="login" className="glass-card p-0 overflow-hidden">
               <LoginForm onTabChange={setActiveTab} />
             </TabsContent>
-            <TabsContent value="register">
+            <TabsContent value="register" className="glass-card p-0 overflow-hidden">
               <RegisterForm onTabChange={setActiveTab} />
             </TabsContent>
           </Tabs>
