@@ -37,6 +37,7 @@ interface UserFormData {
 }
 
 export default function Users() {
+  console.log("Rendering Users component");
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
