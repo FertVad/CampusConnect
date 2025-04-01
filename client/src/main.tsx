@@ -44,14 +44,16 @@ function AppWithErrorHandling() {
   // Otherwise, try to render the app
   try {
     return (
-      <ThemeProvider defaultTheme="dark">
-        <QueryClientProvider client={queryClient}>
-          <AuthProvider>
-            <App />
-            <Toaster />
-          </AuthProvider>
-        </QueryClientProvider>
-      </ThemeProvider>
+      <React.StrictMode>
+        <ThemeProvider defaultTheme="dark">
+          <QueryClientProvider client={queryClient}>
+            <AuthProvider>
+              <App />
+              <Toaster />
+            </AuthProvider>
+          </QueryClientProvider>
+        </ThemeProvider>
+      </React.StrictMode>
     );
   } catch (err) {
     // If app rendering fails, update the error state
