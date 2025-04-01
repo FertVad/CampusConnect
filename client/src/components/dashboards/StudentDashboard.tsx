@@ -13,6 +13,7 @@ import { Link } from 'wouter';
 import { calculateGPA } from '@/lib/utils';
 import { Assignment, Notification } from '@shared/schema';
 import { apiRequest } from '@/lib/queryClient';
+import { useAuth } from '@/hooks/use-auth';
 
 const StudentDashboard = () => {
   const { user } = useAuth();

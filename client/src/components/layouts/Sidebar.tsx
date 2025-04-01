@@ -3,7 +3,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { 
   Home, Clock, FileText, BarChart2, 
   HelpCircle, Receipt, Award, MessageSquare, 
-  Bell, Settings
+  Bell, Settings, Users as UsersIcon
 } from 'lucide-react';
 
 const Sidebar = () => {
@@ -42,7 +42,7 @@ const Sidebar = () => {
     // Add admin-specific menu items
     if (user?.role === 'admin') {
       items[0].items.push({ 
-        icon: <Settings className="h-5 w-5 mr-3" />, 
+        icon: <UsersIcon className="h-5 w-5 mr-3" />, 
         label: 'User Management', 
         href: '/users' 
       });
