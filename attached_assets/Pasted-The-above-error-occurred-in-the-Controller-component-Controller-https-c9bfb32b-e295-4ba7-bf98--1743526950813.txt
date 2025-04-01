@@ -1,0 +1,35 @@
+The above error occurred in the <Controller> component:
+
+Controller@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-YABUFNLM.js:313:34
+FormField@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/components/ui/form.tsx:31:20
+form
+FormProvider@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-YABUFNLM.js:102:9
+div
+_c9@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/components/ui/card.tsx:114:10
+div
+_c@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/components/ui/card.tsx:20:9
+LoginForm@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/pages/auth-page.tsx:45:33
+div
+Primitive.div@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-RLTE5R7I.js:41:11
+Presence@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-HHXI44QP.js:25:31
+TabsContent@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tabs.js:446:80
+_c5@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/components/ui/tabs.tsx:72:10
+div
+Primitive.div@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-RLTE5R7I.js:41:11
+TabsProvider@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-6J5IXUBZ.js:48:13
+Tabs@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tabs.js:323:11
+div
+div
+div
+AuthPage@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/pages/auth-page.tsx:673:27
+Route@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js:323:14
+Switch@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js:380:27
+App
+AuthProvider@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/hooks/use-auth.tsx:27:5
+QueryClientProvider@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js:2805:9
+AppWithErrorHandling@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/main.tsx:28:37
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+null is not an object (evaluating 'dispatcher.useContext')
+

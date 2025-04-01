@@ -1,3 +1,4 @@
+import React from "react";
 import { Switch, Route } from "wouter";
 import Dashboard from "@/pages/dashboard/Dashboard";
 import Assignments from "@/pages/assignments/Assignments";
