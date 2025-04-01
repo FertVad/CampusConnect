@@ -20,9 +20,13 @@ import {
 } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { AlertCircle, Clock, MapPin, User } from 'lucide-react';
+import { AlertCircle, Clock, Download, MapPin, Upload, User } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Subject } from '@shared/schema';
+import ScheduleImport from '@/components/schedule/ScheduleImport';
+import { isAdmin } from '@/lib/auth';
 
 // Map weekday numbers to names
 const DAYS_OF_WEEK = [
@@ -47,6 +51,8 @@ export default function Schedule() {
   const { user } = useAuth();
   const isStudent = user?.role === 'student';
   const isTeacher = user?.role === 'teacher';
+  const userIsAdmin = isAdmin(user?.role);
+  const [activeTab, setActiveTab] = useState<string>("schedule");
   
   // Fetch schedule data based on user role
   const { data: scheduleItems, isLoading, error } = useQuery({
@@ -99,11 +105,10 @@ export default function Schedule() {
     return grouped;
   }, [scheduleItems]);
 
-  return (
-    <div className="container mx-auto py-6">
-      <h1 className="text-3xl font-bold mb-6">Weekly Schedule</h1>
-      
-      {isLoading ? (
+  // Determine if we should show admin features
+  const renderContent = () => {
+    if (isLoading) {
+      return (
         <div className="space-y-4">
           {Array.from({ length: 5 }).map((_, i) => (
             <Card key={i}>
@@ -116,7 +121,11 @@ export default function Schedule() {
             </Card>
           ))}
         </div>
-      ) : error ? (
+      );
+    }
+    
+    if (error) {
+      return (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Error</AlertTitle>
@@ -124,76 +133,116 @@ export default function Schedule() {
             Failed to load your schedule. Please try again later.
           </AlertDescription>
         </Alert>
-      ) : (
-        <div className="space-y-6">
-          {DAYS_OF_WEEK.map((day, index) => {
-            // Skip weekends unless there are classes scheduled
-            if ((day === 'Saturday' || day === 'Sunday') && 
-                (!scheduleByDay[day] || scheduleByDay[day].length === 0)) {
-              return null;
-            }
-            
-            return (
-              <Card key={day}>
-                <CardHeader className="pb-2">
-                  <CardTitle>{day}</CardTitle>
-                  <CardDescription>
-                    {scheduleByDay[day]?.length 
-                      ? `${scheduleByDay[day].length} class${scheduleByDay[day].length > 1 ? 'es' : ''} scheduled`
-                      : 'No classes scheduled'}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {scheduleByDay[day]?.length ? (
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Subject</TableHead>
-                          <TableHead>Time</TableHead>
-                          <TableHead>Room</TableHead>
-                          <TableHead>Teacher</TableHead>
+      );
+    }
+    
+    return (
+      <div className="space-y-6">
+        {DAYS_OF_WEEK.map((day, index) => {
+          // Skip weekends unless there are classes scheduled
+          if ((day === 'Saturday' || day === 'Sunday') && 
+              (!scheduleByDay[day] || scheduleByDay[day].length === 0)) {
+            return null;
+          }
+          
+          return (
+            <Card key={day}>
+              <CardHeader className="pb-2">
+                <CardTitle>{day}</CardTitle>
+                <CardDescription>
+                  {scheduleByDay[day]?.length 
+                    ? `${scheduleByDay[day].length} class${scheduleByDay[day].length > 1 ? 'es' : ''} scheduled`
+                    : 'No classes scheduled'}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {scheduleByDay[day]?.length ? (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Subject</TableHead>
+                        <TableHead>Time</TableHead>
+                        <TableHead>Room</TableHead>
+                        <TableHead>Teacher</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {scheduleByDay[day].map((item: any) => (
+                        <TableRow key={item.id}>
+                          <TableCell className="font-medium">
+                            {item.subject?.name || 'Unknown Subject'}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-1">
+                              <Clock className="h-4 w-4 text-muted-foreground" />
+                              {formatTime(item.startTime)} - {formatTime(item.endTime)}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-1">
+                              <MapPin className="h-4 w-4 text-muted-foreground" />
+                              {item.roomNumber || 'TBA'}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-1">
+                              <User className="h-4 w-4 text-muted-foreground" />
+                              {item.subject?.teacher?.firstName 
+                                ? `${item.subject.teacher.firstName} ${item.subject.teacher.lastName}` 
+                                : 'Not Assigned'}
+                            </div>
+                          </TableCell>
                         </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {scheduleByDay[day].map((item: any) => (
-                          <TableRow key={item.id}>
-                            <TableCell className="font-medium">
-                              {item.subject?.name || 'Unknown Subject'}
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-1">
-                                <Clock className="h-4 w-4 text-muted-foreground" />
-                                {formatTime(item.startTime)} - {formatTime(item.endTime)}
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-1">
-                                <MapPin className="h-4 w-4 text-muted-foreground" />
-                                {item.roomNumber || 'TBA'}
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-1">
-                                <User className="h-4 w-4 text-muted-foreground" />
-                                {item.subject?.teacher?.firstName 
-                                  ? `${item.subject.teacher.firstName} ${item.subject.teacher.lastName}` 
-                                  : 'Not Assigned'}
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  ) : (
-                    <div className="text-center py-4 text-muted-foreground">
-                      No classes scheduled for {day}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            );
-          })}
+                      ))}
+                    </TableBody>
+                  </Table>
+                ) : (
+                  <div className="text-center py-4 text-muted-foreground">
+                    No classes scheduled for {day}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+    );
+  };
+
+  return (
+    <div className="container mx-auto py-6">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold">Weekly Schedule</h1>
+        {userIsAdmin && (
+          <Button 
+            variant={activeTab === "import" ? "default" : "outline"}
+            onClick={() => setActiveTab(activeTab === "schedule" ? "import" : "schedule")}
+          >
+            {activeTab === "schedule" ? (
+              <>
+                <Upload className="mr-2 h-4 w-4" />
+                Import Schedule
+              </>
+            ) : (
+              <>
+                <Clock className="mr-2 h-4 w-4" />
+                View Schedule
+              </>
+            )}
+          </Button>
+        )}
+      </div>
+      
+      {userIsAdmin ? (
+        <div>
+          {activeTab === "schedule" ? (
+            renderContent()
+          ) : (
+            <ScheduleImport />
+          )}
         </div>
+      ) : (
+        renderContent()
       )}
     </div>
   );

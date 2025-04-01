@@ -1,4 +1,4 @@
-import type { Express, Request, Response } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { WebSocketServer } from "ws";
@@ -16,6 +16,13 @@ import { object, string, z } from "zod";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
+import { 
+  parseSheetDataToScheduleItems, 
+  fetchSheetData, 
+  authenticateWithGoogleSheets, 
+  ScheduleImportResult 
+} from "./utils/googleSheetsHelper";
+import { parseCsvToScheduleItems, validateScheduleItems, prepareImportResult } from "./utils/csvHelper";
 
 // Set up file upload storage
 const upload = multer({
@@ -505,6 +512,131 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Server error" });
     }
   });
+  
+  // Schedule Import Routes - Google Sheets (Option A)
+  app.post('/api/schedule/import/google-sheets', authenticateUser, requireRole(['admin']), async (req, res) => {
+    try {
+      // Extract parameters from the request body
+      const { credentials, spreadsheetId, range = 'Sheet1!A1:E' } = req.body;
+      
+      if (!credentials || !spreadsheetId) {
+        return res.status(400).json({ 
+          message: "Missing required parameters. Please provide Google API credentials and spreadsheet ID."
+        });
+      }
+      
+      // Authenticate with Google Sheets API
+      const sheets = await authenticateWithGoogleSheets(credentials);
+      
+      // Fetch data from the specified sheet
+      const sheetData = await fetchSheetData(sheets, spreadsheetId, range);
+      
+      if (sheetData.length <= 1) { // Only header row or empty
+        return res.status(400).json({ message: "No data found in the specified range" });
+      }
+      
+      // Parse the sheet data to schedule items
+      const { scheduleItems, errors: parseErrors } = parseSheetDataToScheduleItems(sheetData);
+      
+      // Validate the schedule items
+      const { validItems, errors: validationErrors } = await validateScheduleItems(
+        scheduleItems,
+        async (subjectId) => {
+          const subject = await storage.getSubject(subjectId);
+          return !!subject;
+        }
+      );
+      
+      // Insert valid items into the database
+      const createdItems = [];
+      for (const item of validItems) {
+        const created = await storage.createScheduleItem(item);
+        createdItems.push(created);
+      }
+      
+      // Prepare and return the import result
+      const result = prepareImportResult(
+        scheduleItems.length,
+        validItems,
+        [...parseErrors, ...validationErrors]
+      );
+      
+      res.status(200).json({
+        message: `Successfully imported ${result.success} out of ${result.total} schedule items.`,
+        result
+      });
+    } catch (error: any) {
+      console.error('Error importing schedule from Google Sheets:', error);
+      res.status(500).json({ 
+        message: "Failed to import schedule from Google Sheets",
+        error: error.message || 'Unknown error'
+      });
+    }
+  });
+  
+  // Schedule Import Routes - CSV Upload (Option B)
+  app.post(
+    '/api/schedule/import/csv', 
+    authenticateUser, 
+    requireRole(['admin']), 
+    upload.single('csvFile'), 
+    async (req, res) => {
+      try {
+        if (!req.file) {
+          return res.status(400).json({ message: "No CSV file uploaded" });
+        }
+        
+        // Get the path to the uploaded file
+        const filePath = req.file.path;
+        
+        // Parse the CSV file to schedule items
+        const { scheduleItems, errors: parseErrors } = await parseCsvToScheduleItems(filePath);
+        
+        // Validate the schedule items
+        const { validItems, errors: validationErrors } = await validateScheduleItems(
+          scheduleItems,
+          async (subjectId) => {
+            const subject = await storage.getSubject(subjectId);
+            return !!subject;
+          }
+        );
+        
+        // Insert valid items into the database
+        const createdItems = [];
+        for (const item of validItems) {
+          const created = await storage.createScheduleItem(item);
+          createdItems.push(created);
+        }
+        
+        // Clean up the uploaded file
+        fs.unlinkSync(filePath);
+        
+        // Prepare and return the import result
+        const result = prepareImportResult(
+          scheduleItems.length,
+          validItems,
+          [...parseErrors, ...validationErrors]
+        );
+        
+        res.status(200).json({
+          message: `Successfully imported ${result.success} out of ${result.total} schedule items.`,
+          result
+        });
+      } catch (error: any) {
+        console.error('Error importing schedule from CSV:', error);
+        
+        // Clean up the uploaded file if exists
+        if (req.file && fs.existsSync(req.file.path)) {
+          fs.unlinkSync(req.file.path);
+        }
+        
+        res.status(500).json({ 
+          message: "Failed to import schedule from CSV file",
+          error: error.message || 'Unknown error'
+        });
+      }
+    }
+  );
   
   // Assignment Routes
   app.get('/api/assignments', authenticateUser, requireRole(['admin', 'teacher']), async (req, res) => {
