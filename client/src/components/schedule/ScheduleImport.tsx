@@ -66,7 +66,7 @@ export default function ScheduleImport() {
       setImporting(true);
       setImportResult(null);
 
-      const response = await apiRequest(
+      const rawResponse = await apiRequest(
         'POST',
         '/api/schedule/import/google-sheets',
         {
@@ -74,7 +74,10 @@ export default function ScheduleImport() {
           spreadsheetId: data.spreadsheetId,
           range: data.range
         }
-      ) as ImportResponse;
+      );
+      
+      // Convert raw response to ImportResponse type
+      const response = rawResponse as unknown as ImportResponse;
 
       setImportResult(response.result);
       toast({
@@ -124,7 +127,7 @@ export default function ScheduleImport() {
         throw new Error(errorData.message || 'Failed to import from CSV');
       }
 
-      const result = await response.json();
+      const result = await response.json() as ImportResponse;
       setImportResult(result.result);
       
       toast({

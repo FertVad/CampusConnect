@@ -1,4 +1,4 @@
-import type { Express, Request, Response, NextFunction } from "express";
+import type { Express, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { WebSocketServer } from "ws";
@@ -10,7 +10,8 @@ import {
   insertScheduleItemSchema, insertAssignmentSchema,
   insertSubmissionSchema, insertGradeSchema,
   insertRequestSchema, insertDocumentSchema,
-  insertMessageSchema, insertNotificationSchema
+  insertMessageSchema, insertNotificationSchema,
+  User
 } from "@shared/schema";
 import { object, string, z } from "zod";
 import multer from "multer";
@@ -23,6 +24,15 @@ import {
   ScheduleImportResult 
 } from "./utils/googleSheetsHelper";
 import { parseCsvToScheduleItems, validateScheduleItems, prepareImportResult } from "./utils/csvHelper";
+
+// Extend the Express Request interface to include user property
+declare global {
+  namespace Express {
+    interface Request {
+      user?: User;
+    }
+  }
+}
 
 // Set up file upload storage
 const upload = multer({
@@ -42,18 +52,25 @@ const upload = multer({
   })
 });
 
-// Auth middleware
-const authenticateUser = async (req: Request, res: Response, next: Function) => {
+// Auth middleware - Use passport.js authentication
+const authenticateUser = async (req: Request, res: Response, next: NextFunction) => {
+  // Check if user is authenticated via Passport session
+  if (req.isAuthenticated() && req.user) {
+    // User is already authenticated
+    return next();
+  }
+  
+  // Legacy header-based auth for backward compatibility
   const userId = req.headers['user-id'];
   
   if (!userId) {
-    return res.status(401).json({ message: "Unauthorized - Missing user ID" });
+    return res.status(401).json({ message: "Unauthorized - Please log in" });
   }
   
   const user = await storage.getUser(Number(userId));
   
   if (!user) {
-    return res.status(401).json({ message: "Unauthorized - Invalid user ID" });
+    return res.status(401).json({ message: "Unauthorized - Invalid user" });
   }
   
   // Attach user to request
@@ -63,7 +80,7 @@ const authenticateUser = async (req: Request, res: Response, next: Function) => 
 
 // Role check middleware
 const requireRole = (roles: string[]) => {
-  return (req: Request, res: Response, next: Function) => {
+  return (req: Request, res: Response, next: NextFunction) => {
     if (!req.user) {
       return res.status(401).json({ message: "Unauthorized" });
     }

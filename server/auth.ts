@@ -2,10 +2,16 @@ import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import { Express } from "express";
 import session from "express-session";
-import { scrypt, randomBytes, timingSafeEqual } from "crypto";
-import { promisify } from "util";
-import { storage } from "./storage";
+import bcrypt from "bcrypt";
 import { User as SelectUser } from "@shared/schema";
+import { createDatabaseStorage } from "./db/storage";
+import { migrateDatabase, seedDatabase } from "./db/migrations";
+
+// Import storage module, but we'll replace it with our DB storage
+import { storage as memStorage } from "./storage";
+
+// Create a variable to hold our storage implementation
+let storage = memStorage;
 
 declare global {
   namespace Express {
@@ -13,36 +19,53 @@ declare global {
   }
 }
 
-const scryptAsync = promisify(scrypt);
-
-// Password hashing function
-async function hashPassword(password: string) {
-  const salt = randomBytes(16).toString("hex");
-  const buf = (await scryptAsync(password, salt, 64)) as Buffer;
-  return `${buf.toString("hex")}.${salt}`;
+// Password hashing function using bcrypt
+export async function hashPassword(password: string): Promise<string> {
+  const salt = await bcrypt.genSalt(10);
+  return bcrypt.hash(password, salt);
 }
 
-// Password verification function
-async function comparePasswords(supplied: string, stored: string) {
+// Password verification function using bcrypt
+export async function comparePasswords(supplied: string, stored: string): Promise<boolean> {
   try {
-    // If stored password doesn't contain a salt (likely unhashed in seed data)
-    if (!stored.includes('.')) {
-      console.log("Warning: Using plain text password comparison (no hash/salt detected)");
-      return supplied === stored;
+    // Check if the stored password is a bcrypt hash
+    if (stored.startsWith('$2b$') || stored.startsWith('$2a$')) {
+      return bcrypt.compare(supplied, stored);
     }
     
-    // Normal secure comparison with hashed password
-    const [hashed, salt] = stored.split(".");
-    
-    if (!salt) {
-      throw new Error("Invalid password format: missing salt");
-    }
-    
-    const hashedBuf = Buffer.from(hashed, "hex");
-    const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
-    return timingSafeEqual(hashedBuf, suppliedBuf);
+    // Fallback for plain text passwords (legacy/seed data)
+    console.log("Warning: Using plain text password comparison (no hash detected)");
+    return supplied === stored;
   } catch (error) {
     console.error("Password comparison error:", error);
+    return false;
+  }
+}
+
+// Initialize the database and switch to PostgreSQL storage
+export async function initializeDatabase(): Promise<boolean> {
+  try {
+    // Run migrations to create tables
+    const migrationSuccess = await migrateDatabase();
+    if (!migrationSuccess) {
+      console.error("Database migration failed, using memory storage.");
+      return false;
+    }
+    
+    // Seed the database with initial data if needed
+    const seedSuccess = await seedDatabase();
+    if (!seedSuccess) {
+      console.error("Database seeding failed, but continuing with empty database.");
+    }
+    
+    // Create database storage and replace memory storage
+    const dbStorage = await createDatabaseStorage();
+    storage = dbStorage;
+    
+    console.log("Successfully initialized database storage");
+    return true;
+  } catch (error) {
+    console.error("Failed to initialize database:", error);
     return false;
   }
 }
@@ -114,19 +137,15 @@ export function setupAuth(app: Express) {
         return res.status(400).json({ message: "Email already exists" });
       }
 
-      // Hash password
-      const hashedPassword = await hashPassword(req.body.password);
-
-      // Create user with hashed password
-      const user = await storage.createUser({
-        ...req.body,
-        password: hashedPassword,
-      });
+      // Create user (password will be hashed in the storage implementation)
+      const user = await storage.createUser(req.body);
 
       // Auto login after registration
       req.login(user, (err) => {
         if (err) return next(err);
-        return res.status(201).json(user);
+        // Don't expose the password hash to the client
+        const { password, ...userWithoutPassword } = user;
+        return res.status(201).json(userWithoutPassword);
       });
     } catch (error) {
       next(error);
@@ -142,7 +161,9 @@ export function setupAuth(app: Express) {
         if (err) return next(err);
         // Make sure we're setting the correct cookie and returning the user data
         console.log("User authenticated successfully:", user.id);
-        return res.status(200).json(user);
+        // Don't expose the password hash to the client
+        const { password, ...userWithoutPassword } = user;
+        return res.status(200).json(userWithoutPassword);
       });
     })(req, res, next);
   });
@@ -156,8 +177,13 @@ export function setupAuth(app: Express) {
 
   app.get("/api/user", (req, res) => {
     if (req.isAuthenticated()) {
-      return res.json(req.user);
+      // Don't expose the password hash to the client
+      const { password, ...userWithoutPassword } = req.user as any;
+      return res.json(userWithoutPassword);
     }
     return res.status(401).json({ message: "Not authenticated" });
   });
 }
+
+// Export the storage to be used in other parts of the application
+export { storage };
