@@ -264,6 +264,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Get subjects taught by the current teacher
+  app.get('/api/subjects/teacher', authenticateUser, async (req, res) => {
+    try {
+      if (!req.user || (req.user.role !== 'teacher' && req.user.role !== 'admin')) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const subjects = await storage.getSubjectsByTeacher(req.user.id);
+      res.json(subjects);
+    } catch (error) {
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+  
   app.post('/api/subjects', authenticateUser, requireRole(['admin']), async (req, res) => {
     try {
       const subjectData = insertSubjectSchema.parse(req.body);
@@ -401,6 +415,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Simplified route for student's own schedule
+  app.get('/api/schedule/student', authenticateUser, async (req, res) => {
+    try {
+      if (req.user.role !== 'student') {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const schedule = await storage.getScheduleItemsByStudent(req.user.id);
+      res.json(schedule);
+    } catch (error) {
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+  
   app.get('/api/schedule/teacher/:teacherId', authenticateUser, async (req, res) => {
     try {
       const teacherId = parseInt(req.params.teacherId);
@@ -411,6 +439,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const schedule = await storage.getScheduleItemsByTeacher(teacherId);
+      res.json(schedule);
+    } catch (error) {
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+  
+  // Simplified route for teacher's own schedule
+  app.get('/api/schedule/teacher', authenticateUser, async (req, res) => {
+    try {
+      if (req.user.role !== 'teacher' && req.user.role !== 'admin') {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const schedule = await storage.getScheduleItemsByTeacher(req.user.id);
       res.json(schedule);
     } catch (error) {
       res.status(500).json({ message: "Server error" });
@@ -505,6 +547,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Simplified route for student's own assignments and submissions
+  app.get('/api/assignments/student', authenticateUser, async (req, res) => {
+    try {
+      if (req.user.role !== 'student') {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      // Get all assignments for the student
+      const assignments = await storage.getAssignmentsByStudent(req.user.id);
+      
+      // Get all submissions by this student
+      const submissions = await storage.getSubmissionsByStudent(req.user.id);
+      
+      // Map submissions to assignments
+      const assignmentsWithSubmissions = assignments.map(assignment => {
+        const submission = submissions.find(sub => sub.assignmentId === assignment.id);
+        return {
+          ...assignment,
+          submission: submission || null
+        };
+      });
+      
+      res.json(assignmentsWithSubmissions);
+    } catch (error) {
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+  
   app.get('/api/assignments/teacher/:teacherId', authenticateUser, async (req, res) => {
     try {
       const teacherId = parseInt(req.params.teacherId);
@@ -516,6 +586,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const assignments = await storage.getAssignmentsByTeacher(teacherId);
       res.json(assignments);
+    } catch (error) {
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+  
+  // Simplified route for teacher's own assignments with submissions
+  app.get('/api/assignments/teacher', authenticateUser, async (req, res) => {
+    try {
+      if (req.user.role !== 'teacher' && req.user.role !== 'admin') {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      // Get all assignments created by this teacher
+      const assignments = await storage.getAssignmentsByTeacher(req.user.id);
+      
+      // For each assignment, get submissions count and other details
+      const assignmentsWithDetails = await Promise.all(assignments.map(async assignment => {
+        const submissions = await storage.getSubmissionsByAssignment(assignment.id);
+        
+        // Get subject details
+        const subject = await storage.getSubject(assignment.subjectId);
+        
+        // Get student count for this subject
+        const students = await storage.getStudentsBySubject(assignment.subjectId);
+        
+        return {
+          ...assignment,
+          subject,
+          submissions,
+          studentCount: students.length
+        };
+      }));
+      
+      res.json(assignmentsWithDetails);
     } catch (error) {
       res.status(500).json({ message: "Server error" });
     }
@@ -854,6 +958,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Validation error", errors: error.errors });
       }
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+  
+  // Chat routes
+  app.get('/api/users/chat', authenticateUser, async (req, res) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      // Get all users except the current user
+      const users = await storage.getUsers();
+      const filteredUsers = users.filter(user => user.id !== req.user?.id);
+      
+      // Remove passwords from response
+      const sanitizedUsers = filteredUsers.map(({ password, ...rest }) => rest);
+      
+      res.json(sanitizedUsers);
+    } catch (error) {
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+  
+  app.get('/api/messages/:userId', authenticateUser, async (req, res) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const otherUserId = parseInt(req.params.userId);
+      const messages = await storage.getMessagesBetweenUsers(req.user.id, otherUserId);
+      
+      res.json(messages);
+    } catch (error) {
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+  
+  app.post('/api/messages/read', authenticateUser, async (req, res) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const { messageIds } = req.body;
+      
+      if (!Array.isArray(messageIds) || messageIds.length === 0) {
+        return res.status(400).json({ message: "Invalid message IDs" });
+      }
+      
+      // Update each message status to 'read'
+      const updatedMessages = await Promise.all(
+        messageIds.map(id => storage.updateMessageStatus(id, "read"))
+      );
+      
+      res.json(updatedMessages.filter(Boolean));
+    } catch (error) {
       res.status(500).json({ message: "Server error" });
     }
   });

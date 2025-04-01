@@ -1,104 +1,559 @@
-import React, { useEffect, useState } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useParams } from 'wouter';
-
-import MainLayout from '@/components/layouts/MainLayout';
-import ChatInterface from '@/components/chat/ChatInterface';
-import { Card, CardContent } from '@/components/ui/card';
-import { Message, User } from '@shared/schema';
+import React, { useState, useEffect, useRef } from 'react';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/use-auth';
+import { format } from 'date-fns';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AlertCircle, Check, CheckCheck, Send, User, Users } from 'lucide-react';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
+import { useToast } from '@/hooks/use-toast';
+import { queryClient } from '@/lib/queryClient';
 
-const Chat = () => {
-  const { id } = useParams<{ id: string }>();
-  const initialSelectedUserId = id ? parseInt(id) : null;
+// Helper function to get initials from name
+function getInitials(firstName: string, lastName: string): string {
+  return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
+}
+
+// Helper function to format message timestamp
+function formatMessageTime(date: Date): string {
+  const now = new Date();
+  const messageDate = new Date(date);
   
+  // If today, show time only
+  if (messageDate.toDateString() === now.toDateString()) {
+    return format(messageDate, 'h:mm a');
+  }
+  
+  // If this year, show month and day
+  if (messageDate.getFullYear() === now.getFullYear()) {
+    return format(messageDate, 'MMM d, h:mm a');
+  }
+  
+  // Otherwise show full date
+  return format(messageDate, 'MMM d, yyyy, h:mm a');
+}
+
+export default function Chat() {
   const { user } = useAuth();
-  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [message, setMessage] = useState('');
+  const [webSocket, setWebSocket] = useState<WebSocket | null>(null);
+  const [connectionStatus, setConnectionStatus] = useState('connecting');
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  
-  // Get all users that can be messaged
-  const { data: users = [], isLoading: isLoadingUsers } = useQuery<User[]>({
-    queryKey: ['/api/users'],
+  // Fetch users for chat selection
+  const { data: users, isLoading: usersLoading, error: usersError } = useQuery({
+    queryKey: ['/api/users/chat'],
+    queryFn: async () => {
+      const response = await fetch('/api/users/chat');
+      if (!response.ok) {
+        throw new Error('Failed to fetch users');
+      }
+      return await response.json();
+    },
     enabled: !!user,
   });
   
-  // Get messages between the current user and selected user
-  const { data: messages = [], isLoading: isLoadingMessages } = useQuery<Message[]>({
-    queryKey: [`/api/messages/between/${user?.id}/${selectedUser?.id}`],
-    enabled: !!user && !!selectedUser,
-    refetchInterval: 5000, // Poll for new messages every 5 seconds
+  // Fetch messages with selected user
+  const { 
+    data: messages, 
+    isLoading: messagesLoading,
+    refetch: refetchMessages,
+  } = useQuery({
+    queryKey: ['/api/messages', selectedUser?.id],
+    queryFn: async () => {
+      if (!selectedUser) return [];
+      
+      const response = await fetch(`/api/messages/${selectedUser.id}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch messages');
+      }
+      return await response.json();
+    },
+    enabled: !!selectedUser, // Only fetch if a user is selected
   });
   
-  // Set the selected user if specified in the URL
-  useEffect(() => {
-    if (initialSelectedUserId && users.length > 0 && !selectedUser) {
-      const user = users.find(u => u.id === initialSelectedUserId);
-      if (user) {
-        setSelectedUser(user);
+  // Mark messages as read mutation
+  const markAsReadMutation = useMutation({
+    mutationFn: async (messageIds: number[]) => {
+      if (!messageIds.length) return;
+      
+      const response = await fetch('/api/messages/read', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ messageIds }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to mark messages as read');
       }
-    }
-  }, [initialSelectedUserId, users, selectedUser]);
+      
+      return await response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/messages', selectedUser?.id] });
+    },
+  });
   
-  // Setup WebSocket connection for real-time messages
+  // Set up WebSocket connection
   useEffect(() => {
     if (!user) return;
     
-    // This is for real-time updates from WebSocket
-    // The actual WebSocket setup is in the ChatInterface component
+    // Create WebSocket connection
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${protocol}//${window.location.host}/ws`;
+    const socket = new WebSocket(wsUrl);
     
-    // Periodically refresh messages
-    const interval = setInterval(() => {
-      if (selectedUser) {
-        queryClient.invalidateQueries({
-          queryKey: [`/api/messages/between/${user.id}/${selectedUser.id}`]
-        });
+    socket.onopen = () => {
+      console.log('WebSocket connection established');
+      setConnectionStatus('connected');
+      
+      // Send authentication message
+      socket.send(JSON.stringify({
+        type: 'auth',
+        userId: user.id,
+      }));
+    };
+    
+    socket.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      
+      // Handle different message types
+      if (data.type === 'message') {
+        // If message is related to current chat, refetch messages
+        if (
+          (data.fromUserId === user.id && data.toUserId === selectedUser?.id) ||
+          (data.fromUserId === selectedUser?.id && data.toUserId === user.id)
+        ) {
+          refetchMessages();
+        } else {
+          // Notify user about new message from other person
+          const sender = users?.find((u: any) => u.id === data.fromUserId);
+          if (sender) {
+            toast({
+              title: 'New Message',
+              description: `${sender.firstName} ${sender.lastName}: ${data.content.substring(0, 50)}${data.content.length > 50 ? '...' : ''}`,
+            });
+          }
+        }
+      } else if (data.type === 'status') {
+        // Update message status (delivered, read)
+        queryClient.invalidateQueries({ queryKey: ['/api/messages', selectedUser?.id] });
       }
-    }, 10000);
+    };
     
-    return () => clearInterval(interval);
-  }, [user, selectedUser, queryClient]);
+    socket.onclose = () => {
+      console.log('WebSocket connection closed');
+      setConnectionStatus('disconnected');
+    };
+    
+    socket.onerror = (error) => {
+      console.error('WebSocket error:', error);
+      setConnectionStatus('error');
+    };
+    
+    setWebSocket(socket);
+    
+    // Clean up connection on unmount
+    return () => {
+      if (socket.readyState === WebSocket.OPEN) {
+        socket.close();
+      }
+    };
+  }, [user]);
   
-  const handleSelectUser = (user: User) => {
-    setSelectedUser(user);
+  // Scroll to bottom when messages change
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages]);
+  
+  // Mark received messages as read when viewing a conversation
+  useEffect(() => {
+    if (messages && selectedUser) {
+      // Find messages that are from the selected user and not read yet
+      const unreadMessageIds = messages
+        .filter((msg: any) => msg.fromUserId === selectedUser.id && msg.status !== 'read')
+        .map((msg: any) => msg.id);
+      
+      if (unreadMessageIds.length > 0) {
+        markAsReadMutation.mutate(unreadMessageIds);
+        
+        // Also notify through WebSocket that messages were read
+        if (webSocket && webSocket.readyState === WebSocket.OPEN) {
+          webSocket.send(JSON.stringify({
+            type: 'read',
+            messageIds: unreadMessageIds,
+            userId: user!.id,
+            otherUserId: selectedUser.id,
+          }));
+        }
+      }
+    }
+  }, [messages, selectedUser]);
+  
+  // Handle sending a new message
+  const handleSendMessage = () => {
+    if (!message.trim() || !selectedUser || !webSocket) return;
+    
+    // Send through WebSocket
+    if (webSocket.readyState === WebSocket.OPEN) {
+      webSocket.send(JSON.stringify({
+        type: 'message',
+        content: message,
+        fromUserId: user!.id,
+        toUserId: selectedUser.id,
+      }));
+      
+      // Immediately add message to UI (optimistic update)
+      const tempMessage = {
+        id: `temp-${Date.now()}`,
+        content: message,
+        fromUserId: user!.id,
+        toUserId: selectedUser.id,
+        sentAt: new Date(),
+        status: 'sent',
+        isTemp: true, // To identify temporary messages
+      };
+      
+      queryClient.setQueryData(['/api/messages', selectedUser.id], (oldData: any) => {
+        return [...(oldData || []), tempMessage];
+      });
+      
+      // Clear input
+      setMessage('');
+      
+      // Will be replaced by refetch when server confirms
+      setTimeout(() => {
+        refetchMessages();
+      }, 1000);
+    } else {
+      toast({
+        title: 'Connection Error',
+        description: 'Not connected to the chat server. Please try again.',
+        variant: 'destructive',
+      });
+    }
   };
   
-  const isLoading = isLoadingUsers || (selectedUser && isLoadingMessages);
+  // Groups users by role for easier navigation
+  const usersByRole = React.useMemo(() => {
+    if (!users) return {};
+    
+    return users.reduce((acc: Record<string, any[]>, user: any) => {
+      if (user.id === user?.id) return acc; // Skip current user
+      
+      if (!acc[user.role]) {
+        acc[user.role] = [];
+      }
+      acc[user.role].push(user);
+      return acc;
+    }, {});
+  }, [users]);
   
   return (
-    <MainLayout 
-      title="Chat"
-      subtitle="Communicate with students, teachers, and administrators"
-    >
-      {isLoading ? (
-        <Card>
-          <CardContent className="p-8 text-center">
-            <div className="animate-pulse flex flex-col items-center">
-              <div className="h-8 w-8 bg-neutral-200 rounded-full mb-4"></div>
-              <div className="h-4 bg-neutral-200 rounded w-3/4 mb-2"></div>
-              <div className="h-4 bg-neutral-200 rounded w-1/2"></div>
+    <div className="container mx-auto py-6">
+      <h1 className="text-3xl font-bold mb-6">Messages</h1>
+      
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 h-[75vh]">
+        {/* User list sidebar */}
+        <div className="col-span-1 md:border-r pr-0 md:pr-4">
+          <div className="sticky top-6">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-lg font-semibold">Contacts</h2>
+              <Badge variant={connectionStatus === 'connected' ? 'outline' : 'destructive'}>
+                {connectionStatus === 'connected' ? 'Connected' : 'Disconnected'}
+              </Badge>
             </div>
-          </CardContent>
-        </Card>
-      ) : user ? (
-        <div className="h-[calc(100vh-16rem)]">
-          <ChatInterface
-            currentUser={user}
-            selectedUser={selectedUser}
-            users={users}
-            messages={messages}
-            onSelectUser={handleSelectUser}
-          />
+            
+            {usersLoading ? (
+              <div className="space-y-3">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="flex items-center space-x-4">
+                    <Skeleton className="h-10 w-10 rounded-full" />
+                    <div className="space-y-2">
+                      <Skeleton className="h-4 w-[150px]" />
+                      <Skeleton className="h-4 w-[100px]" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : usersError ? (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Error</AlertTitle>
+                <AlertDescription>
+                  Failed to load contacts. Please try again later.
+                </AlertDescription>
+              </Alert>
+            ) : !users?.length ? (
+              <div className="text-center py-12 text-muted-foreground">
+                <Users className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                <h3 className="text-lg font-medium">No contacts found</h3>
+                <p className="mt-1">You don't have any contacts yet.</p>
+              </div>
+            ) : (
+              <ScrollArea className="h-[65vh]">
+                <div className="space-y-4">
+                  {/* Show teachers */}
+                  {usersByRole['teacher']?.length > 0 && (
+                    <div>
+                      <h3 className="text-sm font-medium text-muted-foreground mb-2">Teachers</h3>
+                      <div className="space-y-2">
+                        {usersByRole['teacher'].map((chatUser: any) => (
+                          <div
+                            key={chatUser.id}
+                            className={`flex items-center space-x-3 p-2 rounded-md cursor-pointer ${
+                              selectedUser?.id === chatUser.id
+                                ? 'bg-secondary'
+                                : 'hover:bg-secondary/50'
+                            }`}
+                            onClick={() => setSelectedUser(chatUser)}
+                          >
+                            <Avatar>
+                              <AvatarFallback>
+                                {getInitials(chatUser.firstName, chatUser.lastName)}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium truncate">
+                                {chatUser.firstName} {chatUser.lastName}
+                              </p>
+                              <p className="text-xs text-muted-foreground">Teacher</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Show students */}
+                  {usersByRole['student']?.length > 0 && (
+                    <div>
+                      <h3 className="text-sm font-medium text-muted-foreground mb-2">Students</h3>
+                      <div className="space-y-2">
+                        {usersByRole['student'].map((chatUser: any) => (
+                          <div
+                            key={chatUser.id}
+                            className={`flex items-center space-x-3 p-2 rounded-md cursor-pointer ${
+                              selectedUser?.id === chatUser.id
+                                ? 'bg-secondary'
+                                : 'hover:bg-secondary/50'
+                            }`}
+                            onClick={() => setSelectedUser(chatUser)}
+                          >
+                            <Avatar>
+                              <AvatarFallback>
+                                {getInitials(chatUser.firstName, chatUser.lastName)}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium truncate">
+                                {chatUser.firstName} {chatUser.lastName}
+                              </p>
+                              <p className="text-xs text-muted-foreground">Student</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Show administrators */}
+                  {usersByRole['admin']?.length > 0 && (
+                    <div>
+                      <h3 className="text-sm font-medium text-muted-foreground mb-2">Administrators</h3>
+                      <div className="space-y-2">
+                        {usersByRole['admin'].map((chatUser: any) => (
+                          <div
+                            key={chatUser.id}
+                            className={`flex items-center space-x-3 p-2 rounded-md cursor-pointer ${
+                              selectedUser?.id === chatUser.id
+                                ? 'bg-secondary'
+                                : 'hover:bg-secondary/50'
+                            }`}
+                            onClick={() => setSelectedUser(chatUser)}
+                          >
+                            <Avatar>
+                              <AvatarFallback>
+                                {getInitials(chatUser.firstName, chatUser.lastName)}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium truncate">
+                                {chatUser.firstName} {chatUser.lastName}
+                              </p>
+                              <p className="text-xs text-muted-foreground">Admin</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </ScrollArea>
+            )}
+          </div>
         </div>
-      ) : (
-        <Card>
-          <CardContent className="p-8 text-center">
-            <p className="text-neutral-500">Please log in to access chat</p>
-          </CardContent>
-        </Card>
-      )}
-    </MainLayout>
+        
+        {/* Chat area */}
+        <div className="col-span-1 md:col-span-3">
+          {!selectedUser ? (
+            <div className="flex items-center justify-center h-full">
+              <div className="text-center">
+                <User className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                <h3 className="text-lg font-medium">Select a contact</h3>
+                <p className="text-muted-foreground">
+                  Choose a contact from the list to start messaging
+                </p>
+              </div>
+            </div>
+          ) : (
+            <Card className="h-full flex flex-col">
+              <CardHeader className="py-3 px-4 border-b">
+                <div className="flex items-center">
+                  <Avatar className="h-8 w-8 mr-2">
+                    <AvatarFallback>
+                      {getInitials(selectedUser.firstName, selectedUser.lastName)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <CardTitle className="text-base">
+                      {selectedUser.firstName} {selectedUser.lastName}
+                    </CardTitle>
+                    <CardDescription className="text-xs">
+                      {selectedUser.role.charAt(0).toUpperCase() + selectedUser.role.slice(1)}
+                    </CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              
+              <CardContent className="flex-1 overflow-auto p-4">
+                {messagesLoading ? (
+                  <div className="space-y-4">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <div key={i} className={`flex ${i % 2 === 0 ? 'justify-start' : 'justify-end'}`}>
+                        <div className={`max-w-[80%] ${i % 2 === 0 ? 'mr-auto' : 'ml-auto'}`}>
+                          <Skeleton className="h-12 w-[200px] rounded-lg" />
+                          <Skeleton className="h-4 w-24 mt-1" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : !messages?.length ? (
+                  <div className="flex items-center justify-center h-full">
+                    <div className="text-center">
+                      <h3 className="text-lg font-medium">No messages yet</h3>
+                      <p className="text-muted-foreground">
+                        Send a message to start the conversation
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {messages.map((msg: any, index: number) => {
+                      const isSentByMe = msg.fromUserId === user?.id;
+                      
+                      // Group messages by date
+                      const showDateSeparator = index === 0 || 
+                        new Date(msg.sentAt).toDateString() !== 
+                        new Date(messages[index - 1].sentAt).toDateString();
+                      
+                      return (
+                        <React.Fragment key={msg.id || `temp-${index}`}>
+                          {showDateSeparator && (
+                            <div className="relative my-6">
+                              <div className="absolute inset-0 flex items-center">
+                                <Separator />
+                              </div>
+                              <div className="relative flex justify-center">
+                                <span className="bg-background px-2 text-xs text-muted-foreground">
+                                  {format(new Date(msg.sentAt), 'MMMM d, yyyy')}
+                                </span>
+                              </div>
+                            </div>
+                          )}
+                          
+                          <div className={`flex ${isSentByMe ? 'justify-end' : 'justify-start'}`}>
+                            <div className={`max-w-[80%] ${isSentByMe ? 'ml-auto' : 'mr-auto'}`}>
+                              <div 
+                                className={`p-3 rounded-lg ${
+                                  isSentByMe 
+                                    ? 'bg-primary text-primary-foreground' 
+                                    : 'bg-muted'
+                                }`}
+                              >
+                                <p>{msg.content}</p>
+                              </div>
+                              <div className={`flex items-center mt-1 text-xs text-muted-foreground ${isSentByMe ? 'justify-end' : 'justify-start'}`}>
+                                <span>{formatMessageTime(new Date(msg.sentAt))}</span>
+                                {isSentByMe && (
+                                  <span className="ml-1">
+                                    {msg.status === 'read' ? (
+                                      <CheckCheck className="h-3 w-3 text-primary" />
+                                    ) : msg.status === 'delivered' ? (
+                                      <Check className="h-3 w-3" />
+                                    ) : (
+                                      <Check className="h-3 w-3 opacity-50" />
+                                    )}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </React.Fragment>
+                      );
+                    })}
+                    <div ref={messagesEndRef} />
+                  </div>
+                )}
+              </CardContent>
+              
+              <CardFooter className="p-3 border-t">
+                <div className="flex w-full items-center space-x-2">
+                  <Input
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    placeholder="Type your message..."
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        handleSendMessage();
+                      }
+                    }}
+                    disabled={connectionStatus !== 'connected'}
+                  />
+                  <Button 
+                    size="icon" 
+                    onClick={handleSendMessage}
+                    disabled={!message.trim() || connectionStatus !== 'connected'}
+                  >
+                    <Send className="h-4 w-4" />
+                  </Button>
+                </div>
+              </CardFooter>
+            </Card>
+          )}
+        </div>
+      </div>
+    </div>
   );
-};
-
-export default Chat;
+}

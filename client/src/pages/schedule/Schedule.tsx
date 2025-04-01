@@ -1,303 +1,200 @@
-import React, { useContext, useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import React, { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { useAuth } from '@/hooks/use-auth';
+import { format, parseISO } from 'date-fns';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AlertCircle, Clock, MapPin, User } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Subject } from '@shared/schema';
 
-import MainLayout from '@/components/layouts/MainLayout';
-import ClassSchedule from '@/components/schedule/ClassSchedule';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { insertScheduleItemSchema } from '@shared/schema';
-import { postData } from '@/lib/api';
-import { useToast } from '@/hooks/use-toast';
-import { Plus } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+// Map weekday numbers to names
+const DAYS_OF_WEEK = [
+  'Sunday',
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
+];
 
-// Extended schema with validation for forms
-const scheduleFormSchema = insertScheduleItemSchema.extend({
-  subjectId: z.number().positive("Please select a subject"),
-  dayOfWeek: z.number().min(0).max(6),
-  startTime: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$/, "Format: HH:MM:SS"),
-  endTime: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$/, "Format: HH:MM:SS"),
-  roomNumber: z.string().optional(),
-});
+// Convert 24-hour time format to 12-hour format with AM/PM
+function formatTime(time: string): string {
+  const [hours, minutes] = time.split(':').map(Number);
+  const period = hours >= 12 ? 'PM' : 'AM';
+  const displayHours = hours % 12 || 12;
+  return `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
+}
 
-const Schedule = () => {
+export default function Schedule() {
   const { user } = useAuth();
+  const isStudent = user?.role === 'student';
+  const isTeacher = user?.role === 'teacher';
   
-  const queryClient = useQueryClient();
-  const { toast } = useToast();
-  
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<string>('view');
-  
-  // Get schedule based on user role
-  const { data: scheduleItems = [], isLoading } = useQuery({
-    queryKey: [user?.role === 'student' ? `/api/schedule/student/${user?.id}` : `/api/schedule/teacher/${user?.id}`],
-  });
-  
-  // Get all subjects for admin schedule creation
-  const { data: subjects = [] } = useQuery({
-    queryKey: ['/api/subjects'],
-  });
-  
-  // Form for creating new schedule items (admin only)
-  const form = useForm<z.infer<typeof scheduleFormSchema>>({
-    resolver: zodResolver(scheduleFormSchema),
-    defaultValues: {
-      subjectId: 0,
-      dayOfWeek: 1, // Monday
-      startTime: "09:00:00",
-      endTime: "10:30:00",
-      roomNumber: "",
-    },
-  });
-  
-  // Mutation for creating schedule items
-  const createScheduleMutation = useMutation({
-    mutationFn: (data: z.infer<typeof scheduleFormSchema>) => {
-      return postData('/api/schedule', data);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/schedule'] });
-      toast({
-        title: 'Schedule Created',
-        description: 'The schedule item has been created successfully.',
-      });
-      setIsDialogOpen(false);
-      form.reset({
-        subjectId: 0,
-        dayOfWeek: 1,
-        startTime: "09:00:00",
-        endTime: "10:30:00",
-        roomNumber: "",
-      });
-    },
-    onError: (error) => {
-      console.error('Error creating schedule item:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Failed to Create Schedule',
-        description: 'An error occurred while creating the schedule item.',
-      });
-    },
-  });
-  
-  const onSubmit = (data: z.infer<typeof scheduleFormSchema>) => {
-    createScheduleMutation.mutate(data);
-  };
-  
-  const isAdmin = user?.role === 'admin';
-  
-  const weekdays = [
-    { value: 1, label: 'Monday' },
-    { value: 2, label: 'Tuesday' },
-    { value: 3, label: 'Wednesday' },
-    { value: 4, label: 'Thursday' },
-    { value: 5, label: 'Friday' },
-    { value: 6, label: 'Saturday' },
-    { value: 0, label: 'Sunday' },
-  ];
-  
-  return (
-    <MainLayout 
-      title="Class Schedule"
-      subtitle="View your weekly class schedule"
-    >
-      {isAdmin && (
-        <div className="mb-6">
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList>
-              <TabsTrigger value="view">View Schedule</TabsTrigger>
-              <TabsTrigger value="manage">Manage Schedule</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="view">
-              {isLoading ? (
-                <Card>
-                  <CardContent className="p-8 text-center">
-                    <div className="animate-pulse flex flex-col items-center">
-                      <div className="h-8 w-8 bg-neutral-200 rounded-full mb-4"></div>
-                      <div className="h-4 bg-neutral-200 rounded w-3/4 mb-2"></div>
-                      <div className="h-4 bg-neutral-200 rounded w-1/2"></div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ) : (
-                <ClassSchedule scheduleItems={scheduleItems} />
-              )}
-            </TabsContent>
-            
-            <TabsContent value="manage">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
-                  <CardTitle className="text-lg font-heading">Manage Schedule</CardTitle>
-                  <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                    <DialogTrigger asChild>
-                      <Button>
-                        <Plus className="h-4 w-4 mr-2" />
-                        Add Schedule Item
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Add Schedule Item</DialogTitle>
-                        <DialogDescription>
-                          Create a new class schedule item.
-                        </DialogDescription>
-                      </DialogHeader>
-                      
-                      <Form {...form}>
-                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                          <FormField
-                            control={form.control}
-                            name="subjectId"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Subject</FormLabel>
-                                <Select
-                                  onValueChange={(value) => field.onChange(parseInt(value))}
-                                  defaultValue={field.value ? field.value.toString() : undefined}
-                                >
-                                  <FormControl>
-                                    <SelectTrigger>
-                                      <SelectValue placeholder="Select a subject" />
-                                    </SelectTrigger>
-                                  </FormControl>
-                                  <SelectContent>
-                                    {subjects.map((subject) => (
-                                      <SelectItem key={subject.id} value={subject.id.toString()}>
-                                        {subject.name}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          
-                          <FormField
-                            control={form.control}
-                            name="dayOfWeek"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Day of Week</FormLabel>
-                                <Select
-                                  onValueChange={(value) => field.onChange(parseInt(value))}
-                                  defaultValue={field.value.toString()}
-                                >
-                                  <FormControl>
-                                    <SelectTrigger>
-                                      <SelectValue placeholder="Select day" />
-                                    </SelectTrigger>
-                                  </FormControl>
-                                  <SelectContent>
-                                    {weekdays.map((day) => (
-                                      <SelectItem key={day.value} value={day.value.toString()}>
-                                        {day.label}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          
-                          <div className="grid grid-cols-2 gap-4">
-                            <FormField
-                              control={form.control}
-                              name="startTime"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Start Time</FormLabel>
-                                  <FormControl>
-                                    <Input {...field} placeholder="09:00:00" />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                            
-                            <FormField
-                              control={form.control}
-                              name="endTime"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>End Time</FormLabel>
-                                  <FormControl>
-                                    <Input {...field} placeholder="10:30:00" />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                          </div>
-                          
-                          <FormField
-                            control={form.control}
-                            name="roomNumber"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Room Number</FormLabel>
-                                <FormControl>
-                                  <Input {...field} placeholder="Room 101" />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          
-                          <div className="flex justify-end pt-4">
-                            <Button 
-                              type="submit"
-                              disabled={createScheduleMutation.isPending}
-                            >
-                              {createScheduleMutation.isPending ? 'Creating...' : 'Create Schedule Item'}
-                            </Button>
-                          </div>
-                        </form>
-                      </Form>
-                    </DialogContent>
-                  </Dialog>
-                </CardHeader>
-                <CardContent>
-                  {/* Admin schedule management tools would go here */}
-                  <p className="text-neutral-500 text-center py-8">
-                    Use the "Add Schedule Item" button to create new class schedule items.
-                  </p>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
-        </div>
-      )}
+  // Fetch schedule data based on user role
+  const { data: scheduleItems, isLoading, error } = useQuery({
+    queryKey: [isStudent ? '/api/schedule/student' : '/api/schedule/teacher'],
+    queryFn: async () => {
+      const endpoint = isStudent 
+        ? `/api/schedule/student`
+        : `/api/schedule/teacher`;
       
-      {!isAdmin && (
-        <>
-          {isLoading ? (
-            <Card>
-              <CardContent className="p-8 text-center">
-                <div className="animate-pulse flex flex-col items-center">
-                  <div className="h-8 w-8 bg-neutral-200 rounded-full mb-4"></div>
-                  <div className="h-4 bg-neutral-200 rounded w-3/4 mb-2"></div>
-                  <div className="h-4 bg-neutral-200 rounded w-1/2"></div>
-                </div>
+      const response = await fetch(endpoint);
+      if (!response.ok) {
+        throw new Error('Failed to fetch schedule');
+      }
+      return await response.json();
+    },
+    enabled: !!user, // Only run query if user is authenticated
+  });
+
+  // Group schedule items by day of week for easier display
+  const scheduleByDay = React.useMemo(() => {
+    if (!scheduleItems) return {};
+    
+    const grouped: Record<string, any[]> = {};
+    
+    DAYS_OF_WEEK.forEach(day => {
+      grouped[day] = [];
+    });
+    
+    scheduleItems.forEach((item: any) => {
+      const day = DAYS_OF_WEEK[item.dayOfWeek];
+      if (!grouped[day]) {
+        grouped[day] = [];
+      }
+      grouped[day].push(item);
+    });
+    
+    // Sort each day's items by start time
+    Object.keys(grouped).forEach(day => {
+      grouped[day].sort((a: any, b: any) => {
+        const aTime = a.startTime.split(':').map(Number);
+        const bTime = b.startTime.split(':').map(Number);
+        
+        if (aTime[0] !== bTime[0]) {
+          return aTime[0] - bTime[0];
+        }
+        return aTime[1] - bTime[1];
+      });
+    });
+    
+    return grouped;
+  }, [scheduleItems]);
+
+  return (
+    <div className="container mx-auto py-6">
+      <h1 className="text-3xl font-bold mb-6">Weekly Schedule</h1>
+      
+      {isLoading ? (
+        <div className="space-y-4">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Card key={i}>
+              <CardHeader>
+                <Skeleton className="h-8 w-40" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-32 w-full" />
               </CardContent>
             </Card>
-          ) : (
-            <ClassSchedule scheduleItems={scheduleItems} />
-          )}
-        </>
+          ))}
+        </div>
+      ) : error ? (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>
+            Failed to load your schedule. Please try again later.
+          </AlertDescription>
+        </Alert>
+      ) : (
+        <div className="space-y-6">
+          {DAYS_OF_WEEK.map((day, index) => {
+            // Skip weekends unless there are classes scheduled
+            if ((day === 'Saturday' || day === 'Sunday') && 
+                (!scheduleByDay[day] || scheduleByDay[day].length === 0)) {
+              return null;
+            }
+            
+            return (
+              <Card key={day}>
+                <CardHeader className="pb-2">
+                  <CardTitle>{day}</CardTitle>
+                  <CardDescription>
+                    {scheduleByDay[day]?.length 
+                      ? `${scheduleByDay[day].length} class${scheduleByDay[day].length > 1 ? 'es' : ''} scheduled`
+                      : 'No classes scheduled'}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {scheduleByDay[day]?.length ? (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Subject</TableHead>
+                          <TableHead>Time</TableHead>
+                          <TableHead>Room</TableHead>
+                          <TableHead>Teacher</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {scheduleByDay[day].map((item: any) => (
+                          <TableRow key={item.id}>
+                            <TableCell className="font-medium">
+                              {item.subject?.name || 'Unknown Subject'}
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-1">
+                                <Clock className="h-4 w-4 text-muted-foreground" />
+                                {formatTime(item.startTime)} - {formatTime(item.endTime)}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-1">
+                                <MapPin className="h-4 w-4 text-muted-foreground" />
+                                {item.roomNumber || 'TBA'}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-1">
+                                <User className="h-4 w-4 text-muted-foreground" />
+                                {item.subject?.teacher?.firstName 
+                                  ? `${item.subject.teacher.firstName} ${item.subject.teacher.lastName}` 
+                                  : 'Not Assigned'}
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  ) : (
+                    <div className="text-center py-4 text-muted-foreground">
+                      No classes scheduled for {day}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
       )}
-    </MainLayout>
+    </div>
   );
-};
-
-export default Schedule;
+}
