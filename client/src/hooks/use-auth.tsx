@@ -45,7 +45,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     queryFn: async () => {
       try {
         const res = await fetch("/api/user", {
-          credentials: "include" // Include cookies with the request
+          credentials: "include", // Include cookies with the request
+          headers: {
+            "Cache-Control": "no-cache", // Prevent caching
+            "Pragma": "no-cache"
+          }
         });
         if (res.status === 401) return null;
         if (!res.ok) throw new Error("Failed to fetch user data");
@@ -54,7 +58,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.error("User fetch error:", error);
         return null;
       }
-    }
+    },
+    refetchOnMount: true, // Refetch when component mounts
+    refetchOnWindowFocus: true, // Refetch when window gains focus
+    refetchOnReconnect: true, // Refetch when network reconnects
+    staleTime: 5 * 60 * 1000, // 5 minutes - consider data stale after 5 minutes
+    retry: 1 // Retry once if query fails
   });
 
   const loginMutation = useMutation({
