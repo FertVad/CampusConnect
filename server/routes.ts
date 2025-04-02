@@ -413,12 +413,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Получаем информацию о предметах для каждого элемента расписания
       const enrichedSchedule = await Promise.all(schedule.map(async (item) => {
-        const subject = await storage.getSubject(item.subjectId);
+        let subject = await storage.getSubject(item.subjectId);
         
-        // Если предмет найден, добавляем его к элементу расписания
+        // Если предмет не найден, но в процессе импорта был создан предмет с таким ID
+        // попробуем получить его ещё раз или создать новый временный предмет
+        if (!subject) {
+          // Попытка создать отсутствующий предмет 
+          try {
+            console.log(`Creating missing subject with ID: ${item.subjectId} for schedule display`);
+            subject = await storage.createSubject({
+              name: `Предмет #${item.subjectId}`,
+              description: 'Автоматически созданный предмет для расписания',
+              teacherId: 2 // ID учителя по умолчанию
+            });
+            console.log(`Created subject for display: ${JSON.stringify(subject)}`);
+          } catch (subjectError) {
+            console.error(`Error creating subject for ID ${item.subjectId}:`, subjectError);
+            // Если не получилось создать, вернём временный объект
+            subject = { name: 'Неизвестный предмет', id: item.subjectId, description: null, teacherId: null, roomNumber: null };
+          }
+        }
+        
+        // Добавляем информацию о предмете к элементу расписания
         return {
           ...item,
-          subject: subject || { name: 'Неизвестный предмет', id: item.subjectId }
+          subject
         };
       }));
       
