@@ -230,7 +230,7 @@ const AdminDashboard = () => {
                 
                 <Link href="/admin/imported-files" className="flex flex-col items-center p-3 bg-neutral-50 rounded-lg hover:bg-neutral-100 transition-all">
                   <FileUp className="h-6 w-6 text-accent mb-2" />
-                  <span className="text-xs font-medium text-neutral-700">{t('schedule.importedFiles')}</span>
+                  <span className="text-xs font-medium text-neutral-700">{t('common.files')}</span>
                 </Link>
                 
                 <Link href="/requests" className="flex flex-col items-center p-3 bg-neutral-50 rounded-lg hover:bg-neutral-100 transition-all">
