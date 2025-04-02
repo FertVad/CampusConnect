@@ -7,8 +7,25 @@
     @apply border-border;
   }
 
+  html {
+    /* Smooth scrolling behavior for all browsers */
+    scroll-behavior: smooth;
+  }
+
   body {
     @apply font-sans antialiased bg-background text-foreground;
+    /* Prevent content from jumping when scrollbar appears */
+    width: 100%;
+    overflow-x: hidden;
+    /* Force hardware acceleration on all browsers */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Force momentum scrolling for Safari */
+  body, .scrollable-content {
+    -webkit-overflow-scrolling: touch;
   }
 
   .dark {
@@ -57,9 +74,16 @@
   }
 }
 
-/* Glassmorphism styles */
+/* Glassmorphism styles with Safari fallbacks */
 .glass {
-  @apply bg-white/10 backdrop-blur-md border border-white/10;
+  @apply bg-white/10 border border-white/10;
+  /* Multiple backdrop filters for compatibility */
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  /* Fallback for Safari if backdrop-filter is not supported */
+  @supports not ((-webkit-backdrop-filter: blur(12px)) or (backdrop-filter: blur(12px))) {
+    background-color: rgba(255, 255, 255, 0.2);
+  }
 }
 
 .glass-card {
@@ -74,7 +98,7 @@
   @apply glass rounded-lg;
 }
 
-/* Custom scrollbar for dark mode */
+/* Custom scrollbar with Safari support */
 .dark ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -90,4 +114,60 @@
 
 .dark ::-webkit-scrollbar-thumb:hover {
   @apply bg-zinc-600;
+}
+
+/* Cross-browser flexbox fixes */
+.flex-fix {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+}
+
+.flex-col-fix {
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+  -webkit-flex-direction: column;
+  -ms-flex-direction: column;
+  flex-direction: column;
+}
+
+/* Safari-specific fixes */
+@supports (-webkit-touch-callout: none) {
+  /* Fix for fixed position elements in Safari on iOS */
+  .fixed {
+    position: fixed;
+    /* Improve rendering performance */
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+  }
+  
+  /* Fix for grid gaps in Safari */
+  .grid {
+    display: grid;
+    gap: var(--grid-gap, 1rem);
+    /* Safari specific gap fix */
+    grid-gap: var(--grid-gap, 1rem);
+  }
+  
+  /* Fix for sticky positioning in Safari */
+  .sticky {
+    position: -webkit-sticky;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  
+  /* Fix for Safari 100vh issue on iOS */
+  .h-screen {
+    height: 100vh;
+    /* iOS Safari specific fallback */
+    height: -webkit-fill-available;
+  }
+
+  /* Fix for Safari's flex shrink issue */
+  .flex-shrink-0 {
+    -webkit-flex-shrink: 0;
+    flex-shrink: 0;
+  }
 }

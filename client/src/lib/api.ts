@@ -48,8 +48,14 @@ export async function uploadFile(endpoint: string, formData: FormData): Promise<
   return await response.json();
 }
 
-// WebSocket connection for chat
-export function createWebSocketConnection(userId: number, onMessage: (data: any) => void): WebSocket {
+// WebSocket connection for chat with cross-browser compatibility
+export function createWebSocketConnection(userId: number, onMessage: (data: any) => void): WebSocket | null {
+  // Check if WebSocket is supported
+  if (!('WebSocket' in window)) {
+    console.error('WebSocket is not supported by this browser');
+    return null;
+  }
+
   const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
   
   // In development, we use the same origin as the current page
@@ -57,58 +63,135 @@ export function createWebSocketConnection(userId: number, onMessage: (data: any)
   const wsUrl = `${protocol}//${window.location.host}/ws`;
   
   console.log(`Connecting to WebSocket at ${wsUrl}`);
-  const socket = new WebSocket(wsUrl);
   
-  socket.onopen = () => {
-    // Authenticate the WebSocket connection with the user ID
-    socket.send(JSON.stringify({ 
-      type: 'auth', 
-      userId 
-    }));
-    console.log('WebSocket connection established');
-  };
+  let socket: WebSocket;
+  let reconnectAttempts = 0;
+  const maxReconnectAttempts = 5;
   
-  socket.onmessage = (event) => {
-    try {
-      const data = JSON.parse(event.data);
-      onMessage(data);
-    } catch (error) {
-      console.error('Error parsing WebSocket message', error);
-    }
-  };
-  
-  socket.onerror = (error) => {
-    console.error('WebSocket error', error);
-  };
-  
-  socket.onclose = () => {
-    console.log('WebSocket connection closed');
-  };
-  
-  return socket;
-}
-
-// Send chat message through WebSocket
-export function sendChatMessage(socket: WebSocket, toUserId: number, content: string): void {
-  if (socket.readyState === WebSocket.OPEN) {
-    socket.send(JSON.stringify({
-      type: 'message',
-      toUserId,
-      content
-    }));
-  } else {
-    console.error('WebSocket is not connected');
+  try {
+    socket = new WebSocket(wsUrl);
+    
+    // Set a connection timeout for Safari which can hang indefinitely
+    const connectionTimeout = setTimeout(() => {
+      if (socket.readyState !== WebSocket.OPEN) {
+        console.warn('WebSocket connection timeout, closing and retrying...');
+        socket.close();
+        
+        // Try to reconnect if we haven't reached max attempts
+        if (reconnectAttempts < maxReconnectAttempts) {
+          reconnectAttempts++;
+          console.log(`Reconnection attempt ${reconnectAttempts}/${maxReconnectAttempts}`);
+          createWebSocketConnection(userId, onMessage);
+        }
+      }
+    }, 5000); // 5 second timeout
+    
+    socket.onopen = () => {
+      clearTimeout(connectionTimeout);
+      reconnectAttempts = 0;
+      
+      // Authenticate the WebSocket connection with the user ID
+      try {
+        socket.send(JSON.stringify({ 
+          type: 'auth', 
+          userId 
+        }));
+        console.log('WebSocket connection established');
+      } catch (err) {
+        console.error('Error sending authentication message:', err);
+      }
+    };
+    
+    socket.onmessage = (event) => {
+      try {
+        // Safari sometimes fails to parse JSON, so we add additional error handling
+        const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
+        onMessage(data);
+      } catch (error) {
+        console.error('Error parsing WebSocket message', error);
+      }
+    };
+    
+    socket.onerror = (error) => {
+      console.error('WebSocket error', error);
+    };
+    
+    socket.onclose = (event) => {
+      console.log(`WebSocket connection closed: ${event.code} ${event.reason}`);
+      
+      // Attempt to reconnect if not a clean close and we haven't reached max attempts
+      if (!event.wasClean && reconnectAttempts < maxReconnectAttempts) {
+        reconnectAttempts++;
+        console.log(`Reconnection attempt ${reconnectAttempts}/${maxReconnectAttempts}`);
+        
+        // Add delay before reconnecting
+        setTimeout(() => {
+          createWebSocketConnection(userId, onMessage);
+        }, 1000 * reconnectAttempts); // Exponential backoff
+      }
+    };
+    
+    return socket;
+    
+  } catch (error) {
+    console.error('Error creating WebSocket connection:', error);
+    return null;
   }
 }
 
-// Mark message as read through WebSocket
-export function markMessageAsRead(socket: WebSocket, messageId: number): void {
+// Send chat message through WebSocket with Safari compatibility
+export function sendChatMessage(socket: WebSocket | null, toUserId: number, content: string): boolean {
+  if (!socket) {
+    console.error('WebSocket is null');
+    return false;
+  }
+  
   if (socket.readyState === WebSocket.OPEN) {
-    socket.send(JSON.stringify({
-      type: 'markAsRead',
-      messageId
-    }));
+    try {
+      // Create the message payload
+      const payload = JSON.stringify({
+        type: 'message',
+        toUserId,
+        content
+      });
+      
+      // Use a try-catch to handle potential issues in Safari
+      socket.send(payload);
+      return true;
+    } catch (error) {
+      console.error('Error sending chat message:', error);
+      return false;
+    }
   } else {
-    console.error('WebSocket is not connected');
+    console.error('WebSocket is not connected, state:', socket.readyState);
+    return false;
+  }
+}
+
+// Mark message as read through WebSocket with Safari compatibility
+export function markMessageAsRead(socket: WebSocket | null, messageId: number): boolean {
+  if (!socket) {
+    console.error('WebSocket is null');
+    return false;
+  }
+  
+  if (socket.readyState === WebSocket.OPEN) {
+    try {
+      // Create the message payload
+      const payload = JSON.stringify({
+        type: 'markAsRead',
+        messageId
+      });
+      
+      // Use a try-catch to handle potential issues in Safari
+      socket.send(payload);
+      return true;
+    } catch (error) {
+      console.error('Error marking message as read:', error);
+      return false;
+    }
+  } else {
+    console.error('WebSocket is not connected, state:', socket.readyState);
+    return false;
   }
 }

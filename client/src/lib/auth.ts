@@ -1,8 +1,17 @@
 // This file handles the auth header generation for API requests
 
+/**
+ * Gets the headers needed for authenticated requests
+ * Safari requires consistent headers to maintain cookies properly
+ */
 export function getAuthHeaders(): HeadersInit {
-  // No custom headers needed since we're using cookies for authentication
-  return {};
+  // Additional headers needed for Safari compatibility
+  return {
+    // Prevents browsers from automatically handling redirects
+    'X-Requested-With': 'XMLHttpRequest',
+    // Common browser compatibility header
+    'Accept': 'application/json, text/plain, */*',
+  };
 }
 
 // Function to check if a user has a specific role

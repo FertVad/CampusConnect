@@ -7,11 +7,11 @@ import { User as SelectUser } from "@shared/schema";
 import { createDatabaseStorage } from "./db/storage";
 import { migrateDatabase, seedDatabase } from "./db/migrations";
 
-// Import storage module, but we'll replace it with our DB storage
-import { storage as memStorage } from "./storage";
+// Import storage module and IStorage interface
+import { storage as memStorage, IStorage } from "./storage";
 
 // Create a variable to hold our storage implementation
-let storage = memStorage;
+let storage: IStorage = memStorage;
 
 declare global {
   namespace Express {
@@ -59,8 +59,8 @@ export async function initializeDatabase(): Promise<boolean> {
     }
     
     // Create database storage and replace memory storage
-    const dbStorage = await createDatabaseStorage();
-    storage = dbStorage;
+    // Since createDatabaseStorage() returns IStorage, this is type-safe
+    storage = await createDatabaseStorage();
     
     console.log("Successfully initialized database storage");
     return true;
@@ -72,6 +72,9 @@ export async function initializeDatabase(): Promise<boolean> {
 
 export function setupAuth(app: Express) {
   // Configure session
+  const isProduction = process.env.NODE_ENV === 'production';
+  
+  // Safari-friendly cookie settings
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET || "dev-session-secret", // Should be environment variable in production
     resave: false,
@@ -80,11 +83,13 @@ export function setupAuth(app: Express) {
     cookie: {
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production', // Only use secure in production
-      sameSite: 'lax'
+      secure: isProduction, // Only use secure in production
+      sameSite: isProduction ? 'none' : 'lax', // 'none' required for cross-site cookies in Safari
+      path: '/'
     },
     // Extend session expiration time on each request
-    rolling: true
+    rolling: true,
+    name: 'eduportal.sid' // Custom name helps with identification and debugging
   };
 
   app.set("trust proxy", 1);
