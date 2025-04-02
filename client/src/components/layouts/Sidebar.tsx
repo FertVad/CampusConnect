@@ -3,12 +3,15 @@ import { useAuth } from '@/hooks/use-auth';
 import { 
   Home, Clock, FileText, BarChart2, 
   HelpCircle, Receipt, Award, MessageSquare, 
-  Bell, Settings, Users as UsersIcon
+  Bell, Settings, Users as UsersIcon,
+  FileUp, Database
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const Sidebar = () => {
   const { user } = useAuth();
   const [location] = useLocation();
+  const { t } = useTranslation();
   
   // Menu items based on user role
   const getMenuItems = () => {
@@ -41,10 +44,18 @@ const Sidebar = () => {
     
     // Add admin-specific menu items
     if (user?.role === 'admin') {
+      // Add to main menu
       items[0].items.push({ 
         icon: <UsersIcon className="h-5 w-5 mr-3" />, 
-        label: 'User Management', 
+        label: t('users.title', 'User Management'), 
         href: '/users' 
+      });
+      
+      // Add to Files & Documents menu
+      items[1].items.push({
+        icon: <FileUp className="h-5 w-5 mr-3" />,
+        label: t('admin.importedFiles.title', 'Imported Files'),
+        href: '/admin/imported-files'
       });
     }
     

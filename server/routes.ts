@@ -716,6 +716,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
         [...parseErrors, ...validationErrors]
       );
       
+      // Сохраняем информацию о загруженном файле в базу данных
+      try {
+        const fileInfo = await storage.createImportedFile({
+          originalName: req.file.originalname,
+          storedName: path.basename(req.file.path),
+          filePath: req.file.path,
+          fileSize: req.file.size,
+          mimeType: req.file.mimetype,
+          importType: 'csv',
+          status: result.success > 0 ? 'success' : 'error',
+          itemsCount: result.total,
+          successCount: result.success,
+          errorCount: result.total - result.success,
+          uploadedBy: req.user!.id
+        });
+        
+        console.log(`Created import file record: ${fileInfo.id}`);
+      } catch (fileError) {
+        console.error('Error saving file import record:', fileError);
+        // Не прерываем операцию, если не удалось сохранить информацию о файле
+      }
+      
       res.status(200).json({
         message: `Successfully imported ${result.success} out of ${result.total} schedule items.`,
         result
@@ -861,6 +883,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
           validItems,
           [...parseErrors, ...validationErrors]
         );
+        
+        // Сохраняем информацию о загруженном файле в базу данных
+        try {
+          const fileInfo = await storage.createImportedFile({
+            originalName: req.file.originalname,
+            storedName: path.basename(req.file.path),
+            filePath: req.file.path,
+            fileSize: req.file.size,
+            mimeType: req.file.mimetype,
+            importType: 'csv',
+            status: result.success > 0 ? 'success' : 'error',
+            itemsCount: result.total,
+            successCount: result.success,
+            errorCount: result.errors.length,
+            uploadedBy: req.user!.id
+          });
+          
+          console.log(`Created import file record: ${fileInfo.id}`);
+        } catch (fileError) {
+          console.error('Error saving file import record:', fileError);
+          // Не прерываем операцию, если не удалось сохранить информацию о файле
+        }
         
         res.status(200).json({
           message: `Successfully imported ${result.success} out of ${result.total} schedule items.`,

@@ -10,6 +10,7 @@ import Requests from "@/pages/requests/Requests";
 import Chat from "@/pages/chat/Chat";
 import Invoices from "@/pages/documents/Invoices";
 import Certificates from "@/pages/documents/Certificates";
+import ImportedFiles from "@/pages/admin/ImportedFiles";
 import NotFound from "@/pages/not-found";
 import AuthPage from "@/pages/auth-page";
 import { ProtectedRoute } from "@/lib/protected-route";
@@ -77,6 +78,13 @@ const ProtectedCertificates = () => (
   </MainLayout>
 );
 
+// Admin pages
+const ProtectedImportedFiles = () => (
+  <MainLayout>
+    <ImportedFiles />
+  </MainLayout>
+);
+
 function App() {
   return (
     <Switch>
@@ -97,7 +105,7 @@ function App() {
       <ProtectedRoute path="/grades" component={ProtectedGrades} />
       
       {/* User management route (admin only) */}
-      <ProtectedRoute path="/users" component={ProtectedUsers} />
+      <ProtectedRoute path="/users" component={ProtectedUsers} adminOnly={true} />
       
       {/* Requests route */}
       <ProtectedRoute path="/requests" component={ProtectedRequests} />
@@ -109,6 +117,9 @@ function App() {
       {/* Documents routes */}
       <ProtectedRoute path="/invoices" component={ProtectedInvoices} />
       <ProtectedRoute path="/certificates" component={ProtectedCertificates} />
+      
+      {/* Admin routes с проверкой на роль admin */}
+      <ProtectedRoute path="/admin/imported-files" component={ProtectedImportedFiles} adminOnly={true} />
       
       {/* Fallback to 404 */}
       <Route component={NotFound} />

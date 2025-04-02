@@ -598,6 +598,7 @@
     "internalServerError": "Внутренняя ошибка сервера",
     "unauthorized": "Не авторизован",
     "forbidden": "Доступ запрещен",
+    "noAccess": "У вас нет доступа к этой странице",
     "badRequest": "Неверный запрос",
     "invalidCredentials": "Неверные учетные данные",
     "sessionExpired": "Сессия истекла",
@@ -611,5 +612,48 @@
     "goBack": "Вернуться назад",
     "goHome": "На главную",
     "contactSupport": "Связаться с поддержкой"
+  },
+  "admin": {
+    "importedFiles": {
+      "title": "Управление импортированными файлами",
+      "allFiles": "Все импортированные файлы",
+      "allFilesDescription": "Просмотр всех импортированных файлов расписания",
+      "csvFiles": "CSV файлы",
+      "csvFilesDescription": "Файлы, импортированные через загрузку CSV",
+      "googleSheetsFiles": "Google Sheets файлы",
+      "googleSheetsFilesDescription": "Файлы, импортированные через Google Sheets API",
+      "fileName": "Имя файла",
+      "fileType": "Тип файла",
+      "uploadedBy": "Загружено",
+      "dateUploaded": "Дата загрузки",
+      "fileSize": "Размер",
+      "status": "Статус",
+      "items": "Элементы",
+      "total": "Всего",
+      "confirmDelete": "Подтверждение удаления",
+      "confirmDeleteMessage": "Вы уверены, что хотите удалить файл {{fileName}}?",
+      "deleteSuccess": "Файл успешно удален",
+      "deleteError": "Ошибка при удалении файла",
+      "noFiles": "Нет импортированных файлов",
+      "tableCaption": "Список импортированных файлов расписания",
+      "unknownUser": "Пользователь #{{id}}",
+      "statusSuccess": "Успешно",
+      "statusPartial": "Частично",
+      "statusFailed": "Ошибка",
+      "tabs": {
+        "all": "Все файлы",
+        "csv": "CSV",
+        "googleSheets": "Google Sheets"
+      }
+    }
+  },
+  "common": {
+    "cancel": "Отмена",
+    "delete": "Удалить",
+    "success": "Успешно",
+    "error": "Ошибка",
+    "loading": "Загрузка...",
+    "errorLoading": "Ошибка загрузки данных",
+    "actions": "Действия"
   }
 }
