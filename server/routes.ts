@@ -36,15 +36,17 @@ interface Request extends ExpressRequest {
 }
 
 // Set up file upload storage
+// Using import.meta.dirname instead of __dirname for ES modules
+const UPLOADS_DIR = './uploads';
+
 const upload = multer({
   storage: multer.diskStorage({
     destination: function (req, file, cb) {
-      const uploadDir = path.join(__dirname, '../uploads');
       // Create directory if it doesn't exist
-      if (!fs.existsSync(uploadDir)) {
-        fs.mkdirSync(uploadDir, { recursive: true });
+      if (!fs.existsSync(UPLOADS_DIR)) {
+        fs.mkdirSync(UPLOADS_DIR, { recursive: true });
       }
-      cb(null, uploadDir);
+      cb(null, UPLOADS_DIR);
     },
     filename: function (req, file, cb) {
       const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
