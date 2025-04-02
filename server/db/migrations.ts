@@ -199,12 +199,25 @@ export async function seedDatabase() {
   try {
     console.log('Starting database seeding...');
     
-    // Check if users already exist
-    const usersCount = await db.select({ count: sql`count(*)` }).from(schema.users);
+    // Check if admin user exists
+    const adminUser = await db.select().from(schema.users).where(sql`email = 'admin@eduportal.com'`).limit(1);
     
-    if (parseInt(usersCount[0].count as string) > 0) {
-      console.log('Database already has data, skipping seed');
-      return true;
+    if (adminUser.length > 0) {
+      console.log('Admin user already exists, checking for test users...');
+      
+      // Check if we need to add test users (2 teachers and 3 students)
+      const testUsers = await db.select().from(schema.users).where(
+        sql`email IN ('teacher1@eduportal.com', 'teacher2@eduportal.com', 'student1@eduportal.com', 'student2@eduportal.com', 'student3@eduportal.com')`
+      );
+      
+      if (testUsers.length === 5) {
+        console.log('Test users already exist, skipping seed');
+        return true;
+      }
+      
+      console.log('Adding missing test users...');
+    } else {
+      console.log('Creating admin user and test users...');
     }
     
     // Hash password function (implemented in auth.ts, but we need it here for seeding)
@@ -213,59 +226,150 @@ export async function seedDatabase() {
       return bcrypt.hash(password, salt);
     };
     
-    // Insert admin user
-    const adminPass = await hashPassword('admin123');
-    const [adminUser] = await db.insert(schema.users).values({
-      firstName: 'Admin',
-      lastName: 'User',
-      password: adminPass,
-      email: 'admin@eduportal.com',
-      role: 'admin',
-    }).returning();
+    // Insert admin user if it doesn't exist
+    let adminUserRecord;
+    if (adminUser.length === 0) {
+      const adminPass = await hashPassword('admin123');
+      const [newAdmin] = await db.insert(schema.users).values({
+        firstName: 'Admin',
+        lastName: 'User',
+        password: adminPass,
+        email: 'admin@eduportal.com',
+        role: 'admin',
+      }).returning();
+      adminUserRecord = newAdmin;
+      console.log('Created admin user');
+    } else {
+      adminUserRecord = adminUser[0];
+    }
     
     // Insert teachers
     const teacherPass = await hashPassword('teacher123');
-    const [teacher1] = await db.insert(schema.users).values({
-      firstName: 'David',
-      lastName: 'Miller',
-      password: teacherPass,
-      email: 'david@eduportal.com',
-      role: 'teacher',
-    }).returning();
     
-    const [teacher2] = await db.insert(schema.users).values({
-      firstName: 'Sarah',
-      lastName: 'Johnson',
-      password: teacherPass,
-      email: 'sarah@eduportal.com',
-      role: 'teacher',
-    }).returning();
+    // Check if test teachers exist first
+    let teacher1, teacher2;
+    const existingTeacher1 = await db.select().from(schema.users).where(sql`email = 'teacher1@eduportal.com'`).limit(1);
+    const existingTeacher2 = await db.select().from(schema.users).where(sql`email = 'teacher2@eduportal.com'`).limit(1);
     
-    const [teacher3] = await db.insert(schema.users).values({
-      firstName: 'Robert',
-      lastName: 'Chang',
-      password: teacherPass,
-      email: 'robert@eduportal.com',
-      role: 'teacher',
-    }).returning();
+    if (existingTeacher1.length === 0) {
+      const [newTeacher1] = await db.insert(schema.users).values({
+        firstName: 'Иван',
+        lastName: 'Петров',
+        password: teacherPass,
+        email: 'teacher1@eduportal.com',
+        role: 'teacher',
+      }).returning();
+      teacher1 = newTeacher1;
+      console.log('Created test teacher 1');
+    } else {
+      teacher1 = existingTeacher1[0];
+    }
+    
+    if (existingTeacher2.length === 0) {
+      const [newTeacher2] = await db.insert(schema.users).values({
+        firstName: 'Мария',
+        lastName: 'Смирнова',
+        password: teacherPass,
+        email: 'teacher2@eduportal.com',
+        role: 'teacher',
+      }).returning();
+      teacher2 = newTeacher2;
+      console.log('Created test teacher 2');
+    } else {
+      teacher2 = existingTeacher2[0];
+    }
+    
+    // Check if the original teachers from the initial seed exist
+    let teacher3;
+    const existingOldTeacher = await db.select().from(schema.users).where(sql`email = 'david@eduportal.com'`).limit(1);
+    
+    if (existingOldTeacher.length === 0) {
+      const [newTeacher3] = await db.insert(schema.users).values({
+        firstName: 'David',
+        lastName: 'Miller',
+        password: teacherPass,
+        email: 'david@eduportal.com',
+        role: 'teacher',
+      }).returning();
+      teacher3 = newTeacher3;
+    } else {
+      teacher3 = existingOldTeacher[0];
+    }
     
     // Insert students
     const studentPass = await hashPassword('student123');
-    const [student1] = await db.insert(schema.users).values({
-      firstName: 'Alex',
-      lastName: 'Johnson',
-      password: studentPass,
-      email: 'alex@eduportal.com',
-      role: 'student',
-    }).returning();
     
-    const [student2] = await db.insert(schema.users).values({
-      firstName: 'Emma',
-      lastName: 'Wilson',
-      password: studentPass,
-      email: 'emma@eduportal.com',
-      role: 'student',
-    }).returning();
+    // Check if test students exist first
+    let student1, student2, student3;
+    const existingStudent1 = await db.select().from(schema.users).where(sql`email = 'student1@eduportal.com'`).limit(1);
+    const existingStudent2 = await db.select().from(schema.users).where(sql`email = 'student2@eduportal.com'`).limit(1);
+    const existingStudent3 = await db.select().from(schema.users).where(sql`email = 'student3@eduportal.com'`).limit(1);
+    
+    if (existingStudent1.length === 0) {
+      const [newStudent1] = await db.insert(schema.users).values({
+        firstName: 'Алексей',
+        lastName: 'Иванов',
+        password: studentPass,
+        email: 'student1@eduportal.com',
+        role: 'student',
+      }).returning();
+      student1 = newStudent1;
+      console.log('Created test student 1');
+    } else {
+      student1 = existingStudent1[0];
+    }
+    
+    if (existingStudent2.length === 0) {
+      const [newStudent2] = await db.insert(schema.users).values({
+        firstName: 'Екатерина',
+        lastName: 'Сидорова',
+        password: studentPass,
+        email: 'student2@eduportal.com',
+        role: 'student',
+      }).returning();
+      student2 = newStudent2;
+      console.log('Created test student 2');
+    } else {
+      student2 = existingStudent2[0];
+    }
+    
+    if (existingStudent3.length === 0) {
+      const [newStudent3] = await db.insert(schema.users).values({
+        firstName: 'Никита',
+        lastName: 'Попов',
+        password: studentPass,
+        email: 'student3@eduportal.com',
+        role: 'student',
+      }).returning();
+      student3 = newStudent3;
+      console.log('Created test student 3');
+    } else {
+      student3 = existingStudent3[0];
+    }
+    
+    // Check if the original students from the initial seed exist
+    const existingOldStudent1 = await db.select().from(schema.users).where(sql`email = 'alex@eduportal.com'`).limit(1);
+    const existingOldStudent2 = await db.select().from(schema.users).where(sql`email = 'emma@eduportal.com'`).limit(1);
+    
+    if (existingOldStudent1.length === 0) {
+      await db.insert(schema.users).values({
+        firstName: 'Alex',
+        lastName: 'Johnson',
+        password: studentPass,
+        email: 'alex@eduportal.com',
+        role: 'student',
+      });
+    }
+    
+    if (existingOldStudent2.length === 0) {
+      await db.insert(schema.users).values({
+        firstName: 'Emma',
+        lastName: 'Wilson',
+        password: studentPass,
+        email: 'emma@eduportal.com',
+        role: 'student',
+      });
+    }
     
     // Create subjects
     const [math] = await db.insert(schema.subjects).values({
