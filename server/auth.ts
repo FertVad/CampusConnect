@@ -83,8 +83,9 @@ export function setupAuth(app: Express) {
     cookie: {
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
       httpOnly: true,
-      secure: isProduction, // Only use secure in production
-      sameSite: isProduction ? 'none' : 'lax', // 'none' required for cross-site cookies in Safari
+      // In Safari, cookies must be secure even in development mode when using sameSite: 'none'
+      secure: true, // Always use secure for Safari compatibility
+      sameSite: 'none', // Use 'none' for Safari compatibility with cross-origin requests
       path: '/'
     },
     // Extend session expiration time on each request
@@ -160,16 +161,37 @@ export function setupAuth(app: Express) {
   });
 
   app.post("/api/login", (req, res, next) => {
+    console.log("POST /api/login - Login attempt for email:", req.body.email);
+    
     passport.authenticate("local", (err: Error, user: Express.User, info: any) => {
-      if (err) return next(err);
-      if (!user) return res.status(401).json({ message: info?.message || "Authentication failed" });
+      if (err) {
+        console.error("POST /api/login - Authentication error:", err);
+        return next(err);
+      }
+      
+      if (!user) {
+        console.log("POST /api/login - Authentication failed:", info?.message);
+        return res.status(401).json({ message: info?.message || "Authentication failed" });
+      }
 
       req.login(user, (err) => {
-        if (err) return next(err);
+        if (err) {
+          console.error("POST /api/login - Session creation error:", err);
+          return next(err);
+        }
+        
         // Make sure we're setting the correct cookie and returning the user data
-        console.log("User authenticated successfully:", user.id);
+        console.log("POST /api/login - User authenticated successfully:", user.id);
+        console.log("POST /api/login - Session ID:", req.sessionID);
+        
         // Don't expose the password hash to the client
         const { password, ...userWithoutPassword } = user;
+        
+        // Set explicit cookie headers for Safari
+        res.setHeader('Set-Cookie', [
+          `eduportal.sid=${req.sessionID}; Path=/; HttpOnly; Secure; SameSite=None; Max-Age=${7 * 24 * 60 * 60}`
+        ]);
+        
         return res.status(200).json(userWithoutPassword);
       });
     })(req, res, next);
@@ -183,11 +205,17 @@ export function setupAuth(app: Express) {
   });
 
   app.get("/api/user", (req, res) => {
-    if (req.isAuthenticated()) {
+    console.log("GET /api/user - Session ID:", req.sessionID);
+    console.log("GET /api/user - Is Authenticated:", req.isAuthenticated());
+    console.log("GET /api/user - Session:", req.session);
+    
+    if (req.isAuthenticated() && req.user) {
+      console.log("GET /api/user - User ID:", (req.user as any).id);
       // Don't expose the password hash to the client
       const { password, ...userWithoutPassword } = req.user as any;
       return res.json(userWithoutPassword);
     }
+    
     return res.status(401).json({ message: "Not authenticated" });
   });
 }

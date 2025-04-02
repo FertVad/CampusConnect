@@ -47,13 +47,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const res = await fetch("/api/user", {
           credentials: "include", // Include cookies with the request
           headers: {
+            "Accept": "application/json",
+            "X-Requested-With": "XMLHttpRequest", // Helps with CSRF protection
             "Cache-Control": "no-cache", // Prevent caching
             "Pragma": "no-cache"
           }
         });
-        if (res.status === 401) return null;
-        if (!res.ok) throw new Error("Failed to fetch user data");
-        return await res.json();
+        
+        if (res.status === 401) {
+          console.log("Authentication required, user not logged in");
+          return null;
+        }
+        
+        if (!res.ok) {
+          console.error("API error:", res.status, res.statusText);
+          throw new Error("Failed to fetch user data");
+        }
+        
+        const userData = await res.json();
+        console.log("User data fetched successfully:", userData);
+        return userData;
       } catch (error) {
         console.error("User fetch error:", error);
         return null;
@@ -73,6 +86,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Accept": "application/json",
+          "X-Requested-With": "XMLHttpRequest", // Helps with CSRF protection
+          "Cache-Control": "no-cache",
+          "Pragma": "no-cache"
         },
         body: JSON.stringify(credentials),
         credentials: "include", // Include cookies with the request
@@ -110,6 +127,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Accept": "application/json",
+          "X-Requested-With": "XMLHttpRequest", // Helps with CSRF protection
+          "Cache-Control": "no-cache",
+          "Pragma": "no-cache"
         },
         body: JSON.stringify(userData),
         credentials: "include", // Include cookies with the request
@@ -144,6 +165,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Accept": "application/json",
+          "X-Requested-With": "XMLHttpRequest", // Helps with CSRF protection
+          "Cache-Control": "no-cache",
+          "Pragma": "no-cache"
         },
         credentials: "include", // Include cookies with the request
       });
