@@ -414,6 +414,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Маршрут для скачивания шаблона CSV для импорта расписания
+  app.get('/schedule-template.csv', (req, res) => {
+    try {
+      // CSV шаблон с заголовками
+      const csvTemplate = 'Курс,Специальность,Группа,День,Время начала,Время конца,Предмет,Преподаватель,Кабинет\n1,Информатика,ИС-101,Понедельник,09:00,10:30,Математика,Иванов Иван,305\n1,Информатика,ИС-101,Вторник,11:00,12:30,Программирование,Петров Петр,412';
+      
+      // Установка заголовков для скачивания файла
+      res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+      res.setHeader('Content-Disposition', 'attachment; filename=schedule-template.csv');
+      
+      // Отправка CSV данных
+      res.send(csvTemplate);
+    } catch (error) {
+      console.error('Error generating CSV template:', error);
+      res.status(500).send('Ошибка при генерации шаблона CSV');
+    }
+  });
+  
   app.get('/api/schedule/student/:studentId', authenticateUser, async (req, res) => {
     try {
       const studentId = parseInt(req.params.studentId);
