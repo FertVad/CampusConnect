@@ -71,20 +71,20 @@ export async function initializeDatabase(): Promise<boolean> {
 }
 
 export function setupAuth(app: Express) {
-  // Configure session
+  // Configure session - optimized for MemoryStore
   const isProduction = process.env.NODE_ENV === 'production';
   
-  // Safari-friendly cookie settings
+  // Safari-friendly cookie settings and MemoryStore optimization
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET || "dev-session-secret", // Should be environment variable in production
-    resave: true, // Need this for some session stores
-    saveUninitialized: true, // Save all sessions including empty ones
+    resave: false, // For MemoryStore, set to false for better performance
+    saveUninitialized: false, // Only save if we modify the session
     store: storage.sessionStore,
     cookie: {
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
+      maxAge: 14 * 24 * 60 * 60 * 1000, // 14 days in milliseconds for longer persistence
       httpOnly: true,
-      secure: false, // Set to false for development
-      sameSite: 'lax', // Use 'lax' for better compatibility
+      secure: isProduction, // Only use secure cookies in production
+      sameSite: 'lax', // Use 'lax' for better compatibility with Safari
       path: '/'
     },
     // Extend session expiration time on each request

@@ -31,53 +31,14 @@ export class PostgresStorage implements IStorage {
   sessionStore: session.Store;
 
   constructor() {
-    try {
-      // Create PostgreSQL-based session store
-      this.sessionStore = new PgSession({
-        pool: new Pool({
-          connectionString: process.env.DATABASE_URL,
-        }),
-        tableName: 'session',
-        createTableIfMissing: true, // Automatically create table if it doesn't exist
-      });
-      
-      log("Using PostgreSQL for session storage");
-      
-      // Create the sessions table if it doesn't exist already
-      this.ensureSessionTable().catch(err => {
-        log(`Warning: Error creating session table: ${err.message}`);
-      });
-    } catch (error) {
-      log(`Error setting up PostgreSQL session store: ${error}. Falling back to MemoryStore.`);
-      // Fallback to MemoryStore if PG session store fails
-      this.sessionStore = new MemoryStore({
-        checkPeriod: 86400000 // Prune expired entries every 24h
-      });
-    }
-  }
-  
-  // Create the session table if it doesn't exist
-  private async ensureSessionTable(): Promise<void> {
-    try {
-      // In ESM, __dirname is not defined, so we create a path from import.meta.url
-      const __filename = new URL(import.meta.url).pathname;
-      const __dirname = path.dirname(__filename);
-      
-      const sqlPath = path.join(__dirname, 'session-table.sql');
-      const sql = fs.readFileSync(sqlPath, 'utf8');
-      
-      // Execute the SQL to create the session table
-      const pool = new Pool({
-        connectionString: process.env.DATABASE_URL,
-      });
-      
-      await pool.query(sql);
-      log("Session table created or verified successfully");
-      pool.end();
-    } catch (error) {
-      log(`Error creating session table: ${error}`);
-      throw error;
-    }
+    // Use MemoryStore for session storage for better reliability in Replit environment
+    // This is simpler but will lose sessions on server restart
+    this.sessionStore = new MemoryStore({
+      checkPeriod: 86400000, // Prune expired entries every 24h
+      stale: false, // Don't allow stale sessions
+    });
+    
+    log("Using in-memory session storage for better reliability");
   }
 
   // User management

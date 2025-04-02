@@ -1,4 +1,4 @@
-import type { Express, Response, NextFunction } from "express";
+import type { Express, Response, NextFunction, Request as ExpressRequest } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { WebSocketServer } from "ws";
@@ -25,13 +25,14 @@ import {
 } from "./utils/googleSheetsHelper";
 import { parseCsvToScheduleItems, validateScheduleItems, prepareImportResult } from "./utils/csvHelper";
 
-// Extend the Express Request interface to include user property
-declare global {
-  namespace Express {
-    interface Request {
-      user?: User;
-    }
-  }
+// Extend the Express Request interface with session
+interface Request extends ExpressRequest {
+  user?: User;
+  isAuthenticated?: () => boolean;
+  logout?: (cb: (err: any) => void) => void;
+  login?: (user: User, cb: (err: any) => void) => void;
+  session?: any;
+  sessionID?: string;
 }
 
 // Set up file upload storage

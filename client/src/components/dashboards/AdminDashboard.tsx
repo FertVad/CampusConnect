@@ -211,36 +211,28 @@ const AdminDashboard = () => {
             <CardContent className="p-4">
               <h3 className="text-lg font-medium font-heading mb-4">Administrative Tools</h3>
               <div className="grid grid-cols-2 gap-3">
-                <Link href="/users">
-                  <a className="flex flex-col items-center p-3 bg-neutral-50 rounded-lg hover:bg-neutral-100 transition-all">
-                    <Users className="h-6 w-6 text-primary mb-2" />
-                    <span className="text-xs font-medium text-neutral-700">User Management</span>
-                  </a>
+                <Link href="/users" className="flex flex-col items-center p-3 bg-neutral-50 rounded-lg hover:bg-neutral-100 transition-all">
+                  <Users className="h-6 w-6 text-primary mb-2" />
+                  <span className="text-xs font-medium text-neutral-700">User Management</span>
                 </Link>
                 
-                <Link href="/schedule">
-                  <a className="flex flex-col items-center p-3 bg-neutral-50 rounded-lg hover:bg-neutral-100 transition-all">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-secondary mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    <span className="text-xs font-medium text-neutral-700">Schedule</span>
-                  </a>
+                <Link href="/schedule" className="flex flex-col items-center p-3 bg-neutral-50 rounded-lg hover:bg-neutral-100 transition-all">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-secondary mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <span className="text-xs font-medium text-neutral-700">Schedule</span>
                 </Link>
                 
-                <Link href="/requests">
-                  <a className="flex flex-col items-center p-3 bg-neutral-50 rounded-lg hover:bg-neutral-100 transition-all">
-                    <FilePlus className="h-6 w-6 text-accent mb-2" />
-                    <span className="text-xs font-medium text-neutral-700">Requests</span>
-                  </a>
+                <Link href="/requests" className="flex flex-col items-center p-3 bg-neutral-50 rounded-lg hover:bg-neutral-100 transition-all">
+                  <FilePlus className="h-6 w-6 text-accent mb-2" />
+                  <span className="text-xs font-medium text-neutral-700">Requests</span>
                 </Link>
                 
-                <Link href="/invoices">
-                  <a className="flex flex-col items-center p-3 bg-neutral-50 rounded-lg hover:bg-neutral-100 transition-all">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-error mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                    <span className="text-xs font-medium text-neutral-700">Documents</span>
-                  </a>
+                <Link href="/invoices" className="flex flex-col items-center p-3 bg-neutral-50 rounded-lg hover:bg-neutral-100 transition-all">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-error mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <span className="text-xs font-medium text-neutral-700">Documents</span>
                 </Link>
               </div>
             </CardContent>
