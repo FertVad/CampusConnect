@@ -407,7 +407,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Schedule Routes
-  app.get('/api/schedule', authenticateUser, requireRole(['admin']), async (req, res) => {
+  app.get('/api/schedule', authenticateUser, async (req, res) => {
     try {
       const schedule = await storage.getScheduleItems();
       

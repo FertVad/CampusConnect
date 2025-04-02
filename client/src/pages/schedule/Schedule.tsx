@@ -124,8 +124,23 @@ export default function Schedule() {
   const getFilteredScheduleItems = () => {
     if (!scheduleItems) return [];
     
-    // Если отображение всех элементов, возвращаем без фильтрации
+    // Если отображение всех элементов, но также выбрана дата - 
+    // фильтруем по дню недели выбранной даты
     if (viewPeriod === 'all') {
+      // Проверяем, была ли дата явно выбрана пользователем (отличается от текущей)
+      const today = new Date();
+      const isCustomDate = 
+        selectedDate.getDate() !== today.getDate() || 
+        selectedDate.getMonth() !== today.getMonth() || 
+        selectedDate.getFullYear() !== today.getFullYear();
+      
+      // Если дата была явно выбрана, фильтруем по дню недели
+      if (isCustomDate) {
+        const dayOfWeek = selectedDate.getDay();
+        // В нашей системе воскресенье = 0, а в date-fns это 0. 
+        // Поэтому преобразуем, учитывая что суббота = 6, воскресенье = 0
+        return scheduleItems.filter((item: any) => item.dayOfWeek === dayOfWeek);
+      }
       return scheduleItems;
     }
     
@@ -204,6 +219,9 @@ export default function Schedule() {
   }, [filteredScheduleItems]);
 
   // Determine if we should show admin features
+  // Опеределяем, есть ли импортированные данные
+  const hasImportedData = Array.isArray(scheduleItems) && scheduleItems.length > 0;
+  
   const renderContent = () => {
     if (isLoading) {
       return (
@@ -407,9 +425,9 @@ export default function Schedule() {
               
               <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" className="min-w-[240px] justify-start text-left font-normal" disabled={viewPeriod === 'all'}>
+                  <Button variant="outline" className="min-w-[240px] justify-start text-left font-normal">
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {viewPeriod === 'all' ? 'Все расписание' : formattedDate}
+                    {formattedDate}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">

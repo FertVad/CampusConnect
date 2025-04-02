@@ -149,6 +149,12 @@ export default function ScheduleImport() {
 
       // Invalidate schedule queries to reflect the new data
       queryClient.invalidateQueries({ queryKey: ['/api/schedule'] });
+      
+      // Небольшая задержка перед переходом на страницу просмотра
+      setTimeout(() => {
+        // После успешного импорта переключаемся на вкладку просмотра расписания
+        window.location.href = '/schedule';
+      }, 1500);
     } catch (error: any) {
       toast({
         title: 'Import Failed',
