@@ -78,12 +78,12 @@ export function setupAuth(app: Express) {
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET || "dev-session-secret", // Should be environment variable in production
     resave: true, // Set to true to ensure session is saved back to store on each request
-    saveUninitialized: false, // Only save if we modify the session
+    saveUninitialized: true, // Set to true for better compatibility with Safari
     store: storage.sessionStore,
     cookie: {
       maxAge: 14 * 24 * 60 * 60 * 1000, // 14 days in milliseconds for longer persistence
       httpOnly: true,
-      secure: isProduction, // Only use secure cookies in production
+      secure: false, // Set to false even in production for Replit environment
       sameSite: 'lax', // Use 'lax' for better compatibility with Safari
       path: '/'
     },

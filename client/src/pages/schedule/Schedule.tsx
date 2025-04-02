@@ -89,11 +89,15 @@ export default function Schedule() {
   const allSchedule = useQuery({
     queryKey: ['/api/schedule'],
     queryFn: async () => {
-      const response = await fetch('/api/schedule');
+      const response = await fetch('/api/schedule', {
+        credentials: 'include'
+      });
       if (!response.ok) {
         throw new Error('Не удалось загрузить полное расписание');
       }
-      return await response.json();
+      const data = await response.json();
+      console.log('Loaded schedule data:', data);
+      return data;
     },
     enabled: !!user && userIsAdmin, // Только для администраторов
   });
@@ -106,11 +110,15 @@ export default function Schedule() {
         ? `/api/schedule/student`
         : `/api/schedule/teacher`;
       
-      const response = await fetch(endpoint);
+      const response = await fetch(endpoint, {
+        credentials: 'include'
+      });
       if (!response.ok) {
         throw new Error('Не удалось загрузить расписание');
       }
-      return await response.json();
+      const data = await response.json();
+      console.log(`Loaded ${isStudent ? 'student' : 'teacher'} schedule data:`, data);
+      return data;
     },
     enabled: !!user && !userIsAdmin, // Только для студентов и преподавателей
   });
