@@ -1,19 +1,28 @@
 import React, { useState } from 'react';
-import { ScheduleItem, Subject } from '@shared/schema';
+import { ScheduleItem, Subject, User } from '@shared/schema';
 import { formatTime, getDayName } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Book, MapPin, User } from 'lucide-react';
+import { Book, MapPin, User as UserIcon } from 'lucide-react';
+
+// Расширенные типы для обработки данных API
+interface SubjectWithTeacher extends Subject {
+  teacher?: User;
+}
+
+interface ScheduleItemWithSubject extends ScheduleItem {
+  subject: SubjectWithTeacher;
+}
 
 interface ClassScheduleProps {
-  scheduleItems: (ScheduleItem & { subject: Subject })[];
+  scheduleItems: ScheduleItemWithSubject[];
 }
 
 const ClassSchedule: React.FC<ClassScheduleProps> = ({ scheduleItems }) => {
   const [activeDay, setActiveDay] = useState<string>('1'); // Default to Monday
   
   // Group schedule items by day
-  const scheduleByDay = scheduleItems.reduce<Record<string, (ScheduleItem & { subject: Subject })[]>>(
+  const scheduleByDay = scheduleItems.reduce<Record<string, ScheduleItemWithSubject[]>>(
     (acc, item) => {
       const day = item.dayOfWeek.toString();
       if (!acc[day]) {
@@ -88,7 +97,7 @@ const ClassSchedule: React.FC<ClassScheduleProps> = ({ scheduleItems }) => {
                       <h3 className="text-sm font-medium text-neutral-700">{item.subject.name}</h3>
                       <div className="flex flex-wrap gap-x-4 text-xs text-neutral-500 mt-1">
                         <div className="flex items-center">
-                          <User className="h-3 w-3 mr-1" />
+                          <UserIcon className="h-3 w-3 mr-1" />
                           {item.subject.teacher 
                             ? `${item.subject.teacher.firstName} ${item.subject.teacher.lastName}` 
                             : 'Не назначен'}

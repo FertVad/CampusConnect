@@ -83,12 +83,13 @@ const ImportedFilesPage: React.FC = () => {
   const { data: files, isLoading, error } = useQuery({
     queryKey: ['/api/imported-files'],
     queryFn: async () => {
-      const response = await apiRequest('/api/imported-files');
-      if (!Array.isArray(response)) {
+      const response = await apiRequest('GET', '/api/imported-files');
+      const data = await response.json();
+      if (!Array.isArray(data)) {
         return [];
       }
       // Преобразуем строки дат в объекты Date для корректного отображения
-      return response.map((file: ImportedFile) => ({
+      return data.map((file: ImportedFile) => ({
         ...file,
         uploadedAt: new Date(file.uploadedAt)
       }));
@@ -98,7 +99,7 @@ const ImportedFilesPage: React.FC = () => {
   // Мутация для удаления файла
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
-      return await apiRequest(`/api/imported-files/${id}`, 'DELETE');
+      return await apiRequest('DELETE', `/api/imported-files/${id}`);
     },
     onSuccess: () => {
       // Инвалидируем кеш после успешного удаления
@@ -128,8 +129,8 @@ const ImportedFilesPage: React.FC = () => {
   };
 
   // Фильтруем файлы по типу
-  const csvFiles = files?.filter(file => file.importType === 'csv') || [];
-  const googleSheetsFiles = files?.filter(file => file.importType === 'google-sheets') || [];
+  const csvFiles = files?.filter((file: ImportedFile) => file.importType === 'csv') || [];
+  const googleSheetsFiles = files?.filter((file: ImportedFile) => file.importType === 'google-sheets') || [];
 
   return (
     <div className="container mx-auto py-6">

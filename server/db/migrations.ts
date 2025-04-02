@@ -419,47 +419,12 @@ export async function seedDatabase() {
       { studentId: student2.id, subjectId: literature.id },
     ]);
     
-    // Create schedule items
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
+    // Schedule items будут загружены через импорт, поэтому не создаем тестовые данные
     
-    await db.insert(schema.scheduleItems).values([
-      {
-        subjectId: math.id,
-        dayOfWeek: 1, // Monday
-        startTime: '09:00:00',
-        endTime: '10:30:00',
-        roomNumber: '302'
-      },
-      {
-        subjectId: chemistry.id,
-        dayOfWeek: 1, // Monday
-        startTime: '11:00:00',
-        endTime: '13:30:00',
-        roomNumber: 'Lab 201'
-      },
-      {
-        subjectId: physics.id,
-        dayOfWeek: 1, // Monday
-        startTime: '14:00:00',
-        endTime: '15:30:00',
-        roomNumber: '105'
-      },
-      {
-        subjectId: literature.id,
-        dayOfWeek: 2, // Tuesday
-        startTime: '09:00:00',
-        endTime: '10:30:00',
-        roomNumber: '201'
-      },
-      {
-        subjectId: history.id,
-        dayOfWeek: 3, // Wednesday
-        startTime: '13:00:00',
-        endTime: '14:30:00',
-        roomNumber: '103'
-      }
-    ]);
+    // Создаем дату для заданий
+    const currentDate = new Date();
+    const tomorrow = new Date(currentDate);
+    tomorrow.setDate(currentDate.getDate() + 1);
     
     // Create assignments
     const [mathAssignment] = await db.insert(schema.assignments).values({
