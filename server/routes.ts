@@ -410,8 +410,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/schedule', authenticateUser, requireRole(['admin']), async (req, res) => {
     try {
       const schedule = await storage.getScheduleItems();
-      res.json(schedule);
+      
+      // Получаем информацию о предметах для каждого элемента расписания
+      const enrichedSchedule = await Promise.all(schedule.map(async (item) => {
+        const subject = await storage.getSubject(item.subjectId);
+        
+        // Если предмет найден, добавляем его к элементу расписания
+        return {
+          ...item,
+          subject: subject || { name: 'Неизвестный предмет', id: item.subjectId }
+        };
+      }));
+      
+      console.log(`Returning ${enrichedSchedule.length} schedule items with subject info`);
+      res.json(enrichedSchedule);
     } catch (error) {
+      console.error('Error fetching schedule:', error);
       res.status(500).json({ message: "Server error" });
     }
   });
@@ -453,13 +467,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Simplified route for student's own schedule
   app.get('/api/schedule/student', authenticateUser, async (req, res) => {
     try {
-      if (req.user.role !== 'student') {
+      if (!req.user || req.user.role !== 'student') {
         return res.status(403).json({ message: "Access denied" });
       }
       
+      console.log(`Fetching schedule for student with ID: ${req.user.id}`);
       const schedule = await storage.getScheduleItemsByStudent(req.user.id);
+      console.log(`Found ${schedule.length} schedule items for student ${req.user.id}`);
+      
       res.json(schedule);
     } catch (error) {
+      console.error('Error fetching student schedule:', error);
       res.status(500).json({ message: "Server error" });
     }
   });
@@ -483,13 +501,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Simplified route for teacher's own schedule
   app.get('/api/schedule/teacher', authenticateUser, async (req, res) => {
     try {
-      if (req.user.role !== 'teacher' && req.user.role !== 'admin') {
+      if (!req.user || (req.user.role !== 'teacher' && req.user.role !== 'admin')) {
         return res.status(403).json({ message: "Access denied" });
       }
       
+      console.log(`Fetching schedule for teacher with ID: ${req.user.id}`);
       const schedule = await storage.getScheduleItemsByTeacher(req.user.id);
+      console.log(`Found ${schedule.length} schedule items for teacher ${req.user.id}`);
+      
       res.json(schedule);
     } catch (error) {
+      console.error('Error fetching teacher schedule:', error);
       res.status(500).json({ message: "Server error" });
     }
   });
