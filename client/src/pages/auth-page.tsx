@@ -12,31 +12,36 @@ import { z } from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { insertUserSchema } from "@shared/schema";
 import { Loader2 } from "lucide-react";
+import { useTranslation } from 'react-i18next';
 
-// Login schema
-const loginSchema = z.object({
-  email: z.string().email("Please enter a valid email"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+// Create login schema with translations
+const createLoginSchema = (t: any) => z.object({
+  email: z.string().email(t('auth.validations.validEmail')),
+  password: z.string().min(6, t('auth.validations.passwordLength')),
 });
 
-type LoginData = z.infer<typeof loginSchema>;
-
-// Registration schema
-const registerSchema = insertUserSchema.extend({
-  firstName: z.string().min(2, "First name must be at least 2 characters"),
-  lastName: z.string().min(2, "Last name must be at least 2 characters"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-  confirmPassword: z.string().min(6, "Confirm password must be at least 6 characters"),
+// Create registration schema with translations
+const createRegisterSchema = (t: any) => insertUserSchema.extend({
+  firstName: z.string().min(2, t('auth.validations.firstNameLength')),
+  lastName: z.string().min(2, t('auth.validations.lastNameLength')),
+  password: z.string().min(6, t('auth.validations.passwordLength')),
+  confirmPassword: z.string().min(6, t('auth.validations.confirmPasswordLength')),
 }).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
+  message: t('auth.validations.passwordsMatch'),
   path: ["confirmPassword"],
 });
 
-type RegisterData = z.infer<typeof registerSchema>;
+// Define LoginData type
+type LoginData = z.infer<ReturnType<typeof createLoginSchema>>;
+type RegisterData = z.infer<ReturnType<typeof createRegisterSchema>>;
 
 function LoginForm({ onTabChange }: { onTabChange: (tab: string) => void }) {
   const { loginMutation } = useAuth();
   const [, setLocation] = useLocation();
+  const { t } = useTranslation();
+  
+  // Create login schema with translations
+  const loginSchema = createLoginSchema(t);
   
   const form = useForm<LoginData>({
     resolver: zodResolver(loginSchema),
@@ -61,9 +66,11 @@ function LoginForm({ onTabChange }: { onTabChange: (tab: string) => void }) {
   return (
     <Card className="glass border-0 shadow-none">
       <CardHeader>
-        <CardTitle className="text-2xl bg-gradient-to-r from-indigo-400 to-emerald-300 text-transparent bg-clip-text">Login</CardTitle>
+        <CardTitle className="text-2xl bg-gradient-to-r from-indigo-400 to-emerald-300 text-transparent bg-clip-text">
+          {t('auth.login.title')}
+        </CardTitle>
         <CardDescription>
-          Enter your credentials to access your account
+          {t('auth.login.subtitle')}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -74,7 +81,7 @@ function LoginForm({ onTabChange }: { onTabChange: (tab: string) => void }) {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel>{t('auth.login.email')}</FormLabel>
                   <FormControl>
                     <Input placeholder="email@example.com" className="glass" {...field} />
                   </FormControl>
@@ -87,7 +94,7 @@ function LoginForm({ onTabChange }: { onTabChange: (tab: string) => void }) {
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Password</FormLabel>
+                  <FormLabel>{t('auth.login.password')}</FormLabel>
                   <FormControl>
                     <Input type="password" placeholder="********" className="glass" {...field} />
                   </FormControl>
@@ -103,23 +110,23 @@ function LoginForm({ onTabChange }: { onTabChange: (tab: string) => void }) {
               {loginMutation.isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Logging in...
+                  {t('auth.login.loggingIn')}
                 </>
               ) : (
-                "Login"
+                t('auth.login.signIn')
               )}
             </Button>
           </form>
         </Form>
       </CardContent>
       <CardFooter className="flex justify-center text-sm">
-        <span className="text-muted-foreground">Don't have an account?</span>
+        <span className="text-muted-foreground">{t('auth.login.noAccount')}</span>
         <Button 
           variant="link" 
           className="px-2 text-indigo-400 hover:text-indigo-300" 
           onClick={() => onTabChange("register")}
         >
-          Register
+          {t('auth.login.createAccount')}
         </Button>
       </CardFooter>
     </Card>
@@ -129,6 +136,10 @@ function LoginForm({ onTabChange }: { onTabChange: (tab: string) => void }) {
 function RegisterForm({ onTabChange }: { onTabChange: (tab: string) => void }) {
   const { registerMutation } = useAuth();
   const [, setLocation] = useLocation();
+  const { t } = useTranslation();
+  
+  // Create registration schema with translations
+  const registerSchema = createRegisterSchema(t);
   
   const form = useForm<RegisterData>({
     resolver: zodResolver(registerSchema),
@@ -158,9 +169,11 @@ function RegisterForm({ onTabChange }: { onTabChange: (tab: string) => void }) {
   return (
     <Card className="glass border-0 shadow-none">
       <CardHeader>
-        <CardTitle className="text-2xl bg-gradient-to-r from-indigo-400 to-emerald-300 text-transparent bg-clip-text">Create an account</CardTitle>
+        <CardTitle className="text-2xl bg-gradient-to-r from-indigo-400 to-emerald-300 text-transparent bg-clip-text">
+          {t('auth.register.title')}
+        </CardTitle>
         <CardDescription>
-          Enter your information to register for a new account
+          {t('auth.register.subtitle')}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -171,9 +184,9 @@ function RegisterForm({ onTabChange }: { onTabChange: (tab: string) => void }) {
               name="firstName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>First Name</FormLabel>
+                  <FormLabel>{t('auth.register.firstName')}</FormLabel>
                   <FormControl>
-                    <Input placeholder="John" className="glass" {...field} />
+                    <Input placeholder={t('auth.placeholders.firstName')} className="glass" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -184,9 +197,9 @@ function RegisterForm({ onTabChange }: { onTabChange: (tab: string) => void }) {
               name="lastName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Last Name</FormLabel>
+                  <FormLabel>{t('auth.register.lastName')}</FormLabel>
                   <FormControl>
-                    <Input placeholder="Doe" className="glass" {...field} />
+                    <Input placeholder={t('auth.placeholders.lastName')} className="glass" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -197,7 +210,7 @@ function RegisterForm({ onTabChange }: { onTabChange: (tab: string) => void }) {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel>{t('auth.register.email')}</FormLabel>
                   <FormControl>
                     <Input placeholder="email@example.com" className="glass" {...field} />
                   </FormControl>
@@ -210,20 +223,20 @@ function RegisterForm({ onTabChange }: { onTabChange: (tab: string) => void }) {
               name="role"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Role</FormLabel>
+                  <FormLabel>{t('auth.register.role')}</FormLabel>
                   <Select
                     onValueChange={field.onChange}
                     defaultValue={field.value}
                   >
                     <FormControl>
                       <SelectTrigger className="glass">
-                        <SelectValue placeholder="Select a role" />
+                        <SelectValue placeholder={t('auth.placeholders.selectRole')} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent className="glass-modal">
-                      <SelectItem value="student">Student</SelectItem>
-                      <SelectItem value="teacher">Teacher</SelectItem>
-                      <SelectItem value="admin">Administrator</SelectItem>
+                      <SelectItem value="student">{t('users.roles.student')}</SelectItem>
+                      <SelectItem value="teacher">{t('users.roles.teacher')}</SelectItem>
+                      <SelectItem value="admin">{t('users.roles.admin')}</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -235,7 +248,7 @@ function RegisterForm({ onTabChange }: { onTabChange: (tab: string) => void }) {
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Password</FormLabel>
+                  <FormLabel>{t('auth.register.password')}</FormLabel>
                   <FormControl>
                     <Input type="password" placeholder="********" className="glass" {...field} />
                   </FormControl>
@@ -248,7 +261,7 @@ function RegisterForm({ onTabChange }: { onTabChange: (tab: string) => void }) {
               name="confirmPassword"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Confirm Password</FormLabel>
+                  <FormLabel>{t('auth.register.confirmPassword')}</FormLabel>
                   <FormControl>
                     <Input type="password" placeholder="********" className="glass" {...field} />
                   </FormControl>
@@ -264,23 +277,23 @@ function RegisterForm({ onTabChange }: { onTabChange: (tab: string) => void }) {
               {registerMutation.isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creating account...
+                  {t('auth.register.creatingAccount')}
                 </>
               ) : (
-                "Register"
+                t('auth.register.createAccount')
               )}
             </Button>
           </form>
         </Form>
       </CardContent>
       <CardFooter className="flex justify-center text-sm">
-        <span className="text-muted-foreground">Already have an account?</span>
+        <span className="text-muted-foreground">{t('auth.register.alreadyHaveAccount')}</span>
         <Button 
           variant="link" 
           className="px-2 text-indigo-400 hover:text-indigo-300" 
           onClick={() => onTabChange("login")}
         >
-          Login
+          {t('auth.register.signIn')}
         </Button>
       </CardFooter>
     </Card>
@@ -290,6 +303,7 @@ function RegisterForm({ onTabChange }: { onTabChange: (tab: string) => void }) {
 export default function AuthPage() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<string>("login");
+  const { t } = useTranslation();
 
   // Redirect if already logged in
   if (user) {
@@ -300,9 +314,11 @@ export default function AuthPage() {
     <div className="container flex h-screen bg-zinc-900 text-gray-200">
       <div className="hidden lg:flex flex-col justify-center w-1/2 p-10">
         <div className="space-y-6">
-          <h1 className="text-5xl font-bold tracking-tight bg-gradient-to-r from-indigo-400 to-emerald-300 text-transparent bg-clip-text">College Management System</h1>
+          <h1 className="text-5xl font-bold tracking-tight bg-gradient-to-r from-indigo-400 to-emerald-300 text-transparent bg-clip-text">
+            {t('auth.siteTitle')}
+          </h1>
           <p className="text-xl text-muted-foreground">
-            A comprehensive platform for students, teachers, and administrators to manage college resources efficiently.
+            {t('auth.siteDescription')}
           </p>
           <div className="flex flex-col gap-4 mt-8">
             <div className="flex items-center gap-3">
@@ -322,7 +338,7 @@ export default function AuthPage() {
                   />
                 </svg>
               </div>
-              <span className="text-sm font-medium">Access course materials and assignments</span>
+              <span className="text-sm font-medium">{t('auth.features.materials')}</span>
             </div>
             <div className="flex items-center gap-3">
               <div className="rounded-full bg-primary/10 p-1 w-8 h-8 flex items-center justify-center glass">
@@ -341,7 +357,7 @@ export default function AuthPage() {
                   />
                 </svg>
               </div>
-              <span className="text-sm font-medium">Check grades and submit assignments</span>
+              <span className="text-sm font-medium">{t('auth.features.grades')}</span>
             </div>
             <div className="flex items-center gap-3">
               <div className="rounded-full bg-primary/10 p-1 w-8 h-8 flex items-center justify-center glass">
@@ -360,7 +376,7 @@ export default function AuthPage() {
                   />
                 </svg>
               </div>
-              <span className="text-sm font-medium">Communicate with teachers and students</span>
+              <span className="text-sm font-medium">{t('auth.features.communication')}</span>
             </div>
             <div className="flex items-center gap-3">
               <div className="rounded-full bg-primary/10 p-1 w-8 h-8 flex items-center justify-center glass">
@@ -379,7 +395,7 @@ export default function AuthPage() {
                   />
                 </svg>
               </div>
-              <span className="text-sm font-medium">View your class schedule and upcoming events</span>
+              <span className="text-sm font-medium">{t('auth.features.schedule')}</span>
             </div>
           </div>
         </div>
@@ -394,8 +410,12 @@ export default function AuthPage() {
             className="w-full"
           >
             <TabsList className="grid w-full grid-cols-2 mb-8 glass">
-              <TabsTrigger value="login" className="data-[state=active]:bg-primary/20">Login</TabsTrigger>
-              <TabsTrigger value="register" className="data-[state=active]:bg-primary/20">Register</TabsTrigger>
+              <TabsTrigger value="login" className="data-[state=active]:bg-primary/20">
+                {t('auth.login.title')}
+              </TabsTrigger>
+              <TabsTrigger value="register" className="data-[state=active]:bg-primary/20">
+                {t('auth.register.title')}
+              </TabsTrigger>
             </TabsList>
             <TabsContent value="login" className="glass-card p-0 overflow-hidden">
               <LoginForm onTabChange={setActiveTab} />
