@@ -9,7 +9,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { useForm } from 'react-hook-form';
 import { apiRequest } from '@/lib/queryClient';
-import { Loader2, AlertCircle, FileUp, CheckCircle, XCircle, ShieldAlert } from 'lucide-react';
+import { Loader2, AlertCircle, FileUp, CheckCircle, XCircle, ShieldAlert, Download } from 'lucide-react';
 import { queryClient } from '@/lib/queryClient';
 import { useAuth } from '@/hooks/use-auth';
 import { isAdmin } from '@/lib/auth';
@@ -249,7 +249,7 @@ export default function ScheduleImport() {
                       </ol>
                       <p className="text-sm text-gray-600 mb-2">
                         В таблице должны содержаться те же колонки, что и в CSV формате:
-                        <strong>subjectId, dayOfWeek, startTime, endTime, roomNumber</strong>
+                        <strong>Курс, Специальность, Группа, День, Время начала, Время конца, Предмет, Преподаватель, Кабинет</strong>
                       </p>
                     </AlertDescription>
                   </Alert>
@@ -275,6 +275,9 @@ export default function ScheduleImport() {
                     {errors.credentials && (
                       <p className="text-sm text-red-500">{errors.credentials.message}</p>
                     )}
+                    <p className="text-xs text-gray-500">
+                      Вставьте содержимое JSON-файла с ключом доступа к сервисному аккаунту Google Cloud
+                    </p>
                   </div>
 
                   <div className="space-y-2">
@@ -331,23 +334,38 @@ export default function ScheduleImport() {
                   <AlertDescription>
                     <p className="mb-2">CSV файл должен содержать следующие колонки в указанном порядке:</p>
                     <ul className="list-disc pl-5 space-y-1 mb-3">
-                      <li><strong>subjectId</strong> - ID предмета (целое число, должно соответствовать существующему предмету в системе)</li>
-                      <li><strong>dayOfWeek</strong> - День недели (число от 0 до 6, где 0 = Воскресенье, 1 = Понедельник, 6 = Суббота)</li>
-                      <li><strong>startTime</strong> - Время начала занятия (формат: ЧЧ:ММ или ЧЧ:ММ:СС)</li>
-                      <li><strong>endTime</strong> - Время окончания занятия (формат: ЧЧ:ММ или ЧЧ:ММ:СС)</li>
-                      <li><strong>roomNumber</strong> - Номер аудитории (опционально)</li>
+                      <li><strong>Курс</strong> - номер курса (целое число)</li>
+                      <li><strong>Специальность</strong> - название или код специальности</li>
+                      <li><strong>Группа</strong> - название группы</li>
+                      <li><strong>День</strong> - день недели на русском языке (Понедельник, Вторник, и т.д.)</li>
+                      <li><strong>Время начала</strong> - время начала занятия (формат: ЧЧ:ММ)</li>
+                      <li><strong>Время конца</strong> - время окончания занятия (формат: ЧЧ:ММ)</li>
+                      <li><strong>Предмет</strong> - название предмета</li>
+                      <li><strong>Преподаватель</strong> - ФИО преподавателя (Фамилия Имя)</li>
+                      <li><strong>Кабинет</strong> - номер кабинета (опционально)</li>
                     </ul>
                     <p className="mb-2">Пример правильного формата CSV файла:</p>
                     <pre className="bg-gray-100 p-2 rounded text-xs overflow-x-auto mb-3">
-                      subjectId,dayOfWeek,startTime,endTime,roomNumber<br/>
-                      1,1,09:00,10:30,A101<br/>
-                      2,1,11:00,12:30,B202<br/>
-                      3,2,14:00,15:30,C303
+                      Курс,Специальность,Группа,День,Время начала,Время конца,Предмет,Преподаватель,Кабинет<br/>
+                      1,"Информатика","ИВТ-101","Понедельник","09:00","10:30","Математика","Миллер Дэвид","302"<br/>
+                      1,"Информатика","ИВТ-101","Понедельник","11:00","12:30","Химия","Джонсон Сара","Lab 201"<br/>
+                      1,"Информатика","ИВТ-102","Вторник","14:00","15:30","Физика","Чанг Роберт","105"
                     </pre>
                     <p className="text-sm text-gray-600">
                       Первая строка - заголовки колонок. Все последующие строки - данные занятий.
                       Расписание может быть на любой период (семестр, месяц, учебный год) без ограничений.
+                      Система автоматически создаст недостающие элементы (курсы, специальности, группы, предметы).
                     </p>
+                    <div className="mt-3">
+                      <a 
+                        href="/schedule-template.csv" 
+                        download 
+                        className="inline-flex items-center text-blue-600 hover:text-blue-800"
+                      >
+                        <Download className="h-4 w-4 mr-1" /> 
+                        Скачать шаблон CSV файла
+                      </a>
+                    </div>
                   </AlertDescription>
                 </Alert>
                 
