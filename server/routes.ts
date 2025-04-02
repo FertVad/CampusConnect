@@ -54,28 +54,17 @@ const upload = multer({
 
 // Auth middleware - Use passport.js authentication
 const authenticateUser = async (req: Request, res: Response, next: NextFunction) => {
-  // Check if user is authenticated via Passport session
   if (req.isAuthenticated() && req.user) {
-    // User is already authenticated
+    // User is already authenticated via session
     return next();
   }
   
-  // Legacy header-based auth for backward compatibility
-  const userId = req.headers['user-id'];
+  // Debug logging - should not happen in production
+  console.log(`Auth check - Session ID: ${req.sessionID}`);
+  console.log(`Auth check - Is Authenticated: ${req.isAuthenticated()}`);
   
-  if (!userId) {
-    return res.status(401).json({ message: "Unauthorized - Please log in" });
-  }
-  
-  const user = await storage.getUser(Number(userId));
-  
-  if (!user) {
-    return res.status(401).json({ message: "Unauthorized - Invalid user" });
-  }
-  
-  // Attach user to request
-  req.user = user;
-  next();
+  // If we reach here, user is not authenticated
+  return res.status(401).json({ message: "Unauthorized - Please log in" });
 };
 
 // Role check middleware
