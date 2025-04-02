@@ -1,37 +1,49 @@
-import React, { useContext } from 'react';
-
+import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import StatusCard from '@/components/cards/StatusCard';
 import AssignmentList from '@/components/assignments/AssignmentList';
 import ClassSchedule from '@/components/schedule/ClassSchedule';
-import Calendar from '@/components/calendar/Calendar';
 import NotificationList from '@/components/notifications/NotificationList';
-import { Separator } from '@/components/ui/separator';
-import { Card, CardContent } from '@/components/ui/card';
-import { BarChart2, Book, Calendar as CalendarIcon, Clock } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { 
+  BarChart2, Book, Calendar as CalendarIcon, Clock, 
+  AlertCircle, BookOpen, FileText, Bell 
+} from 'lucide-react';
 import { Link } from 'wouter';
+import { Badge } from '@/components/ui/badge';
 import { calculateGPA } from '@/lib/utils';
-import { Assignment, Notification } from '@shared/schema';
+import { Assignment, Notification, Request, ScheduleItem, Grade, Submission } from '@shared/schema';
 import { apiRequest } from '@/lib/queryClient';
 import { useAuth } from '@/hooks/use-auth';
 
+// Extend Assignment type to include submission info
+interface AssignmentWithSubmission extends Assignment {
+  submission?: Submission;
+}
+
 const StudentDashboard = () => {
   const { user } = useAuth();
-  
+  const { t } = useTranslation();
   
   // Get student assignments
-  const { data: assignments = [] } = useQuery<Assignment[]>({
+  const { data: assignments = [] } = useQuery<AssignmentWithSubmission[]>({
     queryKey: ['/api/assignments/student/' + user?.id],
   });
   
   // Get student grades
-  const { data: grades = [] } = useQuery({
+  const { data: grades = [] } = useQuery<Grade[]>({
     queryKey: ['/api/grades/student/' + user?.id],
   });
   
   // Get schedule
-  const { data: scheduleItems = [] } = useQuery({
+  const { data: scheduleItems = [] } = useQuery<(ScheduleItem & { subject: { name: string } })[]>({
     queryKey: ['/api/schedule/student/' + user?.id],
+  });
+  
+  // Get requests
+  const { data: requests = [] } = useQuery<Request[]>({
+    queryKey: ['/api/requests/student/' + user?.id],
   });
   
   // Get notifications
@@ -42,11 +54,40 @@ const StudentDashboard = () => {
   // Calculate GPA
   const gpa = calculateGPA(grades);
   
-  // Get upcoming assignments
+  // Get upcoming assignments that haven't been completed
   const upcomingAssignments = assignments
     .filter(assignment => new Date(assignment.dueDate) >= new Date())
+    .filter(assignment => !assignment.submission || 
+           (assignment.submission.status !== 'completed' && assignment.submission.status !== 'graded'))
     .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
     .slice(0, 4);
+  
+  // Get today's and tomorrow's schedule
+  const today = new Date();
+  const tomorrow = new Date();
+  tomorrow.setDate(today.getDate() + 1);
+  
+  const todayDayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, etc.
+  const tomorrowDayOfWeek = tomorrow.getDay();
+  
+  const todaySchedule = scheduleItems.filter(item => item.dayOfWeek === todayDayOfWeek);
+  const tomorrowSchedule = scheduleItems.filter(item => item.dayOfWeek === tomorrowDayOfWeek);
+  
+  // Get nearest class
+  const nearestClass = [...todaySchedule, ...tomorrowSchedule].sort((a, b) => {
+    const aTime = new Date();
+    const bTime = new Date();
+    const [aHours, aMinutes] = a.startTime.split(':').map(Number);
+    const [bHours, bMinutes] = b.startTime.split(':').map(Number);
+    
+    aTime.setHours(aHours, aMinutes);
+    bTime.setHours(bHours, bMinutes);
+    
+    if (a.dayOfWeek !== todayDayOfWeek) aTime.setDate(aTime.getDate() + 1);
+    if (b.dayOfWeek !== todayDayOfWeek) bTime.setDate(bTime.getDate() + 1);
+    
+    return aTime.getTime() - bTime.getTime();
+  })[0];
   
   // Mark notification as read
   const handleMarkAsRead = async (id: number) => {
@@ -62,20 +103,31 @@ const StudentDashboard = () => {
     await Promise.all(promises);
   };
   
+  // Calculate attendance percentage (dummy for now)
+  const attendancePercentage = 94;
+  
+  // Calculate completion rate of assignments
+  const completedTasks = assignments.filter(a => 
+    a.submission && (a.submission.status === 'completed' || a.submission.status === 'graded')
+  ).length;
+  const completionRate = Math.round((completedTasks / Math.max(assignments.length, 1)) * 100);
+  
   return (
     <div className="space-y-6">
       {/* Alert for important reminders */}
       {upcomingAssignments.length > 0 && new Date(upcomingAssignments[0].dueDate).getTime() - new Date().getTime() < 1000 * 60 * 60 * 24 && (
-        <div className="bg-error bg-opacity-10 border-l-4 border-error rounded-r-lg p-4 flex items-start">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-error mr-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
+        <div className="bg-destructive bg-opacity-10 border-l-4 border-destructive rounded-r-lg p-4 flex items-start">
+          <AlertCircle className="h-6 w-6 text-destructive mr-3 flex-shrink-0" />
           <div>
-            <h3 className="text-sm font-medium text-error">Important Reminder</h3>
-            <p className="text-sm text-neutral-600 mt-1">Your {upcomingAssignments[0].title} assignment is due soon.</p>
+            <h3 className="text-sm font-medium text-destructive">{t('dashboard.student.importantReminder', 'Важное напоминание')}</h3>
+            <p className="text-sm text-muted-foreground mt-1">
+              {t('dashboard.student.assignmentDueSoon', 'Срок сдачи задания "{{title}}" истекает скоро', {
+                title: upcomingAssignments[0].title
+              })}
+            </p>
             <div className="mt-2">
-              <Link href={`/assignments/${upcomingAssignments[0].id}`} className="text-sm font-medium text-error hover:text-error-dark">
-                View Assignment
+              <Link href={`/assignments/${upcomingAssignments[0].id}`} className="text-sm font-medium text-destructive hover:underline">
+                {t('assignments.view', 'Посмотреть задание')}
               </Link>
             </div>
           </div>
@@ -84,52 +136,58 @@ const StudentDashboard = () => {
       
       {/* Status Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Nearest Class */}
         <StatusCard
-          title="GPA"
-          value={gpa.toString()}
-          change={{
-            value: "Current semester",
-            type: "increase"
-          }}
-          icon={<BarChart2 className="h-6 w-6" />}
+          title={t('dashboard.student.nextClass', 'Ближайшее занятие')}
+          value={nearestClass 
+            ? nearestClass.subject.name 
+            : t('dashboard.student.noClasses', 'Нет занятий')}
+          change={nearestClass ? {
+            value: nearestClass.dayOfWeek === todayDayOfWeek
+              ? t('dashboard.student.today', 'Сегодня, {{time}}', { time: nearestClass.startTime.slice(0, 5) })
+              : t('dashboard.student.tomorrow', 'Завтра, {{time}}', { time: nearestClass.startTime.slice(0, 5) }),
+            type: "neutral"
+          } : undefined}
+          icon={<BookOpen className="h-6 w-6" />}
         />
         
+        {/* Attendance */}
         <StatusCard
-          title="Attendance"
-          value="94%"
+          title={t('dashboard.student.attendance', 'Посещаемость')}
+          value={`${attendancePercentage}%`}
           change={{
-            value: "Down 2% from last month",
-            type: "decrease"
+            value: t('dashboard.student.attendanceRate', 'Ваш показатель посещаемости'),
+            type: attendancePercentage > 90 ? "increase" : attendancePercentage > 75 ? "neutral" : "decrease"
           }}
           icon={<Clock className="h-6 w-6" />}
           iconBgColor="bg-secondary bg-opacity-10"
           iconColor="text-secondary"
         />
         
+        {/* Completed Tasks */}
         <StatusCard
-          title="Completed Tasks"
-          value={`${assignments.filter(a => a.submission?.status === 'completed' || a.submission?.status === 'graded').length}/${assignments.length}`}
+          title={t('dashboard.student.completedTasks', 'Выполненные задания')}
+          value={`${completedTasks}/${assignments.length}`}
           change={{
-            value: `${Math.round((assignments.filter(a => a.submission?.status === 'completed' || a.submission?.status === 'graded').length / Math.max(assignments.length, 1)) * 100)}% completion rate`,
-            type: "increase"
+            value: t('common.percentage', '{{percentage}}%', { percentage: completionRate }),
+            type: completionRate > 75 ? "increase" : completionRate > 50 ? "neutral" : "decrease"
           }}
           icon={<Book className="h-6 w-6" />}
-          iconBgColor="bg-accent bg-opacity-10"
-          iconColor="text-accent"
+          iconBgColor="bg-primary bg-opacity-10"
+          iconColor="text-primary"
         />
         
+        {/* Pending Requests */}
         <StatusCard
-          title="Balance Due"
-          value="$750"
+          title={t('requests.pending', 'Активные заявки')}
+          value={requests.filter(r => r.status === 'pending').length.toString()}
           change={{
-            value: "Due in 15 days",
+            value: t('requests.statuses.pending', 'В ожидании рассмотрения'),
             type: "neutral"
           }}
-          icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>}
-          iconBgColor="bg-error bg-opacity-10"
-          iconColor="text-error"
+          icon={<FileText className="h-6 w-6" />}
+          iconBgColor="bg-warning bg-opacity-10"
+          iconColor="text-warning"
         />
       </div>
       
@@ -137,63 +195,139 @@ const StudentDashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left column (2/3 width) */}
         <div className="lg:col-span-2 space-y-6">
-          <ClassSchedule scheduleItems={scheduleItems} />
-          <AssignmentList assignments={upcomingAssignments} viewOnly />
+          {/* Upcoming Classes */}
+          <Card>
+            <CardHeader>
+              <CardTitle>{t('dashboard.student.nextClass', 'Ближайшее занятие')}</CardTitle>
+              <CardDescription>
+                {t('dashboard.student.scheduledToday', todaySchedule.length === 1 
+                  ? 'У вас запланировано {{count}} занятие сегодня' 
+                  : todaySchedule.length > 1 && todaySchedule.length < 5 
+                    ? 'У вас запланировано {{count}} занятия сегодня'
+                    : 'У вас запланировано {{count}} занятий сегодня', 
+                  { count: todaySchedule.length }
+                )}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ClassSchedule scheduleItems={todaySchedule.length > 0 ? todaySchedule : tomorrowSchedule} />
+            </CardContent>
+          </Card>
+          
+          {/* Current Assignments */}
+          <Card>
+            <CardHeader>
+              <CardTitle>{t('dashboard.student.pendingAssignments', 'Текущие задания')}</CardTitle>
+              <CardDescription>{t('dashboard.student.dueSoon', 'Задания со сроком сдачи скоро')}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {upcomingAssignments.length === 0 ? (
+                <div className="text-center py-6 text-muted-foreground">
+                  {t('assignments.noPending', 'У вас нет ожидающих заданий')}
+                </div>
+              ) : (
+                <AssignmentList assignments={upcomingAssignments} viewOnly />
+              )}
+            </CardContent>
+          </Card>
+          
+          {/* Request History */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <div>
+                <CardTitle>{t('dashboard.student.requestHistory', 'История заявок')}</CardTitle>
+                <CardDescription>{t('dashboard.student.latestRequests', 'Последние заявки')}</CardDescription>
+              </div>
+              <Link href="/requests" className="text-sm font-medium text-primary hover:text-primary-dark">
+                {t('common.actions.view', 'Просмотр')}
+              </Link>
+            </CardHeader>
+            <CardContent>
+              {requests.length === 0 ? (
+                <div className="text-center py-6 text-muted-foreground">
+                  {t('requests.noRequests', 'У вас нет заявок')}
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {requests.slice(0, 3).map(request => (
+                    <div key={request.id} className="p-3 border rounded-lg">
+                      <div className="flex justify-between items-start">
+                        <h4 className="text-sm font-medium">{request.type}</h4>
+                        <Badge variant={
+                          request.status === 'approved' ? 'default' : 
+                          request.status === 'rejected' ? 'destructive' : 'outline'
+                        }>
+                          {t(`requests.statuses.${request.status}`, request.status)}
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {request.createdAt ? new Date(request.createdAt).toLocaleDateString('ru-RU') : ''}
+                      </p>
+                      <p className="text-xs text-foreground mt-2 line-clamp-2">{request.description}</p>
+                      <div className="mt-2">
+                        <Link href={`/requests/${request.id}`} className="text-xs text-primary hover:underline">
+                          {t('common.actions.details', 'Подробнее')}
+                        </Link>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
         
         {/* Right column (1/3 width) */}
         <div className="space-y-6">
-          <Calendar
-            events={assignments.map(assignment => ({
-              date: new Date(assignment.dueDate),
-              type: new Date(assignment.dueDate) < new Date() ? 'error' : 'primary'
-            }))}
-          />
-          
-          <NotificationList
-            notifications={notifications.slice(0, 5)}
-            onMarkAsRead={handleMarkAsRead}
-            onMarkAllAsRead={handleMarkAllAsRead}
-            onViewAll={() => {/* In a real application, this would navigate to notifications page */}}
-          />
+          {/* Notifications */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center justify-between">
+                <span>{t('dashboard.notifications', 'Уведомления')}</span>
+                <Bell className="h-4 w-4 text-muted-foreground" />
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <NotificationList
+                notifications={notifications.slice(0, 5)}
+                onMarkAsRead={handleMarkAsRead}
+                onMarkAllAsRead={handleMarkAllAsRead}
+                onViewAll={() => {/* In a real application, this would navigate to notifications page */}}
+              />
+            </CardContent>
+          </Card>
           
           {/* Quick Links */}
           <Card>
             <CardContent className="p-4">
-              <h3 className="text-lg font-medium font-heading mb-4">Quick Links</h3>
+              <h3 className="text-lg font-medium mb-4">{t('dashboard.quickActions', 'Быстрые действия')}</h3>
               <div className="grid grid-cols-2 gap-3">
                 <Link href="/assignments">
-                  <a className="flex flex-col items-center p-3 bg-neutral-50 rounded-lg hover:bg-neutral-100 transition-all">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-primary mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                    </svg>
-                    <span className="text-xs font-medium text-neutral-700">Assignments</span>
-                  </a>
+                  <div className="flex flex-col items-center p-3 bg-muted rounded-lg hover:bg-accent hover:text-accent-foreground transition-all">
+                    <Book className="h-6 w-6 mb-2" />
+                    <span className="text-xs font-medium">{t('assignments.title', 'Задания')}</span>
+                  </div>
                 </Link>
                 
                 <Link href="/schedule">
-                  <a className="flex flex-col items-center p-3 bg-neutral-50 rounded-lg hover:bg-neutral-100 transition-all">
-                    <CalendarIcon className="h-6 w-6 text-secondary mb-2" />
-                    <span className="text-xs font-medium text-neutral-700">Schedule</span>
-                  </a>
+                  <div className="flex flex-col items-center p-3 bg-muted rounded-lg hover:bg-accent hover:text-accent-foreground transition-all">
+                    <CalendarIcon className="h-6 w-6 mb-2" />
+                    <span className="text-xs font-medium">{t('schedule.title', 'Расписание')}</span>
+                  </div>
                 </Link>
                 
-                <Link href="/chat">
-                  <a className="flex flex-col items-center p-3 bg-neutral-50 rounded-lg hover:bg-neutral-100 transition-all">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-accent mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                    <span className="text-xs font-medium text-neutral-700">Chat</span>
-                  </a>
+                <Link href="/requests/new">
+                  <div className="flex flex-col items-center p-3 bg-muted rounded-lg hover:bg-accent hover:text-accent-foreground transition-all">
+                    <FileText className="h-6 w-6 mb-2" />
+                    <span className="text-xs font-medium">{t('requests.add', 'Создать заявку')}</span>
+                  </div>
                 </Link>
                 
-                <Link href="/invoices">
-                  <a className="flex flex-col items-center p-3 bg-neutral-50 rounded-lg hover:bg-neutral-100 transition-all">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-error mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                    <span className="text-xs font-medium text-neutral-700">Invoices</span>
-                  </a>
+                <Link href="/grades">
+                  <div className="flex flex-col items-center p-3 bg-muted rounded-lg hover:bg-accent hover:text-accent-foreground transition-all">
+                    <BarChart2 className="h-6 w-6 mb-2" />
+                    <span className="text-xs font-medium">{t('grades.title', 'Оценки')}</span>
+                  </div>
                 </Link>
               </div>
             </CardContent>

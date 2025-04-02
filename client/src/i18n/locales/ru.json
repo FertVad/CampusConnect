@@ -168,7 +168,18 @@
     }
   },
   "dashboard": {
+    "title": "{{role}} Панель управления",
     "welcome": "Добро пожаловать, {{name}}!",
+    "welcome": {
+      "title": "Добро пожаловать",
+      "guest": "Добро пожаловать в Образовательный Портал"
+    },
+    "greeting": {
+      "morning": "Доброе утро",
+      "afternoon": "Добрый день",
+      "evening": "Добрый вечер"
+    },
+    "loginRequired": "Пожалуйста, войдите в систему для просмотра вашей панели управления.",
     "overview": "Обзор",
     "statistics": "Статистика",
     "recentActivity": "Недавняя активность",
@@ -184,7 +195,62 @@
     "messages": "Сообщения",
     "settings": "Настройки",
     "help": "Помощь",
-    "logout": "Выход"
+    "logout": "Выход",
+    
+    "student": {
+      "nextClass": "Ближайшее занятие",
+      "classes": "Ваши ближайшие занятия",
+      "scheduledToday": "У вас запланировано занятий сегодня",
+      "pendingAssignments": "Текущие задания",
+      "dueSoon": "Задания со сроком сдачи скоро",
+      "requestHistory": "История заявок",
+      "latestRequests": "Последние заявки",
+      "recentGrades": "Недавние оценки",
+      "newGrades": "Новых оценок получено",
+      "attendance": "Посещаемость",
+      "attendanceRate": "Показатель посещаемости",
+      "completedTasks": "Выполненные задания",
+      "balanceDue": "Задолженность"
+    },
+    
+    "teacher": {
+      "schedule": "Расписание занятий",
+      "timetable": "Ваше расписание преподавания",
+      "classesToday": "Занятий для преподавания сегодня",
+      "classGroups": "Список групп и предметов",
+      "yourClasses": "Ваши предметы",
+      "grading": "Задания для оценки",
+      "pendingSubmissions": "Ожидающие проверки работы",
+      "needGrading": "Заданий требуют оценки",
+      "studentActivity": "Активность студентов",
+      "studentHelp": "Студентам требуется помощь",
+      "newRequests": "Новых запросов от студентов",
+      "assignNewTask": "Назначить задание",
+      "totalStudents": "Всего студентов"
+    },
+    
+    "admin": {
+      "systemStatus": "Состояние системы",
+      "systemHealth": "Общее состояние системы",
+      "operational": "Все системы работают нормально",
+      "userManagement": "Управление пользователями",
+      "userStats": "Статистика пользователей",
+      "activeUsers": "Активных пользователей в системе",
+      "studentsCount": "Студентов",
+      "teachersCount": "Преподавателей",
+      "newRegistrations": "Новые регистрации за 7 дней",
+      "groupSchedule": "Расписание по группам",
+      "scheduleAccess": "Быстрый доступ к редактированию расписания",
+      "pendingApprovals": "Заявки от студентов",
+      "requireApproval": "Элементы, требующие вашего подтверждения",
+      "approvalCount": "Ожидающих подтверждений",
+      "systemEvents": "Системные события",
+      "recentActions": "Последние действия в системе",
+      "adminTools": "Инструменты управления",
+      "addUser": "Добавить пользователя",
+      "importSchedule": "Импорт расписания",
+      "manageSubjects": "Управление предметами"
+    }
   },
   "users": {
     "title": "Пользователи",
