@@ -89,30 +89,36 @@ const ClassSchedule: React.FC<ClassScheduleProps> = ({ scheduleItems }) => {
                 </div>
               ) : (
                 scheduleByDay[day.value].map((item, index) => (
-                  <div key={index} className="flex items-center p-3 hover:bg-neutral-50 rounded-lg transition-all">
-                    <div className="bg-primary-light bg-opacity-20 rounded-lg p-3 mr-4">
+                  <div key={index} className="flex items-center p-4 hover:bg-neutral-50 rounded-lg transition-all border border-gray-100 mb-2">
+                    <div className="bg-primary-light bg-opacity-20 rounded-lg p-3 mr-4 flex-shrink-0">
                       <Book className="h-6 w-6 text-primary" />
                     </div>
-                    <div className="flex-1">
-                      <h3 className="text-sm font-medium text-neutral-700">{item.subject.name}</h3>
-                      <div className="flex flex-wrap gap-x-4 text-xs text-neutral-500 mt-1">
-                        <div className="flex items-center">
-                          <UserIcon className="h-3 w-3 mr-1" />
-                          {item.subject.teacher 
-                            ? `${item.subject.teacher.firstName} ${item.subject.teacher.lastName}` 
-                            : 'Не назначен'}
-                        </div>
-                        <div className="flex items-center">
-                          <MapPin className="h-3 w-3 mr-1" />
-                          {item.roomNumber || item.subject.roomNumber || 'Кабинет не указан'}
+                    <div className="grid grid-cols-3 gap-4 flex-1">
+                      <div className="col-span-2">
+                        <h3 className="text-sm font-medium text-neutral-700">{item.subject.name}</h3>
+                        <div className="grid grid-cols-2 gap-2 mt-2">
+                          <div className="flex items-center text-xs text-neutral-500">
+                            <UserIcon className="h-3 w-3 mr-2 flex-shrink-0" />
+                            <span className="truncate">
+                              {item.subject.teacher 
+                                ? `${item.subject.teacher.firstName} ${item.subject.teacher.lastName}` 
+                                : 'Не назначен'}
+                            </span>
+                          </div>
+                          <div className="flex items-center text-xs text-neutral-500">
+                            <MapPin className="h-3 w-3 mr-2 flex-shrink-0" />
+                            <span className="truncate">
+                              {item.roomNumber || item.subject.roomNumber || 'Кабинет не указан'}
+                            </span>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-medium text-neutral-700">
-                        {formatTime(item.startTime)} - {formatTime(item.endTime)}
-                      </p>
-                      <p className="text-xs text-neutral-500">{getDayName(item.dayOfWeek)}</p>
+                      <div className="text-right flex flex-col justify-center">
+                        <p className="text-sm font-medium text-neutral-700">
+                          {formatTime(item.startTime)} - {formatTime(item.endTime)}
+                        </p>
+                        <p className="text-xs text-neutral-500 mt-1">{getDayName(item.dayOfWeek)}</p>
+                      </div>
                     </div>
                   </div>
                 ))
