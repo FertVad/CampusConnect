@@ -8,6 +8,7 @@ export const assignmentStatusEnum = pgEnum('assignment_status', ['not_started', 
 export const requestStatusEnum = pgEnum('request_status', ['pending', 'approved', 'rejected']);
 export const messageStatusEnum = pgEnum('message_status', ['sent', 'delivered', 'read']);
 export const dayOfWeekEnum = pgEnum('day_of_week', ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье']);
+export const importStatusEnum = pgEnum('import_status', ['success', 'partial', 'failed']);
 
 // Users Table
 export const users = pgTable("users", {
@@ -172,6 +173,24 @@ export const scheduleEntries = pgTable("schedule_entries", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Загруженные файлы импорта расписания
+export const importedFiles = pgTable("imported_files", {
+  id: serial("id").primaryKey(),
+  originalName: text("original_name").notNull(),
+  storedName: text("stored_name").notNull(),
+  filePath: text("file_path").notNull(),
+  fileSize: integer("file_size").notNull(),
+  mimeType: text("mime_type").notNull(),
+  importType: text("import_type").notNull(), // 'csv', 'google-sheets'
+  status: importStatusEnum("status").notNull(),
+  itemsCount: integer("items_count").notNull().default(0),
+  successCount: integer("success_count").notNull().default(0),
+  errorCount: integer("error_count").notNull().default(0),
+  uploadedBy: integer("uploaded_by").references(() => users.id).notNull(),
+  uploadedAt: timestamp("uploaded_at").defaultNow(),
+  errorDetails: text("error_details"),
+});
+
 // Insert Schemas
 export const insertUserSchema = createInsertSchema(users).omit({ 
   id: true,
@@ -252,6 +271,11 @@ export const insertScheduleEntrySchema = createInsertSchema(scheduleEntries).omi
   createdAt: true
 });
 
+export const insertImportedFileSchema = createInsertSchema(importedFiles).omit({
+  id: true,
+  uploadedAt: true
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -298,6 +322,9 @@ export type InsertGroup = z.infer<typeof insertGroupSchema>;
 
 export type ScheduleEntry = typeof scheduleEntries.$inferSelect;
 export type InsertScheduleEntry = z.infer<typeof insertScheduleEntrySchema>;
+
+export type ImportedFile = typeof importedFiles.$inferSelect;
+export type InsertImportedFile = z.infer<typeof insertImportedFileSchema>;
 
 // Login schema
 export const loginSchema = z.object({

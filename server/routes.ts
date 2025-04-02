@@ -411,38 +411,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const schedule = await storage.getScheduleItems();
       
-      // Получаем информацию о предметах для каждого элемента расписания
+      // Получаем информацию о предметах и преподавателях для каждого элемента расписания
       const enrichedSchedule = await Promise.all(schedule.map(async (item) => {
         let subject = await storage.getSubject(item.subjectId);
         
-        // Если предмет не найден, но в процессе импорта был создан предмет с таким ID
-        // попробуем получить его ещё раз или создать новый временный предмет
+        // Если предмет не найден в базе, пропускаем этот элемент расписания
         if (!subject) {
-          // Попытка создать отсутствующий предмет 
-          try {
-            console.log(`Creating missing subject with ID: ${item.subjectId} for schedule display`);
-            subject = await storage.createSubject({
-              name: `Предмет #${item.subjectId}`,
-              description: 'Автоматически созданный предмет для расписания',
-              teacherId: 2 // ID учителя по умолчанию
-            });
-            console.log(`Created subject for display: ${JSON.stringify(subject)}`);
-          } catch (subjectError) {
-            console.error(`Error creating subject for ID ${item.subjectId}:`, subjectError);
-            // Если не получилось создать, вернём временный объект
-            subject = { name: 'Неизвестный предмет', id: item.subjectId, description: null, teacherId: null, roomNumber: null, shortName: null, color: null };
-          }
+          console.log(`Subject with ID ${item.subjectId} not found, skipping schedule item`);
+          return null; 
         }
         
-        // Добавляем информацию о предмете к элементу расписания
+        // Получаем информацию о преподавателе
+        let teacher = null;
+        if (subject.teacherId) {
+          teacher = await storage.getUser(subject.teacherId);
+        }
+        
+        // Добавляем информацию о предмете и преподавателе к элементу расписания
         return {
           ...item,
-          subject
+          subject: {
+            ...subject,
+            teacher
+          }
         };
       }));
       
-      console.log(`Returning ${enrichedSchedule.length} schedule items with subject info`);
-      res.json(enrichedSchedule);
+      // Фильтруем элементы, где предмет не найден
+      const validSchedule = enrichedSchedule.filter(item => item !== null);
+      
+      console.log(`Returning ${validSchedule.length} valid schedule items with subject and teacher info`);
+      res.json(validSchedule);
     } catch (error) {
       console.error('Error fetching schedule:', error);
       res.status(500).json({ message: "Server error" });
@@ -882,6 +881,90 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     }
   );
+  
+  // Imported Files Routes
+  app.get('/api/imported-files', authenticateUser, requireRole(['admin']), async (req, res) => {
+    try {
+      const files = await storage.getImportedFiles();
+      res.json(files);
+    } catch (error) {
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
+  app.get('/api/imported-files/:id', authenticateUser, requireRole(['admin']), async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const file = await storage.getImportedFile(id);
+      
+      if (!file) {
+        return res.status(404).json({ message: "File not found" });
+      }
+      
+      res.json(file);
+    } catch (error) {
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
+  app.get('/api/imported-files/user/:userId', authenticateUser, requireRole(['admin']), async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const files = await storage.getImportedFilesByUser(userId);
+      res.json(files);
+    } catch (error) {
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
+  app.get('/api/imported-files/type/:type', authenticateUser, requireRole(['admin']), async (req, res) => {
+    try {
+      const type = req.params.type as 'csv' | 'google-sheets';
+      
+      if (type !== 'csv' && type !== 'google-sheets') {
+        return res.status(400).json({ message: "Invalid file type. Must be 'csv' or 'google-sheets'" });
+      }
+      
+      const files = await storage.getImportedFilesByType(type);
+      res.json(files);
+    } catch (error) {
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
+  app.delete('/api/imported-files/:id', authenticateUser, requireRole(['admin']), async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const file = await storage.getImportedFile(id);
+      
+      if (!file) {
+        return res.status(404).json({ message: "File not found" });
+      }
+      
+      // Delete the actual file from the filesystem if it exists and is a CSV file
+      if (file.filePath && file.importType === 'csv') {
+        const fullPath = path.join(process.cwd(), file.filePath);
+        try {
+          await fs.promises.access(fullPath);
+          await fs.promises.unlink(fullPath);
+        } catch (err) {
+          console.error(`Could not delete file ${fullPath}:`, err);
+          // Continue with deleting the database record even if the file doesn't exist
+        }
+      }
+      
+      // Delete the database record
+      const success = await storage.deleteImportedFile(id);
+      
+      if (success) {
+        res.status(200).json({ message: "File deleted successfully" });
+      } else {
+        res.status(500).json({ message: "Failed to delete file" });
+      }
+    } catch (error) {
+      res.status(500).json({ message: "Server error" });
+    }
+  });
   
   // Assignment Routes
   app.get('/api/assignments', authenticateUser, requireRole(['admin', 'teacher']), async (req, res) => {

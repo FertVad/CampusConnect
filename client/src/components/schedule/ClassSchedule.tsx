@@ -33,13 +33,13 @@ const ClassSchedule: React.FC<ClassScheduleProps> = ({ scheduleItems }) => {
   });
   
   const days = [
-    { value: '1', label: 'Monday' },
-    { value: '2', label: 'Tuesday' },
-    { value: '3', label: 'Wednesday' },
-    { value: '4', label: 'Thursday' },
-    { value: '5', label: 'Friday' },
-    { value: '0', label: 'Sunday' },
-    { value: '6', label: 'Saturday' },
+    { value: '1', label: 'Понедельник' },
+    { value: '2', label: 'Вторник' },
+    { value: '3', label: 'Среда' },
+    { value: '4', label: 'Четверг' },
+    { value: '5', label: 'Пятница' },
+    { value: '0', label: 'Воскресенье' },
+    { value: '6', label: 'Суббота' },
   ];
   
   // Check if there are any schedule items for a day
@@ -50,7 +50,7 @@ const ClassSchedule: React.FC<ClassScheduleProps> = ({ scheduleItems }) => {
   return (
     <div className="bg-white rounded-lg shadow-sm border border-neutral-100">
       <div className="px-6 py-4 border-b border-neutral-100">
-        <h2 className="text-lg font-medium font-heading text-neutral-700">Class Schedule</h2>
+        <h2 className="text-lg font-medium font-heading text-neutral-700">Расписание занятий</h2>
       </div>
       
       <Tabs defaultValue={activeDay} onValueChange={setActiveDay}>
@@ -76,7 +76,7 @@ const ClassSchedule: React.FC<ClassScheduleProps> = ({ scheduleItems }) => {
             <TabsContent key={day.value} value={day.value} className="space-y-4">
               {!hasScheduleForDay(day.value) ? (
                 <div className="text-center p-8 text-neutral-500">
-                  No classes scheduled for {day.label}
+                  Нет занятий на {day.label}
                 </div>
               ) : (
                 scheduleByDay[day.value].map((item, index) => (
@@ -89,11 +89,13 @@ const ClassSchedule: React.FC<ClassScheduleProps> = ({ scheduleItems }) => {
                       <div className="flex flex-wrap gap-x-4 text-xs text-neutral-500 mt-1">
                         <div className="flex items-center">
                           <User className="h-3 w-3 mr-1" />
-                          {item.subject.teacherId ? `Prof. ID: ${item.subject.teacherId}` : 'No teacher assigned'}
+                          {item.subject.teacher 
+                            ? `${item.subject.teacher.firstName} ${item.subject.teacher.lastName}` 
+                            : 'Не назначен'}
                         </div>
                         <div className="flex items-center">
                           <MapPin className="h-3 w-3 mr-1" />
-                          {item.roomNumber || item.subject.roomNumber || 'Room not specified'}
+                          {item.roomNumber || item.subject.roomNumber || 'Кабинет не указан'}
                         </div>
                       </div>
                     </div>

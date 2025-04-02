@@ -6,7 +6,7 @@ import {
   LoginCredentials,
   // Новые модели
   Specialty, InsertSpecialty, Course, InsertCourse, Group, InsertGroup,
-  ScheduleEntry, InsertScheduleEntry
+  ScheduleEntry, InsertScheduleEntry, ImportedFile, InsertImportedFile
 } from "@shared/schema";
 import session from "express-session";
 import * as expressSession from 'express-session';
@@ -158,6 +158,14 @@ export interface IStorage {
   getOrCreateSpecialty(name: string, code?: string): Promise<Specialty>;
   getOrCreateCourse(number: number, specialtyId: number, academicYear: string): Promise<Course>;
   getOrCreateGroup(name: string, courseId: number): Promise<Group>;
+  
+  // Импортированные файлы
+  getImportedFiles(): Promise<ImportedFile[]>;
+  getImportedFile(id: number): Promise<ImportedFile | undefined>;
+  getImportedFilesByUser(userId: number): Promise<ImportedFile[]>;
+  createImportedFile(fileData: InsertImportedFile): Promise<ImportedFile>;
+  deleteImportedFile(id: number): Promise<boolean>;
+  getImportedFilesByType(type: 'csv' | 'google-sheets'): Promise<ImportedFile[]>;
 }
 
 export class MemStorage implements IStorage {
@@ -178,6 +186,7 @@ export class MemStorage implements IStorage {
   private courses: Map<number, Course>;
   private groups: Map<number, Group>;
   private scheduleEntries: Map<number, ScheduleEntry>;
+  private importedFiles: Map<number, ImportedFile>;
   
   private userIdCounter: number;
   private subjectIdCounter: number;
@@ -196,6 +205,7 @@ export class MemStorage implements IStorage {
   private courseIdCounter: number;
   private groupIdCounter: number;
   private scheduleEntryIdCounter: number;
+  private importedFileIdCounter: number;
   
   sessionStore: expressSession.Store;
   
@@ -217,6 +227,7 @@ export class MemStorage implements IStorage {
     this.courses = new Map();
     this.groups = new Map();
     this.scheduleEntries = new Map();
+    this.importedFiles = new Map();
     
     this.userIdCounter = 1;
     this.subjectIdCounter = 1;
@@ -235,6 +246,7 @@ export class MemStorage implements IStorage {
     this.courseIdCounter = 1;
     this.groupIdCounter = 1;
     this.scheduleEntryIdCounter = 1;
+    this.importedFileIdCounter = 1;
     
     // Настройка MemoryStore для длительного хранения сессий
     this.sessionStore = new MemoryStore({
@@ -378,30 +390,62 @@ export class MemStorage implements IStorage {
       .filter(item => item.subjectId === subjectId);
   }
   
-  async getScheduleItemsByStudent(studentId: number): Promise<(ScheduleItem & { subject: Subject })[]> {
+  async getScheduleItemsByStudent(studentId: number): Promise<(ScheduleItem & { subject: Subject & { teacher?: User } })[]> {
     const subjects = await this.getSubjectsByStudent(studentId);
     const subjectIds = subjects.map(subject => subject.id);
     
     const scheduleItems = Array.from(this.scheduleItems.values())
       .filter(item => subjectIds.includes(item.subjectId));
     
-    return scheduleItems.map(item => {
+    return Promise.all(scheduleItems.map(async item => {
       const subject = this.subjects.get(item.subjectId);
-      return { ...item, subject: subject! };
-    });
+      if (!subject) {
+        throw new Error(`Subject with ID ${item.subjectId} not found for schedule item ${item.id}`);
+      }
+      
+      // Получаем информацию о преподавателе, если он указан
+      let teacher = undefined;
+      if (subject.teacherId) {
+        teacher = this.users.get(subject.teacherId);
+      }
+      
+      return { 
+        ...item, 
+        subject: { 
+          ...subject,
+          teacher
+        } 
+      };
+    }));
   }
   
-  async getScheduleItemsByTeacher(teacherId: number): Promise<(ScheduleItem & { subject: Subject })[]> {
+  async getScheduleItemsByTeacher(teacherId: number): Promise<(ScheduleItem & { subject: Subject & { teacher?: User } })[]> {
     const subjects = await this.getSubjectsByTeacher(teacherId);
     const subjectIds = subjects.map(subject => subject.id);
     
     const scheduleItems = Array.from(this.scheduleItems.values())
       .filter(item => subjectIds.includes(item.subjectId));
     
-    return scheduleItems.map(item => {
+    return Promise.all(scheduleItems.map(async item => {
       const subject = this.subjects.get(item.subjectId);
-      return { ...item, subject: subject! };
-    });
+      if (!subject) {
+        throw new Error(`Subject with ID ${item.subjectId} not found for schedule item ${item.id}`);
+      }
+      
+      // Получаем информацию о преподавателе, если он указан
+      let teacher = undefined;
+      if (subject.teacherId) {
+        teacher = this.users.get(subject.teacherId);
+      }
+      
+      return { 
+        ...item, 
+        subject: { 
+          ...subject,
+          teacher
+        } 
+      };
+    }));
   }
   
   async createScheduleItem(scheduleItemData: InsertScheduleItem): Promise<ScheduleItem> {
@@ -1035,6 +1079,44 @@ export class MemStorage implements IStorage {
       name,
       courseId
     });
+  }
+  
+  // Импортированные файлы
+  async getImportedFiles(): Promise<ImportedFile[]> {
+    return Array.from(this.importedFiles.values());
+  }
+  
+  async getImportedFile(id: number): Promise<ImportedFile | undefined> {
+    return this.importedFiles.get(id);
+  }
+  
+  async getImportedFilesByUser(userId: number): Promise<ImportedFile[]> {
+    return Array.from(this.importedFiles.values())
+      .filter(file => file.uploadedBy === userId);
+  }
+  
+  async getImportedFilesByType(type: 'csv' | 'google-sheets'): Promise<ImportedFile[]> {
+    return Array.from(this.importedFiles.values())
+      .filter(file => file.importType === type);
+  }
+  
+  async createImportedFile(fileData: InsertImportedFile): Promise<ImportedFile> {
+    const id = this.importedFileIdCounter++;
+    const uploadedAt = new Date();
+    
+    const importedFile: ImportedFile = {
+      ...fileData,
+      id,
+      uploadedAt,
+      status: fileData.status || 'success'
+    };
+    
+    this.importedFiles.set(id, importedFile);
+    return importedFile;
+  }
+  
+  async deleteImportedFile(id: number): Promise<boolean> {
+    return this.importedFiles.delete(id);
   }
   
   private seedData() {

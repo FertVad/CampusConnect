@@ -14,10 +14,11 @@ export function formatDate(date: Date | string): string {
   return format(dateObj, 'MMM d, yyyy');
 }
 
-export function formatTime(date: Date | string): string {
-  if (!date) return 'N/A';
-  const dateObj = typeof date === 'string' ? new Date(date) : date;
-  return format(dateObj, 'h:mm a');
+export function formatTime(time: string): string {
+  if (!time) return 'N/A';
+  // Предполагаем, что время уже в формате HH:MM
+  // Поэтому возвращаем его как есть
+  return time;
 }
 
 export function getRelativeTime(date: Date | string): string {
@@ -28,8 +29,8 @@ export function getRelativeTime(date: Date | string): string {
 
 // Day of week functions
 export function getDayName(day: number): string {
-  const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-  return days[day] || 'Unknown';
+  const days = ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
+  return days[day] || 'Неизвестно';
 }
 
 // Status color helpers
