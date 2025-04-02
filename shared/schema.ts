@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, date, time, pgEnum } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, date, time, pgEnum, varchar } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -7,6 +7,7 @@ export const roleEnum = pgEnum('role', ['student', 'teacher', 'admin']);
 export const assignmentStatusEnum = pgEnum('assignment_status', ['not_started', 'in_progress', 'completed', 'graded']);
 export const requestStatusEnum = pgEnum('request_status', ['pending', 'approved', 'rejected']);
 export const messageStatusEnum = pgEnum('message_status', ['sent', 'delivered', 'read']);
+export const dayOfWeekEnum = pgEnum('day_of_week', ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье']);
 
 // Users Table
 export const users = pgTable("users", {
@@ -128,6 +129,47 @@ export const notifications = pgTable("notifications", {
   relatedType: text("related_type"),
 });
 
+// Новые таблицы для структуры Курс-Специальность-Группа
+
+// Специальности
+export const specialties = pgTable("specialties", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull().unique(),
+  code: varchar("code", { length: 50 }),
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Курсы
+export const courses = pgTable("courses", {
+  id: serial("id").primaryKey(),
+  number: integer("number").notNull(), // номер курса (1, 2, 3, 4 и т.д.)
+  specialtyId: integer("specialty_id").references(() => specialties.id).notNull(),
+  academicYear: varchar("academic_year", { length: 20 }).notNull(), // учебный год в формате "2023-2024"
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Группы
+export const groups = pgTable("groups", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 50 }).notNull().unique(), // например, "ИП-21-1"
+  courseId: integer("course_id").references(() => courses.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Записи расписания для групп
+export const scheduleEntries = pgTable("schedule_entries", {
+  id: serial("id").primaryKey(),
+  groupId: integer("group_id").references(() => groups.id).notNull(),
+  dayOfWeek: dayOfWeekEnum("day_of_week").notNull(),
+  startTime: time("start_time").notNull(),
+  endTime: time("end_time").notNull(),
+  subjectId: integer("subject_id").references(() => subjects.id).notNull(),
+  teacherId: integer("teacher_id").references(() => users.id),
+  roomNumber: varchar("room_number", { length: 50 }),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Insert Schemas
 export const insertUserSchema = createInsertSchema(users).omit({ 
   id: true,
@@ -187,6 +229,27 @@ export const insertNotificationSchema = createInsertSchema(notifications).omit({
   isRead: true
 });
 
+// Insert схемы для новых моделей
+export const insertSpecialtySchema = createInsertSchema(specialties).omit({
+  id: true,
+  createdAt: true
+});
+
+export const insertCourseSchema = createInsertSchema(courses).omit({
+  id: true,
+  createdAt: true
+});
+
+export const insertGroupSchema = createInsertSchema(groups).omit({
+  id: true,
+  createdAt: true
+});
+
+export const insertScheduleEntrySchema = createInsertSchema(scheduleEntries).omit({
+  id: true,
+  createdAt: true
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -220,6 +283,19 @@ export type InsertMessage = z.infer<typeof insertMessageSchema>;
 
 export type Notification = typeof notifications.$inferSelect;
 export type InsertNotification = z.infer<typeof insertNotificationSchema>;
+
+// Типы для новых моделей
+export type Specialty = typeof specialties.$inferSelect;
+export type InsertSpecialty = z.infer<typeof insertSpecialtySchema>;
+
+export type Course = typeof courses.$inferSelect;
+export type InsertCourse = z.infer<typeof insertCourseSchema>;
+
+export type Group = typeof groups.$inferSelect;
+export type InsertGroup = z.infer<typeof insertGroupSchema>;
+
+export type ScheduleEntry = typeof scheduleEntries.$inferSelect;
+export type InsertScheduleEntry = z.infer<typeof insertScheduleEntrySchema>;
 
 // Login schema
 export const loginSchema = z.object({

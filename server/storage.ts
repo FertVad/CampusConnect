@@ -3,7 +3,10 @@ import {
   ScheduleItem, InsertScheduleItem, Assignment, InsertAssignment,
   Submission, InsertSubmission, Grade, InsertGrade, Request, InsertRequest,
   Document, InsertDocument, Message, InsertMessage, Notification, InsertNotification,
-  LoginCredentials
+  LoginCredentials,
+  // Новые модели
+  Specialty, InsertSpecialty, Course, InsertCourse, Group, InsertGroup,
+  ScheduleEntry, InsertScheduleEntry
 } from "@shared/schema";
 import session from "express-session";
 import * as expressSession from 'express-session';
@@ -115,6 +118,46 @@ export interface IStorage {
   createNotification(notification: InsertNotification): Promise<Notification>;
   markNotificationAsRead(id: number): Promise<Notification | undefined>;
   deleteNotification(id: number): Promise<boolean>;
+  
+  // Специальности
+  getSpecialties(): Promise<Specialty[]>;
+  getSpecialty(id: number): Promise<Specialty | undefined>;
+  createSpecialty(specialty: InsertSpecialty): Promise<Specialty>;
+  updateSpecialty(id: number, specialtyData: Partial<InsertSpecialty>): Promise<Specialty | undefined>;
+  deleteSpecialty(id: number): Promise<boolean>;
+  
+  // Курсы
+  getCourses(): Promise<Course[]>;
+  getCourse(id: number): Promise<Course | undefined>;
+  getCoursesBySpecialty(specialtyId: number): Promise<Course[]>;
+  createCourse(course: InsertCourse): Promise<Course>;
+  updateCourse(id: number, courseData: Partial<InsertCourse>): Promise<Course | undefined>;
+  deleteCourse(id: number): Promise<boolean>;
+  
+  // Группы
+  getGroups(): Promise<Group[]>;
+  getGroup(id: number): Promise<Group | undefined>;
+  getGroupsByCourse(courseId: number): Promise<Group[]>;
+  createGroup(group: InsertGroup): Promise<Group>;
+  updateGroup(id: number, groupData: Partial<InsertGroup>): Promise<Group | undefined>;
+  deleteGroup(id: number): Promise<boolean>;
+  
+  // Расписание для групп
+  getScheduleEntries(): Promise<ScheduleEntry[]>;
+  getScheduleEntry(id: number): Promise<ScheduleEntry | undefined>;
+  getScheduleEntriesByGroup(groupId: number): Promise<ScheduleEntry[]>;
+  getScheduleEntriesByTeacher(teacherId: number): Promise<ScheduleEntry[]>;
+  getScheduleEntriesBySubject(subjectId: number): Promise<ScheduleEntry[]>;
+  createScheduleEntry(scheduleEntry: InsertScheduleEntry): Promise<ScheduleEntry>;
+  updateScheduleEntry(id: number, scheduleEntryData: Partial<InsertScheduleEntry>): Promise<ScheduleEntry | undefined>;
+  deleteScheduleEntry(id: number): Promise<boolean>;
+  
+  // Поиск и обслуживание расписания
+  getTeacherByName(fullName: string): Promise<User | undefined>;
+  getOrCreateSubject(name: string, teacherId?: number, roomNumber?: string): Promise<Subject>;
+  getOrCreateSpecialty(name: string, code?: string): Promise<Specialty>;
+  getOrCreateCourse(number: number, specialtyId: number, academicYear: string): Promise<Course>;
+  getOrCreateGroup(name: string, courseId: number): Promise<Group>;
 }
 
 export class MemStorage implements IStorage {
@@ -130,6 +173,12 @@ export class MemStorage implements IStorage {
   private messages: Map<number, Message>;
   private notifications: Map<number, Notification>;
   
+  // Новые модели
+  private specialties: Map<number, Specialty>;
+  private courses: Map<number, Course>;
+  private groups: Map<number, Group>;
+  private scheduleEntries: Map<number, ScheduleEntry>;
+  
   private userIdCounter: number;
   private subjectIdCounter: number;
   private enrollmentIdCounter: number;
@@ -141,6 +190,12 @@ export class MemStorage implements IStorage {
   private documentIdCounter: number;
   private messageIdCounter: number;
   private notificationIdCounter: number;
+  
+  // Счетчики для новых моделей
+  private specialtyIdCounter: number;
+  private courseIdCounter: number;
+  private groupIdCounter: number;
+  private scheduleEntryIdCounter: number;
   
   sessionStore: expressSession.Store;
   
@@ -157,6 +212,12 @@ export class MemStorage implements IStorage {
     this.messages = new Map();
     this.notifications = new Map();
     
+    // Инициализация новых хранилищ
+    this.specialties = new Map();
+    this.courses = new Map();
+    this.groups = new Map();
+    this.scheduleEntries = new Map();
+    
     this.userIdCounter = 1;
     this.subjectIdCounter = 1;
     this.enrollmentIdCounter = 1;
@@ -168,6 +229,12 @@ export class MemStorage implements IStorage {
     this.documentIdCounter = 1;
     this.messageIdCounter = 1;
     this.notificationIdCounter = 1;
+    
+    // Инициализация счетчиков для новых моделей
+    this.specialtyIdCounter = 1;
+    this.courseIdCounter = 1;
+    this.groupIdCounter = 1;
+    this.scheduleEntryIdCounter = 1;
     
     // Настройка MemoryStore для длительного хранения сессий
     this.sessionStore = new MemoryStore({
@@ -718,6 +785,258 @@ export class MemStorage implements IStorage {
   }
   
   // Helper method to seed initial data
+  // Specialties
+  async getSpecialties(): Promise<Specialty[]> {
+    return Array.from(this.specialties.values());
+  }
+  
+  async getSpecialty(id: number): Promise<Specialty | undefined> {
+    return this.specialties.get(id);
+  }
+  
+  async createSpecialty(specialtyData: InsertSpecialty): Promise<Specialty> {
+    const id = this.specialtyIdCounter++;
+    const specialty: Specialty = { 
+      ...specialtyData, 
+      id, 
+      createdAt: new Date() 
+    };
+    this.specialties.set(id, specialty);
+    return specialty;
+  }
+  
+  async updateSpecialty(id: number, specialtyData: Partial<InsertSpecialty>): Promise<Specialty | undefined> {
+    const specialty = this.specialties.get(id);
+    if (!specialty) return undefined;
+    
+    const updatedSpecialty = { ...specialty, ...specialtyData };
+    this.specialties.set(id, updatedSpecialty);
+    return updatedSpecialty;
+  }
+  
+  async deleteSpecialty(id: number): Promise<boolean> {
+    return this.specialties.delete(id);
+  }
+  
+  // Courses
+  async getCourses(): Promise<Course[]> {
+    return Array.from(this.courses.values());
+  }
+  
+  async getCourse(id: number): Promise<Course | undefined> {
+    return this.courses.get(id);
+  }
+  
+  async getCoursesBySpecialty(specialtyId: number): Promise<Course[]> {
+    return Array.from(this.courses.values()).filter(course => course.specialtyId === specialtyId);
+  }
+  
+  async createCourse(courseData: InsertCourse): Promise<Course> {
+    const id = this.courseIdCounter++;
+    const course: Course = { 
+      ...courseData, 
+      id, 
+      createdAt: new Date() 
+    };
+    this.courses.set(id, course);
+    return course;
+  }
+  
+  async updateCourse(id: number, courseData: Partial<InsertCourse>): Promise<Course | undefined> {
+    const course = this.courses.get(id);
+    if (!course) return undefined;
+    
+    const updatedCourse = { ...course, ...courseData };
+    this.courses.set(id, updatedCourse);
+    return updatedCourse;
+  }
+  
+  async deleteCourse(id: number): Promise<boolean> {
+    return this.courses.delete(id);
+  }
+  
+  // Groups
+  async getGroups(): Promise<Group[]> {
+    return Array.from(this.groups.values());
+  }
+  
+  async getGroup(id: number): Promise<Group | undefined> {
+    return this.groups.get(id);
+  }
+  
+  async getGroupsByCourse(courseId: number): Promise<Group[]> {
+    return Array.from(this.groups.values()).filter(group => group.courseId === courseId);
+  }
+  
+  async createGroup(groupData: InsertGroup): Promise<Group> {
+    const id = this.groupIdCounter++;
+    const group: Group = { 
+      ...groupData, 
+      id, 
+      createdAt: new Date() 
+    };
+    this.groups.set(id, group);
+    return group;
+  }
+  
+  async updateGroup(id: number, groupData: Partial<InsertGroup>): Promise<Group | undefined> {
+    const group = this.groups.get(id);
+    if (!group) return undefined;
+    
+    const updatedGroup = { ...group, ...groupData };
+    this.groups.set(id, updatedGroup);
+    return updatedGroup;
+  }
+  
+  async deleteGroup(id: number): Promise<boolean> {
+    return this.groups.delete(id);
+  }
+  
+  // Schedule entries
+  async getScheduleEntries(): Promise<ScheduleEntry[]> {
+    return Array.from(this.scheduleEntries.values());
+  }
+  
+  async getScheduleEntry(id: number): Promise<ScheduleEntry | undefined> {
+    return this.scheduleEntries.get(id);
+  }
+  
+  async getScheduleEntriesByGroup(groupId: number): Promise<ScheduleEntry[]> {
+    return Array.from(this.scheduleEntries.values()).filter(entry => entry.groupId === groupId);
+  }
+  
+  async getScheduleEntriesByTeacher(teacherId: number): Promise<ScheduleEntry[]> {
+    const subjects = await this.getSubjectsByTeacher(teacherId);
+    const subjectIds = subjects.map(subject => subject.id);
+    
+    return Array.from(this.scheduleEntries.values())
+      .filter(entry => subjectIds.includes(entry.subjectId));
+  }
+  
+  async getScheduleEntriesBySubject(subjectId: number): Promise<ScheduleEntry[]> {
+    return Array.from(this.scheduleEntries.values())
+      .filter(entry => entry.subjectId === subjectId);
+  }
+  
+  async createScheduleEntry(scheduleEntryData: InsertScheduleEntry): Promise<ScheduleEntry> {
+    const id = this.scheduleEntryIdCounter++;
+    const scheduleEntry: ScheduleEntry = { 
+      ...scheduleEntryData, 
+      id, 
+      createdAt: new Date(),
+      teacherId: scheduleEntryData.teacherId || null,
+      roomNumber: scheduleEntryData.roomNumber || null
+    };
+    this.scheduleEntries.set(id, scheduleEntry);
+    return scheduleEntry;
+  }
+  
+  async updateScheduleEntry(id: number, scheduleEntryData: Partial<InsertScheduleEntry>): Promise<ScheduleEntry | undefined> {
+    const scheduleEntry = this.scheduleEntries.get(id);
+    if (!scheduleEntry) return undefined;
+    
+    const updatedScheduleEntry = { ...scheduleEntry, ...scheduleEntryData };
+    this.scheduleEntries.set(id, updatedScheduleEntry);
+    return updatedScheduleEntry;
+  }
+  
+  async deleteScheduleEntry(id: number): Promise<boolean> {
+    return this.scheduleEntries.delete(id);
+  }
+  
+  // Поиск и создание записей для импорта расписания
+  async getTeacherByName(fullName: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find(user => {
+      const teacherFullName = `${user.lastName} ${user.firstName}`.trim();
+      return user.role === 'teacher' && teacherFullName === fullName;
+    });
+  }
+  
+  async getOrCreateSubject(name: string, teacherId?: number, roomNumber?: string): Promise<Subject> {
+    // Ищем предмет по названию и преподавателю (если указан)
+    const existingSubject = Array.from(this.subjects.values()).find(subject => {
+      if (teacherId) {
+        return subject.name === name && subject.teacherId === teacherId;
+      }
+      return subject.name === name;
+    });
+    
+    if (existingSubject) {
+      // Если нашли предмет, но нужно обновить номер кабинета
+      if (roomNumber && existingSubject.roomNumber !== roomNumber) {
+        return this.updateSubject(existingSubject.id, { roomNumber }) as Promise<Subject>;
+      }
+      return existingSubject;
+    }
+    
+    // Создаем новый предмет
+    return this.createSubject({
+      name,
+      teacherId: teacherId || null,
+      roomNumber: roomNumber || null,
+      description: null
+    });
+  }
+  
+  async getOrCreateSpecialty(name: string, code?: string): Promise<Specialty> {
+    // Ищем специальность по названию
+    const existingSpecialty = Array.from(this.specialties.values()).find(
+      specialty => specialty.name === name
+    );
+    
+    if (existingSpecialty) {
+      // Если нашли специальность, но нужно обновить код
+      if (code && existingSpecialty.code !== code) {
+        return this.updateSpecialty(existingSpecialty.id, { code }) as Promise<Specialty>;
+      }
+      return existingSpecialty;
+    }
+    
+    // Создаем новую специальность
+    return this.createSpecialty({
+      name,
+      code: code || null,
+      description: null
+    });
+  }
+  
+  async getOrCreateCourse(number: number, specialtyId: number, academicYear: string): Promise<Course> {
+    // Ищем курс по номеру, специальности и учебному году
+    const existingCourse = Array.from(this.courses.values()).find(
+      course => course.number === number && 
+               course.specialtyId === specialtyId && 
+               course.academicYear === academicYear
+    );
+    
+    if (existingCourse) {
+      return existingCourse;
+    }
+    
+    // Создаем новый курс
+    return this.createCourse({
+      number,
+      specialtyId,
+      academicYear
+    });
+  }
+  
+  async getOrCreateGroup(name: string, courseId: number): Promise<Group> {
+    // Ищем группу по названию и курсу
+    const existingGroup = Array.from(this.groups.values()).find(
+      group => group.name === name && group.courseId === courseId
+    );
+    
+    if (existingGroup) {
+      return existingGroup;
+    }
+    
+    // Создаем новую группу
+    return this.createGroup({
+      name,
+      courseId
+    });
+  }
+  
   private seedData() {
     // Create users
     const adminUser = this.createUser({
@@ -1011,6 +1330,153 @@ export class MemStorage implements IStorage {
       fromUserId: 5, // Alex
       toUserId: 3, // Sarah
       content: "I will, Professor Johnson. Thank you for the reminder."
+    });
+    
+    // Создание тестовых данных для иерархической структуры расписания
+    
+    // Специальности
+    const computerScience = this.createSpecialty({
+      name: "Информатика и вычислительная техника",
+      code: "09.03.01",
+      description: "Бакалавриат по информатике и вычислительной технике"
+    });
+    
+    const economics = this.createSpecialty({
+      name: "Экономика",
+      code: "38.03.01",
+      description: "Бакалавриат по экономике"
+    });
+    
+    const softwareEngineering = this.createSpecialty({
+      name: "Программная инженерия",
+      code: "09.03.04",
+      description: "Бакалавриат по программной инженерии"
+    });
+    
+    // Курсы
+    const cs1 = this.createCourse({
+      number: 1,
+      specialtyId: 1, // Информатика, 1-й курс
+      academicYear: "2024-2025"
+    });
+    
+    const cs2 = this.createCourse({
+      number: 2,
+      specialtyId: 1, // Информатика, 2-й курс
+      academicYear: "2024-2025"
+    });
+    
+    const econ1 = this.createCourse({
+      number: 1,
+      specialtyId: 2, // Экономика, 1-й курс
+      academicYear: "2024-2025"
+    });
+    
+    const swe1 = this.createCourse({
+      number: 1,
+      specialtyId: 3, // Программная инженерия, 1-й курс
+      academicYear: "2024-2025"
+    });
+    
+    // Группы
+    const csGroup1 = this.createGroup({
+      name: "ИВТ-101",
+      courseId: 1 // Информатика, 1-й курс
+    });
+    
+    const csGroup2 = this.createGroup({
+      name: "ИВТ-102",
+      courseId: 1 // Информатика, 1-й курс
+    });
+    
+    const csGroup3 = this.createGroup({
+      name: "ИВТ-201",
+      courseId: 2 // Информатика, 2-й курс
+    });
+    
+    const econGroup1 = this.createGroup({
+      name: "ЭКО-101",
+      courseId: 3 // Экономика, 1-й курс
+    });
+    
+    const sweGroup1 = this.createGroup({
+      name: "ПИ-101",
+      courseId: 4 // Программная инженерия, 1-й курс
+    });
+    
+    // Записи в расписании
+    // Понедельник для группы ИВТ-101
+    this.createScheduleEntry({
+      groupId: 1, // ИВТ-101
+      subjectId: 1, // Математика
+      dayOfWeek: "Понедельник",
+      startTime: "09:00",
+      endTime: "10:30",
+      roomNumber: "302",
+      teacherId: 2 // Дэвид Миллер
+    });
+    
+    this.createScheduleEntry({
+      groupId: 1, // ИВТ-101
+      subjectId: 2, // Химия
+      dayOfWeek: "Понедельник",
+      startTime: "11:00",
+      endTime: "12:30",
+      roomNumber: "Lab 201",
+      teacherId: 3 // Сара Джонсон
+    });
+    
+    // Вторник для группы ИВТ-101
+    this.createScheduleEntry({
+      groupId: 1, // ИВТ-101
+      subjectId: 3, // Физика
+      dayOfWeek: "Вторник",
+      startTime: "09:00",
+      endTime: "10:30",
+      roomNumber: "105",
+      teacherId: 4 // Роберт Чанг
+    });
+    
+    this.createScheduleEntry({
+      groupId: 1, // ИВТ-101
+      subjectId: 4, // Литература
+      dayOfWeek: "Вторник",
+      startTime: "11:00",
+      endTime: "12:30",
+      roomNumber: "201",
+      teacherId: 2 // Дэвид Миллер
+    });
+    
+    // Понедельник для группы ИВТ-102
+    this.createScheduleEntry({
+      groupId: 2, // ИВТ-102
+      subjectId: 3, // Физика
+      dayOfWeek: "Понедельник",
+      startTime: "09:00",
+      endTime: "10:30",
+      roomNumber: "105",
+      teacherId: 4 // Роберт Чанг
+    });
+    
+    this.createScheduleEntry({
+      groupId: 2, // ИВТ-102
+      subjectId: 1, // Математика
+      dayOfWeek: "Понедельник",
+      startTime: "11:00",
+      endTime: "12:30",
+      roomNumber: "302",
+      teacherId: 2 // Дэвид Миллер
+    });
+    
+    // Среда для группы ЭКО-101
+    this.createScheduleEntry({
+      groupId: 4, // ЭКО-101
+      subjectId: 5, // История
+      dayOfWeek: "Среда",
+      startTime: "09:00",
+      endTime: "10:30",
+      roomNumber: "103",
+      teacherId: 3 // Сара Джонсон
     });
   }
 }
