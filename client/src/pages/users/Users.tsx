@@ -4,6 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { apiRequest } from '@/lib/queryClient';
 import { useLocation } from 'wouter';
+import { useTranslation } from 'react-i18next';
 
 // UI Components
 import { Button } from '@/components/ui/button';
@@ -42,6 +43,7 @@ export default function Users() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
+  const { t } = useTranslation();
   
   // If not admin, redirect to dashboard
   if (user?.role !== 'admin') {
@@ -326,20 +328,20 @@ export default function Users() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
-            <CardTitle>User Management</CardTitle>
-            <CardDescription>View, add, edit, and remove users from the system</CardDescription>
+            <CardTitle>{t('users.management.title', 'Управление пользователями')}</CardTitle>
+            <CardDescription>{t('users.management.subtitle', 'Просмотр, добавление, редактирование и удаление пользователей из системы')}</CardDescription>
           </div>
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogTrigger asChild>
               <Button onClick={() => { resetForm(); setIsCreateDialogOpen(true); }}>
-                <Plus className="mr-2 h-4 w-4" /> Add User
+                <Plus className="mr-2 h-4 w-4" /> {t('users.management.addUser', 'Добавить пользователя')}
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Create New User</DialogTitle>
+                <DialogTitle>{t('users.create.title', 'Создать нового пользователя')}</DialogTitle>
                 <DialogDescription>
-                  Add a new user to the system. You'll need to set their name, email, password, and role.
+                  {t('users.create.description', 'Добавьте нового пользователя в систему. Вам потребуется установить его имя, электронную почту, пароль и роль.')}
                 </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleCreateSubmit}>

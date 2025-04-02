@@ -1,29 +1,33 @@
 import React from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useTranslation } from 'react-i18next';
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const { t } = useTranslation();
   
   const getWelcomeMessage = () => {
-    if (!user) return "Welcome to the College Management System";
+    if (!user) return t('dashboard.welcome.guest', 'Добро пожаловать в Систему Управления Колледжем');
     
     const currentHour = new Date().getHours();
     let greeting;
     
     if (currentHour < 12) {
-      greeting = 'Good morning';
+      greeting = t('dashboard.greeting.morning', 'Доброе утро');
     } else if (currentHour < 18) {
-      greeting = 'Good afternoon';
+      greeting = t('dashboard.greeting.afternoon', 'Добрый день');
     } else {
-      greeting = 'Good evening';
+      greeting = t('dashboard.greeting.evening', 'Добрый вечер');
     }
     
-    return `${greeting}, ${user.firstName}. Here's what's happening with your education today.`;
+    // Using interpolation
+    const welcomeMessage = `${greeting}, ${user.firstName}. Вот что происходит с вашим обучением сегодня.`;
+    return welcomeMessage;
   };
   
   const getDashboardContent = () => {
-    if (!user) return <p>Please log in to view your dashboard.</p>;
+    if (!user) return <p>{t('dashboard.loginRequired', 'Пожалуйста, войдите в систему для просмотра вашей панели управления.')}</p>;
     
     switch (user.role) {
       case 'student':
@@ -42,29 +46,29 @@ const Dashboard = () => {
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       <Card className="glass-card">
         <CardHeader>
-          <CardTitle>Upcoming Classes</CardTitle>
-          <CardDescription>Your next scheduled classes</CardDescription>
+          <CardTitle>{t('schedule.title', 'Расписание')}</CardTitle>
+          <CardDescription>{t('dashboard.student.classes', 'Ваши ближайшие занятия')}</CardDescription>
         </CardHeader>
         <CardContent>
-          <p>You have 3 classes scheduled today</p>
+          <p>{t('dashboard.student.scheduledToday', 'У вас запланировано 3 занятия на сегодня')}</p>
         </CardContent>
       </Card>
       <Card className="glass-card">
         <CardHeader>
-          <CardTitle>Assignments</CardTitle>
-          <CardDescription>Your pending assignments</CardDescription>
+          <CardTitle>{t('assignments.title', 'Задания')}</CardTitle>
+          <CardDescription>{t('dashboard.student.pendingAssignments', 'Ваши ожидающие задания')}</CardDescription>
         </CardHeader>
         <CardContent>
-          <p>You have 2 assignments due this week</p>
+          <p>{t('dashboard.student.dueSoon', 'У вас 2 задания со сроком сдачи на этой неделе')}</p>
         </CardContent>
       </Card>
       <Card className="glass-card">
         <CardHeader>
-          <CardTitle>Grades</CardTitle>
-          <CardDescription>Recent grade updates</CardDescription>
+          <CardTitle>{t('grades.title', 'Оценки')}</CardTitle>
+          <CardDescription>{t('dashboard.student.recentGrades', 'Недавние обновления оценок')}</CardDescription>
         </CardHeader>
         <CardContent>
-          <p>2 new grades have been posted</p>
+          <p>{t('dashboard.student.newGrades', 'Добавлено 2 новых оценки')}</p>
         </CardContent>
       </Card>
     </div>
@@ -74,29 +78,29 @@ const Dashboard = () => {
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       <Card className="glass-card">
         <CardHeader>
-          <CardTitle>Teaching Schedule</CardTitle>
-          <CardDescription>Your teaching timetable</CardDescription>
+          <CardTitle>{t('dashboard.teacher.schedule', 'Расписание занятий')}</CardTitle>
+          <CardDescription>{t('dashboard.teacher.timetable', 'Ваше расписание преподавания')}</CardDescription>
         </CardHeader>
         <CardContent>
-          <p>You have 4 classes to teach today</p>
+          <p>{t('dashboard.teacher.classesToday', 'У вас 4 занятия для преподавания сегодня')}</p>
         </CardContent>
       </Card>
       <Card className="glass-card">
         <CardHeader>
-          <CardTitle>Assignments to Grade</CardTitle>
-          <CardDescription>Pending assignment submissions</CardDescription>
+          <CardTitle>{t('dashboard.teacher.grading', 'Задания для оценки')}</CardTitle>
+          <CardDescription>{t('dashboard.teacher.pendingSubmissions', 'Ожидающие проверки работы')}</CardDescription>
         </CardHeader>
         <CardContent>
-          <p>15 assignments need grading</p>
+          <p>{t('dashboard.teacher.needGrading', '15 заданий требуют оценки')}</p>
         </CardContent>
       </Card>
       <Card className="glass-card">
         <CardHeader>
-          <CardTitle>Student Requests</CardTitle>
-          <CardDescription>Students needing assistance</CardDescription>
+          <CardTitle>{t('requests.title', 'Запросы студентов')}</CardTitle>
+          <CardDescription>{t('dashboard.teacher.studentHelp', 'Студентам требуется помощь')}</CardDescription>
         </CardHeader>
         <CardContent>
-          <p>3 new student requests</p>
+          <p>{t('dashboard.teacher.newRequests', '3 новых запроса от студентов')}</p>
         </CardContent>
       </Card>
     </div>
@@ -106,39 +110,56 @@ const Dashboard = () => {
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       <Card className="glass-card">
         <CardHeader>
-          <CardTitle>System Status</CardTitle>
-          <CardDescription>Overall system health</CardDescription>
+          <CardTitle>{t('dashboard.admin.systemStatus', 'Состояние системы')}</CardTitle>
+          <CardDescription>{t('dashboard.admin.systemHealth', 'Общее состояние системы')}</CardDescription>
         </CardHeader>
         <CardContent>
-          <p>All systems operational</p>
+          <p>{t('dashboard.admin.operational', 'Все системы работают нормально')}</p>
         </CardContent>
       </Card>
       <Card className="glass-card">
         <CardHeader>
-          <CardTitle>User Management</CardTitle>
-          <CardDescription>User account statistics</CardDescription>
+          <CardTitle>{t('dashboard.admin.userManagement', 'Управление пользователями')}</CardTitle>
+          <CardDescription>{t('dashboard.admin.userStats', 'Статистика пользователей')}</CardDescription>
         </CardHeader>
         <CardContent>
-          <p>245 active users in the system</p>
+          <p>{t('dashboard.admin.activeUsers', '245 активных пользователей в системе')}</p>
         </CardContent>
       </Card>
       <Card className="glass-card">
         <CardHeader>
-          <CardTitle>Pending Approvals</CardTitle>
-          <CardDescription>Items requiring your approval</CardDescription>
+          <CardTitle>{t('dashboard.admin.pendingApprovals', 'Ожидающие подтверждения')}</CardTitle>
+          <CardDescription>{t('dashboard.admin.requireApproval', 'Элементы, требующие вашего подтверждения')}</CardDescription>
         </CardHeader>
         <CardContent>
-          <p>7 pending approvals</p>
+          <p>{t('dashboard.admin.approvalCount', '7 ожидающих подтверждений')}</p>
         </CardContent>
       </Card>
     </div>
   );
   
+  // Translate role
+  const translateRole = (role: string) => {
+    switch (role) {
+      case 'admin':
+        return t('users.roles.admin', 'Администратор');
+      case 'teacher':
+        return t('users.roles.teacher', 'Преподаватель');
+      case 'student':
+        return t('users.roles.student', 'Студент');
+      default:
+        return role;
+    }
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-indigo-400 to-emerald-300 text-transparent bg-clip-text">
-          {user ? `${user.role.charAt(0).toUpperCase() + user.role.slice(1)} Dashboard` : 'Welcome'}
+          {user 
+            ? t('dashboard.title', '{{role}} Панель управления', { role: translateRole(user.role) }) 
+            : t('dashboard.welcome.title', 'Добро пожаловать')
+          }
         </h1>
         <p className="text-xl text-muted-foreground">{getWelcomeMessage()}</p>
       </div>
