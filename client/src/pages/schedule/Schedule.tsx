@@ -30,21 +30,19 @@ import { isAdmin } from '@/lib/auth';
 
 // Map weekday numbers to names
 const DAYS_OF_WEEK = [
-  'Sunday',
-  'Monday',
-  'Tuesday',
-  'Wednesday',
-  'Thursday',
-  'Friday',
-  'Saturday',
+  'Воскресенье',
+  'Понедельник',
+  'Вторник',
+  'Среда',
+  'Четверг',
+  'Пятница',
+  'Суббота',
 ];
 
-// Convert 24-hour time format to 12-hour format with AM/PM
+// Format time in 24-hour format for Russian convention
 function formatTime(time: string): string {
   const [hours, minutes] = time.split(':').map(Number);
-  const period = hours >= 12 ? 'PM' : 'AM';
-  const displayHours = hours % 12 || 12;
-  return `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
+  return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
 }
 
 export default function Schedule() {
@@ -64,7 +62,7 @@ export default function Schedule() {
       
       const response = await fetch(endpoint);
       if (!response.ok) {
-        throw new Error('Failed to fetch schedule');
+        throw new Error('Не удалось загрузить расписание');
       }
       return await response.json();
     },
@@ -128,9 +126,9 @@ export default function Schedule() {
       return (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Error</AlertTitle>
+          <AlertTitle>Ошибка</AlertTitle>
           <AlertDescription>
-            Failed to load your schedule. Please try again later.
+            Не удалось загрузить расписание. Пожалуйста, попробуйте позже.
           </AlertDescription>
         </Alert>
       );
@@ -140,7 +138,7 @@ export default function Schedule() {
       <div className="space-y-6">
         {DAYS_OF_WEEK.map((day, index) => {
           // Skip weekends unless there are classes scheduled
-          if ((day === 'Saturday' || day === 'Sunday') && 
+          if ((day === 'Суббота' || day === 'Воскресенье') && 
               (!scheduleByDay[day] || scheduleByDay[day].length === 0)) {
             return null;
           }
@@ -151,8 +149,8 @@ export default function Schedule() {
                 <CardTitle>{day}</CardTitle>
                 <CardDescription>
                   {scheduleByDay[day]?.length 
-                    ? `${scheduleByDay[day].length} class${scheduleByDay[day].length > 1 ? 'es' : ''} scheduled`
-                    : 'No classes scheduled'}
+                    ? `${scheduleByDay[day].length} ${scheduleByDay[day].length > 1 ? 'занятий' : 'занятие'} запланировано`
+                    : 'Нет запланированных занятий'}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -160,17 +158,17 @@ export default function Schedule() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Subject</TableHead>
-                        <TableHead>Time</TableHead>
-                        <TableHead>Room</TableHead>
-                        <TableHead>Teacher</TableHead>
+                        <TableHead>Предмет</TableHead>
+                        <TableHead>Время</TableHead>
+                        <TableHead>Кабинет</TableHead>
+                        <TableHead>Преподаватель</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {scheduleByDay[day].map((item: any) => (
                         <TableRow key={item.id}>
                           <TableCell className="font-medium">
-                            {item.subject?.name || 'Unknown Subject'}
+                            {item.subject?.name || 'Неизвестный предмет'}
                           </TableCell>
                           <TableCell>
                             <div className="flex items-center gap-1">
@@ -181,7 +179,7 @@ export default function Schedule() {
                           <TableCell>
                             <div className="flex items-center gap-1">
                               <MapPin className="h-4 w-4 text-muted-foreground" />
-                              {item.roomNumber || 'TBA'}
+                              {item.roomNumber || 'Не назначен'}
                             </div>
                           </TableCell>
                           <TableCell>
@@ -189,7 +187,7 @@ export default function Schedule() {
                               <User className="h-4 w-4 text-muted-foreground" />
                               {item.subject?.teacher?.firstName 
                                 ? `${item.subject.teacher.firstName} ${item.subject.teacher.lastName}` 
-                                : 'Not Assigned'}
+                                : 'Не назначен'}
                             </div>
                           </TableCell>
                         </TableRow>
@@ -198,7 +196,7 @@ export default function Schedule() {
                   </Table>
                 ) : (
                   <div className="text-center py-4 text-muted-foreground">
-                    No classes scheduled for {day}
+                    Нет занятий в {day}
                   </div>
                 )}
               </CardContent>
@@ -212,7 +210,7 @@ export default function Schedule() {
   return (
     <div className="container mx-auto py-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Weekly Schedule</h1>
+        <h1 className="text-3xl font-bold">Расписание</h1>
         {userIsAdmin && (
           <Button 
             variant={activeTab === "import" ? "default" : "outline"}
@@ -221,12 +219,12 @@ export default function Schedule() {
             {activeTab === "schedule" ? (
               <>
                 <Upload className="mr-2 h-4 w-4" />
-                Import Schedule
+                Импорт расписания
               </>
             ) : (
               <>
                 <Clock className="mr-2 h-4 w-4" />
-                View Schedule
+                Просмотр расписания
               </>
             )}
           </Button>
