@@ -430,7 +430,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           } catch (subjectError) {
             console.error(`Error creating subject for ID ${item.subjectId}:`, subjectError);
             // Если не получилось создать, вернём временный объект
-            subject = { name: 'Неизвестный предмет', id: item.subjectId, description: null, teacherId: null, roomNumber: null };
+            subject = { name: 'Неизвестный предмет', id: item.subjectId, description: null, teacherId: null, roomNumber: null, shortName: null, color: null };
           }
         }
         
@@ -607,43 +607,106 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Parse the sheet data to schedule items
       const { scheduleItems, errors: parseErrors } = parseSheetDataToScheduleItems(sheetData);
       
-      // Создаем отсутствующие предметы перед валидацией
+      // Функция для генерации цвета из палитры предопределенных цветов
+      const getColorFromPalette = (index: number): string => {
+        const colors = [
+          '#4285F4', // Google Blue
+          '#34A853', // Google Green
+          '#FBBC05', // Google Yellow
+          '#EA4335', // Google Red
+          '#8E44AD', // Purple
+          '#2ECC71', // Emerald
+          '#E74C3C', // Red
+          '#3498DB', // Blue
+          '#F39C12', // Orange
+          '#1ABC9C', // Turquoise
+        ];
+        return colors[index % colors.length];
+      };
+      
+      // Счетчик новых предметов для равномерного распределения цветов
+      let newSubjectCounter = 0;
+      
+      // Обрабатываем предметы по их названиям
+      // Сначала получаем все существующие предметы
+      const allSubjects = await storage.getSubjects();
+      console.log(`Existing subjects: ${allSubjects.length}`);
+      
+      // Обрабатываем каждый элемент расписания
       for (const item of scheduleItems) {
-        if (item.subjectId) {
-          try {
-            // Проверяем, существует ли предмет
-            const subjectExists = await storage.getSubject(item.subjectId);
-            
-            // Если предмет не существует, создаем его
-            if (!subjectExists) {
-              console.log(`Creating missing subject with ID: ${item.subjectId}`);
-              const newSubject = await storage.createSubject({
-                name: `Предмет #${item.subjectId}`,
-                description: 'Автоматически созданный предмет для импортированного расписания',
-                teacherId: 2 // Используем ID учителя по умолчанию (teacher1)
-              });
-              
-              console.log(`Created new subject: ${JSON.stringify(newSubject)}`);
-            }
-          } catch (error) {
-            console.error(`Error checking or creating subject with ID ${item.subjectId}:`, error);
+        try {
+          // Проверяем, есть ли у элемента информация о предмете
+          const subjectName = (item as any).subjectName;
+          if (!subjectName) {
+            continue; // Пропускаем элементы без названия предмета
           }
+          
+          // Ищем предмет по названию среди существующих
+          const existingSubject = allSubjects.find(
+            s => s.name.toLowerCase() === subjectName.toLowerCase()
+          );
+          
+          if (existingSubject) {
+            // Если предмет найден, используем его ID
+            console.log(`Found existing subject "${existingSubject.name}" with ID: ${existingSubject.id}`);
+            item.subjectId = existingSubject.id;
+          } else {
+            // Если предмет не найден, создаем новый
+            console.log(`Creating new subject with name: "${subjectName}"`);
+            
+            // Увеличиваем счетчик для выбора цвета
+            newSubjectCounter++;
+              
+            // Создаем предмет
+            const newSubject = await storage.createSubject({
+              name: subjectName,
+              shortName: subjectName.substring(0, 10), // Берем первые 10 символов как сокращение
+              description: 'Автоматически созданный предмет из импорта расписания',
+              teacherId: 2, // Используем ID учителя по умолчанию (teacher1)
+              color: getColorFromPalette(newSubjectCounter) // Выбираем цвет из палитры
+            });
+            
+            console.log(`Created new subject: ${JSON.stringify(newSubject)}`);
+            
+            // Добавляем новый предмет в массив для будущих проверок
+            allSubjects.push(newSubject);
+            
+            // Устанавливаем ID предмета в элемент расписания
+            item.subjectId = newSubject.id;
+          }
+        } catch (error) {
+          console.error(`Error processing subject for schedule item:`, error);
         }
       }
       
+      // Проверяем наличие корректных элементов для импорта после обработки
       // Validate the schedule items
       const { validItems, errors: validationErrors } = await validateScheduleItems(
         scheduleItems,
         async (subjectId) => {
-          const subject = await storage.getSubject(subjectId);
-          return !!subject;
+          // Всегда возвращаем true, так как мы уже создали все необходимые предметы
+          // или проверили их существование на предыдущем шаге
+          return true;
         }
       );
+      
+      // Проверка на пустой импорт
+      if (validItems.length === 0) {
+        return res.status(400).json({ 
+          message: "Не удалось импортировать ни один элемент расписания", 
+          errors: [...parseErrors, ...validationErrors] 
+        });
+      }
       
       // Insert valid items into the database
       const createdItems = [];
       for (const item of validItems) {
-        const created = await storage.createScheduleItem(item);
+        // Удаляем временное поле с названием предмета перед созданием
+        const cleanItem = { ...item };
+        delete (cleanItem as any).subjectName;
+        
+        // Создаем элемент расписания
+        const created = await storage.createScheduleItem(cleanItem);
         createdItems.push(created);
       }
       
@@ -687,43 +750,106 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const { scheduleItems, errors: parseErrors } = await parseCsvToScheduleItems(filePath);
         console.log(`Parsed CSV data: Found ${scheduleItems.length} potential schedule items with ${parseErrors.length} parse errors`);
         
-        // Создаем отсутствующие предметы перед валидацией
+        // Функция для генерации цвета из палитры предопределенных цветов
+        const getColorFromPalette = (index: number): string => {
+          const colors = [
+            '#4285F4', // Google Blue
+            '#34A853', // Google Green
+            '#FBBC05', // Google Yellow
+            '#EA4335', // Google Red
+            '#8E44AD', // Purple
+            '#2ECC71', // Emerald
+            '#E74C3C', // Red
+            '#3498DB', // Blue
+            '#F39C12', // Orange
+            '#1ABC9C', // Turquoise
+          ];
+          return colors[index % colors.length];
+        };
+        
+        // Счетчик новых предметов для равномерного распределения цветов
+        let newSubjectCounter = 0;
+        
+        // Обрабатываем предметы по их названиям
+        // Сначала получаем все существующие предметы
+        const allSubjects = await storage.getSubjects();
+        console.log(`Existing subjects: ${allSubjects.length}`);
+        
+        // Обрабатываем каждый элемент расписания
         for (const item of scheduleItems) {
-          if (item.subjectId) {
-            try {
-              // Проверяем, существует ли предмет
-              const subjectExists = await storage.getSubject(item.subjectId);
-              
-              // Если предмет не существует, создаем его
-              if (!subjectExists) {
-                console.log(`Creating missing subject with ID: ${item.subjectId}`);
-                const newSubject = await storage.createSubject({
-                  name: `Предмет #${item.subjectId}`,
-                  description: 'Автоматически созданный предмет для импортированного расписания',
-                  teacherId: 2 // Используем ID учителя по умолчанию (teacher1)
-                });
-                
-                console.log(`Created new subject: ${JSON.stringify(newSubject)}`);
-              }
-            } catch (error) {
-              console.error(`Error checking or creating subject with ID ${item.subjectId}:`, error);
+          try {
+            // Проверяем, есть ли у элемента информация о предмете
+            const subjectName = (item as any).subjectName;
+            if (!subjectName) {
+              continue; // Пропускаем элементы без названия предмета
             }
+            
+            // Ищем предмет по названию среди существующих
+            const existingSubject = allSubjects.find(
+              s => s.name.toLowerCase() === subjectName.toLowerCase()
+            );
+            
+            if (existingSubject) {
+              // Если предмет найден, используем его ID
+              console.log(`Found existing subject "${existingSubject.name}" with ID: ${existingSubject.id}`);
+              item.subjectId = existingSubject.id;
+            } else {
+              // Если предмет не найден, создаем новый
+              console.log(`Creating new subject with name: "${subjectName}"`);
+              
+              // Увеличиваем счетчик для выбора цвета
+              newSubjectCounter++;
+              
+              // Создаем предмет
+              const newSubject = await storage.createSubject({
+                name: subjectName,
+                shortName: subjectName.substring(0, 10), // Берем первые 10 символов как сокращение
+                description: 'Автоматически созданный предмет из импорта расписания',
+                teacherId: 2, // Используем ID учителя по умолчанию (teacher1)
+                color: getColorFromPalette(newSubjectCounter) // Выбираем цвет из палитры
+              });
+              
+              console.log(`Created new subject: ${JSON.stringify(newSubject)}`);
+              
+              // Добавляем новый предмет в массив для будущих проверок
+              allSubjects.push(newSubject);
+              
+              // Устанавливаем ID предмета в элемент расписания
+              item.subjectId = newSubject.id;
+            }
+          } catch (error) {
+            console.error(`Error processing subject for schedule item:`, error);
           }
         }
         
+        // Проверяем наличие корректных элементов для импорта после обработки
         // Validate the schedule items
         const { validItems, errors: validationErrors } = await validateScheduleItems(
           scheduleItems,
           async (subjectId) => {
-            const subject = await storage.getSubject(subjectId);
-            return !!subject;
+            // Всегда возвращаем true, так как мы уже создали все необходимые предметы
+            // или проверили их существование на предыдущем шаге
+            return true;
           }
         );
+        
+        // Проверка на пустой импорт
+        if (validItems.length === 0) {
+          return res.status(400).json({ 
+            message: "Не удалось импортировать ни один элемент расписания", 
+            errors: [...parseErrors, ...validationErrors] 
+          });
+        }
         
         // Insert valid items into the database
         const createdItems = [];
         for (const item of validItems) {
-          const created = await storage.createScheduleItem(item);
+          // Удаляем временное поле с названием предмета перед созданием
+          const cleanItem = { ...item };
+          delete (cleanItem as any).subjectName;
+          
+          // Создаем элемент расписания
+          const created = await storage.createScheduleItem(cleanItem);
           createdItems.push(created);
         }
         

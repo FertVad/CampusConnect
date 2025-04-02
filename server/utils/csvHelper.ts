@@ -107,18 +107,13 @@ export async function parseCsvToScheduleItems(
             item.roomNumber = room;
           }
           
-          // Динамическое назначение ID предмета на основе имени предмета
-          // Для реального приложения нужно добавить поиск по базе данных
-          // Пока используем простой механизм для демонстрации
+          // Вместо генерации ID на основе хеша имени предмета
+          // сохраняем название предмета в специальное поле. 
+          // Фактический ID предмета будет заполнен позже в процессе импорта
+          // при обработке маршрута в routes.ts
           
-          // Определяем subjectId на основе имени предмета, используя некоторую логику маппинга
-          // Хеширование имени предмета для создания уникального ID
-          const getSubjectId = (name: string): number => {
-            const hash = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-            return (hash % 100) + 1; // От 1 до 100, чтобы избежать ID = 0
-          };
-          
-          item.subjectId = getSubjectId(subjectName);
+          // Добавляем имя предмета в дополнительное свойство
+          (item as any).subjectName = subjectName.trim();
           
           console.log(`Extracted schedule item: ${JSON.stringify(item)}`);
           console.log(`CSV Row: Course=${course}, Specialty=${specialty}, Group=${group}, Day=${dayName}, Subject=${subjectName}, Teacher=${teacher}`);
@@ -141,7 +136,7 @@ export async function parseCsvToScheduleItems(
   });
 }
 
-// Function to validate schedule items against existing data
+// Функция валидации элементов расписания
 export async function validateScheduleItems(
   scheduleItems: Partial<InsertScheduleItem>[],
   validateSubject: (subjectId: number) => Promise<boolean>
@@ -153,28 +148,35 @@ export async function validateScheduleItems(
   for (const item of scheduleItems) {
     rowIndex++;
     try {
-      // Validate all required fields exist
-      if (!item.subjectId || !item.dayOfWeek || !item.startTime || !item.endTime) {
-        throw new Error('Missing required fields');
+      // Validate required fields exist, except subjectId which may be added later
+      if (item.dayOfWeek === undefined || !item.startTime || !item.endTime) {
+        throw new Error('Отсутствуют обязательные поля (день недели, время начала или время окончания)');
       }
 
       // Validate day of week is between 0-6 (Sunday-Saturday)
       if (item.dayOfWeek < 0 || item.dayOfWeek > 6) {
-        throw new Error(`Invalid day of week: ${item.dayOfWeek}. Must be between 0 (Sunday) and 6 (Saturday)`);
+        throw new Error(`Неверный день недели: ${item.dayOfWeek}. Должен быть от 0 (Воскресенье) до 6 (Суббота)`);
       }
 
-      // Validate that the subject exists
-      const subjectExists = await validateSubject(item.subjectId);
-      if (!subjectExists) {
-        throw new Error(`Subject with ID ${item.subjectId} does not exist`);
+      // Validate that the subject exists only if subjectId is defined
+      // Если ID предмета указан и требует проверки
+      if (item.subjectId !== undefined) {
+        const subjectExists = await validateSubject(item.subjectId);
+        if (!subjectExists) {
+          throw new Error(`Предмет с ID ${item.subjectId} не существует`);
+        }
+      } else if (!(item as any).subjectName) {
+        // Если нет ни ID предмета, ни имени предмета - ошибка
+        throw new Error('Отсутствует информация о предмете');
       }
 
-      // If we get here, the item is valid
+      // If we get here, the item is valid for insertion
+      // Убедимся, что все необходимые поля заполнены или будут заполнены позже
       validItems.push(item as InsertScheduleItem);
     } catch (error: any) {
       errors.push({
         row: rowIndex,
-        error: error.message || 'Unknown error',
+        error: error.message || 'Неизвестная ошибка',
       });
     }
   }

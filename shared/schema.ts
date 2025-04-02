@@ -24,9 +24,11 @@ export const users = pgTable("users", {
 export const subjects = pgTable("subjects", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
+  shortName: text("short_name"),
   description: text("description"),
   teacherId: integer("teacher_id").references(() => users.id),
   roomNumber: text("room_number"),
+  color: text("color"), // Цвет для визуального отображения предмета в расписании
 });
 
 // Student-Subject Enrollment
