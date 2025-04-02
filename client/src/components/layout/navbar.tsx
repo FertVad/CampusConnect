@@ -1,6 +1,7 @@
 import React from "react";
 import { Link, useLocation } from "wouter";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
+import { LanguageSwitcher } from "@/components/theme/language-switcher";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { 
@@ -22,19 +23,22 @@ import {
   SheetTrigger,
   SheetClose,
 } from "@/components/ui/sheet";
+import { useTranslation } from 'react-i18next';
 
+// Define navigation items with translation keys
 const navigationItems = [
-  { name: "Dashboard", href: "/", icon: BookOpen },
-  { name: "Schedule", href: "/schedule", icon: Calendar },
-  { name: "Assignments", href: "/assignments", icon: FileText },
-  { name: "Grades", href: "/grades", icon: Award },
-  { name: "Chat", href: "/chat", icon: MessageSquare },
-  { name: "Users", href: "/users", icon: Users, adminOnly: true },
+  { key: "dashboard.title", href: "/", icon: BookOpen },
+  { key: "schedule.title", href: "/schedule", icon: Calendar },
+  { key: "assignments.title", href: "/assignments", icon: FileText },
+  { key: "grades.title", href: "/grades", icon: Award },
+  { key: "chat.title", href: "/chat", icon: MessageSquare },
+  { key: "users.title", href: "/users", icon: Users, adminOnly: true },
 ];
 
 export function Navbar() {
   const { user, logoutMutation } = useAuth();
   const [location] = useLocation();
+  const { t, i18n } = useTranslation();
   
   const isAdmin = user?.role === "admin";
 
@@ -62,7 +66,7 @@ export function Navbar() {
             
             return (
               <Link 
-                key={item.name} 
+                key={item.key} 
                 href={item.href}
                 className={`flex items-center gap-1 text-sm font-medium transition-colors ${
                   isActive 
@@ -71,7 +75,7 @@ export function Navbar() {
                 }`}
               >
                 <Icon className="h-4 w-4" />
-                {item.name}
+                {t(item.key)}
               </Link>
             );
           })}
@@ -79,6 +83,7 @@ export function Navbar() {
 
         {/* Actions */}
         <div className="flex items-center gap-2">
+          <LanguageSwitcher />
           <ThemeToggle />
           
           {user && (
@@ -90,7 +95,7 @@ export function Navbar() {
               className="rounded-full"
             >
               <LogOut className="h-5 w-5" />
-              <span className="sr-only">Logout</span>
+              <span className="sr-only">{t('dashboard.logout')}</span>
             </Button>
           )}
           
@@ -117,7 +122,7 @@ export function Navbar() {
                     const Icon = item.icon;
                     
                     return (
-                      <SheetClose asChild key={item.name}>
+                      <SheetClose asChild key={item.key}>
                         <Link 
                           href={item.href}
                           className={`flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
@@ -127,11 +132,36 @@ export function Navbar() {
                           }`}
                         >
                           <Icon className="h-5 w-5" />
-                          {item.name}
+                          {t(item.key)}
                         </Link>
                       </SheetClose>
                     );
                   })}
+                  
+                  {/* Language switcher in mobile menu */}
+                  <SheetClose asChild>
+                    <div className="px-3 py-2">
+                      <div className="text-sm font-medium text-muted-foreground mb-2">
+                        {t('settings.language')}
+                      </div>
+                      <div className="flex gap-2">
+                        <Button 
+                          variant={i18n.resolvedLanguage === 'ru' ? 'default' : 'outline'} 
+                          size="sm"
+                          onClick={() => i18n.changeLanguage('ru')}
+                        >
+                          {t('settings.languages.ru')}
+                        </Button>
+                        <Button 
+                          variant={i18n.resolvedLanguage === 'en' ? 'default' : 'outline'} 
+                          size="sm"
+                          onClick={() => i18n.changeLanguage('en')}
+                        >
+                          {t('settings.languages.en')}
+                        </Button>
+                      </div>
+                    </div>
+                  </SheetClose>
                   
                   {user && (
                     <SheetClose asChild>
@@ -142,7 +172,7 @@ export function Navbar() {
                         className="justify-start px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground"
                       >
                         <LogOut className="h-5 w-5 mr-3" />
-                        Logout
+                        {t('dashboard.logout')}
                       </Button>
                     </SheetClose>
                   )}
