@@ -35,6 +35,33 @@ export async function parseCsvToScheduleItems(
         try {
           const item: Partial<InsertScheduleItem> = {};
           
+          // Проверяем наличие всех обязательных полей
+          const course = row['Курс'];
+          const specialty = row['Специальность'];
+          const group = row['Группа'];
+          const subjectName = row['Предмет'];
+          const teacher = row['Преподаватель'];
+          
+          if (!course) {
+            throw new Error('Отсутствует обязательное поле: Курс');
+          }
+          
+          if (!specialty) {
+            throw new Error('Отсутствует обязательное поле: Специальность');
+          }
+          
+          if (!group) {
+            throw new Error('Отсутствует обязательное поле: Группа');
+          }
+          
+          if (!subjectName) {
+            throw new Error('Отсутствует обязательное поле: Предмет');
+          }
+          
+          if (!teacher) {
+            throw new Error('Отсутствует обязательное поле: Преподаватель');
+          }
+          
           // Обрабатываем день недели
           const dayName = row['День'];
           if (!dayName) {
@@ -83,8 +110,9 @@ export async function parseCsvToScheduleItems(
           // TODO: Здесь будет логика обработки курса, специальности, группы и предмета
           // Которая создает/получает ID соответствующих записей
           
-          // Пока просто устанавливаем временный ID предмета
-          item.subjectId = 1; // Заглушка - в будущем нужно будет заменить реальным ID
+          // В качестве временного решения просто записываем первый предмет из БД
+          // В реальном приложении здесь должна быть логика создания или поиска предмета
+          item.subjectId = 1;
 
           scheduleItems.push(item);
         } catch (error: any) {
