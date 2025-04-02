@@ -11,6 +11,11 @@ export function getAuthHeaders(): HeadersInit {
     'X-Requested-With': 'XMLHttpRequest',
     // Common browser compatibility header
     'Accept': 'application/json, text/plain, */*',
+    // Improve cache handling with Safari
+    'Cache-Control': 'no-cache',
+    'Pragma': 'no-cache',
+    // Set content type for JSON by default
+    'Content-Type': 'application/json',
   };
 }
 

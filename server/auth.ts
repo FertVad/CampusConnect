@@ -77,7 +77,7 @@ export function setupAuth(app: Express) {
   // Safari-friendly cookie settings and MemoryStore optimization
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET || "dev-session-secret", // Should be environment variable in production
-    resave: false, // For MemoryStore, set to false for better performance
+    resave: true, // Set to true to ensure session is saved back to store on each request
     saveUninitialized: false, // Only save if we modify the session
     store: storage.sessionStore,
     cookie: {
@@ -88,8 +88,10 @@ export function setupAuth(app: Express) {
       path: '/'
     },
     // Extend session expiration time on each request
-    rolling: true,
-    name: 'eduportal.sid' // Custom name helps with identification and debugging
+    rolling: true, 
+    name: 'eduportal.sid', // Custom name helps with identification and debugging
+    // Allow uninitialized session to be used with Safari
+    unset: 'keep'
   };
 
   app.set("trust proxy", 1);
@@ -186,10 +188,18 @@ export function setupAuth(app: Express) {
         // Don't expose the password hash to the client
         const { password, ...userWithoutPassword } = user;
         
-        // We'll let Express handle the cookie through sessions
-        // Remove explicit cookie headers as they may conflict
+        // Set headers to help with Safari compatibility
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
         
-        return res.status(200).json(userWithoutPassword);
+        // Ensure the session is saved immediately
+        req.session.save((err) => {
+          if (err) {
+            console.error("POST /api/login - Session save error:", err);
+          }
+          return res.status(200).json(userWithoutPassword);
+        });
       });
     })(req, res, next);
   });
@@ -203,13 +213,21 @@ export function setupAuth(app: Express) {
 
   app.get("/api/user", (req, res) => {
     console.log("GET /api/user - Session ID:", req.sessionID);
-    console.log("GET /api/user - Is Authenticated:", req.isAuthenticated());
+    console.log("GET /api/user - Is Authenticated:", req.isAuthenticated ? req.isAuthenticated() : 'method undefined');
+    console.log("GET /api/user - Headers:", JSON.stringify(req.headers));
     console.log("GET /api/user - Session:", req.session);
     
-    if (req.isAuthenticated() && req.user) {
-      console.log("GET /api/user - User ID:", (req.user as any).id);
-      // Don't expose the password hash to the client
+    // Проверяем метод isAuthenticated и наличие пользователя
+    if (req.isAuthenticated && req.isAuthenticated() && req.user) {
+      console.log("GET /api/user - User authenticated:", (req.user as any).id, "Role:", (req.user as any).role);
+      // Не отправляем пароль клиенту
       const { password, ...userWithoutPassword } = req.user as any;
+      
+      // Устанавливаем заголовки для совместимости с Safari
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+      
       return res.json(userWithoutPassword);
     }
     

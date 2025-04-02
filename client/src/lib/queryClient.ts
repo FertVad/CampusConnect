@@ -2,8 +2,34 @@ import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
-    const text = (await res.text()) || res.statusText;
-    throw new Error(`${res.status}: ${text}`);
+    try {
+      // Try to get response text, but handle JSON parsing safely
+      let text = res.statusText || 'Unknown error';
+      
+      try {
+        // First try to get response as text
+        text = await res.text();
+        
+        // Then try to parse as JSON if it looks like JSON
+        if (text.startsWith('{') || text.startsWith('[')) {
+          const jsonResponse = JSON.parse(text);
+          if (jsonResponse.message) {
+            text = jsonResponse.message;
+          }
+        }
+      } catch (parseError) {
+        console.warn('Error parsing response:', parseError);
+      }
+      
+      throw new Error(`${res.status}: ${text}`);
+    } catch (error) {
+      if (error instanceof Error) {
+        throw error; // Re-throw if it's already an Error object
+      } else {
+        // Fallback for Safari and other browsers with limited error handling
+        throw new Error(`${res.status}: Request failed`);
+      }
+    }
   }
 }
 
@@ -15,25 +41,44 @@ export async function apiRequest(
   data?: unknown | undefined,
 ): Promise<Response> {
   try {
-    // Make sure auth headers are included
+    // Убедимся, что включены все необходимые заголовки для корректной работы
     const headers: HeadersInit = { 
       ...getAuthHeaders(),
-      // Add Safari-friendly headers
+      // Дополнительные заголовки для Safari
       'Accept': 'application/json',
-      'Cache-Control': 'no-cache', // Prevent Safari from caching
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0',
       ...(data ? { "Content-Type": "application/json" } : {})
     };
 
+    // Максимальное время ожидания для запросов - 30 секунд
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
+
+    // Более надежный запрос с параметрами безопасности и совместимости
     const res = await fetch(url, {
       method,
       headers,
       body: data ? JSON.stringify(data) : undefined,
-      credentials: "include", // Always include credentials for session cookies
+      credentials: "include", // Всегда включаем учетные данные для cookie сессии
+      mode: 'cors', // Для лучшей совместимости
+      redirect: 'follow', // Следовать за перенаправлениями
+      signal: controller.signal, // Для тайм-аута
     });
+
+    // Очистим таймер тайм-аута
+    clearTimeout(timeoutId);
 
     await throwIfResNotOk(res);
     return res;
   } catch (error) {
+    // Более подробное логирование ошибок
+    if (error instanceof Error && error.name === 'AbortError') {
+      console.error(`API request timeout (${method} ${url})`);
+      throw new Error(`Request timeout: ${method} ${url}`);
+    }
+    
     console.error(`API request error (${method} ${url}):`, error);
     throw error;
   }
@@ -46,22 +91,38 @@ export const getQueryFn: <T>(options: {
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
     try {
+      // Запрос с улучшенными заголовками для кросс-браузерной совместимости
       const res = await fetch(queryKey[0] as string, {
+        method: 'GET', // Явно указываем метод
         headers: {
           ...getAuthHeaders(),
-          // Add Safari-friendly headers
+          // Дополнительные заголовки для Safari
           'Accept': 'application/json',
-          'Cache-Control': 'no-cache', // Prevent Safari from caching
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0',
         },
-        credentials: "include", // Always include credentials for session cookies
+        credentials: "include", // Всегда включаем учетные данные для cookie сессии
+        mode: 'cors', // Для лучшей совместимости
+        redirect: 'follow', // Следовать перенаправлениям
       });
 
+      // Обработка ошибки авторизации
       if (unauthorizedBehavior === "returnNull" && res.status === 401) {
+        console.warn(`Auth required for ${queryKey[0]}, returning null`);
         return null;
       }
 
+      // Проверяем ответ на ошибки
       await throwIfResNotOk(res);
-      return await res.json();
+      
+      // Безопасный парсинг JSON с логированием
+      try {
+        return await res.json();
+      } catch (parseError) {
+        console.error(`JSON parse error for ${queryKey[0]}:`, parseError);
+        throw new Error(`Failed to parse response from ${queryKey[0]}`);
+      }
     } catch (error) {
       console.error(`Query error (${queryKey[0]}):`, error);
       throw error;

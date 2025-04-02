@@ -169,8 +169,12 @@ export class MemStorage implements IStorage {
     this.messageIdCounter = 1;
     this.notificationIdCounter = 1;
     
+    // Настройка MemoryStore для длительного хранения сессий
     this.sessionStore = new MemoryStore({
-      checkPeriod: 86400000 // prune expired entries every 24h
+      checkPeriod: 86400000, // проверка и удаление устаревших сессий каждые 24ч
+      max: 5000, // максимальное количество сессий в памяти
+      ttl: 14 * 24 * 60 * 60 * 1000, // время жизни сессии - 14 дней
+      stale: false // не возвращать просроченные объекты
     });
     
     // Add some seed data
