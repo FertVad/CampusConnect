@@ -83,9 +83,8 @@ export function setupAuth(app: Express) {
     cookie: {
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
       httpOnly: true,
-      // In Safari, cookies must be secure even in development mode when using sameSite: 'none'
-      secure: true, // Always use secure for Safari compatibility
-      sameSite: 'none', // Use 'none' for Safari compatibility with cross-origin requests
+      secure: "auto", // Auto detect if HTTPS is being used
+      sameSite: 'lax', // Use 'lax' for better compatibility
       path: '/'
     },
     // Extend session expiration time on each request
@@ -187,10 +186,8 @@ export function setupAuth(app: Express) {
         // Don't expose the password hash to the client
         const { password, ...userWithoutPassword } = user;
         
-        // Set explicit cookie headers for Safari
-        res.setHeader('Set-Cookie', [
-          `eduportal.sid=${req.sessionID}; Path=/; HttpOnly; Secure; SameSite=None; Max-Age=${7 * 24 * 60 * 60}`
-        ]);
+        // We'll let Express handle the cookie through sessions
+        // Remove explicit cookie headers as they may conflict
         
         return res.status(200).json(userWithoutPassword);
       });

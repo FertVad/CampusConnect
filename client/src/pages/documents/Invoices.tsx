@@ -14,6 +14,7 @@ import { z } from 'zod';
 import { insertDocumentSchema } from '@shared/schema';
 import { uploadFile } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/use-auth';
 import { AlertCircle, DownloadCloud, FilePlus, FileText } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { formatDate } from '@/lib/utils';

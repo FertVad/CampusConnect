@@ -1,6 +1,7 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { format, formatDistance } from 'date-fns';
+import { Grade } from '@shared/schema';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -59,9 +60,15 @@ export function formatFileSize(bytes: number): string {
 }
 
 // GPA calculation
-export function calculateGPA(grades: number[]): number {
-  if (!grades || grades.length === 0) return 0;
+
+export function calculateGPA(grades: Grade[]): string {
+  if (!grades || grades.length === 0) return "0.00";
   
-  const sum = grades.reduce((total, grade) => total + grade, 0);
-  return parseFloat((sum / grades.length).toFixed(2));
+  const totalScore = grades.reduce((acc, grade) => acc + grade.score, 0);
+  const totalMaxScore = grades.reduce((acc, grade) => acc + grade.maxScore, 0);
+  
+  if (totalMaxScore === 0) return "0.00";
+  
+  const gpa = (totalScore / totalMaxScore) * 4.0;
+  return gpa.toFixed(2);
 }
