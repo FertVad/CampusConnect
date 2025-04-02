@@ -120,6 +120,13 @@ export default function Schedule() {
   const isLoading = userIsAdmin ? allSchedule.isLoading : roleBasedSchedule.isLoading;
   const error = userIsAdmin ? allSchedule.error : roleBasedSchedule.error;
   
+  // Отладочный вывод данных в консоль
+  React.useEffect(() => {
+    if (scheduleItems) {
+      console.log('Current schedule data:', scheduleItems);
+    }
+  }, [scheduleItems]);
+  
   // Функция фильтрации расписания на основе выбранного периода и даты
   const getFilteredScheduleItems = () => {
     if (!scheduleItems) return [];

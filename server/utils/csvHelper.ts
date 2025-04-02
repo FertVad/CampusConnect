@@ -107,19 +107,18 @@ export async function parseCsvToScheduleItems(
             item.roomNumber = room;
           }
           
-          // Ищем предмет с соответствующим названием и преподавателем в базе данных
-          // В данной версии мы просто используем первый доступный предмет, но в реальном приложении нужно
-          // добавить логику для поиска или создания предметов на основе данных из CSV
+          // Динамическое назначение ID предмета на основе имени предмета
+          // Для реального приложения нужно добавить поиск по базе данных
+          // Пока используем простой механизм для демонстрации
           
-          // Сначала проверим, существует ли предмет "Математика" в нашем тестовом наборе данных
-          if (subjectName === "Математика") {
-            item.subjectId = 1; // ID предмета "Calculus II" в тестовых данных
-          } else if (subjectName === "Программирование") {
-            item.subjectId = 2; // ID предмета "Chemistry" в тестовых данных  
-          } else {
-            // Если предмет не найден, используем ID 1 по умолчанию
-            item.subjectId = 1;
-          }
+          // Определяем subjectId на основе имени предмета, используя некоторую логику маппинга
+          // Хеширование имени предмета для создания уникального ID
+          const getSubjectId = (name: string): number => {
+            const hash = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+            return (hash % 100) + 1; // От 1 до 100, чтобы избежать ID = 0
+          };
+          
+          item.subjectId = getSubjectId(subjectName);
           
           console.log(`Extracted schedule item: ${JSON.stringify(item)}`);
           console.log(`CSV Row: Course=${course}, Specialty=${specialty}, Group=${group}, Day=${dayName}, Subject=${subjectName}, Teacher=${teacher}`);

@@ -588,6 +588,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Parse the sheet data to schedule items
       const { scheduleItems, errors: parseErrors } = parseSheetDataToScheduleItems(sheetData);
       
+      // Создаем отсутствующие предметы перед валидацией
+      for (const item of scheduleItems) {
+        if (item.subjectId) {
+          try {
+            // Проверяем, существует ли предмет
+            const subjectExists = await storage.getSubject(item.subjectId);
+            
+            // Если предмет не существует, создаем его
+            if (!subjectExists) {
+              console.log(`Creating missing subject with ID: ${item.subjectId}`);
+              const newSubject = await storage.createSubject({
+                name: `Предмет #${item.subjectId}`,
+                description: 'Автоматически созданный предмет для импортированного расписания',
+                teacherId: 2 // Используем ID учителя по умолчанию (teacher1)
+              });
+              
+              console.log(`Created new subject: ${JSON.stringify(newSubject)}`);
+            }
+          } catch (error) {
+            console.error(`Error checking or creating subject with ID ${item.subjectId}:`, error);
+          }
+        }
+      }
+      
       // Validate the schedule items
       const { validItems, errors: validationErrors } = await validateScheduleItems(
         scheduleItems,
@@ -643,6 +667,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Parse the CSV file to schedule items
         const { scheduleItems, errors: parseErrors } = await parseCsvToScheduleItems(filePath);
         console.log(`Parsed CSV data: Found ${scheduleItems.length} potential schedule items with ${parseErrors.length} parse errors`);
+        
+        // Создаем отсутствующие предметы перед валидацией
+        for (const item of scheduleItems) {
+          if (item.subjectId) {
+            try {
+              // Проверяем, существует ли предмет
+              const subjectExists = await storage.getSubject(item.subjectId);
+              
+              // Если предмет не существует, создаем его
+              if (!subjectExists) {
+                console.log(`Creating missing subject with ID: ${item.subjectId}`);
+                const newSubject = await storage.createSubject({
+                  name: `Предмет #${item.subjectId}`,
+                  description: 'Автоматически созданный предмет для импортированного расписания',
+                  teacherId: 2 // Используем ID учителя по умолчанию (teacher1)
+                });
+                
+                console.log(`Created new subject: ${JSON.stringify(newSubject)}`);
+              }
+            } catch (error) {
+              console.error(`Error checking or creating subject with ID ${item.subjectId}:`, error);
+            }
+          }
+        }
         
         // Validate the schedule items
         const { validItems, errors: validationErrors } = await validateScheduleItems(

@@ -153,9 +153,16 @@ export function parseSheetDataToScheduleItems(
         item.roomNumber = room;
       }
       
-      // В качестве временного решения просто записываем первый предмет из БД
-      // В реальном приложении здесь должна быть логика создания или поиска предмета
-      item.subjectId = 1;
+      // Динамическое назначение ID предмета на основе имени предмета
+      // Для реального приложения нужно добавить поиск по базе данных
+      // Используем ту же логику, что и в csvHelper.ts для консистентности
+      const subjectName = rowData['Предмет'];
+      const getSubjectId = (name: string): number => {
+        const hash = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+        return (hash % 100) + 1; // От 1 до 100, чтобы избежать ID = 0
+      };
+      
+      item.subjectId = getSubjectId(subjectName);
 
       scheduleItems.push(item);
     } catch (error: any) {
