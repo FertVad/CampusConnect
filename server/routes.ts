@@ -616,9 +616,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Get the path to the uploaded file
         const filePath = req.file.path;
+        console.log(`Processing uploaded CSV file at: ${filePath}`);
         
         // Parse the CSV file to schedule items
         const { scheduleItems, errors: parseErrors } = await parseCsvToScheduleItems(filePath);
+        console.log(`Parsed CSV data: Found ${scheduleItems.length} potential schedule items with ${parseErrors.length} parse errors`);
         
         // Validate the schedule items
         const { validItems, errors: validationErrors } = await validateScheduleItems(

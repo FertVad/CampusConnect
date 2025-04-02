@@ -107,12 +107,15 @@ export async function parseCsvToScheduleItems(
             item.roomNumber = room;
           }
           
-          // TODO: Здесь будет логика обработки курса, специальности, группы и предмета
-          // Которая создает/получает ID соответствующих записей
-          
-          // В качестве временного решения просто записываем первый предмет из БД
-          // В реальном приложении здесь должна быть логика создания или поиска предмета
+          // Используем фиктивные идентификаторы для импорта
+          // В реальном приложении должна быть логика создания или поиска предмета
+          // и связанных данных в базе данных
           item.subjectId = 1;
+          console.log(`Extracted schedule item: ${JSON.stringify(item)}`);
+          
+          // Логируем информацию о CSV строке для отладки
+          console.log(`CSV Row: Course=${course}, Specialty=${specialty}, Group=${group}, Day=${dayName}, Subject=${subjectName}, Teacher=${teacher}`);
+          
 
           scheduleItems.push(item);
         } catch (error: any) {
