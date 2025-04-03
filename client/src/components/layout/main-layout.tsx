@@ -16,7 +16,7 @@ export function MainLayout({ children }: MainLayoutProps) {
       {/* Main content - will always have left margin for collapsed sidebar */}
       <div className="ml-16 flex flex-col min-h-screen">
         {/* Top actions bar */}
-        <div className="flex items-center justify-end h-16 px-4 border-b glass-sidebar">
+        <div className="flex items-center justify-end h-16 px-4 border-b glass-sidebar relative z-10">
           <div className="flex items-center space-x-2">
             <LanguageSwitcher />
             <ThemeToggle />
