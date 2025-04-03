@@ -179,21 +179,23 @@ export function Sidebar() {
           isCollapsed ? "flex justify-center" : ""
         )}>
           {isCollapsed ? (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button 
-                  variant="ghost"
-                  onClick={handleLogout} 
-                  disabled={logoutMutation.isPending}
-                  className="w-10 h-10 rounded-full p-0 hover:bg-primary/5 text-muted-foreground hover:text-foreground"
-                >
-                  <LogOut className="h-5 w-5" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="right">
-                {t('dashboard.logout')}
-              </TooltipContent>
-            </Tooltip>
+            <TooltipProvider delayDuration={0}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    variant="ghost"
+                    onClick={handleLogout} 
+                    disabled={logoutMutation.isPending}
+                    className="w-10 h-10 rounded-full p-0 hover:bg-primary/5 text-muted-foreground hover:text-foreground"
+                  >
+                    <LogOut className="h-5 w-5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="right">
+                  {t('dashboard.logout')}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           ) : (
             <Button 
               variant="ghost"
