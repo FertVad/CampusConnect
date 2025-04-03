@@ -17,6 +17,8 @@ import { object, string, z } from "zod";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
+import { eq } from "drizzle-orm";
+import { db } from "./db";
 import { 
   parseSheetDataToScheduleItems, 
   fetchSheetData, 
@@ -1043,34 +1045,83 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete('/api/imported-files/:id', authenticateUser, requireRole(['admin']), async (req, res) => {
     try {
       const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid file ID" });
+      }
+      
+      console.log(`Processing delete request for imported file ID: ${id}`);
+      
       const file = await storage.getImportedFile(id);
       
       if (!file) {
+        console.log(`File with ID ${id} not found`);
         return res.status(404).json({ message: "File not found" });
       }
+      
+      console.log(`Found file: ${file.originalName}, import type: ${file.importType}`);
       
       // Delete the actual file from the filesystem if it exists and is a CSV file
       if (file.filePath && file.importType === 'csv') {
         const fullPath = path.join(process.cwd(), file.filePath);
+        console.log(`Attempting to delete physical file at: ${fullPath}`);
+        
         try {
           await fs.promises.access(fullPath);
           await fs.promises.unlink(fullPath);
+          console.log(`Successfully deleted physical file: ${fullPath}`);
         } catch (err) {
-          console.error(`Could not delete file ${fullPath}:`, err);
+          console.error(`Could not delete physical file ${fullPath}:`, err);
           // Continue with deleting the database record even if the file doesn't exist
         }
       }
       
-      // Delete the database record
+      console.log(`Now deleting the database record for file ID: ${id}`);
+      
+      // First, get related schedule items for logging
+      const scheduleItems = await db.select()
+        .from(schema.scheduleItems)
+        .where(eq(schema.scheduleItems.importedFileId, id));
+      
+      console.log(`Found ${scheduleItems.length} schedule items related to imported file ID: ${id}`);
+      
+      // Delete the database record (which now handles cascade deletion of schedule items)
       const success = await storage.deleteImportedFile(id);
       
       if (success) {
-        res.status(200).json({ message: "File deleted successfully" });
+        console.log(`Successfully deleted imported file with ID: ${id}`);
+        res.status(200).json({ 
+          message: "File deleted successfully",
+          info: {
+            fileId: id,
+            fileName: file.originalName,
+            relatedItemsDeleted: scheduleItems.length
+          }
+        });
       } else {
-        res.status(500).json({ message: "Failed to delete file" });
+        console.error(`Failed to delete imported file with ID: ${id}`);
+        res.status(500).json({ 
+          message: "Failed to delete file",
+          details: "The database operation to delete the file record failed. This might be due to foreign key constraints."
+        });
       }
     } catch (error) {
-      res.status(500).json({ message: "Server error" });
+      console.error('Error in delete imported file handler:', error);
+      // Provide more helpful error messages
+      if (error instanceof Error) {
+        console.error('Error details:', {
+          name: error.name,
+          message: error.message,
+          stack: error.stack
+        });
+        
+        res.status(500).json({ 
+          message: "Server error", 
+          details: error.message,
+          type: error.name
+        });
+      } else {
+        res.status(500).json({ message: "Server error" });
+      }
     }
   });
   

@@ -770,17 +770,47 @@ export class PostgresStorage implements IStorage {
 
   async deleteImportedFile(id: number): Promise<boolean> {
     try {
-      // First delete all schedule items associated with this imported file
-      await db.delete(schema.scheduleItems)
+      console.log(`Deleting imported file with ID: ${id}`);
+      
+      // First check if the imported file exists
+      const file = await this.getImportedFile(id);
+      if (!file) {
+        console.error(`ImportedFile with ID ${id} not found`);
+        return false;
+      }
+      
+      console.log(`Found file: ${file.originalName}, now deleting related schedule items`);
+      
+      // Find all schedule items related to this file for logging
+      const scheduleItems = await db.select()
+        .from(schema.scheduleItems)
         .where(eq(schema.scheduleItems.importedFileId, id));
+      
+      console.log(`Found ${scheduleItems.length} related schedule items to delete`);
+      
+      // First delete all schedule items associated with this imported file
+      const deleteItemsResult = await db.delete(schema.scheduleItems)
+        .where(eq(schema.scheduleItems.importedFileId, id));
+      
+      console.log(`Deleted ${deleteItemsResult.rowCount || 0} schedule items`);
       
       // Then delete the file record
       const result = await db.delete(schema.importedFiles)
         .where(eq(schema.importedFiles.id, id));
       
-      return result.rowCount > 0;
+      console.log(`Deleted file record, affected rows: ${result.rowCount || 0}`);
+      
+      return (result.rowCount || 0) > 0;
     } catch (error) {
       console.error('Error deleting imported file:', error);
+      // Print detailed error information for debugging
+      if (error instanceof Error) {
+        console.error('Error details:', {
+          name: error.name,
+          message: error.message,
+          stack: error.stack
+        });
+      }
       return false;
     }
   }
