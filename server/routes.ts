@@ -1075,39 +1075,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      console.log(`Now deleting the database record for file ID: ${id}`);
+      console.log(`Now deleting the database records for file ID: ${id}`);
       
-      // First, get related schedule items for logging
-      // Access imported schedule items from shared schema 
+      // First, get a count of related schedule items for logging purposes
       const { scheduleItems } = await import('@shared/schema');
+      const { sql } = await import('drizzle-orm');
       
-      // Select only the id column to avoid schema mismatches
-      const relatedItems = await db.select({
-          id: scheduleItems.id
+      // Get count of related items
+      const relatedItemsCount = await db.select({
+          count: sql<number>`count(*)`,
         })
         .from(scheduleItems)
-        .where(eq(scheduleItems.importedFileId, id));
+        .where(eq(scheduleItems.importedFileId, id))
+        .then(result => Number(result[0]?.count || 0));
       
-      console.log(`Found ${relatedItems.length} schedule items related to imported file ID: ${id}`);
+      console.log(`Found ${relatedItemsCount} schedule items related to imported file ID: ${id}`);
       
-      // Delete the database record (which now handles cascade deletion of schedule items)
+      // Delete the database record using our improved transaction-based method
       const success = await storage.deleteImportedFile(id);
       
       if (success) {
-        console.log(`Successfully deleted imported file with ID: ${id}`);
+        console.log(`Successfully deleted imported file with ID: ${id} and all related schedule items`);
         res.status(200).json({ 
           message: "File deleted successfully",
           info: {
             fileId: id,
             fileName: file.originalName,
-            relatedItemsDeleted: relatedItems.length
+            relatedItemsDeleted: relatedItemsCount
           }
         });
       } else {
         console.error(`Failed to delete imported file with ID: ${id}`);
         res.status(500).json({ 
           message: "Failed to delete file",
-          details: "The database operation to delete the file record failed. This might be due to foreign key constraints."
+          details: "The database operation to delete the file record failed. This might be due to related records that need to be deleted first."
         });
       }
     } catch (error) {

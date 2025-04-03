@@ -781,29 +781,43 @@ export class PostgresStorage implements IStorage {
       
       console.log(`Found file: ${file.originalName}, now deleting related schedule items`);
       
-      // Find all schedule items related to this file for logging
-      // Select only specific columns to avoid schema mismatches
-      const scheduleItems = await db.select({
-          id: schema.scheduleItems.id
-        })
-        .from(schema.scheduleItems)
-        .where(eq(schema.scheduleItems.importedFileId, id));
-      
-      console.log(`Found ${scheduleItems.length} related schedule items to delete`);
-      
-      // First delete all schedule items associated with this imported file
-      const deleteItemsResult = await db.delete(schema.scheduleItems)
-        .where(eq(schema.scheduleItems.importedFileId, id));
-      
-      console.log(`Deleted ${deleteItemsResult.rowCount || 0} schedule items`);
-      
-      // Then delete the file record
-      const result = await db.delete(schema.importedFiles)
-        .where(eq(schema.importedFiles.id, id));
-      
-      console.log(`Deleted file record, affected rows: ${result.rowCount || 0}`);
-      
-      return (result.rowCount || 0) > 0;
+      try {
+        // First, start a transaction to ensure both operations succeed or fail together
+        await db.transaction(async (tx) => {
+          // Step 1: Delete all schedule items associated with this imported file
+          console.log(`Deleting schedule items with importedFileId = ${id}`);
+          const deleteItemsResult = await tx.delete(schema.scheduleItems)
+            .where(eq(schema.scheduleItems.importedFileId, id));
+          console.log(`Successfully deleted ${deleteItemsResult.rowCount || 0} schedule items`);
+          
+          // Step 2: Delete the file record
+          console.log(`Now deleting the imported file record with ID: ${id}`);
+          const result = await tx.delete(schema.importedFiles)
+            .where(eq(schema.importedFiles.id, id));
+          
+          if ((result.rowCount || 0) === 0) {
+            // If no rows were affected, roll back the transaction
+            console.error(`No imported file with ID ${id} found to delete`);
+            throw new Error(`Imported file with ID ${id} not found`);
+          }
+          
+          console.log(`Successfully deleted imported file record with ID: ${id}`);
+        });
+        
+        // If we reach here, the transaction was successful
+        return true;
+      } catch (txError) {
+        console.error('Transaction error when deleting imported file:', txError);
+        if (txError instanceof Error) {
+          console.error('Transaction error details:', {
+            name: txError.name,
+            message: txError.message,
+            stack: txError.stack
+          });
+        }
+        // Re-throw the error to be caught by the outer try-catch
+        throw txError;
+      }
     } catch (error) {
       console.error('Error deleting imported file:', error);
       // Print detailed error information for debugging
