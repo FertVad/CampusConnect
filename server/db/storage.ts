@@ -782,7 +782,10 @@ export class PostgresStorage implements IStorage {
       console.log(`Found file: ${file.originalName}, now deleting related schedule items`);
       
       // Find all schedule items related to this file for logging
-      const scheduleItems = await db.select()
+      // Select only specific columns to avoid schema mismatches
+      const scheduleItems = await db.select({
+          id: schema.scheduleItems.id
+        })
         .from(schema.scheduleItems)
         .where(eq(schema.scheduleItems.importedFileId, id));
       

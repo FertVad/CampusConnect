@@ -1080,7 +1080,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // First, get related schedule items for logging
       // Access imported schedule items from shared schema 
       const { scheduleItems } = await import('@shared/schema');
-      const relatedItems = await db.select()
+      
+      // Select only the id column to avoid schema mismatches
+      const relatedItems = await db.select({
+          id: scheduleItems.id
+        })
         .from(scheduleItems)
         .where(eq(scheduleItems.importedFileId, id));
       
