@@ -156,11 +156,13 @@ const AdminDashboard = () => {
                 )}
               </div>
               <div className="mt-4 text-center">
-                <Button asChild variant="outline">
-                  <Link href="/users">
-                    View All Users
-                  </Link>
-                </Button>
+                <Link href="/users">
+                  <span className="inline-block">
+                    <Button variant="outline">
+                      View All Users
+                    </Button>
+                  </span>
+                </Link>
               </div>
             </CardContent>
           </Card>

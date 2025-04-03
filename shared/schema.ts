@@ -8,7 +8,7 @@ export const assignmentStatusEnum = pgEnum('assignment_status', ['not_started', 
 export const requestStatusEnum = pgEnum('request_status', ['pending', 'approved', 'rejected']);
 export const messageStatusEnum = pgEnum('message_status', ['sent', 'delivered', 'read']);
 export const dayOfWeekEnum = pgEnum('day_of_week', ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье']);
-export const importStatusEnum = pgEnum('import_status', ['success', 'partial', 'failed']);
+export const importStatusEnum = pgEnum('import_status', ['success', 'partial', 'failed', 'error']);
 
 // Users Table
 export const users = pgTable("users", {

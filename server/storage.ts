@@ -21,6 +21,7 @@ export interface IStorage {
   getUsers(): Promise<User[]>;
   getUser(id: number): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
+  getUsersByRole(role: string): Promise<User[]>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: number, userData: Partial<InsertUser>): Promise<User | undefined>;
   deleteUser(id: number): Promise<boolean>;
@@ -301,6 +302,10 @@ export class MemStorage implements IStorage {
     // Note: The actual password verification is handled in auth.ts with comparePasswords
     // This method should just do the lookup by email, as the password check is done separately
     return user;
+  }
+  
+  async getUsersByRole(role: string): Promise<User[]> {
+    return Array.from(this.users.values()).filter(user => user.role === role);
   }
   
   // Subjects

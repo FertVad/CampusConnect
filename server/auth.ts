@@ -83,7 +83,7 @@ export function setupAuth(app: Express) {
     cookie: {
       maxAge: 14 * 24 * 60 * 60 * 1000, // 14 days in milliseconds for longer persistence
       httpOnly: true,
-      secure: false, // Set to false even in production for Replit environment
+      secure: isProduction, // Set to true only in production
       sameSite: 'lax', // Use 'lax' for better compatibility with Safari
       path: '/'
     },

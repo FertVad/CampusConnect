@@ -86,6 +86,25 @@ const requireRole = (roles: string[]) => {
   };
 };
 
+// Вспомогательная функция для получения ID преподавателя по умолчанию
+async function getDefaultTeacherId(): Promise<number> {
+  try {
+    // Пытаемся найти пользователя с ролью "teacher"
+    const teachers = await storage.getUsersByRole('teacher');
+    if (teachers && teachers.length > 0) {
+      console.log(`Found ${teachers.length} teachers, using ${teachers[0].firstName} ${teachers[0].lastName} (ID: ${teachers[0].id}) as default`);
+      return teachers[0].id;
+    }
+    
+    // Если учителей нет, создаем тестового преподавателя
+    console.log('No teachers found, using fallback teacher ID 2');
+    return 2; // ID тестового преподавателя
+  } catch (error) {
+    console.error('Error getting default teacher:', error);
+    return 2; // В случае ошибки возвращаем ID тестового преподавателя
+  }
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
   
@@ -661,7 +680,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
               name: subjectName,
               shortName: subjectName.substring(0, 10), // Берем первые 10 символов как сокращение
               description: 'Автоматически созданный предмет из импорта расписания',
-              teacherId: 2, // Используем ID учителя по умолчанию (teacher1)
+              // Ищем ID первого преподавателя в системе
+              teacherId: await getDefaultTeacherId(),
               color: getColorFromPalette(newSubjectCounter) // Выбираем цвет из палитры
             });
             
@@ -826,7 +846,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 name: subjectName,
                 shortName: subjectName.substring(0, 10), // Берем первые 10 символов как сокращение
                 description: 'Автоматически созданный предмет из импорта расписания',
-                teacherId: 2, // Используем ID учителя по умолчанию (teacher1)
+                // Ищем ID первого преподавателя в системе
+                teacherId: await getDefaultTeacherId(),
                 color: getColorFromPalette(newSubjectCounter) // Выбираем цвет из палитры
               });
               
