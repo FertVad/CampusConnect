@@ -61,6 +61,12 @@ export class PostgresStorage implements IStorage {
       .limit(1);
     return users[0];
   }
+  
+  async getUsersByRole(role: string): Promise<User[]> {
+    return db.select()
+      .from(schema.users)
+      .where(eq(schema.users.role, role as any));
+  }
 
   async createUser(userData: InsertUser): Promise<User> {
     // Hash the password before storing it
