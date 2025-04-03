@@ -338,9 +338,9 @@ export default function Schedule() {
                       <TableCell>
                         <div className="flex items-center gap-1">
                           <User className="h-4 w-4 text-muted-foreground" />
-                          {item.subject?.teacher?.firstName 
+                          {item.teacherName || (item.subject?.teacher?.firstName 
                             ? `${item.subject.teacher.firstName} ${item.subject.teacher.lastName}` 
-                            : 'Не назначен'}
+                            : 'Не назначен')}
                         </div>
                       </TableCell>
                     </TableRow>

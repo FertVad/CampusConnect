@@ -440,19 +440,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return null; 
         }
         
-        // Получаем информацию о преподавателе
-        let teacher = null;
-        if (subject.teacherId) {
-          teacher = await storage.getUser(subject.teacherId);
+        // Определяем имя преподавателя
+        let teacherName = null;
+        
+        // Сначала проверяем, есть ли имя преподавателя непосредственно в элементе расписания
+        if (item.teacherName) {
+          teacherName = item.teacherName;
+        } 
+        // Если нет, пробуем получить имя преподавателя из связанного пользователя
+        else if (subject.teacherId) {
+          const teacher = await storage.getUser(subject.teacherId);
+          if (teacher) {
+            teacherName = `${teacher.firstName} ${teacher.lastName}`;
+          }
         }
         
         // Добавляем информацию о предмете и преподавателе к элементу расписания
         return {
           ...item,
           subject: {
-            ...subject,
-            teacher
-          }
+            ...subject
+          },
+          teacherName: teacherName || 'Not assigned'
         };
       }));
       
@@ -470,8 +479,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Маршрут для скачивания шаблона CSV для импорта расписания
   app.get('/schedule-template.csv', (req, res) => {
     try {
-      // CSV шаблон с заголовками
-      const csvTemplate = 'Курс,Специальность,Группа,День,Время начала,Время конца,Предмет,Преподаватель,Кабинет\n1,Информатика,ИС-101,Понедельник,09:00,10:30,Математика,Иванов Иван,305\n1,Информатика,ИС-101,Вторник,11:00,12:30,Программирование,Петров Петр,412';
+      // Упрощенный CSV шаблон с заголовками и образцами данных
+      const csvTemplate = 'Subject,Day,Start Time,End Time,Room,Teacher\nMath,Monday,09:00,10:30,305,Anna Ivanova\nProgramming,Tuesday,11:00,12:30,412,Oleg Petrov';
       
       // Установка заголовков для скачивания файла
       res.setHeader('Content-Type', 'text/csv; charset=utf-8');
@@ -787,7 +796,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const filePath = req.file.path;
         console.log(`Processing uploaded CSV file at: ${filePath}`);
         
-        // Parse the CSV file to schedule items
+        // Parse the CSV file to schedule items - не передаем заголовки, чтобы функция автоматически определила их
         const { scheduleItems, errors: parseErrors } = await parseCsvToScheduleItems(filePath);
         console.log(`Parsed CSV data: Found ${scheduleItems.length} potential schedule items with ${parseErrors.length} parse errors`);
         
@@ -846,7 +855,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 name: subjectName,
                 shortName: subjectName.substring(0, 10), // Берем первые 10 символов как сокращение
                 description: 'Автоматически созданный предмет из импорта расписания',
-                // Ищем ID первого преподавателя в системе
+                // Используем идентификатор преподавателя по умолчанию, но это не важно,
+                // так как в расписании будем использовать строковое имя преподавателя
                 teacherId: await getDefaultTeacherId(),
                 color: getColorFromPalette(newSubjectCounter) // Выбираем цвет из палитры
               });
@@ -886,17 +896,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Insert valid items into the database
         const createdItems = [];
         for (const item of validItems) {
-          // Удаляем временное поле с названием предмета перед созданием
-          const cleanItem = { ...item };
+          // Создаем чистый объект для вставки, но сохраняем teacherName если есть
+          const cleanItem = { 
+            subjectId: item.subjectId,
+            dayOfWeek: item.dayOfWeek,
+            startTime: item.startTime,
+            endTime: item.endTime,
+            roomNumber: item.roomNumber,
+            teacherName: item.teacherName || (item as any).teacherName || null
+          };
+          
+          // Удаляем временное поле с названием предмета
           delete (cleanItem as any).subjectName;
           
           // Создаем элемент расписания
           const created = await storage.createScheduleItem(cleanItem);
           createdItems.push(created);
         }
-        
-        // Clean up the uploaded file
-        fs.unlinkSync(filePath);
         
         // Prepare and return the import result
         const result = prepareImportResult(

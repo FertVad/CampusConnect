@@ -12,6 +12,7 @@ interface SubjectWithTeacher extends Subject {
 
 interface ScheduleItemWithSubject extends ScheduleItem {
   subject: SubjectWithTeacher;
+  teacherName?: string;
 }
 
 interface ClassScheduleProps {
@@ -100,9 +101,9 @@ const ClassSchedule: React.FC<ClassScheduleProps> = ({ scheduleItems }) => {
                           <div className="flex items-center text-xs text-neutral-500">
                             <UserIcon className="h-3 w-3 mr-2 flex-shrink-0" />
                             <span className="truncate">
-                              {item.subject.teacher 
+                              {item.teacherName || (item.subject.teacher 
                                 ? `${item.subject.teacher.firstName} ${item.subject.teacher.lastName}` 
-                                : 'Не назначен'}
+                                : 'Не назначен')}
                             </span>
                           </div>
                           <div className="flex items-center text-xs text-neutral-500">

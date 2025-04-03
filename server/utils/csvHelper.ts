@@ -21,103 +21,162 @@ function getDayOfWeekNumber(day: string): number {
 // Функция для обработки данных из CSV файла в формате расписания
 export async function parseCsvToScheduleItems(
   filePath: string,
-  headers: string[] = ['Курс', 'Специальность', 'Группа', 'День', 'Время начала', 'Время конца', 'Предмет', 'Преподаватель', 'Кабинет']
+  headers?: string[] // Принимаем любые заголовки
 ): Promise<{ scheduleItems: Partial<InsertScheduleItem>[], errors: ScheduleImportError[] }> {
   return new Promise((resolve, reject) => {
     const scheduleItems: Partial<InsertScheduleItem>[] = [];
     const errors: ScheduleImportError[] = [];
     let rowIndex = 1; // Start at 1 for header row
+    let foundHeaders: string[] = [];
 
     createReadStream(filePath)
       .pipe(csvParser())
+      .on('headers', (headers) => {
+        foundHeaders = headers;
+        console.log(`Found CSV headers: ${headers.join(', ')}`);
+      })
       .on('data', (row) => {
         rowIndex++;
         try {
           const item: Partial<InsertScheduleItem> = {};
           
-          // Проверяем наличие всех обязательных полей
-          const course = row['Курс'];
-          const specialty = row['Специальность'];
-          const group = row['Группа'];
-          const subjectName = row['Предмет'];
-          const teacher = row['Преподаватель'];
+          // Попробуем определить формат CSV файла по заголовкам
+          let subjectName, dayName, startTime, endTime, roomNumber, teacherName;
           
-          if (!course) {
-            throw new Error('Отсутствует обязательное поле: Курс');
-          }
+          // Сначала ищем стандартные названия полей - точные совпадения
+          if (row['Subject'] !== undefined) subjectName = row['Subject'];
+          else if (row['Предмет'] !== undefined) subjectName = row['Предмет'];
           
-          if (!specialty) {
-            throw new Error('Отсутствует обязательное поле: Специальность');
-          }
+          if (row['Day'] !== undefined) dayName = row['Day'];
+          else if (row['День'] !== undefined) dayName = row['День'];
           
-          if (!group) {
-            throw new Error('Отсутствует обязательное поле: Группа');
-          }
+          if (row['Start Time'] !== undefined) startTime = row['Start Time'];
+          else if (row['Время начала'] !== undefined) startTime = row['Время начала']; 
           
+          if (row['End Time'] !== undefined) endTime = row['End Time'];
+          else if (row['Время конца'] !== undefined) endTime = row['Время конца'];
+          
+          if (row['Room'] !== undefined) roomNumber = row['Room'];
+          else if (row['Кабинет'] !== undefined) roomNumber = row['Кабинет'];
+          
+          if (row['Teacher'] !== undefined) teacherName = row['Teacher'];
+          else if (row['Преподаватель'] !== undefined) teacherName = row['Преподаватель'];
+          
+          // Если не нашли точные совпадения, ищем по содержимому заголовков
           if (!subjectName) {
-            throw new Error('Отсутствует обязательное поле: Предмет');
+            const subjectHeader = foundHeaders.find(h => h.toLowerCase().includes('subject') || h.toLowerCase().includes('предмет'));
+            if (subjectHeader) subjectName = row[subjectHeader];
           }
           
-          if (!teacher) {
-            throw new Error('Отсутствует обязательное поле: Преподаватель');
+          if (!dayName) {
+            const dayHeader = foundHeaders.find(h => h.toLowerCase().includes('day') || h.toLowerCase().includes('день'));
+            if (dayHeader) dayName = row[dayHeader];
+          }
+          
+          if (!startTime) {
+            const startHeader = foundHeaders.find(h => 
+              h.toLowerCase().includes('start') || 
+              h.toLowerCase().includes('начало') || 
+              h.toLowerCase().includes('начала'));
+            if (startHeader) startTime = row[startHeader];
+          }
+          
+          if (!endTime) {
+            const endHeader = foundHeaders.find(h => 
+              h.toLowerCase().includes('end') || 
+              h.toLowerCase().includes('конец') || 
+              h.toLowerCase().includes('конца'));
+            if (endHeader) endTime = row[endHeader];
+          }
+          
+          if (!roomNumber) {
+            const roomHeader = foundHeaders.find(h => 
+              h.toLowerCase().includes('room') || 
+              h.toLowerCase().includes('кабинет') || 
+              h.toLowerCase().includes('аудитория'));
+            if (roomHeader) roomNumber = row[roomHeader];
+          }
+          
+          if (!teacherName) {
+            const teacherHeader = foundHeaders.find(h => 
+              h.toLowerCase().includes('teacher') || 
+              h.toLowerCase().includes('преподаватель') || 
+              h.toLowerCase().includes('учитель'));
+            if (teacherHeader) teacherName = row[teacherHeader];
+          }
+          
+          // Проверяем обязательные поля
+          if (!subjectName) {
+            throw new Error('Отсутствует обязательное поле: Предмет (Subject)');
+          }
+          
+          if (!dayName) {
+            throw new Error('Отсутствует обязательное поле: День (Day)');
+          }
+          
+          if (!startTime) {
+            throw new Error('Отсутствует обязательное поле: Время начала (Start Time)');
+          }
+          
+          if (!endTime) {
+            throw new Error('Отсутствует обязательное поле: Время конца (End Time)');
           }
           
           // Обрабатываем день недели
-          const dayName = row['День'];
-          if (!dayName) {
-            throw new Error('Отсутствует обязательное поле: День');
-          }
-          
           const dayNumber = getDayOfWeekNumber(dayName);
           if (dayNumber === -1) {
-            throw new Error(`Неверный формат дня недели: ${dayName}`);
+            // Если английское название дня, пробуем их тоже распознать
+            const englishDaysMap: Record<string, number> = {
+              'sunday': 0,
+              'monday': 1,
+              'tuesday': 2,
+              'wednesday': 3,
+              'thursday': 4,
+              'friday': 5,
+              'saturday': 6
+            };
+            
+            const englishDayNumber = englishDaysMap[dayName.toLowerCase()];
+            if (englishDayNumber === undefined) {
+              throw new Error(`Неверный формат дня недели: ${dayName}`);
+            }
+            
+            item.dayOfWeek = englishDayNumber;
+          } else {
+            item.dayOfWeek = dayNumber;
           }
-          
-          item.dayOfWeek = dayNumber;
           
           // Обрабатываем время начала
-          const startTime = row['Время начала'];
-          if (!startTime) {
-            throw new Error('Отсутствует обязательное поле: Время начала');
-          }
-          
           // Валидация формата времени (ЧЧ:ММ)
           const timeRegex = /^(\d{1,2}):(\d{2})$/;
           if (!timeRegex.test(startTime)) {
-            throw new Error(`Неверный формат времени начала: ${startTime}`);
+            throw new Error(`Неверный формат времени начала: ${startTime}. Ожидается формат ЧЧ:ММ`);
           }
           
           item.startTime = startTime;
           
           // Обрабатываем время окончания
-          const endTime = row['Время конца'];
-          if (!endTime) {
-            throw new Error('Отсутствует обязательное поле: Время конца');
-          }
-          
           if (!timeRegex.test(endTime)) {
-            throw new Error(`Неверный формат времени окончания: ${endTime}`);
+            throw new Error(`Неверный формат времени окончания: ${endTime}. Ожидается формат ЧЧ:ММ`);
           }
           
           item.endTime = endTime;
           
           // Обрабатываем поле Кабинет (необязательное)
-          const room = row['Кабинет'];
-          if (room) {
-            item.roomNumber = room;
+          if (roomNumber) {
+            item.roomNumber = roomNumber;
           }
           
-          // Вместо генерации ID на основе хеша имени предмета
-          // сохраняем название предмета в специальное поле. 
-          // Фактический ID предмета будет заполнен позже в процессе импорта
-          // при обработке маршрута в routes.ts
-          
-          // Добавляем имя предмета в дополнительное свойство
+          // Сохраняем имя предмета
           (item as any).subjectName = subjectName.trim();
           
-          console.log(`Extracted schedule item: ${JSON.stringify(item)}`);
-          console.log(`CSV Row: Course=${course}, Specialty=${specialty}, Group=${group}, Day=${dayName}, Subject=${subjectName}, Teacher=${teacher}`);
+          // Сохраняем имя преподавателя, если оно есть
+          if (teacherName) {
+            item.teacherName = teacherName.trim();
+          }
           
+          console.log(`Extracted schedule item: ${JSON.stringify(item)}`);
+          console.log(`CSV Row: Day=${dayName}, Subject=${subjectName}, Start=${startTime}, End=${endTime}, Teacher=${teacherName || 'Not specified'}, Room=${roomNumber || 'Not specified'}`);
 
           scheduleItems.push(item);
         } catch (error: any) {
