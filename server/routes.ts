@@ -1078,11 +1078,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`Now deleting the database record for file ID: ${id}`);
       
       // First, get related schedule items for logging
-      const scheduleItems = await db.select()
-        .from(schema.scheduleItems)
-        .where(eq(schema.scheduleItems.importedFileId, id));
+      // Access imported schedule items from shared schema 
+      const { scheduleItems } = await import('@shared/schema');
+      const relatedItems = await db.select()
+        .from(scheduleItems)
+        .where(eq(scheduleItems.importedFileId, id));
       
-      console.log(`Found ${scheduleItems.length} schedule items related to imported file ID: ${id}`);
+      console.log(`Found ${relatedItems.length} schedule items related to imported file ID: ${id}`);
       
       // Delete the database record (which now handles cascade deletion of schedule items)
       const success = await storage.deleteImportedFile(id);
@@ -1094,7 +1096,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           info: {
             fileId: id,
             fileName: file.originalName,
-            relatedItemsDeleted: scheduleItems.length
+            relatedItemsDeleted: relatedItems.length
           }
         });
       } else {
