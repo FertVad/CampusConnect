@@ -1,10 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from 'react-i18next';
 import { Button } from "@/components/ui/button";
 import { 
-  BookOpen, 
+  FileText as FileManagerIcon, 
   Calendar, 
   Award, 
   Users, 
@@ -27,7 +27,7 @@ const navigationItems = [
   { key: "grades.title", href: "/grades", icon: Award },
   { key: "chat.title", href: "/chat", icon: MessageSquare },
   { key: "users.title", href: "/users", icon: Users, adminOnly: true },
-  { key: "admin.importedFiles.title", href: "/admin/imported-files", icon: BookOpen, adminOnly: true },
+  { key: "schedule.import.fileManager", href: "/admin/imported-files", icon: FileManagerIcon, adminOnly: true },
   { key: "settings.title", href: "/settings", icon: Settings },
 ];
 
@@ -35,7 +35,9 @@ export function Sidebar() {
   const { user, logoutMutation } = useAuth();
   const [location] = useLocation();
   const { t } = useTranslation();
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true);
+  const [isManuallyExpanded, setIsManuallyExpanded] = useState(false);
+  const sidebarRef = useRef<HTMLDivElement>(null);
   
   const isAdmin = user?.role === "admin";
 
@@ -45,10 +47,42 @@ export function Sidebar() {
 
   const toggleCollapse = () => {
     setIsCollapsed(!isCollapsed);
+    setIsManuallyExpanded(!isCollapsed);
   };
+
+  // Handle hover events
+  const handleMouseEnter = () => {
+    if (!isManuallyExpanded) {
+      setIsCollapsed(false);
+    }
+  };
+
+  const handleMouseLeave = () => {
+    if (!isManuallyExpanded) {
+      setIsCollapsed(true);
+    }
+  };
+
+  // Handle clicks outside the sidebar to collapse it when manually expanded
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (sidebarRef.current && !sidebarRef.current.contains(event.target as Node) && isManuallyExpanded) {
+        setIsCollapsed(true);
+        setIsManuallyExpanded(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isManuallyExpanded]);
 
   return (
     <div 
+      ref={sidebarRef}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
       className={cn(
         "fixed left-0 top-0 bottom-0 z-50 h-full flex flex-col glass-sidebar transition-all duration-300",
         isCollapsed ? "w-16" : "w-64"

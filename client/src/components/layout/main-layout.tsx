@@ -14,7 +14,7 @@ export function MainLayout({ children }: MainLayoutProps) {
       <Sidebar />
       
       {/* Main content */}
-      <div className="flex-1 flex flex-col ml-16 md:ml-64 transition-all duration-300">
+      <div className="flex-1 flex flex-col ml-16 transition-all duration-300">
         {/* Top actions bar */}
         <div className="flex items-center justify-end h-16 px-4 border-b glass-sidebar">
           <div className="flex items-center space-x-2">
