@@ -13,7 +13,7 @@ import {
   ScheduleItem, InsertScheduleItem, Assignment, InsertAssignment,
   Submission, InsertSubmission, Grade, InsertGrade, Request, InsertRequest,
   Document, InsertDocument, Message, InsertMessage, Notification, InsertNotification,
-  LoginCredentials
+  LoginCredentials, ImportedFile, InsertImportedFile
 } from '@shared/schema';
 import { testConnection } from './index';
 import bcrypt from 'bcrypt';
@@ -737,6 +737,59 @@ export class PostgresStorage implements IStorage {
       .where(eq(schema.notifications.id, id));
     
     return result.rowCount > 0;
+  }
+
+  // Imported Files
+  async getImportedFiles(): Promise<ImportedFile[]> {
+    return db.select().from(schema.importedFiles)
+      .orderBy(desc(schema.importedFiles.uploadedAt));
+  }
+
+  async getImportedFile(id: number): Promise<ImportedFile | undefined> {
+    const files = await db.select()
+      .from(schema.importedFiles)
+      .where(eq(schema.importedFiles.id, id))
+      .limit(1);
+    return files[0];
+  }
+
+  async getImportedFilesByUser(userId: number): Promise<ImportedFile[]> {
+    return db.select()
+      .from(schema.importedFiles)
+      .where(eq(schema.importedFiles.uploadedBy, userId))
+      .orderBy(desc(schema.importedFiles.uploadedAt));
+  }
+
+  async createImportedFile(fileData: InsertImportedFile): Promise<ImportedFile> {
+    const [file] = await db.insert(schema.importedFiles)
+      .values(fileData)
+      .returning();
+    
+    return file;
+  }
+
+  async deleteImportedFile(id: number): Promise<boolean> {
+    try {
+      // First delete all schedule items associated with this imported file
+      await db.delete(schema.scheduleItems)
+        .where(eq(schema.scheduleItems.importedFileId, id));
+      
+      // Then delete the file record
+      const result = await db.delete(schema.importedFiles)
+        .where(eq(schema.importedFiles.id, id));
+      
+      return result.rowCount > 0;
+    } catch (error) {
+      console.error('Error deleting imported file:', error);
+      return false;
+    }
+  }
+
+  async getImportedFilesByType(type: 'csv' | 'google-sheets'): Promise<ImportedFile[]> {
+    return db.select()
+      .from(schema.importedFiles)
+      .where(eq(schema.importedFiles.importType, type))
+      .orderBy(desc(schema.importedFiles.uploadedAt));
   }
 }
 
