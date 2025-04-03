@@ -9,6 +9,7 @@ import { Link } from 'wouter';
 import { User, Request } from '@shared/schema';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from 'react-i18next';
+import ActivityFeed from '@/components/activity/ActivityFeed';
 
 const AdminDashboard = () => {
   const { t } = useTranslation();
@@ -129,10 +130,8 @@ const AdminDashboard = () => {
             </CardContent>
           </Card>
           
-          {/* Space reserved for future Activity Feed implementation */}
-          <div className="h-20 rounded-lg border-2 border-dashed border-neutral-200 flex items-center justify-center">
-            <p className="text-neutral-400">Space for upcoming Activity Feed</p>
-          </div>
+          {/* Activity Feed */}
+          <ActivityFeed />
         </div>
         
         {/* Right column (1/3 width) - now empty to make space for other widgets */}

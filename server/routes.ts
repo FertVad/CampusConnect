@@ -1886,6 +1886,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Activity Logs Endpoints
+  app.get('/api/activity-logs', authenticateUser, requireRole(['admin']), async (req, res) => {
+    try {
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
+      const logs = await storage.getActivityLogs(limit);
+      res.json(logs);
+    } catch (error) {
+      console.error('Error fetching activity logs:', error);
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
+  app.get('/api/activity-logs/type/:type', authenticateUser, requireRole(['admin']), async (req, res) => {
+    try {
+      const type = req.params.type;
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
+      const logs = await storage.getActivityLogsByType(type, limit);
+      res.json(logs);
+    } catch (error) {
+      console.error('Error fetching activity logs by type:', error);
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
+  app.get('/api/activity-logs/user/:userId', authenticateUser, requireRole(['admin']), async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
+      const logs = await storage.getActivityLogsByUser(userId, limit);
+      res.json(logs);
+    } catch (error) {
+      console.error('Error fetching activity logs by user:', error);
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+  
   return httpServer;
 }
 

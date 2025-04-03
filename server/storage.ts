@@ -6,7 +6,8 @@ import {
   LoginCredentials,
   // Новые модели
   Specialty, InsertSpecialty, Course, InsertCourse, Group, InsertGroup,
-  ScheduleEntry, InsertScheduleEntry, ImportedFile, InsertImportedFile
+  ScheduleEntry, InsertScheduleEntry, ImportedFile, InsertImportedFile,
+  ActivityLog, InsertActivityLog
 } from "@shared/schema";
 import session from "express-session";
 import * as expressSession from 'express-session';
@@ -167,6 +168,12 @@ export interface IStorage {
   createImportedFile(fileData: InsertImportedFile): Promise<ImportedFile>;
   deleteImportedFile(id: number): Promise<boolean>;
   getImportedFilesByType(type: 'csv' | 'google-sheets'): Promise<ImportedFile[]>;
+  
+  // Activity Logs
+  getActivityLogs(limit?: number): Promise<ActivityLog[]>; 
+  createActivityLog(logData: InsertActivityLog): Promise<ActivityLog>;
+  getActivityLogsByType(type: string, limit?: number): Promise<ActivityLog[]>;
+  getActivityLogsByUser(userId: number, limit?: number): Promise<ActivityLog[]>;
 }
 
 export class MemStorage implements IStorage {
@@ -188,6 +195,7 @@ export class MemStorage implements IStorage {
   private groups: Map<number, Group>;
   private scheduleEntries: Map<number, ScheduleEntry>;
   private importedFiles: Map<number, ImportedFile>;
+  private activityLogs: Map<number, ActivityLog>;
   
   private userIdCounter: number;
   private subjectIdCounter: number;
@@ -207,6 +215,7 @@ export class MemStorage implements IStorage {
   private groupIdCounter: number;
   private scheduleEntryIdCounter: number;
   private importedFileIdCounter: number;
+  private activityLogIdCounter: number;
   
   sessionStore: expressSession.Store;
   
@@ -229,6 +238,7 @@ export class MemStorage implements IStorage {
     this.groups = new Map();
     this.scheduleEntries = new Map();
     this.importedFiles = new Map();
+    this.activityLogs = new Map();
     
     this.userIdCounter = 1;
     this.subjectIdCounter = 1;
@@ -248,6 +258,7 @@ export class MemStorage implements IStorage {
     this.groupIdCounter = 1;
     this.scheduleEntryIdCounter = 1;
     this.importedFileIdCounter = 1;
+    this.activityLogIdCounter = 1;
     
     // Настройка MemoryStore для длительного хранения сессий
     this.sessionStore = new MemoryStore({
@@ -1117,6 +1128,22 @@ export class MemStorage implements IStorage {
     };
     
     this.importedFiles.set(id, importedFile);
+    
+    // Create activity log for file upload
+    await this.createActivityLog({
+      userId: fileData.uploadedBy,
+      type: 'file_upload',
+      description: `Uploaded ${fileData.importType} file: ${fileData.originalName}`,
+      entityId: id,
+      entityType: 'imported_file',
+      metadata: JSON.stringify({
+        fileName: fileData.originalName,
+        fileSize: fileData.fileSize,
+        mimeType: fileData.mimeType,
+        status: fileData.status
+      })
+    });
+    
     return importedFile;
   }
   
@@ -1129,6 +1156,9 @@ export class MemStorage implements IStorage {
         console.error(`In-Memory: ImportedFile with ID ${id} not found`);
         return false;
       }
+      
+      // Get file data for activity log before deletion
+      const file = this.importedFiles.get(id);
       
       // Get all schedule items that need to be deleted
       const itemsToDelete = Array.from(this.scheduleItems.values())
@@ -1146,6 +1176,22 @@ export class MemStorage implements IStorage {
       const result = this.importedFiles.delete(id);
       console.log(`In-Memory: Deleted imported file record: ${result ? 'success' : 'failed'}`);
       
+      // Create activity log for file deletion if successful
+      if (result && file) {
+        await this.createActivityLog({
+          userId: file.uploadedBy,
+          type: 'file_delete',
+          description: `Deleted ${file.importType} file: ${file.originalName}. File deletion affected ${itemsToDelete.length} schedule items`,
+          entityId: id,
+          entityType: 'imported_file',
+          metadata: JSON.stringify({
+            fileName: file.originalName,
+            fileSize: file.fileSize,
+            itemsDeleted: itemsToDelete.length
+          })
+        });
+      }
+      
       return result;
     } catch (error) {
       console.error('In-Memory: Error in deleteImportedFile:', error);
@@ -1159,6 +1205,61 @@ export class MemStorage implements IStorage {
       }
       return false;
     }
+  }
+  
+  // Activity Logs
+  async getActivityLogs(limit?: number): Promise<ActivityLog[]> {
+    const logs = Array.from(this.activityLogs.values());
+    // Sort by timestamp in descending order (newest first)
+    logs.sort((a, b) => {
+      if (!a.timestamp || !b.timestamp) return 0;
+      return b.timestamp.getTime() - a.timestamp.getTime();
+    });
+    
+    return limit ? logs.slice(0, limit) : logs;
+  }
+  
+  async createActivityLog(logData: InsertActivityLog): Promise<ActivityLog> {
+    const id = this.activityLogIdCounter++;
+    const now = new Date();
+    
+    const log: ActivityLog = {
+      ...logData,
+      id,
+      timestamp: now,
+      entityId: logData.entityId || null,
+      entityType: logData.entityType || null,
+      metadata: logData.metadata || null
+    };
+    
+    this.activityLogs.set(id, log);
+    return log;
+  }
+  
+  async getActivityLogsByType(type: string, limit?: number): Promise<ActivityLog[]> {
+    const logs = Array.from(this.activityLogs.values())
+      .filter(log => log.type === type);
+    
+    // Sort by timestamp in descending order (newest first)
+    logs.sort((a, b) => {
+      if (!a.timestamp || !b.timestamp) return 0;
+      return b.timestamp.getTime() - a.timestamp.getTime();
+    });
+    
+    return limit ? logs.slice(0, limit) : logs;
+  }
+  
+  async getActivityLogsByUser(userId: number, limit?: number): Promise<ActivityLog[]> {
+    const logs = Array.from(this.activityLogs.values())
+      .filter(log => log.userId === userId);
+    
+    // Sort by timestamp in descending order (newest first)
+    logs.sort((a, b) => {
+      if (!a.timestamp || !b.timestamp) return 0;
+      return b.timestamp.getTime() - a.timestamp.getTime();
+    });
+    
+    return limit ? logs.slice(0, limit) : logs;
   }
   
   private seedData() {

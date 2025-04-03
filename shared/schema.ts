@@ -9,6 +9,7 @@ export const requestStatusEnum = pgEnum('request_status', ['pending', 'approved'
 export const messageStatusEnum = pgEnum('message_status', ['sent', 'delivered', 'read']);
 export const dayOfWeekEnum = pgEnum('day_of_week', ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье']);
 export const importStatusEnum = pgEnum('import_status', ['success', 'partial', 'failed', 'error']);
+export const activityTypeEnum = pgEnum('activity_type', ['file_upload', 'file_delete', 'teacher_assign', 'user_create', 'user_delete', 'subject_create', 'schedule_change', 'other']);
 
 // Users Table
 export const users = pgTable("users", {
@@ -193,6 +194,18 @@ export const importedFiles = pgTable("imported_files", {
   errorDetails: text("error_details"),
 });
 
+// Activity Log - tracking system events for the activity feed
+export const activityLogs = pgTable("activity_logs", {
+  id: serial("id").primaryKey(),
+  type: activityTypeEnum("type").notNull(),
+  description: text("description").notNull(),
+  userId: integer("user_id").references(() => users.id).notNull(), // Who performed the action
+  timestamp: timestamp("timestamp").defaultNow(),
+  entityId: integer("entity_id"), // ID of the affected entity (file, user, subject, etc.)
+  entityType: text("entity_type"), // Type of the affected entity
+  metadata: text("metadata"), // JSON string with additional data if needed
+});
+
 // Insert Schemas
 export const insertUserSchema = createInsertSchema(users).omit({ 
   id: true,
@@ -278,6 +291,11 @@ export const insertImportedFileSchema = createInsertSchema(importedFiles).omit({
   uploadedAt: true
 });
 
+export const insertActivityLogSchema = createInsertSchema(activityLogs).omit({
+  id: true,
+  timestamp: true
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -327,6 +345,9 @@ export type InsertScheduleEntry = z.infer<typeof insertScheduleEntrySchema>;
 
 export type ImportedFile = typeof importedFiles.$inferSelect;
 export type InsertImportedFile = z.infer<typeof insertImportedFileSchema>;
+
+export type ActivityLog = typeof activityLogs.$inferSelect;
+export type InsertActivityLog = z.infer<typeof insertActivityLogSchema>;
 
 // Login schema
 export const loginSchema = z.object({
