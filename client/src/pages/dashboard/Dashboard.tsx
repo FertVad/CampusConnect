@@ -61,7 +61,7 @@ const Dashboard = () => {
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-indigo-400 to-emerald-300 text-transparent bg-clip-text">
           {user 
-            ? t('dashboard.title', '{{role}} Панель управления', { role: translateRole(user.role) }) 
+            ? `${translateRole(user.role)} ${t('dashboard.title', 'Панель управления')}` 
             : t('dashboard.welcome.title', 'Добро пожаловать')
           }
         </h1>

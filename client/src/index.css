@@ -121,6 +121,24 @@
   @apply bg-zinc-600;
 }
 
+/* Thin scrollbar variant */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  @apply bg-zinc-700 rounded-full;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  @apply bg-zinc-600;
+}
+
 /* Cross-browser flexbox fixes */
 .flex-fix {
   display: -webkit-box;
