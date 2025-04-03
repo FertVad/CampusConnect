@@ -3,7 +3,8 @@ import csvParser from 'csv-parser';
 import { InsertScheduleItem } from '@shared/schema';
 import { ScheduleImportError, ScheduleImportResult } from './googleSheetsHelper';
 import * as chardet from 'chardet';
-import * as iconv from 'iconv-lite';
+import fs from 'fs';
+import iconv from 'iconv-lite';
 
 // Функция для нормализации и очистки значений строк
 function normalizeValue(value: string | undefined): string | undefined {
@@ -104,32 +105,40 @@ export async function parseCsvToScheduleItems(
     let rowIndex = 1; // Start at 1 for header row
     let foundHeaders: string[] = [];
     
-    // Определяем разделитель CSV файла
-    const delimiter = detectDelimiter(filePath);
-
-    // Определяем кодировку файла
-    const encoding = chardet.detectFileSync(filePath) || 'utf8';
-    console.log(`Detected file encoding: ${encoding}`);
-    
-    // Создаем поток для чтения файла
-    let fileStream = createReadStream(filePath);
-    
-    // Подготавливаем опции для парсера CSV
-    const parserOptions = {
-      separator: delimiter,
-      skipLines: 0,
-      headers: headers || undefined, // Используем переданные заголовки или автоопределяем
-      strict: false
-    };
-    
-    // Обрабатываем CSV файл
-    fileStream
-      .pipe(iconv.decodeStream(encoding.toString()))
-      .pipe(csvParser(parserOptions))
-      .on('headers', (headers) => {
-        foundHeaders = headers.map(h => h.trim());
-        console.log(`Found CSV headers: ${foundHeaders.join(', ')}`);
-      })
+    try {
+      // Определяем разделитель CSV файла
+      const delimiter = detectDelimiter(filePath);
+  
+      // Определяем кодировку файла
+      const encoding = chardet.detectFileSync(filePath) || 'utf8';
+      console.log(`Detected file encoding: ${encoding}`);
+      
+      // Читаем и декодируем весь файл, затем преобразуем в строки для обработки
+      const buffer = fs.readFileSync(filePath);
+      const content = iconv.decode(buffer, encoding.toString());
+      
+      // Сохраняем обработанный файл в промежуточный файл в UTF-8
+      const tempFilePath = `${filePath}.utf8.csv`;
+      fs.writeFileSync(tempFilePath, content, 'utf8');
+      
+      // Создаем поток для чтения файла из промежуточного файла
+      let fileStream = createReadStream(tempFilePath);
+      
+      // Подготавливаем опции для парсера CSV
+      const parserOptions = {
+        separator: delimiter,
+        skipLines: 0,
+        headers: headers || undefined, // Используем переданные заголовки или автоопределяем
+        strict: false
+      };
+      
+      // Обрабатываем CSV файл
+      fileStream
+        .pipe(csvParser(parserOptions))
+        .on('headers', (headers) => {
+          foundHeaders = headers.map((h: string) => h.trim());
+          console.log(`Found CSV headers: ${foundHeaders.join(', ')}`);
+        })
       .on('data', (row) => {
         rowIndex++;
         try {
@@ -317,6 +326,10 @@ export async function parseCsvToScheduleItems(
       .on('error', (error: any) => {
         reject(error);
       });
+    } catch (error: any) {
+      console.error('Error processing CSV file:', error);
+      reject(error);
+    }
   });
 }
 

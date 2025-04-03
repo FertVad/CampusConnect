@@ -338,7 +338,7 @@ export default function ScheduleImport() {
                 <Alert className="mb-4">
                   <AlertTitle>Важная информация по формату CSV файла</AlertTitle>
                   <AlertDescription>
-                    <p className="mb-2">CSV файл должен содержать следующие колонки:</p>
+                    <div className="mb-2">CSV файл должен содержать следующие колонки:</div>
                     <ul className="list-disc pl-5 space-y-1 mb-3">
                       <li><strong>Subject</strong> - название предмета</li>
                       <li><strong>Day</strong> - день недели на русском или английском языке</li>
@@ -353,7 +353,7 @@ export default function ScheduleImport() {
                       Система автоматически создаст недостающие предметы и назначит их в расписание.
                     </p>
                     
-                    <p className="text-sm text-gray-600">
+                    <div className="text-sm text-gray-600">
                       <strong>Поддерживаемые форматы:</strong>
                       <ul className="list-disc pl-5 space-y-1 mt-1 mb-2">
                         <li>Названия колонок могут быть на русском языке: Предмет, День, Время начала, Время конца, Кабинет, Преподаватель</li>
@@ -361,7 +361,7 @@ export default function ScheduleImport() {
                         <li>Поддерживаются разделители: запятая (,), точка с запятой (;) и табуляция</li>
                         <li>Автоматически определяется кодировка файла (UTF-8, UTF-8-BOM и др.)</li>
                       </ul>
-                    </p>
+                    </div>
                     
                     <div className="mt-3">
                       <a 

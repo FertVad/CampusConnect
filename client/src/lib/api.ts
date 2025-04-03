@@ -131,11 +131,13 @@ export function createWebSocketConnection(userId: number, onMessage: (data: any)
     return null;
   }
 
+  // Determine the WebSocket URL based on environment
+  let wsUrl: string;
   const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+  const host = window.location.host;
   
-  // In development, we use the same origin as the current page
-  // This avoids CORS issues since we're using Vite's proxy to connect to our server
-  const wsUrl = `${protocol}//${window.location.host}/ws`;
+  // Make sure we're always using a valid URL in both development and production
+  wsUrl = `${protocol}//${host}/ws`;
   
   console.log(`Connecting to WebSocket at ${wsUrl}`);
   
