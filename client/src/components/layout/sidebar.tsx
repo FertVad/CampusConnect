@@ -18,6 +18,8 @@ import {
 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
+import { LanguageSwitcher } from "@/components/theme/language-switcher";
 
 // Define navigation items with translation keys
 const navigationItems = [
@@ -94,13 +96,12 @@ export function Sidebar() {
             <TooltipTrigger asChild>
               <Link href={item.href}>
                 <div className={cn(
-                  "flex items-center rounded-md transition-colors group relative h-10",
+                  "flex items-center rounded-md transition-colors group h-10 justify-center",
                   isActive 
                     ? "bg-primary/10 text-primary" 
-                    : "hover:bg-primary/5 text-muted-foreground hover:text-foreground",
-                  "justify-center px-2"
+                    : "hover:bg-primary/5 text-muted-foreground hover:text-foreground"
                 )}>
-                  <Icon className="h-5 w-5 flex-shrink-0" />
+                  <Icon className="h-5 w-5" />
                 </div>
               </Link>
             </TooltipTrigger>
@@ -115,13 +116,13 @@ export function Sidebar() {
       return (
         <Link key={item.key} href={item.href}>
           <div className={cn(
-            "flex items-center rounded-md transition-colors group relative h-10",
+            "flex items-center rounded-md transition-colors group h-10",
             isActive 
               ? "bg-primary/10 text-primary" 
               : "hover:bg-primary/5 text-muted-foreground hover:text-foreground",
             "px-3"
           )}>
-            <Icon className="h-5 w-5 mr-3 flex-shrink-0" />
+            <Icon className="h-5 w-5 mr-3" />
             <span className="text-sm font-medium">
               {t(item.key)}
             </span>
@@ -137,7 +138,7 @@ export function Sidebar() {
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       className={cn(
-        "fixed left-0 top-0 bottom-0 z-[100] h-full flex flex-col glass-sidebar",
+        "fixed left-0 top-0 bottom-0 z-[100] h-full flex flex-col glass-sidebar shadow-xl",
         isCollapsed ? "w-16" : "w-64"
       )}
     >
@@ -172,6 +173,50 @@ export function Sidebar() {
         </div>
       </nav>
 
+      {/* Settings section */}
+      <div className={cn(
+        "border-t border-sidebar-border pt-4 px-4",
+        isCollapsed ? "flex flex-col items-center gap-3" : ""
+      )}>
+        {isCollapsed ? (
+          <>
+            <TooltipProvider delayDuration={0}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="w-10 h-10 flex items-center justify-center">
+                    <ThemeToggle />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="right">
+                  {t('settings.theme')}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            
+            <TooltipProvider delayDuration={0}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="w-10 h-10 flex items-center justify-center">
+                    <LanguageSwitcher />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="right">
+                  {t('settings.language')}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </>
+        ) : (
+          <div className="flex justify-between items-center mb-4">
+            <span className="text-sm text-muted-foreground">{t('settings.appearance')}</span>
+            <div className="flex items-center gap-2">
+              <LanguageSwitcher />
+              <ThemeToggle />
+            </div>
+          </div>
+        )}
+      </div>
+      
       {/* User section */}
       {user && (
         <div className={cn(

@@ -13,18 +13,10 @@ export function MainLayout({ children }: MainLayoutProps) {
       {/* Sidebar - fixed position, will overlay content */}
       <Sidebar />
       
-      {/* Main content - will always have left margin for collapsed sidebar */}
-      <div className="ml-16 flex flex-col min-h-screen">
-        {/* Top actions bar */}
-        <div className="flex items-center justify-end h-16 px-4 border-b glass-sidebar relative z-10">
-          <div className="flex items-center space-x-2">
-            <LanguageSwitcher />
-            <ThemeToggle />
-          </div>
-        </div>
-        
-        {/* Main content */}
-        <main className="flex-1 overflow-auto">
+      {/* Main content area - fixed margin for collapsed sidebar */}
+      <div className="ml-16 min-h-screen">
+        {/* Place theme and language controls inside sidebar instead */}
+        <main className="w-full">
           {children}
         </main>
       </div>
