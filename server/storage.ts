@@ -1121,6 +1121,14 @@ export class MemStorage implements IStorage {
   }
   
   async deleteImportedFile(id: number): Promise<boolean> {
+    // First delete all schedule items associated with this import file
+    const scheduleItems = this.scheduleItems.values().filter(item => item.importedFileId === id);
+    for (const item of scheduleItems) {
+      this.scheduleItems.delete(item.id);
+    }
+    console.log(`Deleted ${scheduleItems.length} schedule items associated with import file ${id}`);
+    
+    // Then delete the import file record
     return this.importedFiles.delete(id);
   }
   

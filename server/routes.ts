@@ -746,8 +746,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       );
       
       // Сохраняем информацию о загруженном файле в базу данных
+      let fileInfo;
       try {
-        const fileInfo = await storage.createImportedFile({
+        fileInfo = await storage.createImportedFile({
           originalName: req.file.originalname,
           storedName: path.basename(req.file.path),
           filePath: req.file.path,
@@ -762,6 +763,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
         
         console.log(`Created import file record: ${fileInfo.id}`);
+        
+        // Обновляем созданные элементы расписания, чтобы связать их с файлом
+        for (const item of createdItems) {
+          await storage.updateScheduleItem(item.id, {
+            ...item,
+            importedFileId: fileInfo.id
+          });
+          console.log(`Linked schedule item ${item.id} with imported file ${fileInfo.id}`);
+        }
       } catch (fileError) {
         console.error('Error saving file import record:', fileError);
         // Не прерываем операцию, если не удалось сохранить информацию о файле
@@ -931,8 +941,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         );
         
         // Сохраняем информацию о загруженном файле в базу данных
+        let fileInfo;
         try {
-          const fileInfo = await storage.createImportedFile({
+          fileInfo = await storage.createImportedFile({
             originalName: req.file.originalname,
             storedName: path.basename(req.file.path),
             filePath: req.file.path,
@@ -947,6 +958,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
           
           console.log(`Created import file record: ${fileInfo.id}`);
+          
+          // Обновляем созданные элементы расписания, чтобы связать их с файлом
+          for (const item of createdItems) {
+            await storage.updateScheduleItem(item.id, {
+              ...item,
+              importedFileId: fileInfo.id
+            });
+            console.log(`Linked schedule item ${item.id} with imported file ${fileInfo.id}`);
+          }
         } catch (fileError) {
           console.error('Error saving file import record:', fileError);
           // Не прерываем операцию, если не удалось сохранить информацию о файле
