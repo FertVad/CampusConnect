@@ -9,7 +9,8 @@ import {
   CheckCircle, 
   XCircle, 
   AlertTriangle,
-  Clock
+  Clock,
+  Upload
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -116,7 +117,16 @@ const ImportedFiles = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-8">Управление загруженными файлами</h1>
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-2xl font-bold">Управление загруженными файлами</h1>
+        <Button 
+          onClick={() => window.location.href = "/schedule"}
+          aria-label="Загрузить файл расписания"
+        >
+          <Upload className="mr-2 h-4 w-4" />
+          Загрузить расписание
+        </Button>
+      </div>
       
       <Tabs defaultValue="all" onValueChange={(value) => setActiveFilter(value as any)}>
         <div className="mb-4">

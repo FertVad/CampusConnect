@@ -25,6 +25,7 @@ import {
   AlertCircle, 
   Clock, 
   Download, 
+  FileText,
   MapPin, 
   Upload, 
   User, 
@@ -405,22 +406,32 @@ export default function Schedule() {
         <h1 className="text-3xl font-bold">Расписание</h1>
         <div className="flex gap-2">
           {userIsAdmin && (
-            <Button 
-              variant={activeTab === "import" ? "default" : "outline"}
-              onClick={() => setActiveTab(activeTab === "schedule" ? "import" : "schedule")}
-            >
-              {activeTab === "schedule" ? (
-                <>
-                  <Upload className="mr-2 h-4 w-4" />
-                  Импорт расписания
-                </>
-              ) : (
-                <>
-                  <Clock className="mr-2 h-4 w-4" />
-                  Просмотр расписания
-                </>
-              )}
-            </Button>
+            <>
+              <Button 
+                variant="outline"
+                onClick={() => window.location.href = "/admin/imported-files"}
+                aria-label="Перейти к менеджеру файлов"
+              >
+                <FileText className="mr-2 h-4 w-4" />
+                Менеджер файлов
+              </Button>
+              <Button 
+                variant={activeTab === "import" ? "default" : "outline"}
+                onClick={() => setActiveTab(activeTab === "schedule" ? "import" : "schedule")}
+              >
+                {activeTab === "schedule" ? (
+                  <>
+                    <Upload className="mr-2 h-4 w-4" />
+                    Импорт расписания
+                  </>
+                ) : (
+                  <>
+                    <Clock className="mr-2 h-4 w-4" />
+                    Просмотр расписания
+                  </>
+                )}
+              </Button>
+            </>
           )}
         </div>
       </div>
