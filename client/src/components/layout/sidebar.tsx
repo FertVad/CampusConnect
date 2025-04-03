@@ -94,11 +94,11 @@ export function Sidebar() {
             <TooltipTrigger asChild>
               <Link href={item.href}>
                 <div className={cn(
-                  "flex items-center rounded-md transition-colors group relative",
+                  "flex items-center rounded-md transition-colors group relative h-10",
                   isActive 
                     ? "bg-primary/10 text-primary" 
                     : "hover:bg-primary/5 text-muted-foreground hover:text-foreground",
-                  "justify-center px-2 py-3"
+                  "justify-center px-2"
                 )}>
                   <Icon className="h-5 w-5 flex-shrink-0" />
                 </div>
@@ -115,11 +115,11 @@ export function Sidebar() {
       return (
         <Link key={item.key} href={item.href}>
           <div className={cn(
-            "flex items-center rounded-md transition-colors group relative",
+            "flex items-center rounded-md transition-colors group relative h-10",
             isActive 
               ? "bg-primary/10 text-primary" 
               : "hover:bg-primary/5 text-muted-foreground hover:text-foreground",
-            "px-3 py-2"
+            "px-3"
           )}>
             <Icon className="h-5 w-5 mr-3 flex-shrink-0" />
             <span className="text-sm font-medium">
@@ -137,7 +137,7 @@ export function Sidebar() {
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       className={cn(
-        "fixed left-0 top-0 bottom-0 z-50 h-full flex flex-col glass-sidebar transition-all duration-300",
+        "fixed left-0 top-0 bottom-0 z-50 h-full flex flex-col glass-sidebar",
         isCollapsed ? "w-16" : "w-64"
       )}
     >
