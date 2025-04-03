@@ -1,21 +1,96 @@
-import { createReadStream } from 'fs';
+import { createReadStream, readFileSync } from 'fs';
 import csvParser from 'csv-parser';
 import { InsertScheduleItem } from '@shared/schema';
 import { ScheduleImportError, ScheduleImportResult } from './googleSheetsHelper';
+import * as chardet from 'chardet';
+import * as iconv from 'iconv-lite';
+
+// Функция для нормализации и очистки значений строк
+function normalizeValue(value: string | undefined): string | undefined {
+  if (value === undefined || value === null) return undefined;
+  
+  // Удаляем кавычки вокруг значения
+  let normalized = value.trim();
+  if ((normalized.startsWith('"') && normalized.endsWith('"')) || 
+      (normalized.startsWith("'") && normalized.endsWith("'"))) {
+    normalized = normalized.substring(1, normalized.length - 1).trim();
+  }
+  
+  return normalized === '' ? undefined : normalized;
+}
 
 // Функция для преобразования названия дня недели в числовое значение
 function getDayOfWeekNumber(day: string): number {
-  const daysMap: Record<string, number> = {
+  const russianDaysMap: Record<string, number> = {
     'воскресенье': 0,
+    'вс': 0,
     'понедельник': 1,
+    'пн': 1,
     'вторник': 2,
+    'вт': 2,
     'среда': 3,
+    'ср': 3,
     'четверг': 4,
+    'чт': 4,
     'пятница': 5,
-    'суббота': 6
+    'пт': 5,
+    'суббота': 6,
+    'сб': 6
   };
   
-  return daysMap[day.toLowerCase()] ?? -1;
+  const englishDaysMap: Record<string, number> = {
+    'sunday': 0,
+    'sun': 0,
+    'monday': 1,
+    'mon': 1,
+    'tuesday': 2,
+    'tue': 2,
+    'wednesday': 3,
+    'wed': 3,
+    'thursday': 4,
+    'thu': 4,
+    'friday': 5,
+    'fri': 5,
+    'saturday': 6,
+    'sat': 6
+  };
+  
+  const normalizedDay = day.toLowerCase().trim();
+  
+  return russianDaysMap[normalizedDay] ?? englishDaysMap[normalizedDay] ?? -1;
+}
+
+// Определение разделителя CSV файла
+function detectDelimiter(filePath: string): string {
+  try {
+    // Читаем первые несколько строк файла для определения разделителя
+    const encoding = chardet.detectFileSync(filePath) || 'utf8';
+    const buffer = readFileSync(filePath);
+    const content = iconv.decode(buffer, encoding.toString());
+    
+    const firstLines = content.split('\n').slice(0, 3).join('\n');
+    
+    // Считаем количество разных разделителей
+    const commaCount = (firstLines.match(/,/g) || []).length;
+    const semicolonCount = (firstLines.match(/;/g) || []).length;
+    const tabCount = (firstLines.match(/\t/g) || []).length;
+    
+    // Выбираем разделитель с наибольшим количеством вхождений
+    if (semicolonCount > commaCount && semicolonCount > tabCount) {
+      console.log('Detected CSV delimiter: semicolon (;)');
+      return ';';
+    } else if (tabCount > commaCount && tabCount > semicolonCount) {
+      console.log('Detected CSV delimiter: tab (\\t)');
+      return '\t';
+    } else {
+      console.log('Detected CSV delimiter: comma (,)');
+      return ',';
+    }
+  } catch (error) {
+    console.error('Error detecting CSV delimiter:', error);
+    console.log('Defaulting to comma (,) delimiter');
+    return ',';
+  }
 }
 
 // Функция для обработки данных из CSV файла в формате расписания
@@ -28,81 +103,120 @@ export async function parseCsvToScheduleItems(
     const errors: ScheduleImportError[] = [];
     let rowIndex = 1; // Start at 1 for header row
     let foundHeaders: string[] = [];
+    
+    // Определяем разделитель CSV файла
+    const delimiter = detectDelimiter(filePath);
 
-    createReadStream(filePath)
-      .pipe(csvParser())
+    // Определяем кодировку файла
+    const encoding = chardet.detectFileSync(filePath) || 'utf8';
+    console.log(`Detected file encoding: ${encoding}`);
+    
+    // Создаем поток для чтения файла
+    let fileStream = createReadStream(filePath);
+    
+    // Подготавливаем опции для парсера CSV
+    const parserOptions = {
+      separator: delimiter,
+      skipLines: 0,
+      headers: headers || undefined, // Используем переданные заголовки или автоопределяем
+      strict: false
+    };
+    
+    // Обрабатываем CSV файл
+    fileStream
+      .pipe(iconv.decodeStream(encoding.toString()))
+      .pipe(csvParser(parserOptions))
       .on('headers', (headers) => {
-        foundHeaders = headers;
-        console.log(`Found CSV headers: ${headers.join(', ')}`);
+        foundHeaders = headers.map(h => h.trim());
+        console.log(`Found CSV headers: ${foundHeaders.join(', ')}`);
       })
       .on('data', (row) => {
         rowIndex++;
         try {
           const item: Partial<InsertScheduleItem> = {};
           
+          // Нормализуем все значения
+          const normalizedRow: Record<string, string | undefined> = {};
+          for (const key in row) {
+            normalizedRow[key.trim()] = normalizeValue(row[key]);
+          }
+          
+          console.log('Row data:', normalizedRow);
+          
           // Попробуем определить формат CSV файла по заголовкам
           let subjectName, dayName, startTime, endTime, roomNumber, teacherName;
           
           // Сначала ищем стандартные названия полей - точные совпадения
-          if (row['Subject'] !== undefined) subjectName = row['Subject'];
-          else if (row['Предмет'] !== undefined) subjectName = row['Предмет'];
+          if (normalizedRow['Subject'] !== undefined) subjectName = normalizedRow['Subject'];
+          else if (normalizedRow['Предмет'] !== undefined) subjectName = normalizedRow['Предмет'];
           
-          if (row['Day'] !== undefined) dayName = row['Day'];
-          else if (row['День'] !== undefined) dayName = row['День'];
+          if (normalizedRow['Day'] !== undefined) dayName = normalizedRow['Day'];
+          else if (normalizedRow['День'] !== undefined) dayName = normalizedRow['День'];
           
-          if (row['Start Time'] !== undefined) startTime = row['Start Time'];
-          else if (row['Время начала'] !== undefined) startTime = row['Время начала']; 
+          if (normalizedRow['Start Time'] !== undefined) startTime = normalizedRow['Start Time'];
+          else if (normalizedRow['Время начала'] !== undefined) startTime = normalizedRow['Время начала']; 
           
-          if (row['End Time'] !== undefined) endTime = row['End Time'];
-          else if (row['Время конца'] !== undefined) endTime = row['Время конца'];
+          if (normalizedRow['End Time'] !== undefined) endTime = normalizedRow['End Time'];
+          else if (normalizedRow['Время конца'] !== undefined) endTime = normalizedRow['Время конца'];
           
-          if (row['Room'] !== undefined) roomNumber = row['Room'];
-          else if (row['Кабинет'] !== undefined) roomNumber = row['Кабинет'];
+          if (normalizedRow['Room'] !== undefined) roomNumber = normalizedRow['Room'];
+          else if (normalizedRow['Кабинет'] !== undefined) roomNumber = normalizedRow['Кабинет'];
           
-          if (row['Teacher'] !== undefined) teacherName = row['Teacher'];
-          else if (row['Преподаватель'] !== undefined) teacherName = row['Преподаватель'];
+          if (normalizedRow['Teacher'] !== undefined) teacherName = normalizedRow['Teacher'];
+          else if (normalizedRow['Преподаватель'] !== undefined) teacherName = normalizedRow['Преподаватель'];
           
           // Если не нашли точные совпадения, ищем по содержимому заголовков
           if (!subjectName) {
-            const subjectHeader = foundHeaders.find(h => h.toLowerCase().includes('subject') || h.toLowerCase().includes('предмет'));
-            if (subjectHeader) subjectName = row[subjectHeader];
+            const subjectHeader = foundHeaders.find(h => 
+              h.toLowerCase().includes('subject') || 
+              h.toLowerCase().includes('предмет') ||
+              h.toLowerCase().includes('дисциплина'));
+            if (subjectHeader) subjectName = normalizedRow[subjectHeader];
           }
           
           if (!dayName) {
-            const dayHeader = foundHeaders.find(h => h.toLowerCase().includes('day') || h.toLowerCase().includes('день'));
-            if (dayHeader) dayName = row[dayHeader];
+            const dayHeader = foundHeaders.find(h => 
+              h.toLowerCase().includes('day') || 
+              h.toLowerCase().includes('день') ||
+              h.toLowerCase().includes('дата'));
+            if (dayHeader) dayName = normalizedRow[dayHeader];
           }
           
           if (!startTime) {
             const startHeader = foundHeaders.find(h => 
               h.toLowerCase().includes('start') || 
               h.toLowerCase().includes('начало') || 
-              h.toLowerCase().includes('начала'));
-            if (startHeader) startTime = row[startHeader];
+              h.toLowerCase().includes('начала') ||
+              h.toLowerCase().includes('с'));
+            if (startHeader) startTime = normalizedRow[startHeader];
           }
           
           if (!endTime) {
             const endHeader = foundHeaders.find(h => 
               h.toLowerCase().includes('end') || 
               h.toLowerCase().includes('конец') || 
-              h.toLowerCase().includes('конца'));
-            if (endHeader) endTime = row[endHeader];
+              h.toLowerCase().includes('конца') ||
+              h.toLowerCase().includes('завершение') ||
+              h.toLowerCase().includes('до'));
+            if (endHeader) endTime = normalizedRow[endHeader];
           }
           
           if (!roomNumber) {
             const roomHeader = foundHeaders.find(h => 
               h.toLowerCase().includes('room') || 
               h.toLowerCase().includes('кабинет') || 
-              h.toLowerCase().includes('аудитория'));
-            if (roomHeader) roomNumber = row[roomHeader];
+              h.toLowerCase().includes('аудитория') ||
+              h.toLowerCase().includes('класс'));
+            if (roomHeader) roomNumber = normalizedRow[roomHeader];
           }
           
           if (!teacherName) {
             const teacherHeader = foundHeaders.find(h => 
               h.toLowerCase().includes('teacher') || 
               h.toLowerCase().includes('преподаватель') || 
-              h.toLowerCase().includes('учитель'));
-            if (teacherHeader) teacherName = row[teacherHeader];
+              h.toLowerCase().includes('учитель') ||
+              h.toLowerCase().includes('педагог'));
+            if (teacherHeader) teacherName = normalizedRow[teacherHeader];
           }
           
           // Проверяем обязательные поля
@@ -125,46 +239,57 @@ export async function parseCsvToScheduleItems(
           // Обрабатываем день недели
           const dayNumber = getDayOfWeekNumber(dayName);
           if (dayNumber === -1) {
-            // Если английское название дня, пробуем их тоже распознать
-            const englishDaysMap: Record<string, number> = {
-              'sunday': 0,
-              'monday': 1,
-              'tuesday': 2,
-              'wednesday': 3,
-              'thursday': 4,
-              'friday': 5,
-              'saturday': 6
-            };
-            
-            const englishDayNumber = englishDaysMap[dayName.toLowerCase()];
-            if (englishDayNumber === undefined) {
+            // Проверяем числовое представление дня недели (0-6)
+            const numericDay = parseInt(dayName);
+            if (!isNaN(numericDay) && numericDay >= 0 && numericDay <= 6) {
+              item.dayOfWeek = numericDay;
+            } else {
               throw new Error(`Неверный формат дня недели: ${dayName}`);
             }
-            
-            item.dayOfWeek = englishDayNumber;
           } else {
             item.dayOfWeek = dayNumber;
           }
           
           // Обрабатываем время начала
-          // Валидация формата времени (ЧЧ:ММ)
-          const timeRegex = /^(\d{1,2}):(\d{2})$/;
-          if (!timeRegex.test(startTime)) {
+          // Валидация формата времени (ЧЧ:ММ или чч.мм)
+          const timeRegexColon = /^(\d{1,2}):(\d{2})$/;
+          const timeRegexDot = /^(\d{1,2})\.(\d{2})$/;
+          const timeRegexNumeric = /^(\d{1,2})(\d{2})$/;
+          
+          // Функция для форматирования времени в формат ЧЧ:ММ
+          const formatTimeToHHMM = (time: string): string => {
+            if (timeRegexColon.test(time)) {
+              return time; // Уже в нужном формате ЧЧ:ММ
+            } else if (timeRegexDot.test(time)) {
+              return time.replace('.', ':'); // Заменяем точку на двоеточие
+            } else if (timeRegexNumeric.test(time)) {
+              // Преобразуем формат ЧЧММ в ЧЧ:ММ
+              const hour = time.substring(0, time.length - 2);
+              const minute = time.substring(time.length - 2);
+              return `${hour}:${minute}`;
+            }
+            return time; // Возвращаем как есть, если не подходит под известные форматы
+          };
+          
+          // Приводим время к нужному формату
+          const formattedStartTime = formatTimeToHHMM(startTime);
+          const formattedEndTime = formatTimeToHHMM(endTime);
+          
+          // Проверяем форматы времени после преобразования
+          if (!timeRegexColon.test(formattedStartTime)) {
             throw new Error(`Неверный формат времени начала: ${startTime}. Ожидается формат ЧЧ:ММ`);
           }
           
-          item.startTime = startTime;
-          
-          // Обрабатываем время окончания
-          if (!timeRegex.test(endTime)) {
+          if (!timeRegexColon.test(formattedEndTime)) {
             throw new Error(`Неверный формат времени окончания: ${endTime}. Ожидается формат ЧЧ:ММ`);
           }
           
-          item.endTime = endTime;
+          item.startTime = formattedStartTime;
+          item.endTime = formattedEndTime;
           
           // Обрабатываем поле Кабинет (необязательное)
           if (roomNumber) {
-            item.roomNumber = roomNumber;
+            item.roomNumber = roomNumber.trim();
           }
           
           // Сохраняем имя предмета

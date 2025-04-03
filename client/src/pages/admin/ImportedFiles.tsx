@@ -200,12 +200,12 @@ const ImportedFiles = () => {
                             <RefreshCw className="h-4 w-4" />
                           </Button>
                           <Button 
-                            variant="ghost" 
+                            variant="danger" 
                             size="icon"
                             disabled={isProcessing[file.id]}
                             onClick={() => handleDeleteFile(file.id)}
                           >
-                            <Trash2 className="h-4 w-4 text-red-500" />
+                            <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
                       </TableCell>

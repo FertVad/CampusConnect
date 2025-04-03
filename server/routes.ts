@@ -796,6 +796,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const filePath = req.file.path;
         console.log(`Processing uploaded CSV file at: ${filePath}`);
         
+        // Проверяем и получаем информацию о CSV файле
+        const fileInfo = {
+          mime: req.file.mimetype,
+          size: req.file.size,
+          name: req.file.originalname
+        };
+        
+        console.log(`CSV File Info - Type: ${fileInfo.mime}, Size: ${fileInfo.size} bytes, Name: ${fileInfo.name}`);
+        
         // Parse the CSV file to schedule items - не передаем заголовки, чтобы функция автоматически определила их
         const { scheduleItems, errors: parseErrors } = await parseCsvToScheduleItems(filePath);
         console.log(`Parsed CSV data: Found ${scheduleItems.length} potential schedule items with ${parseErrors.length} parse errors`);
