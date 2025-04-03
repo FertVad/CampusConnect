@@ -746,9 +746,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       );
       
       // Сохраняем информацию о загруженном файле в базу данных
-      let fileInfo;
       try {
-        fileInfo = await storage.createImportedFile({
+        const gsheetFileInfo = await storage.createImportedFile({
           originalName: req.file.originalname,
           storedName: path.basename(req.file.path),
           filePath: req.file.path,
@@ -762,15 +761,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           uploadedBy: req.user!.id
         });
         
-        console.log(`Created import file record: ${fileInfo.id}`);
+        console.log(`Created import file record: ${gsheetFileInfo.id}`);
         
         // Обновляем созданные элементы расписания, чтобы связать их с файлом
         for (const item of createdItems) {
           await storage.updateScheduleItem(item.id, {
             ...item,
-            importedFileId: fileInfo.id
+            importedFileId: gsheetFileInfo.id
           });
-          console.log(`Linked schedule item ${item.id} with imported file ${fileInfo.id}`);
+          console.log(`Linked schedule item ${item.id} with imported file ${gsheetFileInfo.id}`);
         }
       } catch (fileError) {
         console.error('Error saving file import record:', fileError);
@@ -807,13 +806,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log(`Processing uploaded CSV file at: ${filePath}`);
         
         // Проверяем и получаем информацию о CSV файле
-        const fileInfo = {
+        const csvFileInfo = {
           mime: req.file.mimetype,
           size: req.file.size,
           name: req.file.originalname
         };
         
-        console.log(`CSV File Info - Type: ${fileInfo.mime}, Size: ${fileInfo.size} bytes, Name: ${fileInfo.name}`);
+        console.log(`CSV File Info - Type: ${csvFileInfo.mime}, Size: ${csvFileInfo.size} bytes, Name: ${csvFileInfo.name}`);
         
         // Parse the CSV file to schedule items - не передаем заголовки, чтобы функция автоматически определила их
         const { scheduleItems, errors: parseErrors } = await parseCsvToScheduleItems(filePath);
@@ -941,9 +940,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         );
         
         // Сохраняем информацию о загруженном файле в базу данных
-        let fileInfo;
         try {
-          fileInfo = await storage.createImportedFile({
+          const importFileInfo = await storage.createImportedFile({
             originalName: req.file.originalname,
             storedName: path.basename(req.file.path),
             filePath: req.file.path,
@@ -957,15 +955,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
             uploadedBy: req.user!.id
           });
           
-          console.log(`Created import file record: ${fileInfo.id}`);
+          console.log(`Created import file record: ${importFileInfo.id}`);
           
           // Обновляем созданные элементы расписания, чтобы связать их с файлом
           for (const item of createdItems) {
             await storage.updateScheduleItem(item.id, {
               ...item,
-              importedFileId: fileInfo.id
+              importedFileId: importFileInfo.id
             });
-            console.log(`Linked schedule item ${item.id} with imported file ${fileInfo.id}`);
+            console.log(`Linked schedule item ${item.id} with imported file ${importFileInfo.id}`);
           }
         } catch (fileError) {
           console.error('Error saving file import record:', fileError);

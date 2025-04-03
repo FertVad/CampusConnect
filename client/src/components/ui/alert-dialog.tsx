@@ -90,6 +90,9 @@ const AlertDialogDescription = React.forwardRef<
   <AlertDialogPrimitive.Description
     ref={ref}
     className={cn("text-sm text-muted-foreground", className)}
+    asChild={props.children && React.Children.toArray(props.children).some(
+      child => React.isValidElement(child) && (child.type === 'p' || child.props?.className?.includes('p-'))
+    )}
     {...props}
   />
 ))
