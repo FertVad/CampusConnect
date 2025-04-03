@@ -1121,15 +1121,44 @@ export class MemStorage implements IStorage {
   }
   
   async deleteImportedFile(id: number): Promise<boolean> {
-    // First delete all schedule items associated with this import file
-    const scheduleItems = this.scheduleItems.values().filter(item => item.importedFileId === id);
-    for (const item of scheduleItems) {
-      this.scheduleItems.delete(item.id);
+    try {
+      console.log(`In-Memory: Deleting imported file with ID: ${id}`);
+      
+      // First check if the file exists
+      if (!this.importedFiles.has(id)) {
+        console.error(`In-Memory: ImportedFile with ID ${id} not found`);
+        return false;
+      }
+      
+      // Get all schedule items that need to be deleted
+      const itemsToDelete = Array.from(this.scheduleItems.values())
+        .filter(item => item.importedFileId === id);
+      
+      console.log(`In-Memory: Found ${itemsToDelete.length} schedule items to delete for import file ${id}`);
+      
+      // Delete all associated schedule items
+      for (const item of itemsToDelete) {
+        this.scheduleItems.delete(item.id);
+      }
+      console.log(`In-Memory: Deleted ${itemsToDelete.length} schedule items associated with import file ${id}`);
+      
+      // Then delete the import file record
+      const result = this.importedFiles.delete(id);
+      console.log(`In-Memory: Deleted imported file record: ${result ? 'success' : 'failed'}`);
+      
+      return result;
+    } catch (error) {
+      console.error('In-Memory: Error in deleteImportedFile:', error);
+      // Print detailed error information for debugging
+      if (error instanceof Error) {
+        console.error('In-Memory: Error details:', {
+          name: error.name,
+          message: error.message,
+          stack: error.stack
+        });
+      }
+      return false;
     }
-    console.log(`Deleted ${scheduleItems.length} schedule items associated with import file ${id}`);
-    
-    // Then delete the import file record
-    return this.importedFiles.delete(id);
   }
   
   private seedData() {

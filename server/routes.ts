@@ -1046,38 +1046,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
-        return res.status(400).json({ message: "Invalid file ID" });
+        console.error('Invalid file ID provided:', req.params.id);
+        return res.status(400).json({ 
+          error: true,
+          message: "Invalid file ID", 
+          details: "The file ID must be a valid number"
+        });
       }
       
-      console.log(`Processing delete request for imported file ID: ${id}`);
+      console.log(`[DELETE FILE] Processing delete request for imported file ID: ${id}`);
       
+      // Step 1: Get the file details
       const file = await storage.getImportedFile(id);
       
       if (!file) {
-        console.log(`File with ID ${id} not found`);
-        return res.status(404).json({ message: "File not found" });
+        console.log(`[DELETE FILE] File with ID ${id} not found`);
+        return res.status(404).json({ 
+          error: true, 
+          message: "File not found",
+          details: `No file with ID ${id} exists in the database`
+        });
       }
       
-      console.log(`Found file: ${file.originalName}, import type: ${file.importType}`);
+      console.log(`[DELETE FILE] Found file: ${file.originalName}, import type: ${file.importType}`);
       
-      // Delete the actual file from the filesystem if it exists and is a CSV file
+      // Step 2: Delete the physical file if it exists
+      let physicalFileDeleted = false;
+      
       if (file.filePath && file.importType === 'csv') {
         const fullPath = path.join(process.cwd(), file.filePath);
-        console.log(`Attempting to delete physical file at: ${fullPath}`);
+        console.log(`[DELETE FILE] Attempting to delete physical file at: ${fullPath}`);
         
         try {
           await fs.promises.access(fullPath);
           await fs.promises.unlink(fullPath);
-          console.log(`Successfully deleted physical file: ${fullPath}`);
+          console.log(`[DELETE FILE] Successfully deleted physical file: ${fullPath}`);
+          physicalFileDeleted = true;
         } catch (err) {
-          console.error(`Could not delete physical file ${fullPath}:`, err);
-          // Continue with deleting the database record even if the file doesn't exist
+          console.error(`[DELETE FILE] Could not delete physical file ${fullPath}:`, err);
+          // Continue with database operations even if physical file delete fails
         }
       }
       
-      console.log(`Now deleting the database records for file ID: ${id}`);
+      console.log(`[DELETE FILE] Now checking related schedule items for file ID: ${id}`);
       
-      // First, get a count of related schedule items for logging purposes
+      // Step 3: Get count of related schedule items before deletion
       const { scheduleItems } = await import('@shared/schema');
       const { sql } = await import('drizzle-orm');
       
@@ -1089,45 +1102,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .where(eq(scheduleItems.importedFileId, id))
         .then(result => Number(result[0]?.count || 0));
       
-      console.log(`Found ${relatedItemsCount} schedule items related to imported file ID: ${id}`);
+      console.log(`[DELETE FILE] Found ${relatedItemsCount} schedule items related to imported file ID: ${id}`);
       
-      // Delete the database record using our improved transaction-based method
+      // Step 4: Delete the database records using our improved transaction-based method
+      console.log(`[DELETE FILE] Attempting to delete file ID ${id} and related records from database`);
       const success = await storage.deleteImportedFile(id);
       
+      // Step 5: Respond with appropriate status based on success
       if (success) {
-        console.log(`Successfully deleted imported file with ID: ${id} and all related schedule items`);
-        res.status(200).json({ 
+        console.log(`[DELETE FILE] Successfully deleted imported file with ID: ${id} and all related schedule items`);
+        return res.status(200).json({ 
+          error: false,
           message: "File deleted successfully",
           info: {
             fileId: id,
             fileName: file.originalName,
-            relatedItemsDeleted: relatedItemsCount
+            relatedItemsDeleted: relatedItemsCount,
+            physicalFileDeleted
           }
         });
       } else {
-        console.error(`Failed to delete imported file with ID: ${id}`);
-        res.status(500).json({ 
+        console.error(`[DELETE FILE] Database operation failed for deleting imported file with ID: ${id}`);
+        return res.status(500).json({ 
+          error: true,
           message: "Failed to delete file",
-          details: "The database operation to delete the file record failed. This might be due to related records that need to be deleted first."
+          details: "The database operation to delete the file record failed. This might be due to database constraints or a server issue.",
+          info: {
+            fileId: id,
+            fileName: file.originalName,
+            physicalFileDeleted
+          }
         });
       }
     } catch (error) {
-      console.error('Error in delete imported file handler:', error);
-      // Provide more helpful error messages
+      // Enhanced error logging with prefix for easier debugging
+      console.error('[DELETE FILE] Unhandled error in delete imported file handler:', error);
+      
+      // Provide more helpful error messages to both logs and response
       if (error instanceof Error) {
-        console.error('Error details:', {
+        console.error('[DELETE FILE] Detailed error:', {
           name: error.name,
           message: error.message,
           stack: error.stack
         });
         
-        res.status(500).json({ 
-          message: "Server error", 
+        return res.status(500).json({ 
+          error: true,
+          message: "Error deleting file", 
           details: error.message,
           type: error.name
         });
       } else {
-        res.status(500).json({ message: "Server error" });
+        return res.status(500).json({ 
+          error: true,
+          message: "Unknown server error occurred while deleting file"
+        });
       }
     }
   });
