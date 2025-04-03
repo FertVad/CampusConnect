@@ -592,6 +592,12 @@
     "darkMode": "Темный режим",
     "lightMode": "Светлый режим",
     "systemMode": "Системная тема",
+    "darkTheme": "Темная тема",
+    "lightTheme": "Светлая тема",
+    "systemTheme": "Системная тема",
+    "toggleTheme": "Переключить тему",
+    "themeOptions": "Варианты темы",
+    "themeTitle": "Тема оформления",
     "languages": {
       "ru": "Русский",
       "en": "Английский"

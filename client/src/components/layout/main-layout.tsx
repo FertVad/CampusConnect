@@ -9,13 +9,13 @@ interface MainLayoutProps {
 
 export function MainLayout({ children }: MainLayoutProps) {
   return (
-    <div className="min-h-screen bg-zinc-900 text-gray-200">
+    <div className="min-h-screen bg-background text-foreground transition-colors">
       {/* Sidebar - fixed position, will overlay content */}
       <Sidebar />
       
       {/* Main content area - fixed margin for collapsed sidebar */}
       <div className="ml-16 min-h-screen">
-        {/* Place theme and language controls inside sidebar instead */}
+        {/* Content container */}
         <main className="w-full">
           {children}
         </main>

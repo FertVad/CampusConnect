@@ -3,8 +3,63 @@
 @tailwind utilities;
 
 @layer base {
+  /* Theme transition class - applied during theme changes */
+  .theme-transition * {
+    transition: background-color 0.5s ease, color 0.5s ease, border-color 0.5s ease, fill 0.5s ease, box-shadow 0.5s ease !important;
+  }
+  
+  :root {
+    /* Base transition for theme switching */
+    --theme-transition: background-color 0.5s ease, color 0.5s ease, border-color 0.5s ease, fill 0.5s ease, box-shadow 0.5s ease;
+    
+    /* Light theme variables */
+    --background: 0 0% 100%;
+    --foreground: 240 10% 15%;
+    
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 15%;
+    
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 15%;
+    
+    --primary: 246 60% 60%;
+    --primary-foreground: 0 0% 100%;
+    
+    --secondary: 240 5% 95%;
+    --secondary-foreground: 240 10% 15%;
+    
+    --muted: 240 5% 95%;
+    --muted-foreground: 240 5% 40%;
+    
+    --accent: 240 5% 95%;
+    --accent-foreground: 240 10% 15%;
+    
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 0 0% 100%;
+    
+    --border: 240 5% 85%;
+    --input: 240 5% 85%;
+    --ring: 246 60% 60%;
+    
+    --chart-1: 246 60% 50%;
+    --chart-2: 180 70% 40%;
+    --chart-3: 330 70% 50%;
+    --chart-4: 60 70% 45%;
+    --chart-5: 280 70% 50%;
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 10% 15%;
+    --sidebar-primary: 246 60% 60%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 246 10% 95%;
+    --sidebar-accent-foreground: 240 10% 15%;
+    --sidebar-border: 240 5% 90%;
+    --sidebar-ring: 246 60% 60%;
+  }
+
   * {
     @apply border-border;
+    transition: var(--theme-transition);
   }
 
   html {
@@ -21,6 +76,7 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
+    transition: var(--theme-transition);
   }
 
   /* Force momentum scrolling for Safari */
@@ -74,20 +130,33 @@
   }
 }
 
-/* Glassmorphism styles with Safari fallbacks */
+/* Glassmorphism styles with light/dark variants and Safari fallbacks */
 .glass {
-  @apply bg-white/10 border border-white/10;
-  
-  /* Better fallback for all browsers - will be overridden by backdrop-filter when supported */
-  background-color: rgba(30, 30, 35, 0.75); 
+  /* Base style - works for both light and dark modes */
+  @apply backdrop-blur-md border transition-colors;
   
   /* Multiple backdrop filters for compatibility */
   -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
+}
+
+/* Dark mode glass */
+.dark .glass {
+  @apply bg-white/10 border-white/10;
+  background-color: rgba(30, 30, 35, 0.75); 
   
-  /* Fallback for Safari and other browsers if backdrop-filter is not supported */
   @supports not ((-webkit-backdrop-filter: blur(12px)) or (backdrop-filter: blur(12px))) {
     background-color: rgba(30, 30, 35, 0.9);
+  }
+}
+
+/* Light mode glass */
+:root:not(.dark) .glass {
+  @apply bg-black/5 border-black/10;
+  background-color: rgba(255, 255, 255, 0.8);
+  
+  @supports not ((-webkit-backdrop-filter: blur(12px)) or (backdrop-filter: blur(12px))) {
+    background-color: rgba(255, 255, 255, 0.9);
   }
 }
 
@@ -96,22 +165,33 @@
 }
 
 .glass-sidebar {
-  @apply glass border-r border-white/10;
+  @apply glass border-r z-50;
+  transition: width 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.5s ease, border-color 0.5s ease;
+}
+
+/* Dark mode sidebar */
+.dark .glass-sidebar {
+  @apply border-white/10;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-  z-index: 50;
-  transition: width 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Light mode sidebar */
+:root:not(.dark) .glass-sidebar {
+  @apply border-black/10;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.07);
 }
 
 .glass-modal {
   @apply glass rounded-lg;
 }
 
-/* Custom scrollbar with Safari support */
-.dark ::-webkit-scrollbar {
+/* Custom scrollbar for both themes with Safari support */
+::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
+/* Dark mode scrollbar */
 .dark ::-webkit-scrollbar-track {
   @apply bg-zinc-900;
 }
@@ -122,6 +202,19 @@
 
 .dark ::-webkit-scrollbar-thumb:hover {
   @apply bg-zinc-600;
+}
+
+/* Light mode scrollbar */
+:root:not(.dark) ::-webkit-scrollbar-track {
+  @apply bg-gray-100;
+}
+
+:root:not(.dark) ::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 rounded-full;
+}
+
+:root:not(.dark) ::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-400;
 }
 
 /* Thin scrollbar variant */
