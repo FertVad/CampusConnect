@@ -78,6 +78,59 @@ export function Sidebar() {
     };
   }, [isManuallyExpanded]);
 
+  // Render navigation items
+  const renderNavItems = () => {
+    return navigationItems.map((item) => {
+      // Skip admin-only items for non-admin users
+      if (item.adminOnly && !isAdmin) return null;
+      
+      const isActive = location === item.href;
+      const Icon = item.icon;
+      
+      // When sidebar is collapsed, show tooltips
+      if (isCollapsed) {
+        return (
+          <Tooltip key={item.key}>
+            <TooltipTrigger asChild>
+              <Link href={item.href}>
+                <div className={cn(
+                  "flex items-center rounded-md transition-colors group relative",
+                  isActive 
+                    ? "bg-primary/10 text-primary" 
+                    : "hover:bg-primary/5 text-muted-foreground hover:text-foreground",
+                  "justify-center px-2 py-3"
+                )}>
+                  <Icon className="h-5 w-5 flex-shrink-0" />
+                </div>
+              </Link>
+            </TooltipTrigger>
+            <TooltipContent side="right">
+              {t(item.key)}
+            </TooltipContent>
+          </Tooltip>
+        );
+      }
+      
+      // When sidebar is expanded, show full menu items
+      return (
+        <Link key={item.key} href={item.href}>
+          <div className={cn(
+            "flex items-center rounded-md transition-colors group relative",
+            isActive 
+              ? "bg-primary/10 text-primary" 
+              : "hover:bg-primary/5 text-muted-foreground hover:text-foreground",
+            "px-3 py-2"
+          )}>
+            <Icon className="h-5 w-5 mr-3 flex-shrink-0" />
+            <span className="text-sm font-medium">
+              {t(item.key)}
+            </span>
+          </div>
+        </Link>
+      );
+    });
+  };
+
   return (
     <div 
       ref={sidebarRef}
@@ -113,41 +166,8 @@ export function Sidebar() {
       {/* Navigation */}
       <nav className="flex-1 py-6 overflow-y-auto scrollbar-thin">
         <div className="space-y-1 px-2">
-          <TooltipProvider delayDuration={isCollapsed ? 0 : 999999}>
-            {navigationItems.map((item) => {
-              if (item.adminOnly && !isAdmin) return null;
-              
-              const isActive = location === item.href;
-              const Icon = item.icon;
-              
-              return (
-                <Tooltip key={item.key}>
-                  <TooltipTrigger asChild>
-                    <Link href={item.href}>
-                      <div className={cn(
-                        "flex items-center rounded-md transition-colors group relative",
-                        isActive 
-                          ? "bg-primary/10 text-primary" 
-                          : "hover:bg-primary/5 text-muted-foreground hover:text-foreground",
-                        isCollapsed ? "justify-center px-2 py-3" : "px-3 py-2"
-                      )}>
-                        <Icon className={cn("flex-shrink-0", isCollapsed ? "h-6 w-6" : "h-5 w-5 mr-3")} />
-                        {!isCollapsed && (
-                          <span className="text-sm font-medium">
-                            {t(item.key)}
-                          </span>
-                        )}
-                      </div>
-                    </Link>
-                  </TooltipTrigger>
-                  {isCollapsed && (
-                    <TooltipContent side="right">
-                      {t(item.key)}
-                    </TooltipContent>
-                  )}
-                </Tooltip>
-              );
-            })}
+          <TooltipProvider delayDuration={0}>
+            {renderNavItems()}
           </TooltipProvider>
         </div>
       </nav>
@@ -158,29 +178,33 @@ export function Sidebar() {
           "border-t border-sidebar-border py-4 px-4",
           isCollapsed ? "flex justify-center" : ""
         )}>
-          <TooltipProvider delayDuration={isCollapsed ? 0 : 999999}>
+          {isCollapsed ? (
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button 
                   variant="ghost"
                   onClick={handleLogout} 
                   disabled={logoutMutation.isPending}
-                  className={cn(
-                    "hover:bg-primary/5 text-muted-foreground hover:text-foreground",
-                    isCollapsed ? "w-10 h-10 rounded-full p-0" : "justify-start text-sm w-full"
-                  )}
+                  className="w-10 h-10 rounded-full p-0 hover:bg-primary/5 text-muted-foreground hover:text-foreground"
                 >
-                  <LogOut className={isCollapsed ? "h-5 w-5" : "h-5 w-5 mr-3"} />
-                  {!isCollapsed && t('dashboard.logout')}
+                  <LogOut className="h-5 w-5" />
                 </Button>
               </TooltipTrigger>
-              {isCollapsed && (
-                <TooltipContent side="right">
-                  {t('dashboard.logout')}
-                </TooltipContent>
-              )}
+              <TooltipContent side="right">
+                {t('dashboard.logout')}
+              </TooltipContent>
             </Tooltip>
-          </TooltipProvider>
+          ) : (
+            <Button 
+              variant="ghost"
+              onClick={handleLogout} 
+              disabled={logoutMutation.isPending}
+              className="justify-start text-sm w-full hover:bg-primary/5 text-muted-foreground hover:text-foreground"
+            >
+              <LogOut className="h-5 w-5 mr-3" />
+              {t('dashboard.logout')}
+            </Button>
+          )}
         </div>
       )}
     </div>
