@@ -351,7 +351,8 @@
       "sheetsUrl": "URL Google Sheets",
       "sheetsId": "ID листа",
       "importSuccess": "Расписание успешно импортировано",
-      "importError": "Ошибка импорта расписания: {{message}}"
+      "importError": "Ошибка импорта расписания: {{message}}",
+      "fileManager": "Менеджер файлов"
     },
     "confirmDelete": "Вы уверены, что хотите удалить это занятие?",
     "deleteSuccess": "Занятие успешно удалено",
