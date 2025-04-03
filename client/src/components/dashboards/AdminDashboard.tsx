@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import StatusCard from '@/components/cards/StatusCard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { BookOpen, FilePlus, Users } from 'lucide-react';
+import { BookOpen, FilePlus, Users, FileText, MessageSquare } from 'lucide-react';
 import { Link } from 'wouter';
 import { User, Request } from '@shared/schema';
 import { Button } from '@/components/ui/button';
@@ -134,12 +134,49 @@ const AdminDashboard = () => {
           <ActivityFeed />
         </div>
         
-        {/* Right column (1/3 width) - now empty to make space for other widgets */}
+        {/* Right column (1/3 width) */}
         <div className="space-y-6">
-          {/* Space reserved for upcoming features */}
-          <div className="h-96 rounded-lg border-2 border-dashed border-neutral-200 flex items-center justify-center">
-            <p className="text-neutral-400">Space for additional widgets</p>
-          </div>
+          {/* Quick Actions */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg font-heading">{t('dashboard.quickActions')}</CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="grid grid-cols-2 gap-3 p-3">
+                {/* Files */}
+                <Link href="/imported-files" className="w-full">
+                  <div className="rounded-lg border bg-card text-card-foreground shadow-sm hover:bg-accent/10 transition-colors p-4 flex flex-col items-center justify-center gap-2 h-full cursor-pointer">
+                    <FileText className="h-8 w-8 text-primary" />
+                    <span className="text-sm font-medium">📁 {t('schedule.importedFiles')}</span>
+                  </div>
+                </Link>
+                
+                {/* Users */}
+                <Link href="/users" className="w-full">
+                  <div className="rounded-lg border bg-card text-card-foreground shadow-sm hover:bg-accent/10 transition-colors p-4 flex flex-col items-center justify-center gap-2 h-full cursor-pointer">
+                    <Users className="h-8 w-8 text-primary" />
+                    <span className="text-sm font-medium">👥 {t('common.users')}</span>
+                  </div>
+                </Link>
+                
+                {/* Requests */}
+                <Link href="/requests" className="w-full">
+                  <div className="rounded-lg border bg-card text-card-foreground shadow-sm hover:bg-accent/10 transition-colors p-4 flex flex-col items-center justify-center gap-2 h-full cursor-pointer">
+                    <FilePlus className="h-8 w-8 text-primary" />
+                    <span className="text-sm font-medium">📄 {t('requests.title')}</span>
+                  </div>
+                </Link>
+                
+                {/* Chat */}
+                <Link href="/chat" className="w-full">
+                  <div className="rounded-lg border bg-card text-card-foreground shadow-sm hover:bg-accent/10 transition-colors p-4 flex flex-col items-center justify-center gap-2 h-full cursor-pointer">
+                    <MessageSquare className="h-8 w-8 text-primary" />
+                    <span className="text-sm font-medium">💬 {t('chat.title')}</span>
+                  </div>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
