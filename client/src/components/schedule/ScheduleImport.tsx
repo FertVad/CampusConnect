@@ -12,7 +12,6 @@ import { apiRequest } from '@/lib/queryClient';
 import { Loader2, AlertCircle, FileUp, CheckCircle, XCircle, ShieldAlert, Download } from 'lucide-react';
 import { queryClient } from '@/lib/queryClient';
 import { useAuth } from '@/hooks/use-auth';
-import { isAdmin } from '@/lib/auth';
 import { useLocation } from 'wouter';
 
 interface ImportResult {
@@ -46,7 +45,7 @@ export default function ScheduleImport() {
   const [, navigate] = useLocation();
   
   // Проверка роли пользователя
-  const userIsAdmin = isAdmin(user?.role);
+  const userIsAdmin = user?.role === "admin";
 
   const {
     register,

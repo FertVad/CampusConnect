@@ -82,10 +82,9 @@ export function ProtectedRoute({ path, component: Component, adminOnly = false }
     );
   }
 
-  // Если пользователь не авторизован, ничего не показываем, потому что useEffect
-  // запустит перенаправление
+  // Если пользователь не авторизован, показываем компонент страницы авторизации
   if (!user) {
-    return null;
+    return <Route path="/auth" component={() => <Component />} />;
   }
 
   // Показываем компонент только если пользователь авторизован и имеет нужные права
