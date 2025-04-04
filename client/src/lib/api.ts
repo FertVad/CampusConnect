@@ -125,9 +125,9 @@ export async function uploadFile(endpoint: string, formData: FormData): Promise<
 
 // WebSocket connection for chat with cross-browser compatibility
 export function createWebSocketConnection(userId: number | undefined | null, onMessage: (data: any) => void): WebSocket | null {
-  // Проверка наличия userId перед созданием соединения
-  if (!userId) {
-    console.log('WebSocket не инициализируется: отсутствует userId');
+  // Enhanced validation to prevent WebSocket initialization with invalid/missing token
+  if (!userId || typeof userId !== 'number' || userId <= 0) {
+    console.log('WebSocket not initialized: Invalid or missing userId');
     return null;
   }
 
@@ -141,7 +141,8 @@ export function createWebSocketConnection(userId: number | undefined | null, onM
   const wsUrl = import.meta.env.VITE_WS_URL || 
                `${window.location.protocol === "https:" ? "wss:" : "ws:"}//${window.location.host}/ws`;
   
-  if (!wsUrl) {
+  // Validate WebSocket URL format
+  if (!wsUrl || !(wsUrl.startsWith('ws:') || wsUrl.startsWith('wss:'))) {
     console.error('Invalid WebSocket URL configuration');
     return null;
   }
@@ -165,8 +166,8 @@ export function createWebSocketConnection(userId: number | undefined | null, onM
           console.error('Error closing socket during timeout:', err);
         }
         
-        // Try to reconnect if we haven't reached max attempts
-        if (reconnectAttempts < maxReconnectAttempts) {
+        // Try to reconnect if we haven't reached max attempts and userId is valid
+        if (reconnectAttempts < maxReconnectAttempts && userId && typeof userId === 'number' && userId > 0) {
           reconnectAttempts++;
           console.log(`Reconnection attempt ${reconnectAttempts}/${maxReconnectAttempts}`);
           createWebSocketConnection(userId, onMessage);
@@ -178,8 +179,8 @@ export function createWebSocketConnection(userId: number | undefined | null, onM
       clearTimeout(connectionTimeout);
       reconnectAttempts = 0;
       
-      // Проверяем наличие userId еще раз перед отправкой аутентификации
-      if (!userId) {
+      // Enhanced validation for userId when connection is established
+      if (!userId || typeof userId !== 'number' || userId <= 0) {
         console.error('WebSocket opened but userId is missing or invalid');
         try {
           socket.close(1000, 'User not authenticated');
@@ -227,8 +228,8 @@ export function createWebSocketConnection(userId: number | undefined | null, onM
       console.log(`WebSocket connection closed: ${event.code} ${event.reason}`);
       
       // Attempt to reconnect if not a clean close and we haven't reached max attempts
-      // И только если userId все еще валиден
-      if (!event.wasClean && reconnectAttempts < maxReconnectAttempts && userId) {
+      // Only reconnect if userId is still valid
+      if (!event.wasClean && reconnectAttempts < maxReconnectAttempts && userId && typeof userId === 'number' && userId > 0) {
         reconnectAttempts++;
         console.log(`Reconnection attempt ${reconnectAttempts}/${maxReconnectAttempts}`);
         
