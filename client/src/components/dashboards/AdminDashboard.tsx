@@ -119,11 +119,11 @@ const AdminDashboard = () => {
                 )}
               </div>
               <div className="mt-4 text-center">
-                <Button variant="outline" asChild>
-                  <Link href="/users">
+                <Link href="/users">
+                  <Button variant="outline" className="cursor-pointer">
                     View All Users
-                  </Link>
-                </Button>
+                  </Button>
+                </Link>
               </div>
             </CardContent>
           </Card>

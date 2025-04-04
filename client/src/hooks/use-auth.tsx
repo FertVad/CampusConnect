@@ -46,13 +46,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         console.log("Fetching user data...");
         const res = await fetch("/api/user", {
+          method: 'GET',
           credentials: "include", // Include cookies with the request
           headers: {
             "Accept": "application/json",
             "X-Requested-With": "XMLHttpRequest", // Helps with CSRF protection
-            "Cache-Control": "no-cache", // Prevent caching
-            "Pragma": "no-cache"
-          }
+            "Cache-Control": "no-cache, no-store, must-revalidate", 
+            "Pragma": "no-cache",
+            "Expires": "0"
+          },
+          cache: 'no-store' // Для современных браузеров - не кэшировать
         });
         
         if (res.status === 401) {
@@ -73,13 +76,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return null;
       }
     },
-    refetchOnMount: false, // Don't automatically refetch on mount to avoid loops
-    refetchOnWindowFocus: false, // Don't automatically refetch on window focus to avoid loops
-    refetchOnReconnect: true, // Still refetch when network reconnects
-    staleTime: Infinity, // Keep data fresh indefinitely until explicitly invalidated
-    gcTime: 24 * 60 * 60 * 1000, // Cache for 24 hours (formerly cacheTime in v4)
-    retry: 1, // Retry once if query fails
-    refetchInterval: false // Don't periodically refetch
+    refetchOnMount: true, // Включаем перезагрузку при монтировании
+    refetchOnWindowFocus: true, // Включаем перезагрузку при фокусе окна
+    refetchOnReconnect: true, // Включаем перезагрузку при восстановлении соединения
+    staleTime: 5 * 60 * 1000, // Считаем данные свежими 5 минут
+    gcTime: 10 * 60 * 1000, // Храним в кэше 10 минут (раньше cacheTime)
+    retry: 1, // Пробуем повторить запрос один раз при ошибке
+    refetchInterval: false // Не делаем периодические запросы
   });
 
   const loginMutation = useMutation({
@@ -91,21 +94,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           "Content-Type": "application/json",
           "Accept": "application/json",
           "X-Requested-With": "XMLHttpRequest", // Helps with CSRF protection
-          "Cache-Control": "no-cache",
-          "Pragma": "no-cache"
+          "Cache-Control": "no-cache, no-store, must-revalidate",
+          "Pragma": "no-cache",
+          "Expires": "0"
         },
         body: JSON.stringify(credentials),
         credentials: "include", // Include cookies with the request
+        cache: 'no-store'
       });
       
       if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || "Login failed");
+        let errorMessage = "Login failed";
+        try {
+          const errorData = await res.json();
+          errorMessage = errorData.message || errorMessage;
+        } catch (e) {
+          console.error("Error parsing error response:", e);
+        }
+        throw new Error(errorMessage);
       }
       
       // Return user data
-      const userData = await res.json();
-      console.log("Login successful, received user data:", userData);
+      let userData = null;
+      try {
+        userData = await res.json();
+        console.log("Login successful, received user data:", userData);
+      } catch (e) {
+        console.error("Error parsing login response:", e);
+        throw new Error("Invalid response from server");
+      }
       return userData;
     },
     onSuccess: (userData: User) => {
