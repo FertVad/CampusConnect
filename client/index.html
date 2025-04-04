@@ -5,6 +5,68 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>EduPortal - College Management System</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+  <script>
+    // Monkey patch WebSocket to prevent "localhost:undefined" errors from plugins
+    (function() {
+      // Store original WebSocket constructor
+      const OriginalWebSocket = window.WebSocket;
+      
+      // Create a patched version that validates URLs
+      function PatchedWebSocket(url, protocols) {
+        // Validate URL - prevent connection to invalid URLs
+        try {
+          if (url.includes('localhost:undefined') || 
+              url.includes('undefined/?token=') ||
+              url.includes('/?token=') && !url.startsWith('wss://') && !url.startsWith('ws://')) {
+            console.warn('Prevented WebSocket connection to invalid URL:', url);
+            // Simulate a failed connection after a short delay
+            const fakeSocket = {
+              addEventListener: function() {},
+              removeEventListener: function() {},
+              close: function() {},
+              send: function() {},
+              dispatchEvent: function() { return true; }
+            };
+            
+            // Set properties that make it look like a real WebSocket
+            Object.defineProperties(fakeSocket, {
+              readyState: { get: function() { return 3; /* CLOSED */ } },
+              CONNECTING: { get: function() { return 0; } },
+              OPEN: { get: function() { return 1; } },
+              CLOSING: { get: function() { return 2; } },
+              CLOSED: { get: function() { return 3; } },
+              url: { get: function() { return url; } },
+              protocol: { get: function() { return ''; } }
+            });
+            
+            // Simulate error and close events
+            setTimeout(function() {
+              if (fakeSocket.onerror) fakeSocket.onerror(new Event('error'));
+              if (fakeSocket.onclose) fakeSocket.onclose(new CloseEvent('close', { wasClean: false, code: 1006, reason: 'Invalid URL' }));
+            }, 10);
+            
+            return fakeSocket;
+          }
+          
+          // For valid URLs, use the original WebSocket
+          return new OriginalWebSocket(url, protocols);
+        } catch (e) {
+          console.warn('WebSocket connection error:', e);
+          throw e;
+        }
+      }
+      
+      // Copy properties from the original WebSocket
+      PatchedWebSocket.prototype = OriginalWebSocket.prototype;
+      PatchedWebSocket.CONNECTING = OriginalWebSocket.CONNECTING;
+      PatchedWebSocket.OPEN = OriginalWebSocket.OPEN;
+      PatchedWebSocket.CLOSING = OriginalWebSocket.CLOSING;
+      PatchedWebSocket.CLOSED = OriginalWebSocket.CLOSED;
+      
+      // Replace the global WebSocket
+      window.WebSocket = PatchedWebSocket;
+    })();
+  </script>
 </head>
 <body>
   <div id="root"></div>
