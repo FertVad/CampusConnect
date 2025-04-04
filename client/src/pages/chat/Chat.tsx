@@ -21,6 +21,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { queryClient } from '@/lib/queryClient';
+import { createWebSocketConnection } from '@/lib/api';
 
 // Helper function to get initials from name
 function getInitials(firstName: string, lastName: string): string {
@@ -125,36 +126,9 @@ export default function Chat() {
     let isActive = true;
     
     try {
-      // Create WebSocket connection
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const wsUrl = `${protocol}//${window.location.host}/ws`;
-      console.log('Attempting to connect WebSocket to:', wsUrl);
-      const socket = new WebSocket(wsUrl);
-      
-      socket.onopen = () => {
-        // Проверяем, что эффект все еще активен и пользователь авторизован
-        if (!isActive || !user || !user.id) {
-          console.log('WebSocket opened but component unmounted or user logged out - closing');
-          socket.close();
-          return;
-        }
-        
-        console.log('WebSocket connection established');
-        setConnectionStatus('connected');
-        
-        // Send authentication message
-        try {
-          socket.send(JSON.stringify({
-            type: 'auth',
-            userId: user.id,
-          }));
-        } catch (err) {
-          console.error('Error sending auth message:', err);
-        }
-      };
-    
-      socket.onmessage = (event) => {
-        const data = JSON.parse(event.data);
+      // Используем вспомогательную функцию из API для создания WebSocket с безопасной обработкой
+      const socket = createWebSocketConnection(user.id, (data) => {
+        if (!isActive) return; // Игнорируем сообщения если компонент размонтирован
         
         // Handle different message types
         if (data.type === 'message') {
@@ -178,50 +152,64 @@ export default function Chat() {
           // Update message status (delivered, read)
           queryClient.invalidateQueries({ queryKey: ['/api/messages', selectedUser?.id] });
         }
-      };
+      });
       
-      socket.onclose = () => {
-        console.log('WebSocket connection closed');
-        setConnectionStatus('disconnected');
-      };
-      
-      socket.onerror = (error) => {
-        console.error('WebSocket error:', error);
+      // Если соединение не получилось создать
+      if (!socket) {
+        console.log('Failed to create WebSocket connection');
         setConnectionStatus('error');
-      };
-      
-      // Установка WebSocket только если пользователь авторизован
-      if (user && user.id) {
-        setWebSocket(socket);
-      
-        // Clean up connection on unmount or when user logs out
-        return () => {
-          // Отмечаем что эффект больше не активен
-          isActive = false;
-          
-          if (socket && socket.readyState === WebSocket.OPEN) {
-            console.log('Closing WebSocket connection on cleanup');
-            try {
-              socket.close();
-            } catch (err) {
-              console.error('Error closing WebSocket:', err);
-            }
-          }
-        };
+        return;
       }
       
-      // Если до этого момента return не был выполнен, значит что-то пошло не так
-      return () => {
-        isActive = false; // на всякий случай
+      // Подписка на события состояния соединения
+      const connectionHandler = () => {
+        if (isActive) setConnectionStatus('connected');
       };
       
+      const disconnectionHandler = () => {
+        if (isActive) setConnectionStatus('disconnected');
+      };
+      
+      const errorHandler = () => {
+        if (isActive) setConnectionStatus('error');
+      };
+      
+      // Добавляем обработчики событий
+      socket.addEventListener('open', connectionHandler);
+      socket.addEventListener('close', disconnectionHandler);
+      socket.addEventListener('error', errorHandler);
+      
+      // Установка WebSocket в состояние компонента
+      setWebSocket(socket);
+      
+      // Clean up connection on unmount or when user logs out
+      return () => {
+        // Отмечаем что эффект больше не активен
+        isActive = false;
+        
+        // Удаляем обработчики событий
+        socket.removeEventListener('open', connectionHandler);
+        socket.removeEventListener('close', disconnectionHandler);
+        socket.removeEventListener('error', errorHandler);
+        
+        // Закрываем соединение
+        if (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING) {
+          console.log('Closing WebSocket connection on cleanup');
+          try {
+            socket.close(1000, 'Page unloaded');
+          } catch (err) {
+            console.error('Error closing WebSocket:', err);
+          }
+        }
+      };
     } catch (err) {
       console.error('Error establishing WebSocket connection:', err);
+      setConnectionStatus('error');
       return () => {
         // Nothing to clean up if connection failed
       };
     }
-  }, [user]);
+  }, [user, refetchMessages, users, selectedUser?.id, toast]);
   
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -252,7 +240,7 @@ export default function Chat() {
         }
       }
     }
-  }, [messages, selectedUser]);
+  }, [messages, selectedUser, markAsReadMutation, webSocket, user]);
   
   // Handle sending a new message
   const handleSendMessage = () => {

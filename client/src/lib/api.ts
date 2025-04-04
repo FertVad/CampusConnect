@@ -124,20 +124,27 @@ export async function uploadFile(endpoint: string, formData: FormData): Promise<
 }
 
 // WebSocket connection for chat with cross-browser compatibility
-export function createWebSocketConnection(userId: number, onMessage: (data: any) => void): WebSocket | null {
+export function createWebSocketConnection(userId: number | undefined | null, onMessage: (data: any) => void): WebSocket | null {
+  // Проверка наличия userId перед созданием соединения
+  if (!userId) {
+    console.log('WebSocket не инициализируется: отсутствует userId');
+    return null;
+  }
+
   // Check if WebSocket is supported
   if (!('WebSocket' in window)) {
     console.error('WebSocket is not supported by this browser');
     return null;
   }
 
-  // Determine the WebSocket URL based on environment
-  let wsUrl: string;
-  const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-  const host = window.location.host;
+  // Determine the WebSocket URL based on environment or fallback to window location
+  const wsUrl = import.meta.env.VITE_WS_URL || 
+               `${window.location.protocol === "https:" ? "wss:" : "ws:"}//${window.location.host}/ws`;
   
-  // Make sure we're always using a valid URL in both development and production
-  wsUrl = `${protocol}//${host}/ws`;
+  if (!wsUrl) {
+    console.error('Invalid WebSocket URL configuration');
+    return null;
+  }
   
   console.log(`Connecting to WebSocket at ${wsUrl}`);
   
@@ -150,9 +157,13 @@ export function createWebSocketConnection(userId: number, onMessage: (data: any)
     
     // Set a connection timeout for Safari which can hang indefinitely
     const connectionTimeout = setTimeout(() => {
-      if (socket.readyState !== WebSocket.OPEN) {
+      if (socket && socket.readyState !== WebSocket.OPEN) {
         console.warn('WebSocket connection timeout, closing and retrying...');
-        socket.close();
+        try {
+          socket.close();
+        } catch (err) {
+          console.error('Error closing socket during timeout:', err);
+        }
         
         // Try to reconnect if we haven't reached max attempts
         if (reconnectAttempts < maxReconnectAttempts) {
@@ -167,15 +178,31 @@ export function createWebSocketConnection(userId: number, onMessage: (data: any)
       clearTimeout(connectionTimeout);
       reconnectAttempts = 0;
       
+      // Проверяем наличие userId еще раз перед отправкой аутентификации
+      if (!userId) {
+        console.error('WebSocket opened but userId is missing or invalid');
+        try {
+          socket.close(1000, 'User not authenticated');
+        } catch (err) {
+          console.error('Error closing unauthenticated socket:', err);
+        }
+        return;
+      }
+      
       // Authenticate the WebSocket connection with the user ID
       try {
         socket.send(JSON.stringify({ 
           type: 'auth', 
           userId 
         }));
-        console.log('WebSocket connection established');
+        console.log('WebSocket connection established and authenticated with userId:', userId);
       } catch (err) {
         console.error('Error sending authentication message:', err);
+        try {
+          socket.close(1000, 'Authentication failed');
+        } catch (closeErr) {
+          console.error('Error closing socket after auth failure:', closeErr);
+        }
       }
     };
     
@@ -191,13 +218,17 @@ export function createWebSocketConnection(userId: number, onMessage: (data: any)
     
     socket.onerror = (error) => {
       console.error('WebSocket error', error);
+      // Не пытаемся автоматически переподключаться при явной ошибке
+      clearTimeout(connectionTimeout);
     };
     
     socket.onclose = (event) => {
+      clearTimeout(connectionTimeout);
       console.log(`WebSocket connection closed: ${event.code} ${event.reason}`);
       
       // Attempt to reconnect if not a clean close and we haven't reached max attempts
-      if (!event.wasClean && reconnectAttempts < maxReconnectAttempts) {
+      // И только если userId все еще валиден
+      if (!event.wasClean && reconnectAttempts < maxReconnectAttempts && userId) {
         reconnectAttempts++;
         console.log(`Reconnection attempt ${reconnectAttempts}/${maxReconnectAttempts}`);
         
