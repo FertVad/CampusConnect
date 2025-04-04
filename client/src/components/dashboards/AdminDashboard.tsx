@@ -95,7 +95,7 @@ const AdminDashboard = () => {
       {/* User Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatusCard
-          title={t('roles.students')}
+          title={t('users.roles.students')}
           value={userStats.studentCount.toString()}
           icon={<GraduationCap className="h-6 w-6" />}
           iconBgColor="bg-accent bg-opacity-10"
@@ -103,7 +103,7 @@ const AdminDashboard = () => {
         />
         
         <StatusCard
-          title={t('roles.teachers')}
+          title={t('users.roles.teachers')}
           value={userStats.teacherCount.toString()}
           icon={<Briefcase className="h-6 w-6" />}
           iconBgColor="bg-secondary bg-opacity-10"
@@ -111,7 +111,7 @@ const AdminDashboard = () => {
         />
         
         <StatusCard
-          title={t('roles.admins')}
+          title={t('users.roles.admins')}
           value={userStats.adminCount.toString()}
           icon={<UserCircle className="h-6 w-6" />}
           iconBgColor="bg-primary bg-opacity-10"
@@ -138,7 +138,7 @@ const AdminDashboard = () => {
         />
         
         <StatusCard
-          title={t('requests.pending')}
+          title={t('common.status.pending')}
           value={pendingRequests.length.toString()}
           icon={<FilePlus className="h-6 w-6" />}
           iconBgColor="bg-warning bg-opacity-10"
@@ -191,7 +191,7 @@ const AdminDashboard = () => {
                         </div>
                       </div>
                       <Badge className={`capitalize ${getRoleBadgeStyles(user.role)}`}>
-                        {user.role}
+                        {t(`users.roles.${user.role}`)}
                       </Badge>
                     </div>
                   ))
@@ -268,7 +268,7 @@ const AdminDashboard = () => {
                     <div className="h-8 w-8 rounded-full bg-primary bg-opacity-10 flex items-center justify-center mr-3">
                       <UserCircle className="h-5 w-5 text-primary" />
                     </div>
-                    <span className="text-sm font-medium">{t('roles.admins')}</span>
+                    <span className="text-sm font-medium">{t('users.roles.admins')}</span>
                   </div>
                   <Badge variant="outline" className="bg-primary bg-opacity-5">
                     {userStats.adminCount}
@@ -281,7 +281,7 @@ const AdminDashboard = () => {
                     <div className="h-8 w-8 rounded-full bg-secondary bg-opacity-10 flex items-center justify-center mr-3">
                       <Briefcase className="h-5 w-5 text-secondary" />
                     </div>
-                    <span className="text-sm font-medium">{t('roles.teachers')}</span>
+                    <span className="text-sm font-medium">{t('users.roles.teachers')}</span>
                   </div>
                   <Badge variant="outline" className="bg-secondary bg-opacity-5">
                     {userStats.teacherCount}
@@ -294,7 +294,7 @@ const AdminDashboard = () => {
                     <div className="h-8 w-8 rounded-full bg-accent bg-opacity-10 flex items-center justify-center mr-3">
                       <GraduationCap className="h-5 w-5 text-accent" />
                     </div>
-                    <span className="text-sm font-medium">{t('roles.students')}</span>
+                    <span className="text-sm font-medium">{t('users.roles.students')}</span>
                   </div>
                   <Badge variant="outline" className="bg-accent bg-opacity-5">
                     {userStats.studentCount}
