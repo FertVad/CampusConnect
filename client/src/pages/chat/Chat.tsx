@@ -2,6 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/use-auth';
 import { format } from 'date-fns';
+import { useToast } from '@/hooks/use-toast';
+import { queryClient } from '@/lib/queryClient';
+import { createWebSocketConnection } from '@/lib/api';
 import {
   Card,
   CardContent,
@@ -19,9 +22,6 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle, Check, CheckCheck, Send, User, Users } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { useToast } from '@/hooks/use-toast';
-import { queryClient } from '@/lib/queryClient';
-import { createWebSocketConnection } from '@/lib/api';
 
 // Helper function to get initials from name
 function getInitials(firstName: string, lastName: string): string {
@@ -47,27 +47,49 @@ function formatMessageTime(date: Date): string {
   return format(messageDate, 'MMM d, yyyy, h:mm a');
 }
 
-export default function Chat() {
-  const { user } = useAuth();
-  const { toast } = useToast();
-  const [selectedUser, setSelectedUser] = useState<any>(null);
-  const [message, setMessage] = useState('');
-  const [webSocket, setWebSocket] = useState<WebSocket | null>(null);
-  const [connectionStatus, setConnectionStatus] = useState('connecting');
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  
-  // Fetch users for chat selection
-  const { data: users, isLoading: usersLoading, error: usersError } = useQuery({
-    queryKey: ['/api/users/chat'],
-    queryFn: async () => {
-      const response = await fetch('/api/users/chat');
-      if (!response.ok) {
-        throw new Error('Failed to fetch users');
+  export default function Chat() {
+    const { user } = useAuth();
+    const { toast } = useToast();
+    const [selectedUser, setSelectedUser] = useState<any>(null);
+    const [message, setMessage] = useState('');
+    const [webSocket, setWebSocket] = useState<WebSocket | null>(null);
+    const [connectionStatus, setConnectionStatus] = useState<'connected' | 'disconnected' | 'error'>('disconnected');
+    const socketRef = useRef<WebSocket | null>(null);
+    const messagesEndRef = useRef<HTMLDivElement>(null);
+    
+    // Fetch users for chat
+    const {
+      data: users,
+      isLoading: usersLoading,
+      error: usersError
+    } = useQuery({
+      queryKey: ['/api/users/chat'],
+      queryFn: async () => {
+        const response = await fetch('/api/users/chat');
+        if (!response.ok) {
+          throw new Error('Failed to fetch users');
+        }
+        return await response.json();
       }
-      return await response.json();
-    },
-    enabled: !!user,
-  });
+    });
+
+    useEffect(() => {
+      const token = localStorage.getItem("token");
+
+      if (!token || token.length < 5 || !user?.id) {
+        console.warn("WebSocket skipped — no valid token or userId.");
+        return;
+      }
+
+      socketRef.current = createWebSocketConnection(user.id, (data) => {
+        console.log("📨 New WebSocket message:", data);
+        // Обработка входящих данных, например: обновление чата
+      });
+
+      return () => {
+        socketRef.current?.close();
+      };
+    }, [user]);
   
   // Fetch messages with selected user
   const { 

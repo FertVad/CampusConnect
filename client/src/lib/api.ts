@@ -76,14 +76,22 @@ export async function uploadFile(endpoint: string, formData: FormData): Promise<
   const timeoutId = setTimeout(() => controller.abort(), 60000);
   
   try {
-    // Удаляем Content-Type для корректной работы формы с файлами
+    // Получаем заголовки авторизации
     const headers = getAuthHeaders();
-    delete headers['Content-Type']; // Let browser set content type with correct boundary
+    // Создаем новый объект заголовков без Content-Type
+    const formHeaders: HeadersInit = {
+      ...headers
+    };
+    // Удаляем Content-Type для корректной работы формы с файлами
+    // NOTE: Content-Type должен быть установлен браузером для multipart/form-data
+    if ('Content-Type' in formHeaders) {
+      delete formHeaders['Content-Type'];
+    }
     
     const response = await fetch(endpoint, {
       method: 'POST',
       headers: {
-        ...headers,
+        ...formHeaders,
         // Safari-friendly headers
         'Accept': 'application/json',
         'Cache-Control': 'no-cache, no-store',
