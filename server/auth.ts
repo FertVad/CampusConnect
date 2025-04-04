@@ -32,7 +32,7 @@ export async function comparePasswords(supplied: string, stored: string): Promis
     if (stored.startsWith('$2b$') || stored.startsWith('$2a$')) {
       return bcrypt.compare(supplied, stored);
     }
-    
+
     // Fallback for plain text passwords (legacy/seed data)
     console.log("Warning: Using plain text password comparison (no hash detected)");
     return supplied === stored;
@@ -51,17 +51,17 @@ export async function initializeDatabase(): Promise<boolean> {
       console.error("Database migration failed, using memory storage.");
       return false;
     }
-    
+
     // Seed the database with initial data if needed
     const seedSuccess = await seedDatabase();
     if (!seedSuccess) {
       console.error("Database seeding failed, but continuing with empty database.");
     }
-    
+
     // Create database storage and replace memory storage
     // Since createDatabaseStorage() returns IStorage, this is type-safe
     storage = await createDatabaseStorage();
-    
+
     console.log("Successfully initialized database storage");
     return true;
   } catch (error) {
@@ -73,25 +73,20 @@ export async function initializeDatabase(): Promise<boolean> {
 export function setupAuth(app: Express) {
   // Configure session - optimized for MemoryStore
   const isProduction = process.env.NODE_ENV === 'production';
-  
+
   // Safari-friendly cookie settings and MemoryStore optimization
   const sessionSettings: session.SessionOptions = {
-    secret: process.env.SESSION_SECRET || "dev-session-secret", // Should be environment variable in production
-    resave: true, // Set to true to ensure session is saved back to store on each request
-    saveUninitialized: true, // Set to true for better compatibility with Safari
+    secret: process.env.SESSION_SECRET || "dev-session-secret",
+    resave: false,
+    saveUninitialized: false,
     store: storage.sessionStore,
     cookie: {
-      maxAge: 14 * 24 * 60 * 60 * 1000, // 14 days in milliseconds for longer persistence
+      maxAge: 14 * 24 * 60 * 60 * 1000,
       httpOnly: true,
-      secure: isProduction, // Set to true only in production for HTTPS
-      sameSite: isProduction ? 'strict' : 'lax', // Better security in production
+      secure: 'auto',
+      sameSite: 'lax',
       path: '/'
     },
-    // Extend session expiration time on each request
-    rolling: true, 
-    name: 'eduportal.sid', // Custom name helps with identification and debugging
-    // Allow uninitialized session to be used with Safari
-    unset: 'keep'
   };
 
   app.set("trust proxy", 1);
@@ -163,13 +158,13 @@ export function setupAuth(app: Express) {
 
   app.post("/api/login", (req, res, next) => {
     console.log("POST /api/login - Login attempt for email:", req.body.email);
-    
+
     passport.authenticate("local", (err: Error, user: Express.User, info: any) => {
       if (err) {
         console.error("POST /api/login - Authentication error:", err);
         return next(err);
       }
-      
+
       if (!user) {
         console.log("POST /api/login - Authentication failed:", info?.message);
         return res.status(401).json({ message: info?.message || "Authentication failed" });
@@ -180,19 +175,19 @@ export function setupAuth(app: Express) {
           console.error("POST /api/login - Session creation error:", err);
           return next(err);
         }
-        
+
         // Make sure we're setting the correct cookie and returning the user data
         console.log("POST /api/login - User authenticated successfully:", user.id);
         console.log("POST /api/login - Session ID:", req.sessionID);
-        
+
         // Don't expose the password hash to the client
         const { password, ...userWithoutPassword } = user;
-        
+
         // Set headers to help with Safari compatibility
         res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
         res.setHeader('Pragma', 'no-cache');
         res.setHeader('Expires', '0');
-        
+
         // Ensure the session is saved immediately
         req.session.save((err) => {
           if (err) {
@@ -216,21 +211,21 @@ export function setupAuth(app: Express) {
     console.log("GET /api/user - Is Authenticated:", req.isAuthenticated ? req.isAuthenticated() : 'method undefined');
     console.log("GET /api/user - Headers:", JSON.stringify(req.headers));
     console.log("GET /api/user - Session:", req.session);
-    
+
     // Проверяем метод isAuthenticated и наличие пользователя
     if (req.isAuthenticated && req.isAuthenticated() && req.user) {
       console.log("GET /api/user - User authenticated:", (req.user as any).id, "Role:", (req.user as any).role);
       // Не отправляем пароль клиенту
       const { password, ...userWithoutPassword } = req.user as any;
-      
+
       // Устанавливаем заголовки для совместимости с Safari
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
       res.setHeader('Pragma', 'no-cache');
       res.setHeader('Expires', '0');
-      
+
       return res.json(userWithoutPassword);
     }
-    
+
     return res.status(401).json({ message: "Not authenticated" });
   });
 }
