@@ -80,14 +80,16 @@ export default function Users() {
   const { data: users = [], isLoading, error } = useQuery({
     queryKey: ['/api/users'],
     queryFn: async () => {
-      return apiRequest('GET', '/api/users') as Promise<User[]>;
+      const response = await apiRequest('GET', '/api/users');
+      return response.json() as Promise<User[]>;
     }
   });
 
   // Create user mutation
   const createUserMutation = useMutation({
     mutationFn: async (userData: UserFormData) => {
-      return apiRequest('POST', '/api/users', userData) as Promise<User>;
+      const response = await apiRequest('POST', '/api/users', userData);
+      return response.json() as Promise<User>;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/users'] });
@@ -110,7 +112,8 @@ export default function Users() {
   // Update user mutation
   const updateUserMutation = useMutation({
     mutationFn: async ({ id, userData }: { id: number, userData: Partial<UserFormData> }) => {
-      return apiRequest('PUT', `/api/users/${id}`, userData) as Promise<User>;
+      const response = await apiRequest('PUT', `/api/users/${id}`, userData);
+      return response.json() as Promise<User>;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/users'] });
@@ -134,7 +137,8 @@ export default function Users() {
   // Delete user mutation
   const deleteUserMutation = useMutation({
     mutationFn: async (id: number) => {
-      return apiRequest('DELETE', `/api/users/${id}`) as Promise<void>;
+      await apiRequest('DELETE', `/api/users/${id}`);
+      return Promise.resolve();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/users'] });

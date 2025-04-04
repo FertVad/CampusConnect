@@ -191,7 +191,7 @@ const ImportedFiles = () => {
                                 <span className="text-red-500">{file.errorCount}</span>
                               </TooltipTrigger>
                               <TooltipContent>
-                                {file.errorDetails || 'Подробности ошибок не доступны'}
+                                <div>{file.errorDetails || 'Подробности ошибок не доступны'}</div>
                               </TooltipContent>
                             </Tooltip>
                           </TooltipProvider>
