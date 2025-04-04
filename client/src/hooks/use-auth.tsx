@@ -1,4 +1,4 @@
-import React, { createContext, ReactNode, useContext } from "react";
+import React, { createContext, ReactNode, useContext, useEffect } from "react";
 import {
   useQuery,
   useMutation,
@@ -7,6 +7,23 @@ import {
 } from "@tanstack/react-query";
 import { User } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
+
+// Helper to dispatch authentication status change events
+const dispatchAuthStatusChanged = (isAuthenticated: boolean) => {
+  try {
+    // Store in localStorage for persistence across page reloads
+    localStorage.setItem('isAuthenticated', isAuthenticated ? 'true' : 'false');
+    
+    // Dispatch custom event for WebSocket interceptor
+    const event = new CustomEvent('authStatusChanged', {
+      detail: { isAuthenticated }
+    });
+    document.dispatchEvent(event);
+    console.log(`Auth status changed: ${isAuthenticated ? 'authenticated' : 'unauthenticated'}`);
+  } catch (error) {
+    console.error('Error dispatching auth status:', error);
+  }
+};
 
 type AuthContextType = {
   user: User | null;
@@ -127,6 +144,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     onSuccess: (userData: User) => {
       queryClient.setQueryData(["/api/user"], userData);
+      // Explicitly set authentication status to true
+      dispatchAuthStatusChanged(true);
       toast({
         title: "Login successful",
         description: `Welcome back, ${userData.firstName}!`,
@@ -165,6 +184,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     onSuccess: (userData: User) => {
       queryClient.setQueryData(["/api/user"], userData);
+      // Set authentication status to true for new users
+      dispatchAuthStatusChanged(true);
       toast({
         title: "Registration successful",
         description: `Welcome, ${userData.firstName}!`,
@@ -210,6 +231,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Сначала устанавливаем пользователя в null, чтобы избежать повторных запросов
       queryClient.setQueryData(["/api/user"], null);
       
+      // Explicitly set authentication status to false
+      dispatchAuthStatusChanged(false);
+      
       // Затем очищаем кэш react-query
       queryClient.clear();
       
@@ -237,6 +261,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
     },
   });
+
+  // Update authentication status whenever user data changes
+  useEffect(() => {
+    const isAuthenticated = user !== null;
+    dispatchAuthStatusChanged(isAuthenticated);
+  }, [user]);
 
   return (
     <AuthContext.Provider

@@ -6,53 +6,94 @@
   <title>EduPortal - College Management System</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
   <script>
-    // Monkey patch WebSocket to prevent "localhost:undefined" errors from plugins
+    // Monkey patch WebSocket to prevent connection errors
     (function() {
       // Store original WebSocket constructor
       const OriginalWebSocket = window.WebSocket;
       
-      // Create a patched version that validates URLs
+      // Helper function to create a fake WebSocket that gracefully fails
+      function createFakeSocket(url, reason) {
+        console.warn('WebSocket interceptor:', reason, url);
+        
+        const fakeSocket = {
+          addEventListener: function() {},
+          removeEventListener: function() {},
+          close: function() {},
+          send: function() {},
+          dispatchEvent: function() { return true; }
+        };
+        
+        // Set properties to make it look like a real WebSocket
+        Object.defineProperties(fakeSocket, {
+          readyState: { get: function() { return 3; /* CLOSED */ } },
+          CONNECTING: { get: function() { return 0; } },
+          OPEN: { get: function() { return 1; } },
+          CLOSING: { get: function() { return 2; } },
+          CLOSED: { get: function() { return 3; } },
+          url: { get: function() { return url; } },
+          protocol: { get: function() { return ''; } }
+        });
+        
+        // Simulate error and close events after a delay
+        setTimeout(function() {
+          if (fakeSocket.onerror) fakeSocket.onerror(new Event('error'));
+          if (fakeSocket.onclose) fakeSocket.onclose(new CloseEvent('close', { wasClean: false, code: 1006, reason: reason }));
+        }, 10);
+        
+        return fakeSocket;
+      }
+      
+      // Create a patched version that validates URLs and token
       function PatchedWebSocket(url, protocols) {
-        // Validate URL - prevent connection to invalid URLs
         try {
-          if (url.includes('localhost:undefined') || 
-              url.includes('undefined/?token=') ||
-              url.includes('/?token=') && !url.startsWith('wss://') && !url.startsWith('ws://')) {
-            console.warn('Prevented WebSocket connection to invalid URL:', url);
-            // Simulate a failed connection after a short delay
-            const fakeSocket = {
-              addEventListener: function() {},
-              removeEventListener: function() {},
-              close: function() {},
-              send: function() {},
-              dispatchEvent: function() { return true; }
-            };
-            
-            // Set properties that make it look like a real WebSocket
-            Object.defineProperties(fakeSocket, {
-              readyState: { get: function() { return 3; /* CLOSED */ } },
-              CONNECTING: { get: function() { return 0; } },
-              OPEN: { get: function() { return 1; } },
-              CLOSING: { get: function() { return 2; } },
-              CLOSED: { get: function() { return 3; } },
-              url: { get: function() { return url; } },
-              protocol: { get: function() { return ''; } }
-            });
-            
-            // Simulate error and close events
-            setTimeout(function() {
-              if (fakeSocket.onerror) fakeSocket.onerror(new Event('error'));
-              if (fakeSocket.onclose) fakeSocket.onclose(new CloseEvent('close', { wasClean: false, code: 1006, reason: 'Invalid URL' }));
-            }, 10);
-            
-            return fakeSocket;
+          // Block specific problematic URLs
+          if (url.includes('localhost:undefined') || url.includes('undefined/?token=')) {
+            return createFakeSocket(url, 'Prevented connection to invalid localhost URL');
           }
           
-          // For valid URLs, use the original WebSocket
+          // Block malformed URLs
+          if (url.includes('/?token=') && !url.startsWith('wss://') && !url.startsWith('ws://')) {
+            return createFakeSocket(url, 'Malformed WebSocket URL');
+          }
+          
+          // Block connections with token when user is not authenticated
+          // Get authentication status from localStorage or session storage if available
+          const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true' || 
+                                 sessionStorage.getItem('isAuthenticated') === 'true';
+          const token = new URL(url).searchParams.get('token');
+          
+          if (token && !isAuthenticated) {
+            return createFakeSocket(url, 'Auth token provided but user not authenticated');
+          }
+          
+          // For Replit's Vite plugins and dev tools, handle errors silently
+          if (url.includes('token=') && url.includes(window.location.host)) {
+            try {
+              const socket = new OriginalWebSocket(url, protocols);
+              
+              // Silence connection errors for Replit system WebSockets
+              const originalOnerror = socket.onerror;
+              socket.onerror = function(event) {
+                console.warn('Silenced WebSocket error for:', url);
+                if (typeof originalOnerror === 'function') {
+                  // Call the original handler with a modified event
+                  const silentEvent = new Event('error');
+                  silentEvent.silent = true;
+                  originalOnerror.call(this, silentEvent);
+                }
+              };
+              
+              return socket;
+            } catch (err) {
+              return createFakeSocket(url, 'Failed to connect to Replit system WebSocket');
+            }
+          }
+          
+          // For all other valid URLs, use the original WebSocket
           return new OriginalWebSocket(url, protocols);
         } catch (e) {
-          console.warn('WebSocket connection error:', e);
-          throw e;
+          console.warn('WebSocket creation error:', e);
+          return createFakeSocket(url, e.message);
         }
       }
       
@@ -65,6 +106,14 @@
       
       // Replace the global WebSocket
       window.WebSocket = PatchedWebSocket;
+      
+      // Store authentication status when it changes
+      document.addEventListener('authStatusChanged', function(e) {
+        if (e.detail && typeof e.detail.isAuthenticated === 'boolean') {
+          localStorage.setItem('isAuthenticated', e.detail.isAuthenticated);
+          sessionStorage.setItem('isAuthenticated', e.detail.isAuthenticated);
+        }
+      });
     })();
   </script>
 </head>

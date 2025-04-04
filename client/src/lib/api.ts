@@ -131,22 +131,107 @@ export async function uploadFile(endpoint: string, formData: FormData): Promise<
   }
 }
 
-/* CHAT FUNCTIONALITY TEMPORARILY DISABLED
 // WebSocket connection for chat with cross-browser compatibility
 export function createWebSocketConnection(userId: number | undefined | null, onMessage: (data: any) => void): WebSocket | null {
-  console.log('WebSocket functionality is temporarily disabled');
-  return null;
+  // Check if user is logged in and has userId
+  if (!userId) {
+    console.warn('WebSocket connection not created: User not authenticated');
+    return null;
+  }
+  
+  try {
+    // Get user authentication status from localStorage
+    const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
+    if (!isAuthenticated) {
+      console.warn('WebSocket connection not created: Authentication status is false');
+      return null;
+    }
+
+    // Determine the WebSocket URL
+    const wsUrl = import.meta.env.VITE_WS_URL || 
+                  `wss://${window.location.host}`;
+                  
+    // Only create WebSocket if we have a valid URL and user ID
+    if (!wsUrl || wsUrl.includes('undefined')) {
+      console.warn('WebSocket connection not created: Invalid WebSocket URL', wsUrl);
+      return null;
+    }
+
+    console.log(`Creating WebSocket connection to ${wsUrl}/?token=${userId}`);
+    
+    // Create WebSocket connection
+    const socket = new WebSocket(`${wsUrl}/?token=${userId}`);
+    
+    // Set up event handlers
+    socket.onopen = () => {
+      console.log('WebSocket connection established');
+    };
+    
+    socket.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        onMessage(data);
+      } catch (e) {
+        console.error('Failed to parse WebSocket message:', e);
+      }
+    };
+    
+    socket.onerror = (error) => {
+      console.error('WebSocket error:', error);
+    };
+    
+    socket.onclose = (event) => {
+      console.log(`WebSocket connection closed: ${event.code} ${event.reason}`);
+    };
+    
+    return socket;
+  } catch (error) {
+    console.error('Error creating WebSocket connection:', error);
+    return null;
+  }
 }
 
 // Send chat message through WebSocket with Safari compatibility
 export function sendChatMessage(socket: WebSocket | null, toUserId: number, content: string): boolean {
-  console.log('WebSocket functionality is temporarily disabled');
-  return false;
+  if (!socket || socket.readyState !== WebSocket.OPEN) {
+    console.warn('Cannot send message: WebSocket not connected');
+    return false;
+  }
+  
+  try {
+    const message = JSON.stringify({
+      type: 'message',
+      to: toUserId,
+      content: content,
+      timestamp: new Date().toISOString()
+    });
+    
+    socket.send(message);
+    return true;
+  } catch (error) {
+    console.error('Error sending chat message:', error);
+    return false;
+  }
 }
 
 // Mark message as read through WebSocket with Safari compatibility
 export function markMessageAsRead(socket: WebSocket | null, messageId: number): boolean {
-  console.log('WebSocket functionality is temporarily disabled');
-  return false;
+  if (!socket || socket.readyState !== WebSocket.OPEN) {
+    console.warn('Cannot mark message as read: WebSocket not connected');
+    return false;
+  }
+  
+  try {
+    const message = JSON.stringify({
+      type: 'mark_read',
+      messageId: messageId,
+      timestamp: new Date().toISOString()
+    });
+    
+    socket.send(message);
+    return true;
+  } catch (error) {
+    console.error('Error marking message as read:', error);
+    return false;
+  }
 }
-*/
