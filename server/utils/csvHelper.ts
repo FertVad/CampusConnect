@@ -155,6 +155,12 @@ export async function parseCsvToScheduleItems(
           // Попробуем определить формат CSV файла по заголовкам
           let subjectName, dayName, startTime, endTime, roomNumber, teacherName;
           
+          // Дополнительные поля, которые мы будем игнорировать (но логировать)
+          let course, specialty, group;
+          
+          // Логируем все найденные заголовки
+          console.log('Found column headers:', Object.keys(normalizedRow));
+          
           // Сначала ищем стандартные названия полей - точные совпадения
           if (normalizedRow['Subject'] !== undefined) subjectName = normalizedRow['Subject'];
           else if (normalizedRow['Предмет'] !== undefined) subjectName = normalizedRow['Предмет'];
@@ -174,13 +180,26 @@ export async function parseCsvToScheduleItems(
           if (normalizedRow['Teacher'] !== undefined) teacherName = normalizedRow['Teacher'];
           else if (normalizedRow['Преподаватель'] !== undefined) teacherName = normalizedRow['Преподаватель'];
           
+          // Учитываем дополнительные поля
+          if (normalizedRow['Курс'] !== undefined) course = normalizedRow['Курс'];
+          if (normalizedRow['Специальность'] !== undefined) specialty = normalizedRow['Специальность'];
+          if (normalizedRow['Группа'] !== undefined) group = normalizedRow['Группа'];
+          
+          // Логируем дополнительные поля, если они найдены
+          if (course || specialty || group) {
+            console.log(`Additional fields found - Course: ${course}, Specialty: ${specialty}, Group: ${group}`);
+          }
+          
           // Если не нашли точные совпадения, ищем по содержимому заголовков
           if (!subjectName) {
             const subjectHeader = foundHeaders.find(h => 
               h.toLowerCase().includes('subject') || 
               h.toLowerCase().includes('предмет') ||
               h.toLowerCase().includes('дисциплина'));
-            if (subjectHeader) subjectName = normalizedRow[subjectHeader];
+            if (subjectHeader) {
+              console.log(`Found subject column through partial match: ${subjectHeader}`);
+              subjectName = normalizedRow[subjectHeader];
+            }
           }
           
           if (!dayName) {
@@ -188,7 +207,10 @@ export async function parseCsvToScheduleItems(
               h.toLowerCase().includes('day') || 
               h.toLowerCase().includes('день') ||
               h.toLowerCase().includes('дата'));
-            if (dayHeader) dayName = normalizedRow[dayHeader];
+            if (dayHeader) {
+              console.log(`Found day column through partial match: ${dayHeader}`);
+              dayName = normalizedRow[dayHeader];
+            }
           }
           
           if (!startTime) {
@@ -197,7 +219,10 @@ export async function parseCsvToScheduleItems(
               h.toLowerCase().includes('начало') || 
               h.toLowerCase().includes('начала') ||
               h.toLowerCase().includes('с'));
-            if (startHeader) startTime = normalizedRow[startHeader];
+            if (startHeader) {
+              console.log(`Found start time column through partial match: ${startHeader}`);
+              startTime = normalizedRow[startHeader];
+            }
           }
           
           if (!endTime) {
@@ -207,7 +232,10 @@ export async function parseCsvToScheduleItems(
               h.toLowerCase().includes('конца') ||
               h.toLowerCase().includes('завершение') ||
               h.toLowerCase().includes('до'));
-            if (endHeader) endTime = normalizedRow[endHeader];
+            if (endHeader) {
+              console.log(`Found end time column through partial match: ${endHeader}`);
+              endTime = normalizedRow[endHeader];
+            }
           }
           
           if (!roomNumber) {
@@ -216,7 +244,10 @@ export async function parseCsvToScheduleItems(
               h.toLowerCase().includes('кабинет') || 
               h.toLowerCase().includes('аудитория') ||
               h.toLowerCase().includes('класс'));
-            if (roomHeader) roomNumber = normalizedRow[roomHeader];
+            if (roomHeader) {
+              console.log(`Found room column through partial match: ${roomHeader}`);
+              roomNumber = normalizedRow[roomHeader];
+            }
           }
           
           if (!teacherName) {
@@ -225,7 +256,10 @@ export async function parseCsvToScheduleItems(
               h.toLowerCase().includes('преподаватель') || 
               h.toLowerCase().includes('учитель') ||
               h.toLowerCase().includes('педагог'));
-            if (teacherHeader) teacherName = normalizedRow[teacherHeader];
+            if (teacherHeader) {
+              console.log(`Found teacher column through partial match: ${teacherHeader}`);
+              teacherName = normalizedRow[teacherHeader];
+            }
           }
           
           // Проверяем обязательные поля

@@ -71,12 +71,40 @@ app.use((req, res, next) => {
     // Register API routes
     const server = await registerRoutes(app);
 
+    // Глобальная обработка ошибок
     app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-      const status = err.status || err.statusCode || 500;
-      const message = err.message || "Internal Server Error";
-
-      res.status(status).json({ message });
-      throw err;
+      // Логирование ошибки для отладки
+      console.error('Server error caught in global handler:', err);
+      
+      // Определяем статус и сообщение в зависимости от типа ошибки
+      let status = err.status || err.statusCode || 500;
+      let message = err.message || "Internal Server Error";
+      
+      // Проверка специальных случаев ошибок
+      if (err.code === 'ENOENT') {
+        // Ошибка при отсутствии файла
+        status = 404;
+        message = "Файл не найден";
+      } else if (err.name === 'SyntaxError' && err.message.includes('JSON')) {
+        // Ошибка при разборе JSON
+        status = 400;
+        message = "Неверный формат данных";
+      } else if (err.name === 'MulterError') {
+        // Ошибки связанные с загрузкой файлов через multer
+        status = 400;
+        message = err.message || "Ошибка загрузки файла";
+      }
+      
+      // Отправляем ответ с соответствующим статусом и сообщением об ошибке
+      res.status(status).json({ 
+        message,
+        error: process.env.NODE_ENV === 'development' ? err.stack : undefined
+      });
+      
+      // В девелопмент-режиме пробрасываем ошибку дальше для логирования
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Full error details:', err);
+      }
     });
 
     // importantly only setup vite in development and after

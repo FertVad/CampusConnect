@@ -13,6 +13,7 @@ import { Loader2, AlertCircle, FileUp, CheckCircle, XCircle, ShieldAlert, Downlo
 import { queryClient } from '@/lib/queryClient';
 import { useAuth } from '@/hooks/use-auth';
 import { isAdmin } from '@/lib/auth';
+import { useLocation } from 'wouter';
 
 interface ImportResult {
   total: number;
@@ -42,6 +43,7 @@ export default function ScheduleImport() {
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [, navigate] = useLocation();
   
   // Проверка роли пользователя
   const userIsAdmin = isAdmin(user?.role);
@@ -152,8 +154,8 @@ export default function ScheduleImport() {
       
       // Небольшая задержка перед переходом на страницу просмотра
       setTimeout(() => {
-        // После успешного импорта переключаемся на вкладку просмотра расписания
-        window.location.href = '/schedule';
+        // После успешного импорта переключаемся на вкладку просмотра расписания используя wouter
+        navigate('/schedule');
       }, 1500);
     } catch (error: any) {
       toast({
@@ -338,19 +340,27 @@ export default function ScheduleImport() {
                 <Alert className="mb-4">
                   <AlertTitle>Важная информация по формату CSV файла</AlertTitle>
                   <AlertDescription>
-                    <div className="mb-2">CSV файл должен содержать следующие колонки:</div>
+                    <div className="mb-2">CSV файл должен содержать следующие обязательные колонки:</div>
                     <ul className="list-disc pl-5 space-y-1 mb-3">
-                      <li><strong>Subject</strong> - название предмета</li>
-                      <li><strong>Day</strong> - день недели на русском или английском языке</li>
-                      <li><strong>Start Time</strong> - время начала занятия (формат: ЧЧ:ММ, ЧЧ.ММ или ЧЧММ)</li>
-                      <li><strong>End Time</strong> - время окончания занятия (формат: ЧЧ:ММ, ЧЧ.ММ или ЧЧММ)</li>
-                      <li><strong>Room</strong> - номер кабинета (опционально)</li>
-                      <li><strong>Teacher</strong> - ФИО преподавателя (опционально)</li>
+                      <li><strong>Предмет</strong> (Subject) - название предмета</li>
+                      <li><strong>День</strong> (Day) - день недели на русском или английском языке</li>
+                      <li><strong>Время начала</strong> (Start Time) - время начала занятия (ЧЧ:ММ, ЧЧ.ММ или ЧЧММ)</li>
+                      <li><strong>Время конца</strong> (End Time) - время окончания занятия (ЧЧ:ММ, ЧЧ.ММ или ЧЧММ)</li>
+                      <li><strong>Кабинет</strong> (Room) - номер кабинета (опционально)</li>
+                      <li><strong>Преподаватель</strong> (Teacher) - ФИО преподавателя (опционально)</li>
+                    </ul>
+                    
+                    <div className="mb-2">Дополнительные поля, которые могут присутствовать в файле:</div>
+                    <ul className="list-disc pl-5 space-y-1 mb-3">
+                      <li><strong>Курс</strong> - номер курса обучения</li>
+                      <li><strong>Специальность</strong> - название специальности</li>
+                      <li><strong>Группа</strong> - название группы учащихся</li>
                     </ul>
 
                     <p className="text-sm text-gray-600 mb-2">
                       Первая строка должна содержать названия колонок. Все последующие строки - данные занятий.
                       Система автоматически создаст недостающие предметы и назначит их в расписание.
+                      Дополнительные поля будут сохранены в виде метаданных.
                     </p>
                     
                     <div className="text-sm text-gray-600">
@@ -363,15 +373,33 @@ export default function ScheduleImport() {
                       </ul>
                     </div>
                     
-                    <div className="mt-3">
-                      <a 
-                        href="/schedule-template.csv" 
-                        download 
-                        className="inline-flex items-center text-blue-600 hover:text-blue-800"
-                      >
-                        <Download className="h-4 w-4 mr-1" /> 
-                        Скачать шаблон CSV файла
-                      </a>
+                    <div className="mt-3 space-y-2">
+                      <div>
+                        <a 
+                          href="/schedule-template-comma.csv" 
+                          download 
+                          className="inline-flex items-center text-blue-600 hover:text-blue-800"
+                        >
+                          <Download className="h-4 w-4 mr-1" /> 
+                          Скачать простой шаблон (с запятыми)
+                        </a>
+                      </div>
+                      
+                      <div>
+                        <a 
+                          href="/schedule-template-semicolon.csv" 
+                          download 
+                          className="inline-flex items-center text-blue-600 hover:text-blue-800"
+                        >
+                          <Download className="h-4 w-4 mr-1" /> 
+                          Скачать расширенный шаблон (с точками с запятой)
+                        </a>
+                      </div>
+                      
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Выберите шаблон в зависимости от того, планируете ли вы включать дополнительные поля 
+                        (Курс, Специальность, Группа) в ваш файл CSV.
+                      </p>
                     </div>
                   </AlertDescription>
                 </Alert>

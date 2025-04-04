@@ -302,16 +302,19 @@ export default function Chat() {
   const usersByRole = React.useMemo(() => {
     if (!users) return {};
     
-    return users.reduce((acc: Record<string, any[]>, user: any) => {
-      if (user.id === user?.id) return acc; // Skip current user
+    // Получаем текущего аутентифицированного пользователя
+    const currentUser = user;
+    
+    return users.reduce((acc: Record<string, any[]>, chatUser: any) => {
+      if (chatUser.id === currentUser?.id) return acc; // Skip current user
       
-      if (!acc[user.role]) {
-        acc[user.role] = [];
+      if (!acc[chatUser.role]) {
+        acc[chatUser.role] = [];
       }
-      acc[user.role].push(user);
+      acc[chatUser.role].push(chatUser);
       return acc;
     }, {});
-  }, [users]);
+  }, [users, user]);
   
   return (
     <div className="container mx-auto py-6">
