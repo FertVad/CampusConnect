@@ -131,220 +131,22 @@ export async function uploadFile(endpoint: string, formData: FormData): Promise<
   }
 }
 
+/* CHAT FUNCTIONALITY TEMPORARILY DISABLED
 // WebSocket connection for chat with cross-browser compatibility
 export function createWebSocketConnection(userId: number | undefined | null, onMessage: (data: any) => void): WebSocket | null {
-  // Get token from localStorage
-  const token = localStorage.getItem('token');
-  
-  // Skip initialization if token is missing or invalid
-  if (!token || token.length < 5) {
-    console.log('WebSocket not initialized: Token is missing or invalid');
-    return null;
-  }
-  
-  // User ID validation
-  if (!userId || typeof userId !== 'number' || userId <= 0) {
-    console.log('WebSocket not initialized: User ID is invalid:', userId);
-    return null;
-  }
-  
-  // Get base URL from window location
-  const host = window.location.host;
-  if (!host) {
-    console.log('WebSocket not initialized: Host is undefined');
-    return null;
-  }
-  
-  // Construct WebSocket URL
-  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-  const wsUrl = import.meta.env.VITE_WS_URL || `${protocol}//${host}`;
-  
-  // Validate WebSocket URL
-  if (!wsUrl || typeof wsUrl !== 'string' || !wsUrl.startsWith('ws')) {
-    console.log('WebSocket not initialized: Invalid WebSocket URL:', wsUrl);
-    return null;
-  }
-  
-  console.log('Creating WebSocket connection with URL:', wsUrl);
-  
-  let socket: WebSocket;
-  let reconnectAttempts = 0;
-  const maxReconnectAttempts = 5;
-  
-  try {
-    // Include token in the WebSocket URL
-    socket = new WebSocket(`${wsUrl}/?token=${token}`);
-    
-    // Set a connection timeout for Safari which can hang indefinitely
-    const connectionTimeout = setTimeout(() => {
-      if (socket && socket.readyState !== WebSocket.OPEN) {
-        console.warn('WebSocket connection timeout, closing and retrying...');
-        try {
-          socket.close();
-        } catch (err) {
-          console.error('Error closing socket during timeout:', err);
-        }
-        
-        // Don't retry if token is missing or invalid
-        const currentToken = localStorage.getItem('token');
-        if (!currentToken || currentToken.length < 5) {
-          console.log('WebSocket reconnect aborted: Token is missing or invalid');
-          return;
-        }
-        
-        // Don't retry if user ID is invalid
-        if (!userId || typeof userId !== 'number' || userId <= 0) {
-          console.log('WebSocket reconnect aborted: User ID is invalid');
-          return;
-        }
-        
-        // Try to reconnect if we haven't reached max attempts
-        if (reconnectAttempts < maxReconnectAttempts) {
-          reconnectAttempts++;
-          console.log(`WebSocket reconnect attempt ${reconnectAttempts} of ${maxReconnectAttempts}`);
-          createWebSocketConnection(userId, onMessage);
-        }
-      }
-    }, 5000); // 5 second timeout
-    
-    socket.onopen = () => {
-      clearTimeout(connectionTimeout);
-      reconnectAttempts = 0;
-      
-      // Enhanced validation for userId when connection is established
-      if (!userId || typeof userId !== 'number' || userId <= 0) {
-        console.error('WebSocket opened but userId is missing or invalid');
-        try {
-          socket.close(1000, 'User not authenticated');
-        } catch (err) {
-          console.error('Error closing unauthenticated socket:', err);
-        }
-        return;
-      }
-      
-      // Authenticate the WebSocket connection with the user ID
-      try {
-        socket.send(JSON.stringify({ 
-          type: 'auth', 
-          userId 
-        }));
-        console.log('WebSocket connection established and authenticated with userId:', userId);
-      } catch (err) {
-        console.error('Error sending authentication message:', err);
-        try {
-          socket.close(1000, 'Authentication failed');
-        } catch (closeErr) {
-          console.error('Error closing socket after auth failure:', closeErr);
-        }
-      }
-    };
-    
-    socket.onmessage = (event) => {
-      try {
-        // Safari sometimes fails to parse JSON, so we add additional error handling
-        const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
-        onMessage(data);
-      } catch (error) {
-        console.error('Error parsing WebSocket message', error);
-      }
-    };
-    
-    socket.onerror = (error) => {
-      console.error('WebSocket error', error);
-      // Не пытаемся автоматически переподключаться при явной ошибке
-      clearTimeout(connectionTimeout);
-    };
-    
-    socket.onclose = (event) => {
-      clearTimeout(connectionTimeout);
-      console.log(`WebSocket connection closed: ${event.code} ${event.reason}`);
-      
-      // Don't retry if token is missing or invalid
-      const currentToken = localStorage.getItem('token');
-      if (!currentToken || currentToken.length < 5) {
-        console.log('WebSocket reconnect aborted: Token is missing or invalid');
-        return;
-      }
-      
-      // Don't retry if user ID is invalid
-      if (!userId || typeof userId !== 'number' || userId <= 0) {
-        console.log('WebSocket reconnect aborted: User ID is invalid');
-        return;
-      }
-      
-      // Attempt to reconnect if not a clean close and we haven't reached max attempts
-      if (!event.wasClean && reconnectAttempts < maxReconnectAttempts) {
-        reconnectAttempts++;
-        
-        // Add delay before reconnecting
-        setTimeout(() => {
-          console.log(`WebSocket reconnect attempt ${reconnectAttempts} of ${maxReconnectAttempts}`);
-          createWebSocketConnection(userId, onMessage);
-        }, 1000 * reconnectAttempts); // Exponential backoff
-      }
-    };
-    
-    return socket;
-    
-  } catch (error) {
-    console.error('Error creating WebSocket connection:', error);
-    return null;
-  }
+  console.log('WebSocket functionality is temporarily disabled');
+  return null;
 }
 
 // Send chat message through WebSocket with Safari compatibility
 export function sendChatMessage(socket: WebSocket | null, toUserId: number, content: string): boolean {
-  if (!socket) {
-    console.error('WebSocket is null');
-    return false;
-  }
-  
-  if (socket.readyState === WebSocket.OPEN) {
-    try {
-      // Create the message payload
-      const payload = JSON.stringify({
-        type: 'message',
-        toUserId,
-        content
-      });
-      
-      // Use a try-catch to handle potential issues in Safari
-      socket.send(payload);
-      return true;
-    } catch (error) {
-      console.error('Error sending chat message:', error);
-      return false;
-    }
-  } else {
-    console.error('WebSocket is not connected, state:', socket.readyState);
-    return false;
-  }
+  console.log('WebSocket functionality is temporarily disabled');
+  return false;
 }
 
 // Mark message as read through WebSocket with Safari compatibility
 export function markMessageAsRead(socket: WebSocket | null, messageId: number): boolean {
-  if (!socket) {
-    console.error('WebSocket is null');
-    return false;
-  }
-  
-  if (socket.readyState === WebSocket.OPEN) {
-    try {
-      // Create the message payload
-      const payload = JSON.stringify({
-        type: 'markAsRead',
-        messageId
-      });
-      
-      // Use a try-catch to handle potential issues in Safari
-      socket.send(payload);
-      return true;
-    } catch (error) {
-      console.error('Error marking message as read:', error);
-      return false;
-    }
-  } else {
-    console.error('WebSocket is not connected, state:', socket.readyState);
-    return false;
-  }
+  console.log('WebSocket functionality is temporarily disabled');
+  return false;
 }
+*/
