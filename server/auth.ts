@@ -8,10 +8,7 @@ import { createDatabaseStorage } from "./db/storage";
 import { migrateDatabase, seedDatabase } from "./db/migrations";
 
 // Import storage module and IStorage interface
-import { storage as memStorage, IStorage } from "./storage";
-
-// Create a variable to hold our storage implementation
-let storage: IStorage = memStorage;
+import { storage, IStorage, setStorage, getStorage } from "./storage";
 
 declare global {
   namespace Express {
@@ -48,7 +45,7 @@ export async function initializeDatabase(): Promise<boolean> {
     // Run migrations to create tables
     const migrationSuccess = await migrateDatabase();
     if (!migrationSuccess) {
-      console.error("Database migration failed, using memory storage.");
+      console.error("Database migration failed, using memory getStorage().");
       return false;
     }
 
@@ -60,7 +57,10 @@ export async function initializeDatabase(): Promise<boolean> {
 
     // Create database storage and replace memory storage
     // Since createDatabaseStorage() returns IStorage, this is type-safe
-    storage = await createDatabaseStorage();
+    const dbStorage = await createDatabaseStorage();
+    
+    // Обновляем хранилище через сеттер, чтобы обновить его во всех модулях
+    setStorage(dbStorage);
 
     console.log("Successfully initialized database storage");
     return true;
@@ -79,7 +79,7 @@ export function setupAuth(app: Express) {
     secret: process.env.SESSION_SECRET || "dev-session-secret",
     resave: false,
     saveUninitialized: false,
-    store: storage.sessionStore,
+    store: getStorage().sessionStore,
     cookie: {
       maxAge: 14 * 24 * 60 * 60 * 1000,
       httpOnly: true,
@@ -101,7 +101,7 @@ export function setupAuth(app: Express) {
       passwordField: 'password'
     }, async (email, password, done) => {
       try {
-        const user = await storage.getUserByEmail(email);
+        const user = await getStorage().getUserByEmail(email);
         if (!user) {
           return done(null, false, { message: "Invalid email or password" });
         }
@@ -125,7 +125,7 @@ export function setupAuth(app: Express) {
 
   passport.deserializeUser(async (id: number, done) => {
     try {
-      const user = await storage.getUser(id);
+      const user = await getStorage().getUser(id);
       done(null, user);
     } catch (error) {
       done(error);
@@ -136,13 +136,13 @@ export function setupAuth(app: Express) {
   app.post("/api/register", async (req, res, next) => {
     try {
       // Check if email already exists
-      const existingUser = await storage.getUserByEmail(req.body.email);
+      const existingUser = await getStorage().getUserByEmail(req.body.email);
       if (existingUser) {
         return res.status(400).json({ message: "Email already exists" });
       }
 
       // Create user (password will be hashed in the storage implementation)
-      const user = await storage.createUser(req.body);
+      const user = await getStorage().createUser(req.body);
 
       // Auto login after registration
       req.login(user, (err) => {
@@ -229,6 +229,3 @@ export function setupAuth(app: Express) {
     return res.status(401).json({ message: "Not authenticated" });
   });
 }
-
-// Export the storage to be used in other parts of the application
-export { storage };

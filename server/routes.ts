@@ -1,6 +1,6 @@
 import type { Express, Response, NextFunction, Request as ExpressRequest } from "express";
 import { createServer, type Server } from "http";
-import { storage } from "./storage";
+import { getStorage } from "./storage";
 import { WebSocketServer } from "ws";
 import { WebSocket } from "ws";
 import { setupAuth } from "./auth";
@@ -92,7 +92,7 @@ const requireRole = (roles: string[]) => {
 async function getDefaultTeacherId(): Promise<number> {
   try {
     // Пытаемся найти пользователя с ролью "teacher"
-    const teachers = await storage.getUsersByRole('teacher');
+    const teachers = await getStorage().getUsersByRole('teacher');
     if (teachers && teachers.length > 0) {
       console.log(`Found ${teachers.length} teachers, using ${teachers[0].firstName} ${teachers[0].lastName} (ID: ${teachers[0].id}) as default`);
       return teachers[0].id;
@@ -133,14 +133,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.log(`User ${userId} connected to WebSocket`);
           
           // Send any undelivered messages to the user
-          const messages = await storage.getMessagesByUser(userId);
+          const messages = await getStorage().getMessagesByUser(userId);
           const undeliveredMessages = messages.filter(m => 
             m.toUserId === userId && m.status === 'sent'
           );
           
           for (const message of undeliveredMessages) {
             // Mark as delivered
-            await storage.updateMessageStatus(message.id, 'delivered');
+            await getStorage().updateMessageStatus(message.id, 'delivered');
             
             ws.send(JSON.stringify({
               type: 'message',
@@ -154,7 +154,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const { toUserId, content } = data;
           
           // Save the message
-          const message = await storage.createMessage({
+          const message = await getStorage().createMessage({
             fromUserId: userId,
             toUserId,
             content
@@ -169,7 +169,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }));
             
             // Mark as delivered
-            await storage.updateMessageStatus(message.id, 'delivered');
+            await getStorage().updateMessageStatus(message.id, 'delivered');
           }
           
           // Confirm to sender
@@ -182,7 +182,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Handle read receipts
         if (data.type === 'markAsRead' && userId) {
           const { messageId } = data;
-          await storage.updateMessageStatus(messageId, 'read');
+          await getStorage().updateMessageStatus(messageId, 'read');
         }
       } catch (error) {
         console.error('WebSocket message error:', error);
@@ -202,7 +202,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // User Routes
   app.get('/api/users', authenticateUser, requireRole(['admin']), async (req, res) => {
     try {
-      const users = await storage.getUsers();
+      const users = await getStorage().getUsers();
       res.json(users);
     } catch (error) {
       res.status(500).json({ message: "Server error" });
@@ -218,7 +218,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Forbidden" });
       }
       
-      const user = await storage.getUser(userId);
+      const user = await getStorage().getUser(userId);
       
       if (!user) {
         return res.status(404).json({ message: "User not found" });
@@ -233,7 +233,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/users', authenticateUser, requireRole(['admin']), async (req, res) => {
     try {
       const userData = insertUserSchema.parse(req.body);
-      const user = await storage.createUser(userData);
+      const user = await getStorage().createUser(userData);
       res.status(201).json(user);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -247,7 +247,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = parseInt(req.params.id);
       const userData = insertUserSchema.partial().parse(req.body);
-      const updatedUser = await storage.updateUser(userId, userData);
+      const updatedUser = await getStorage().updateUser(userId, userData);
       
       if (!updatedUser) {
         return res.status(404).json({ message: "User not found" });
@@ -265,7 +265,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete('/api/users/:id', authenticateUser, requireRole(['admin']), async (req, res) => {
     try {
       const userId = parseInt(req.params.id);
-      const success = await storage.deleteUser(userId);
+      const success = await getStorage().deleteUser(userId);
       
       if (!success) {
         return res.status(404).json({ message: "User not found" });
@@ -280,7 +280,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Subject Routes
   app.get('/api/subjects', authenticateUser, async (req, res) => {
     try {
-      const subjects = await storage.getSubjects();
+      const subjects = await getStorage().getSubjects();
       res.json(subjects);
     } catch (error) {
       res.status(500).json({ message: "Server error" });
@@ -290,7 +290,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/subjects/:id', authenticateUser, async (req, res) => {
     try {
       const subjectId = parseInt(req.params.id);
-      const subject = await storage.getSubject(subjectId);
+      const subject = await getStorage().getSubject(subjectId);
       
       if (!subject) {
         return res.status(404).json({ message: "Subject not found" });
@@ -309,7 +309,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Access denied" });
       }
       
-      const subjects = await storage.getSubjectsByTeacher(req.user.id);
+      const subjects = await getStorage().getSubjectsByTeacher(req.user.id);
       res.json(subjects);
     } catch (error) {
       res.status(500).json({ message: "Server error" });
@@ -319,7 +319,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/subjects', authenticateUser, requireRole(['admin']), async (req, res) => {
     try {
       const subjectData = insertSubjectSchema.parse(req.body);
-      const subject = await storage.createSubject(subjectData);
+      const subject = await getStorage().createSubject(subjectData);
       res.status(201).json(subject);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -333,7 +333,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const subjectId = parseInt(req.params.id);
       const subjectData = insertSubjectSchema.partial().parse(req.body);
-      const updatedSubject = await storage.updateSubject(subjectId, subjectData);
+      const updatedSubject = await getStorage().updateSubject(subjectId, subjectData);
       
       if (!updatedSubject) {
         return res.status(404).json({ message: "Subject not found" });
@@ -351,7 +351,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete('/api/subjects/:id', authenticateUser, requireRole(['admin']), async (req, res) => {
     try {
       const subjectId = parseInt(req.params.id);
-      const success = await storage.deleteSubject(subjectId);
+      const success = await getStorage().deleteSubject(subjectId);
       
       if (!success) {
         return res.status(404).json({ message: "Subject not found" });
@@ -366,7 +366,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Enrollment Routes
   app.get('/api/enrollments', authenticateUser, requireRole(['admin', 'teacher']), async (req, res) => {
     try {
-      const enrollments = await storage.getEnrollments();
+      const enrollments = await getStorage().getEnrollments();
       res.json(enrollments);
     } catch (error) {
       res.status(500).json({ message: "Server error" });
@@ -382,7 +382,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Forbidden" });
       }
       
-      const enrollments = await storage.getEnrollmentsByStudent(studentId);
+      const enrollments = await getStorage().getEnrollmentsByStudent(studentId);
       res.json(enrollments);
     } catch (error) {
       res.status(500).json({ message: "Server error" });
@@ -392,7 +392,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/enrollments/subject/:subjectId', authenticateUser, async (req, res) => {
     try {
       const subjectId = parseInt(req.params.subjectId);
-      const enrollments = await storage.getEnrollmentsBySubject(subjectId);
+      const enrollments = await getStorage().getEnrollmentsBySubject(subjectId);
       res.json(enrollments);
     } catch (error) {
       res.status(500).json({ message: "Server error" });
@@ -402,7 +402,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/enrollments', authenticateUser, requireRole(['admin']), async (req, res) => {
     try {
       const enrollmentData = insertEnrollmentSchema.parse(req.body);
-      const enrollment = await storage.createEnrollment(enrollmentData);
+      const enrollment = await getStorage().createEnrollment(enrollmentData);
       res.status(201).json(enrollment);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -415,7 +415,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete('/api/enrollments/:id', authenticateUser, requireRole(['admin']), async (req, res) => {
     try {
       const enrollmentId = parseInt(req.params.id);
-      const success = await storage.deleteEnrollment(enrollmentId);
+      const success = await getStorage().deleteEnrollment(enrollmentId);
       
       if (!success) {
         return res.status(404).json({ message: "Enrollment not found" });
@@ -430,11 +430,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Schedule Routes
   app.get('/api/schedule', authenticateUser, async (req, res) => {
     try {
-      const schedule = await storage.getScheduleItems();
+      const schedule = await getStorage().getScheduleItems();
       
       // Получаем информацию о предметах и преподавателях для каждого элемента расписания
       const enrichedSchedule = await Promise.all(schedule.map(async (item) => {
-        let subject = await storage.getSubject(item.subjectId);
+        let subject = await getStorage().getSubject(item.subjectId);
         
         // Если предмет не найден в базе, пропускаем этот элемент расписания
         if (!subject) {
@@ -451,7 +451,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         } 
         // Если нет, пробуем получить имя преподавателя из связанного пользователя
         else if (subject.teacherId) {
-          const teacher = await storage.getUser(subject.teacherId);
+          const teacher = await getStorage().getUser(subject.teacherId);
           if (teacher) {
             teacherName = `${teacher.firstName} ${teacher.lastName}`;
           }
@@ -505,7 +505,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Forbidden" });
       }
       
-      const schedule = await storage.getScheduleItemsByStudent(studentId);
+      const schedule = await getStorage().getScheduleItemsByStudent(studentId);
       res.json(schedule);
     } catch (error) {
       res.status(500).json({ message: "Server error" });
@@ -520,7 +520,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       console.log(`Fetching schedule for student with ID: ${req.user.id}`);
-      const schedule = await storage.getScheduleItemsByStudent(req.user.id);
+      const schedule = await getStorage().getScheduleItemsByStudent(req.user.id);
       console.log(`Found ${schedule.length} schedule items for student ${req.user.id}`);
       
       res.json(schedule);
@@ -539,7 +539,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Forbidden" });
       }
       
-      const schedule = await storage.getScheduleItemsByTeacher(teacherId);
+      const schedule = await getStorage().getScheduleItemsByTeacher(teacherId);
       res.json(schedule);
     } catch (error) {
       res.status(500).json({ message: "Server error" });
@@ -554,7 +554,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       console.log(`Fetching schedule for teacher with ID: ${req.user.id}`);
-      const schedule = await storage.getScheduleItemsByTeacher(req.user.id);
+      const schedule = await getStorage().getScheduleItemsByTeacher(req.user.id);
       console.log(`Found ${schedule.length} schedule items for teacher ${req.user.id}`);
       
       res.json(schedule);
@@ -567,7 +567,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/schedule', authenticateUser, requireRole(['admin']), async (req, res) => {
     try {
       const scheduleData = insertScheduleItemSchema.parse(req.body);
-      const scheduleItem = await storage.createScheduleItem(scheduleData);
+      const scheduleItem = await getStorage().createScheduleItem(scheduleData);
       res.status(201).json(scheduleItem);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -581,7 +581,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const scheduleId = parseInt(req.params.id);
       const scheduleData = insertScheduleItemSchema.partial().parse(req.body);
-      const updatedSchedule = await storage.updateScheduleItem(scheduleId, scheduleData);
+      const updatedSchedule = await getStorage().updateScheduleItem(scheduleId, scheduleData);
       
       if (!updatedSchedule) {
         return res.status(404).json({ message: "Schedule item not found" });
@@ -599,7 +599,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete('/api/schedule/:id', authenticateUser, requireRole(['admin']), async (req, res) => {
     try {
       const scheduleId = parseInt(req.params.id);
-      const success = await storage.deleteScheduleItem(scheduleId);
+      const success = await getStorage().deleteScheduleItem(scheduleId);
       
       if (!success) {
         return res.status(404).json({ message: "Schedule item not found" });
@@ -658,7 +658,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Обрабатываем предметы по их названиям
       // Сначала получаем все существующие предметы
-      const allSubjects = await storage.getSubjects();
+      const allSubjects = await getStorage().getSubjects();
       console.log(`Existing subjects: ${allSubjects.length}`);
       
       // Обрабатываем каждый элемент расписания
@@ -687,7 +687,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             newSubjectCounter++;
               
             // Создаем предмет
-            const newSubject = await storage.createSubject({
+            const newSubject = await getStorage().createSubject({
               name: subjectName,
               shortName: subjectName.substring(0, 10), // Берем первые 10 символов как сокращение
               description: 'Автоматически созданный предмет из импорта расписания',
@@ -736,7 +736,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         delete (cleanItem as any).subjectName;
         
         // Создаем элемент расписания
-        const created = await storage.createScheduleItem(cleanItem);
+        const created = await getStorage().createScheduleItem(cleanItem);
         createdItems.push(created);
       }
       
@@ -749,7 +749,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Сохраняем информацию о загруженном файле в базу данных
       try {
-        const gsheetFileInfo = await storage.createImportedFile({
+        const gsheetFileInfo = await getStorage().createImportedFile({
           originalName: req.file.originalname,
           storedName: path.basename(req.file.path),
           filePath: req.file.path,
@@ -767,7 +767,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Обновляем созданные элементы расписания, чтобы связать их с файлом
         for (const item of createdItems) {
-          await storage.updateScheduleItem(item.id, {
+          await getStorage().updateScheduleItem(item.id, {
             ...item,
             importedFileId: gsheetFileInfo.id
           });
@@ -842,7 +842,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Обрабатываем предметы по их названиям
         // Сначала получаем все существующие предметы
-        const allSubjects = await storage.getSubjects();
+        const allSubjects = await getStorage().getSubjects();
         console.log(`Existing subjects: ${allSubjects.length}`);
         
         // Обрабатываем каждый элемент расписания
@@ -871,7 +871,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               newSubjectCounter++;
               
               // Создаем предмет
-              const newSubject = await storage.createSubject({
+              const newSubject = await getStorage().createSubject({
                 name: subjectName,
                 shortName: subjectName.substring(0, 10), // Берем первые 10 символов как сокращение
                 description: 'Автоматически созданный предмет из импорта расписания',
@@ -930,7 +930,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           delete (cleanItem as any).subjectName;
           
           // Создаем элемент расписания
-          const created = await storage.createScheduleItem(cleanItem);
+          const created = await getStorage().createScheduleItem(cleanItem);
           createdItems.push(created);
         }
         
@@ -943,7 +943,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Сохраняем информацию о загруженном файле в базу данных
         try {
-          const importFileInfo = await storage.createImportedFile({
+          const importFileInfo = await getStorage().createImportedFile({
             originalName: req.file.originalname,
             storedName: path.basename(req.file.path),
             filePath: req.file.path,
@@ -961,7 +961,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           // Обновляем созданные элементы расписания, чтобы связать их с файлом
           for (const item of createdItems) {
-            await storage.updateScheduleItem(item.id, {
+            await getStorage().updateScheduleItem(item.id, {
               ...item,
               importedFileId: importFileInfo.id
             });
@@ -995,7 +995,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Imported Files Routes
   app.get('/api/imported-files', authenticateUser, requireRole(['admin']), async (req, res) => {
     try {
-      const files = await storage.getImportedFiles();
+      const files = await getStorage().getImportedFiles();
       res.json(files);
     } catch (error) {
       res.status(500).json({ message: "Server error" });
@@ -1005,7 +1005,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/imported-files/:id', authenticateUser, requireRole(['admin']), async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      const file = await storage.getImportedFile(id);
+      const file = await getStorage().getImportedFile(id);
       
       if (!file) {
         return res.status(404).json({ message: "File not found" });
@@ -1020,7 +1020,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/imported-files/user/:userId', authenticateUser, requireRole(['admin']), async (req, res) => {
     try {
       const userId = parseInt(req.params.userId);
-      const files = await storage.getImportedFilesByUser(userId);
+      const files = await getStorage().getImportedFilesByUser(userId);
       res.json(files);
     } catch (error) {
       res.status(500).json({ message: "Server error" });
@@ -1035,7 +1035,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid file type. Must be 'csv' or 'google-sheets'" });
       }
       
-      const files = await storage.getImportedFilesByType(type);
+      const files = await getStorage().getImportedFilesByType(type);
       res.json(files);
     } catch (error) {
       res.status(500).json({ message: "Server error" });
@@ -1057,7 +1057,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`[DELETE FILE] Processing delete request for imported file ID: ${id}`);
       
       // Step 1: Get the file details
-      const file = await storage.getImportedFile(id);
+      const file = await getStorage().getImportedFile(id);
       
       if (!file) {
         console.log(`[DELETE FILE] File with ID ${id} not found`);
@@ -1106,7 +1106,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Step 4: Delete the database records using our improved transaction-based method
       console.log(`[DELETE FILE] Attempting to delete file ID ${id} and related records from database`);
-      const success = await storage.deleteImportedFile(id);
+      const success = await getStorage().deleteImportedFile(id);
       
       // Step 5: Respond with appropriate status based on success
       if (success) {
@@ -1164,7 +1164,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Assignment Routes
   app.get('/api/assignments', authenticateUser, requireRole(['admin', 'teacher']), async (req, res) => {
     try {
-      const assignments = await storage.getAssignments();
+      const assignments = await getStorage().getAssignments();
       res.json(assignments);
     } catch (error) {
       res.status(500).json({ message: "Server error" });
@@ -1174,7 +1174,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/assignments/:id', authenticateUser, async (req, res) => {
     try {
       const assignmentId = parseInt(req.params.id);
-      const assignment = await storage.getAssignment(assignmentId);
+      const assignment = await getStorage().getAssignment(assignmentId);
       
       if (!assignment) {
         return res.status(404).json({ message: "Assignment not found" });
@@ -1195,7 +1195,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Forbidden" });
       }
       
-      const assignments = await storage.getAssignmentsByStudent(studentId);
+      const assignments = await getStorage().getAssignmentsByStudent(studentId);
       res.json(assignments);
     } catch (error) {
       res.status(500).json({ message: "Server error" });
@@ -1210,10 +1210,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Get all assignments for the student
-      const assignments = await storage.getAssignmentsByStudent(req.user.id);
+      const assignments = await getStorage().getAssignmentsByStudent(req.user.id);
       
       // Get all submissions by this student
-      const submissions = await storage.getSubmissionsByStudent(req.user.id);
+      const submissions = await getStorage().getSubmissionsByStudent(req.user.id);
       
       // Map submissions to assignments
       const assignmentsWithSubmissions = assignments.map(assignment => {
@@ -1239,7 +1239,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Forbidden" });
       }
       
-      const assignments = await storage.getAssignmentsByTeacher(teacherId);
+      const assignments = await getStorage().getAssignmentsByTeacher(teacherId);
       res.json(assignments);
     } catch (error) {
       res.status(500).json({ message: "Server error" });
@@ -1254,17 +1254,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Get all assignments created by this teacher
-      const assignments = await storage.getAssignmentsByTeacher(req.user.id);
+      const assignments = await getStorage().getAssignmentsByTeacher(req.user.id);
       
       // For each assignment, get submissions count and other details
       const assignmentsWithDetails = await Promise.all(assignments.map(async assignment => {
-        const submissions = await storage.getSubmissionsByAssignment(assignment.id);
+        const submissions = await getStorage().getSubmissionsByAssignment(assignment.id);
         
         // Get subject details
-        const subject = await storage.getSubject(assignment.subjectId);
+        const subject = await getStorage().getSubject(assignment.subjectId);
         
         // Get student count for this subject
-        const students = await storage.getStudentsBySubject(assignment.subjectId);
+        const students = await getStorage().getStudentsBySubject(assignment.subjectId);
         
         return {
           ...assignment,
@@ -1286,12 +1286,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...req.body,
         createdBy: req.user.id
       });
-      const assignment = await storage.createAssignment(assignmentData);
+      const assignment = await getStorage().createAssignment(assignmentData);
       
       // Create notifications for students in this subject
-      const students = await storage.getStudentsBySubject(assignmentData.subjectId);
+      const students = await getStorage().getStudentsBySubject(assignmentData.subjectId);
       for (const student of students) {
-        await storage.createNotification({
+        await getStorage().createNotification({
           userId: student.id,
           title: "New Assignment",
           content: `A new assignment "${assignment.title}" has been posted for ${assignment.subjectId}.`,
@@ -1312,7 +1312,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put('/api/assignments/:id', authenticateUser, requireRole(['admin', 'teacher']), async (req, res) => {
     try {
       const assignmentId = parseInt(req.params.id);
-      const assignment = await storage.getAssignment(assignmentId);
+      const assignment = await getStorage().getAssignment(assignmentId);
       
       if (!assignment) {
         return res.status(404).json({ message: "Assignment not found" });
@@ -1324,7 +1324,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const assignmentData = insertAssignmentSchema.partial().parse(req.body);
-      const updatedAssignment = await storage.updateAssignment(assignmentId, assignmentData);
+      const updatedAssignment = await getStorage().updateAssignment(assignmentId, assignmentData);
       
       res.json(updatedAssignment);
     } catch (error) {
@@ -1338,7 +1338,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete('/api/assignments/:id', authenticateUser, requireRole(['admin', 'teacher']), async (req, res) => {
     try {
       const assignmentId = parseInt(req.params.id);
-      const assignment = await storage.getAssignment(assignmentId);
+      const assignment = await getStorage().getAssignment(assignmentId);
       
       if (!assignment) {
         return res.status(404).json({ message: "Assignment not found" });
@@ -1349,7 +1349,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Forbidden" });
       }
       
-      const success = await storage.deleteAssignment(assignmentId);
+      const success = await getStorage().deleteAssignment(assignmentId);
       res.status(204).end();
     } catch (error) {
       res.status(500).json({ message: "Server error" });
@@ -1362,7 +1362,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const assignmentId = parseInt(req.params.assignmentId);
       
       // Get the assignment
-      const assignment = await storage.getAssignment(assignmentId);
+      const assignment = await getStorage().getAssignment(assignmentId);
       if (!assignment) {
         return res.status(404).json({ message: "Assignment not found" });
       }
@@ -1370,7 +1370,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check permissions
       if (req.user.role === 'student') {
         // Students can only see their own submissions
-        const submission = await storage.getSubmissionByAssignmentAndStudent(assignmentId, req.user.id);
+        const submission = await getStorage().getSubmissionByAssignmentAndStudent(assignmentId, req.user.id);
         return res.json(submission ? [submission] : []);
       }
       
@@ -1379,7 +1379,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Forbidden" });
       }
       
-      const submissions = await storage.getSubmissionsByAssignment(assignmentId);
+      const submissions = await getStorage().getSubmissionsByAssignment(assignmentId);
       res.json(submissions);
     } catch (error) {
       res.status(500).json({ message: "Server error" });
@@ -1395,7 +1395,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Forbidden" });
       }
       
-      const submissions = await storage.getSubmissionsByStudent(studentId);
+      const submissions = await getStorage().getSubmissionsByStudent(studentId);
       res.json(submissions);
     } catch (error) {
       res.status(500).json({ message: "Server error" });
@@ -1408,13 +1408,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const studentId = req.user.id;
       
       // Check if assignment exists
-      const assignment = await storage.getAssignment(assignmentId);
+      const assignment = await getStorage().getAssignment(assignmentId);
       if (!assignment) {
         return res.status(404).json({ message: "Assignment not found" });
       }
       
       // Check if student is enrolled in the subject
-      const enrollments = await storage.getEnrollmentsByStudent(studentId);
+      const enrollments = await getStorage().getEnrollmentsByStudent(studentId);
       const isEnrolled = enrollments.some(e => e.subjectId === assignment.subjectId);
       
       if (!isEnrolled) {
@@ -1422,7 +1422,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Check for existing submission
-      const existingSubmission = await storage.getSubmissionByAssignmentAndStudent(assignmentId, studentId);
+      const existingSubmission = await getStorage().getSubmissionByAssignmentAndStudent(assignmentId, studentId);
       
       // Prepare submission data
       const submissionData = {
@@ -1437,14 +1437,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Update or create submission
       if (existingSubmission) {
-        submission = await storage.updateSubmission(existingSubmission.id, submissionData);
+        submission = await getStorage().updateSubmission(existingSubmission.id, submissionData);
       } else {
-        submission = await storage.createSubmission(submissionData);
+        submission = await getStorage().createSubmission(submissionData);
         
         // Notify the teacher
-        const subject = await storage.getSubject(assignment.subjectId);
+        const subject = await getStorage().getSubject(assignment.subjectId);
         if (subject?.teacherId) {
-          await storage.createNotification({
+          await getStorage().createNotification({
             userId: subject.teacherId,
             title: "New Submission",
             content: `${req.user.firstName} ${req.user.lastName} has submitted ${assignment.title}.`,
@@ -1469,34 +1469,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { grade, feedback } = req.body;
       
       // Get the submission
-      const submission = await storage.getSubmission(submissionId);
+      const submission = await getStorage().getSubmission(submissionId);
       if (!submission) {
         return res.status(404).json({ message: "Submission not found" });
       }
       
       // Get the assignment
-      const assignment = await storage.getAssignment(submission.assignmentId);
+      const assignment = await getStorage().getAssignment(submission.assignmentId);
       if (!assignment) {
         return res.status(404).json({ message: "Assignment not found" });
       }
       
       // Teachers can only grade submissions for their subjects
       if (req.user.role === 'teacher') {
-        const subject = await storage.getSubject(assignment.subjectId);
+        const subject = await getStorage().getSubject(assignment.subjectId);
         if (subject?.teacherId !== req.user.id) {
           return res.status(403).json({ message: "Forbidden" });
         }
       }
       
       // Update submission with grade and feedback
-      const updatedSubmission = await storage.updateSubmission(submissionId, {
+      const updatedSubmission = await getStorage().updateSubmission(submissionId, {
         grade: parseInt(grade),
         feedback,
         status: 'graded'
       });
       
       // Create a grade record
-      const gradeRecord = await storage.createGrade({
+      const gradeRecord = await getStorage().createGrade({
         studentId: submission.studentId,
         subjectId: assignment.subjectId,
         assignmentId: assignment.id,
@@ -1506,7 +1506,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       // Notify the student
-      await storage.createNotification({
+      await getStorage().createNotification({
         userId: submission.studentId,
         title: "Assignment Graded",
         content: `Your submission for "${assignment.title}" has been graded.`,
@@ -1530,7 +1530,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Forbidden" });
       }
       
-      const grades = await storage.getGradesByStudent(studentId);
+      const grades = await getStorage().getGradesByStudent(studentId);
       res.json(grades);
     } catch (error) {
       res.status(500).json({ message: "Server error" });
@@ -1543,13 +1543,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Check if the teacher has access to this subject
       if (req.user.role === 'teacher') {
-        const subject = await storage.getSubject(subjectId);
+        const subject = await getStorage().getSubject(subjectId);
         if (subject?.teacherId !== req.user.id) {
           return res.status(403).json({ message: "Forbidden" });
         }
       }
       
-      const grades = await storage.getGradesBySubject(subjectId);
+      const grades = await getStorage().getGradesBySubject(subjectId);
       res.json(grades);
     } catch (error) {
       res.status(500).json({ message: "Server error" });
@@ -1562,16 +1562,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Check if the teacher has access to this subject
       if (req.user.role === 'teacher') {
-        const subject = await storage.getSubject(gradeData.subjectId);
+        const subject = await getStorage().getSubject(gradeData.subjectId);
         if (subject?.teacherId !== req.user.id) {
           return res.status(403).json({ message: "Forbidden" });
         }
       }
       
-      const grade = await storage.createGrade(gradeData);
+      const grade = await getStorage().createGrade(gradeData);
       
       // Notify the student
-      await storage.createNotification({
+      await getStorage().createNotification({
         userId: gradeData.studentId,
         title: "New Grade Posted",
         content: `A new grade has been posted for your ${gradeData.subjectId} course.`,
@@ -1591,7 +1591,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put('/api/grades/:id', authenticateUser, requireRole(['admin', 'teacher']), async (req, res) => {
     try {
       const gradeId = parseInt(req.params.id);
-      const grade = await storage.getGrade(gradeId);
+      const grade = await getStorage().getGrade(gradeId);
       
       if (!grade) {
         return res.status(404).json({ message: "Grade not found" });
@@ -1599,14 +1599,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Check if the teacher has access to this subject
       if (req.user.role === 'teacher') {
-        const subject = await storage.getSubject(grade.subjectId);
+        const subject = await getStorage().getSubject(grade.subjectId);
         if (subject?.teacherId !== req.user.id) {
           return res.status(403).json({ message: "Forbidden" });
         }
       }
       
       const gradeData = insertGradeSchema.partial().parse(req.body);
-      const updatedGrade = await storage.updateGrade(gradeId, gradeData);
+      const updatedGrade = await getStorage().updateGrade(gradeId, gradeData);
       
       res.json(updatedGrade);
     } catch (error) {
@@ -1625,7 +1625,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Get all users except the current user
-      const users = await storage.getUsers();
+      const users = await getStorage().getUsers();
       const filteredUsers = users.filter(user => user.id !== req.user?.id);
       
       // Remove passwords from response
@@ -1644,7 +1644,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const otherUserId = parseInt(req.params.userId);
-      const messages = await storage.getMessagesBetweenUsers(req.user.id, otherUserId);
+      const messages = await getStorage().getMessagesBetweenUsers(req.user.id, otherUserId);
       
       res.json(messages);
     } catch (error) {
@@ -1666,7 +1666,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Update each message status to 'read'
       const updatedMessages = await Promise.all(
-        messageIds.map(id => storage.updateMessageStatus(id, "read"))
+        messageIds.map(id => getStorage().updateMessageStatus(id, "read"))
       );
       
       res.json(updatedMessages.filter(Boolean));
@@ -1679,8 +1679,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/requests', authenticateUser, requireRole(['admin', 'teacher']), async (req, res) => {
     try {
       const requests = req.user.role === 'admin' 
-        ? await storage.getRequests()
-        : await storage.getPendingRequests();
+        ? await getStorage().getRequests()
+        : await getStorage().getPendingRequests();
       
       res.json(requests);
     } catch (error) {
@@ -1697,7 +1697,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Forbidden" });
       }
       
-      const requests = await storage.getRequestsByStudent(studentId);
+      const requests = await getStorage().getRequestsByStudent(studentId);
       res.json(requests);
     } catch (error) {
       res.status(500).json({ message: "Server error" });
@@ -1711,12 +1711,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         studentId: req.user.id
       });
       
-      const request = await storage.createRequest(requestData);
+      const request = await getStorage().createRequest(requestData);
       
       // Notify administrators
-      const admins = (await storage.getUsers()).filter(user => user.role === 'admin');
+      const admins = (await getStorage().getUsers()).filter(user => user.role === 'admin');
       for (const admin of admins) {
-        await storage.createNotification({
+        await getStorage().createNotification({
           userId: admin.id,
           title: "New Student Request",
           content: `${req.user.firstName} ${req.user.lastName} has submitted a ${requestData.type} request.`,
@@ -1743,12 +1743,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid status. Must be 'approved' or 'rejected'" });
       }
       
-      const request = await storage.getRequest(requestId);
+      const request = await getStorage().getRequest(requestId);
       if (!request) {
         return res.status(404).json({ message: "Request not found" });
       }
       
-      const updatedRequest = await storage.updateRequestStatus(
+      const updatedRequest = await getStorage().updateRequestStatus(
         requestId, 
         status as 'approved' | 'rejected',
         req.user.id,
@@ -1756,7 +1756,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       );
       
       // Notify the student
-      await storage.createNotification({
+      await getStorage().createNotification({
         userId: request.studentId,
         title: "Request Status Update",
         content: `Your ${request.type} request has been ${status}.`,
@@ -1780,7 +1780,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Forbidden" });
       }
       
-      const documents = await storage.getDocumentsByUser(userId);
+      const documents = await getStorage().getDocumentsByUser(userId);
       res.json(documents);
     } catch (error) {
       res.status(500).json({ message: "Server error" });
@@ -1797,7 +1797,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Forbidden" });
       }
       
-      const documents = await storage.getDocumentsByType(userId, type);
+      const documents = await getStorage().getDocumentsByType(userId, type);
       res.json(documents);
     } catch (error) {
       res.status(500).json({ message: "Server error" });
@@ -1812,10 +1812,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         fileUrl: req.file ? `/uploads/${req.file.filename}` : null
       });
       
-      const document = await storage.createDocument(documentData);
+      const document = await getStorage().createDocument(documentData);
       
       // Notify the user
-      await storage.createNotification({
+      await getStorage().createNotification({
         userId: documentData.userId,
         title: "New Document",
         content: `A new ${documentData.type} document "${documentData.title}" is available.`,
@@ -1842,7 +1842,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Forbidden" });
       }
       
-      const notifications = await storage.getNotificationsByUser(userId);
+      const notifications = await getStorage().getNotificationsByUser(userId);
       res.json(notifications);
     } catch (error) {
       res.status(500).json({ message: "Server error" });
@@ -1858,7 +1858,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Forbidden" });
       }
       
-      const notifications = await storage.getUnreadNotificationsByUser(userId);
+      const notifications = await getStorage().getUnreadNotificationsByUser(userId);
       res.json(notifications);
     } catch (error) {
       res.status(500).json({ message: "Server error" });
@@ -1868,7 +1868,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put('/api/notifications/:id/read', authenticateUser, async (req, res) => {
     try {
       const notificationId = parseInt(req.params.id);
-      const notification = await storage.getNotification(notificationId);
+      const notification = await getStorage().getNotification(notificationId);
       
       if (!notification) {
         return res.status(404).json({ message: "Notification not found" });
@@ -1879,7 +1879,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Forbidden" });
       }
       
-      const updatedNotification = await storage.markNotificationAsRead(notificationId);
+      const updatedNotification = await getStorage().markNotificationAsRead(notificationId);
       res.json(updatedNotification);
     } catch (error) {
       res.status(500).json({ message: "Server error" });
@@ -1890,7 +1890,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/activity-logs', authenticateUser, requireRole(['admin']), async (req, res) => {
     try {
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
-      const logs = await storage.getActivityLogs(limit);
+      const logs = await getStorage().getActivityLogs(limit);
       res.json(logs);
     } catch (error) {
       console.error('Error fetching activity logs:', error);
@@ -1902,7 +1902,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const type = req.params.type;
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
-      const logs = await storage.getActivityLogsByType(type, limit);
+      const logs = await getStorage().getActivityLogsByType(type, limit);
       res.json(logs);
     } catch (error) {
       console.error('Error fetching activity logs by type:', error);
@@ -1914,7 +1914,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = parseInt(req.params.userId);
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
-      const logs = await storage.getActivityLogsByUser(userId, limit);
+      const logs = await getStorage().getActivityLogsByUser(userId, limit);
       res.json(logs);
     } catch (error) {
       console.error('Error fetching activity logs by user:', error);

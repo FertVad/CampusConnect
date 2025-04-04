@@ -269,7 +269,8 @@
       "sheetsUrl": "Google Sheets URL",
       "sheetsId": "Sheet ID",
       "importSuccess": "Schedule imported successfully",
-      "importError": "Error importing schedule: {{message}}"
+      "importError": "Error importing schedule: {{message}}",
+      "fileManager": "File Manager"
     },
     "confirmDelete": "Are you sure you want to delete this schedule item?",
     "deleteSuccess": "Schedule item deleted successfully",

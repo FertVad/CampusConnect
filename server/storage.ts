@@ -1344,4 +1344,17 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+// Создаем хранилище, которое может быть заменено базой данных
+let _storage: IStorage = new MemStorage();
+
+// Экспортируем геттер, чтобы всегда получать актуальную версию хранилища
+export const getStorage = (): IStorage => _storage;
+
+// Экспортируем сеттер для обновления хранилища из других модулей (например, auth.ts)
+export const setStorage = (newStorage: IStorage): void => {
+  _storage = newStorage;
+  console.log('Storage implementation has been updated');
+};
+
+// Для обратной совместимости экспортируем ссылку на хранилище
+export const storage = _storage;
