@@ -14,6 +14,7 @@ import ImportedFiles from "@/pages/admin/ImportedFiles";
 import NotFound from "@/pages/not-found";
 import AuthPage from "@/pages/auth-page";
 import { ProtectedRoute } from "@/lib/protected-route";
+import { useAuth } from "@/hooks/use-auth";
 
 import { MainLayout } from "@/components/layout/main-layout";
 
@@ -86,6 +87,14 @@ const ProtectedImportedFiles = () => (
 );
 
 function App() {
+  const { user, isLoading } = useAuth();
+  
+  // Если пользователь не авторизован и загрузка завершена, 
+  // сразу показываем страницу авторизации
+  if (!isLoading && !user) {
+    return <AuthPage />;
+  }
+  
   return (
     <Switch>
       <Route path="/auth" component={AuthPage} />
