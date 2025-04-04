@@ -44,6 +44,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     queryKey: ["/api/user"],
     queryFn: async () => {
       try {
+        console.log("Fetching user data...");
         const res = await fetch("/api/user", {
           credentials: "include", // Include cookies with the request
           headers: {
@@ -72,11 +73,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return null;
       }
     },
-    refetchOnMount: true, // Refetch when component mounts
-    refetchOnWindowFocus: true, // Refetch when window gains focus
-    refetchOnReconnect: true, // Refetch when network reconnects
-    staleTime: 5 * 60 * 1000, // 5 minutes - consider data stale after 5 minutes
-    retry: 1 // Retry once if query fails
+    refetchOnMount: false, // Don't automatically refetch on mount to avoid loops
+    refetchOnWindowFocus: false, // Don't automatically refetch on window focus to avoid loops
+    refetchOnReconnect: true, // Still refetch when network reconnects
+    staleTime: Infinity, // Keep data fresh indefinitely until explicitly invalidated
+    gcTime: 24 * 60 * 60 * 1000, // Cache for 24 hours (formerly cacheTime in v4)
+    retry: 1, // Retry once if query fails
+    refetchInterval: false // Don't periodically refetch
   });
 
   const loginMutation = useMutation({

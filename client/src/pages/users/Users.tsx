@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
@@ -45,11 +45,14 @@ export default function Users() {
   const [, setLocation] = useLocation();
   const { t } = useTranslation();
   
-  // If not admin, redirect to dashboard
-  if (user?.role !== 'admin') {
-    setLocation('/dashboard');
-    return null;
-  }
+  // Use effect for navigation to prevent render loop
+  useEffect(() => {
+    // Only redirect if user is defined but not an admin
+    if (user && user.role !== 'admin') {
+      console.log('Users: User is not admin, redirecting to dashboard');
+      setLocation('/dashboard');
+    }
+  }, [user, setLocation]);
 
   // State for filtering and pagination
   const [searchQuery, setSearchQuery] = useState('');
