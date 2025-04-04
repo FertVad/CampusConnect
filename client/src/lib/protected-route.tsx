@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { Loader2 } from "lucide-react";
 import { Route, useLocation } from "wouter";
@@ -15,31 +15,53 @@ export function ProtectedRoute({ path, component: Component, adminOnly = false }
   const { t } = useTranslation();
   const [location, setLocation] = useLocation();
   const [redirectAttempted, setRedirectAttempted] = useState(false);
-
-  // Сбрасываем флаг редиректа при изменении пути
+  
+  // Используем ref для отслеживания предыдущего значения пользователя
+  const prevUserRef = useRef<any>(null);
+  
+  // Сбрасываем флаг редиректа только при значимых изменениях пути
   useEffect(() => {
-    setRedirectAttempted(false);
+    // Проверяем, что изменение пути - это не часть бесконечного цикла
+    if (location !== '/auth' && location !== '/dashboard') {
+      setRedirectAttempted(false);
+    }
   }, [location]);
   
-  // Создаем эффект для перенаправления, который запускается только один раз
+  // Сохраняем предыдущее значение пользователя
   useEffect(() => {
-    // Проверяем нужно ли перенаправить пользователя
-    if (!isLoading) {
-      // Если страница только для админа, и пользователь не админ
-      if (user && adminOnly && user.role !== 'admin' && !redirectAttempted) {
-        setRedirectAttempted(true);
-        setLocation('/dashboard');
-        return;
-      }
-
-      // Если пользователь не авторизован
-      if (!user && !redirectAttempted) {
-        setRedirectAttempted(true);
-        setLocation('/auth');
-        return;
-      }
+    prevUserRef.current = user;
+  }, [user]);
+  
+  // Эффект для перенаправления с защитой от циклов
+  useEffect(() => {
+    // Работаем только когда загрузка завершена
+    if (isLoading) return;
+    
+    // Чтобы избежать бесконечной цепочки перенаправлений, проверяем:
+    // 1. Изменился ли пользователь с последнего раза (не было ли уже редиректа)
+    // 2. Не пытались ли мы уже перенаправить пользователя
+    const userChanged = prevUserRef.current !== user;
+    
+    // Если страница только для админа, и пользователь не админ
+    if (user && adminOnly && user.role !== 'admin' && !redirectAttempted && userChanged) {
+      console.log("Redirecting admin-only user to dashboard");
+      setRedirectAttempted(true);
+      
+      // Используем setTimeout для избежания проблем с React 18 StrictMode
+      setTimeout(() => setLocation('/dashboard'), 0);
+      return;
     }
-  }, [user, isLoading, adminOnly, redirectAttempted, setLocation]);
+
+    // Если пользователь не авторизован и это не страница авторизации
+    if (!user && !redirectAttempted && userChanged && location !== '/auth') {
+      console.log("Redirecting unauthenticated user to auth page");
+      setRedirectAttempted(true);
+      
+      // Используем setTimeout для избежания проблем с React 18 StrictMode
+      setTimeout(() => setLocation('/auth'), 0);
+      return;
+    }
+  }, [user, isLoading, adminOnly, redirectAttempted, location, setLocation]);
 
   // Показываем загрузчик пока проверяем авторизацию
   if (isLoading) {

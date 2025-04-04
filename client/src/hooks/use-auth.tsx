@@ -187,23 +187,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           "Content-Type": "application/json",
           "Accept": "application/json",
           "X-Requested-With": "XMLHttpRequest", // Helps with CSRF protection
-          "Cache-Control": "no-cache",
-          "Pragma": "no-cache"
+          "Cache-Control": "no-cache, no-store, must-revalidate",
+          "Pragma": "no-cache",
+          "Expires": "0"
         },
         credentials: "include", // Include cookies with the request
+        cache: 'no-store'
       });
       
       if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || "Logout failed");
+        let errorMessage = "Logout failed";
+        try {
+          const errorData = await res.json();
+          errorMessage = errorData.message || errorMessage;
+        } catch (e) {
+          console.error("Error parsing error response:", e);
+        }
+        throw new Error(errorMessage);
       }
     },
     onSuccess: () => {
+      // Сначала устанавливаем пользователя в null, чтобы избежать повторных запросов
       queryClient.setQueryData(["/api/user"], null);
+      
+      // Затем очищаем кэш react-query
+      queryClient.clear();
+      
+      // Обнуляем все активные запросы
+      queryClient.cancelQueries();
+      
+      // Обнуляем историю
+      window.history.pushState({}, '', '/auth');
+      
       toast({
         title: "Logout successful",
         description: "You have been logged out",
       });
+      
+      // Устанавливаем задержку перед перезагрузкой страницы для гарантии очистки состояния
+      setTimeout(() => {
+        window.location.href = '/auth';
+      }, 300);
     },
     onError: (error: Error) => {
       toast({

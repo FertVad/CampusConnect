@@ -57,9 +57,24 @@ function LoginForm({ onTabChange }: { onTabChange: (tab: string) => void }) {
   }
   
   // Redirect to dashboard when login is successful
+  // Используем ref для отслеживания предыдущего состояния успешной аутентификации
+  const prevSuccessRef = React.useRef(false);
+  
   useEffect(() => {
-    if (loginMutation.isSuccess) {
-      setLocation("/");
+    // Перенаправляем только если статус изменился с false на true
+    // Это предотвращает многократные перенаправления
+    if (loginMutation.isSuccess && !prevSuccessRef.current) {
+      prevSuccessRef.current = true;
+      
+      // Используем setTimeout для предотвращения проблем с циклами рендеринга
+      setTimeout(() => {
+        setLocation("/");
+      }, 100);
+    }
+    
+    // Сбрасываем флаг, когда статус успеха сбрасывается
+    if (!loginMutation.isSuccess) {
+      prevSuccessRef.current = false;
     }
   }, [loginMutation.isSuccess, setLocation]);
 
@@ -160,9 +175,24 @@ function RegisterForm({ onTabChange }: { onTabChange: (tab: string) => void }) {
   }
   
   // Redirect to dashboard when registration is successful
+  // Используем ref для отслеживания предыдущего состояния успешной регистрации
+  const prevSuccessRef = React.useRef(false);
+  
   useEffect(() => {
-    if (registerMutation.isSuccess) {
-      setLocation("/");
+    // Перенаправляем только если статус изменился с false на true
+    // Это предотвращает многократные перенаправления
+    if (registerMutation.isSuccess && !prevSuccessRef.current) {
+      prevSuccessRef.current = true;
+      
+      // Используем setTimeout для предотвращения проблем с циклами рендеринга
+      setTimeout(() => {
+        setLocation("/");
+      }, 100);
+    }
+    
+    // Сбрасываем флаг, когда статус успеха сбрасывается
+    if (!registerMutation.isSuccess) {
+      prevSuccessRef.current = false;
     }
   }, [registerMutation.isSuccess, setLocation]);
 

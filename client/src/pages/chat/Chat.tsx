@@ -114,69 +114,113 @@ export default function Chat() {
   
   // Set up WebSocket connection
   useEffect(() => {
-    if (!user) return;
-    
-    // Create WebSocket connection
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${window.location.host}/ws`;
-    const socket = new WebSocket(wsUrl);
-    
-    socket.onopen = () => {
-      console.log('WebSocket connection established');
-      setConnectionStatus('connected');
-      
-      // Send authentication message
-      socket.send(JSON.stringify({
-        type: 'auth',
-        userId: user.id,
-      }));
-    };
-    
-    socket.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      
-      // Handle different message types
-      if (data.type === 'message') {
-        // If message is related to current chat, refetch messages
-        if (
-          (data.fromUserId === user.id && data.toUserId === selectedUser?.id) ||
-          (data.fromUserId === selectedUser?.id && data.toUserId === user.id)
-        ) {
-          refetchMessages();
-        } else {
-          // Notify user about new message from other person
-          const sender = users?.find((u: any) => u.id === data.fromUserId);
-          if (sender) {
-            toast({
-              title: 'New Message',
-              description: `${sender.firstName} ${sender.lastName}: ${data.content.substring(0, 50)}${data.content.length > 50 ? '...' : ''}`,
-            });
-          }
-        }
-      } else if (data.type === 'status') {
-        // Update message status (delivered, read)
-        queryClient.invalidateQueries({ queryKey: ['/api/messages', selectedUser?.id] });
-      }
-    };
-    
-    socket.onclose = () => {
-      console.log('WebSocket connection closed');
+    // Проверка наличия пользователя и его токена перед созданием соединения
+    if (!user || !user.id) {
+      console.log('WebSocket not initialized: User not authenticated');
       setConnectionStatus('disconnected');
-    };
+      return;
+    }
     
-    socket.onerror = (error) => {
-      console.error('WebSocket error:', error);
-      setConnectionStatus('error');
-    };
+    // Создаем защищенную переменную для отслеживания состояния эффекта
+    let isActive = true;
     
-    setWebSocket(socket);
+    try {
+      // Create WebSocket connection
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsUrl = `${protocol}//${window.location.host}/ws`;
+      console.log('Attempting to connect WebSocket to:', wsUrl);
+      const socket = new WebSocket(wsUrl);
+      
+      socket.onopen = () => {
+        // Проверяем, что эффект все еще активен и пользователь авторизован
+        if (!isActive || !user || !user.id) {
+          console.log('WebSocket opened but component unmounted or user logged out - closing');
+          socket.close();
+          return;
+        }
+        
+        console.log('WebSocket connection established');
+        setConnectionStatus('connected');
+        
+        // Send authentication message
+        try {
+          socket.send(JSON.stringify({
+            type: 'auth',
+            userId: user.id,
+          }));
+        } catch (err) {
+          console.error('Error sending auth message:', err);
+        }
+      };
     
-    // Clean up connection on unmount
-    return () => {
-      if (socket.readyState === WebSocket.OPEN) {
-        socket.close();
+      socket.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        
+        // Handle different message types
+        if (data.type === 'message') {
+          // If message is related to current chat, refetch messages
+          if (
+            (data.fromUserId === user.id && data.toUserId === selectedUser?.id) ||
+            (data.fromUserId === selectedUser?.id && data.toUserId === user.id)
+          ) {
+            refetchMessages();
+          } else {
+            // Notify user about new message from other person
+            const sender = users?.find((u: any) => u.id === data.fromUserId);
+            if (sender) {
+              toast({
+                title: 'New Message',
+                description: `${sender.firstName} ${sender.lastName}: ${data.content.substring(0, 50)}${data.content.length > 50 ? '...' : ''}`,
+              });
+            }
+          }
+        } else if (data.type === 'status') {
+          // Update message status (delivered, read)
+          queryClient.invalidateQueries({ queryKey: ['/api/messages', selectedUser?.id] });
+        }
+      };
+      
+      socket.onclose = () => {
+        console.log('WebSocket connection closed');
+        setConnectionStatus('disconnected');
+      };
+      
+      socket.onerror = (error) => {
+        console.error('WebSocket error:', error);
+        setConnectionStatus('error');
+      };
+      
+      // Установка WebSocket только если пользователь авторизован
+      if (user && user.id) {
+        setWebSocket(socket);
+      
+        // Clean up connection on unmount or when user logs out
+        return () => {
+          // Отмечаем что эффект больше не активен
+          isActive = false;
+          
+          if (socket && socket.readyState === WebSocket.OPEN) {
+            console.log('Closing WebSocket connection on cleanup');
+            try {
+              socket.close();
+            } catch (err) {
+              console.error('Error closing WebSocket:', err);
+            }
+          }
+        };
       }
-    };
+      
+      // Если до этого момента return не был выполнен, значит что-то пошло не так
+      return () => {
+        isActive = false; // на всякий случай
+      };
+      
+    } catch (err) {
+      console.error('Error establishing WebSocket connection:', err);
+      return () => {
+        // Nothing to clean up if connection failed
+      };
+    }
   }, [user]);
   
   // Scroll to bottom when messages change
