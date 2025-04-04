@@ -23,6 +23,12 @@
       "reject": "Reject",
       "approve": "Approve"
     },
+    "users": "Users",
+    "manageUsers": "Manage Users",
+    "viewAllUsers": "View All Users",
+    "courses": "Courses",
+    "total": "Total",
+    "added": "Added:",
     "status": {
       "loading": "Loading...",
       "success": "Success",
@@ -189,10 +195,17 @@
     "status": "Status",
     "createdAt": "Created at",
     "actions": "Actions",
+    "recentlyAdded": "Recently Added Users",
+    "recentUsersDescription": "The most recently registered users",
+    "noUsersFound": "No users found",
+    "roleDistribution": "Role Distribution",
     "roles": {
       "admin": "Administrator",
       "teacher": "Teacher",
-      "student": "Student"
+      "student": "Student",
+      "admins": "Administrators",
+      "teachers": "Teachers",
+      "students": "Students"
     },
     "confirmDelete": "Are you sure you want to delete this user?",
     "deleteSuccess": "User deleted successfully",

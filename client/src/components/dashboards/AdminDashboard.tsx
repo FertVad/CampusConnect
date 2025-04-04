@@ -1,10 +1,10 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import StatusCard from '@/components/cards/StatusCard';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { BookOpen, FilePlus, Users, FileText, MessageSquare } from 'lucide-react';
+import { BookOpen, FilePlus, Users, UserCircle, Briefcase, GraduationCap, FileText, MessageSquare, Loader2 } from 'lucide-react';
 import { Link } from 'wouter';
 import { User, Request } from '@shared/schema';
 import { Button } from '@/components/ui/button';
@@ -13,10 +13,13 @@ import ActivityFeed from '@/components/activity/ActivityFeed';
 
 const AdminDashboard = () => {
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
   
-  // Get all users
-  const { data: users = [] } = useQuery<User[]>({
+  // Get all users with refetch on window focus and interval
+  const { data: users = [], isLoading: isLoadingUsers } = useQuery<User[]>({
     queryKey: ['/api/users'],
+    refetchOnWindowFocus: true,
+    refetchInterval: 30000, // Refresh every 30 seconds
   });
   
   // Get all subjects
@@ -29,41 +32,113 @@ const AdminDashboard = () => {
     queryKey: ['/api/requests'],
   });
   
-  // Count users by role
-  const studentCount = users.filter(u => u.role === 'student').length;
-  const teacherCount = users.filter(u => u.role === 'teacher').length;
+  // Calculate user statistics using useMemo for performance
+  const userStats = useMemo(() => {
+    const adminCount = users.filter(u => u.role === 'admin').length;
+    const teacherCount = users.filter(u => u.role === 'teacher').length;
+    const studentCount = users.filter(u => u.role === 'student').length;
+    
+    return {
+      total: users.length,
+      adminCount,
+      teacherCount,
+      studentCount
+    };
+  }, [users]);
   
   // Count pending requests
   const pendingRequests = requests.filter(r => r.status === 'pending');
   
+  // Sort users by creation date (newest first)
+  const sortedUsers = useMemo(() => {
+    return [...users].sort((a, b) => {
+      if (b.createdAt && a.createdAt) {
+        return new Date(b.createdAt as Date).getTime() - new Date(a.createdAt as Date).getTime();
+      }
+      return 0;
+    });
+  }, [users]);
+  
+  // Get the 5 most recently added users
+  const recentUsers = sortedUsers.slice(0, 5);
+  
+  // Get role badge styles
+  const getRoleBadgeStyles = (role: string) => {
+    switch(role) {
+      case 'admin':
+        return 'bg-primary';
+      case 'teacher':
+        return 'bg-secondary';
+      case 'student':
+        return 'bg-accent';
+      default:
+        return 'bg-neutral-500';
+    }
+  };
+  
+  // Get role icon
+  const getRoleIcon = (role: string) => {
+    switch(role) {
+      case 'admin':
+        return <UserCircle className="h-6 w-6" />;
+      case 'teacher':
+        return <Briefcase className="h-6 w-6" />;
+      case 'student':
+        return <GraduationCap className="h-6 w-6" />;
+      default:
+        return <Users className="h-6 w-6" />;
+    }
+  };
+  
   return (
     <div className="space-y-6">
-      {/* Status Cards */}
+      {/* User Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatusCard
-          title="Students"
-          value={studentCount.toString()}
-          icon={<Users className="h-6 w-6" />}
-        />
-        
-        <StatusCard
-          title="Teachers"
-          value={teacherCount.toString()}
-          icon={<Users className="h-6 w-6" />}
-          iconBgColor="bg-secondary bg-opacity-10"
-          iconColor="text-secondary"
-        />
-        
-        <StatusCard
-          title="Courses"
-          value={subjects.length.toString()}
-          icon={<BookOpen className="h-6 w-6" />}
+          title={t('roles.students')}
+          value={userStats.studentCount.toString()}
+          icon={<GraduationCap className="h-6 w-6" />}
           iconBgColor="bg-accent bg-opacity-10"
           iconColor="text-accent"
         />
         
         <StatusCard
-          title="Pending Requests"
+          title={t('roles.teachers')}
+          value={userStats.teacherCount.toString()}
+          icon={<Briefcase className="h-6 w-6" />}
+          iconBgColor="bg-secondary bg-opacity-10"
+          iconColor="text-secondary"
+        />
+        
+        <StatusCard
+          title={t('roles.admins')}
+          value={userStats.adminCount.toString()}
+          icon={<UserCircle className="h-6 w-6" />}
+          iconBgColor="bg-primary bg-opacity-10"
+          iconColor="text-primary"
+        />
+        
+        <StatusCard
+          title={t('common.total')}
+          value={userStats.total.toString()}
+          icon={<Users className="h-6 w-6" />}
+          iconBgColor="bg-info bg-opacity-10"
+          iconColor="text-info"
+        />
+      </div>
+      
+      {/* System Statistics Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatusCard
+          title={t('common.courses')}
+          value={subjects.length.toString()}
+          icon={<BookOpen className="h-6 w-6" />}
+          iconBgColor="bg-success bg-opacity-10"
+          iconColor="text-success"
+        />
+        
+        <StatusCard
+          title={t('requests.pending')}
           value={pendingRequests.length.toString()}
           icon={<FilePlus className="h-6 w-6" />}
           iconBgColor="bg-warning bg-opacity-10"
@@ -73,55 +148,59 @@ const AdminDashboard = () => {
       
       {/* Main Content */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Activity Feed space (2/3 width) - kept empty for now */}
+        {/* Main content (2/3 width) */}
         <div className="lg:col-span-2 space-y-6">
           {/* Recent Users */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-lg font-heading">Recently Added Users</CardTitle>
+              <div>
+                <CardTitle className="text-lg font-heading">{t('users.recentlyAdded')}</CardTitle>
+                <CardDescription>{t('users.recentUsersDescription')}</CardDescription>
+              </div>
               <Link href="/users" className="text-sm font-medium text-primary hover:text-primary-dark">
-                Manage Users
+                {t('common.manageUsers')}
               </Link>
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                {users.length === 0 ? (
+                {isLoadingUsers ? (
+                  <div className="flex justify-center items-center h-64">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  </div>
+                ) : users.length === 0 ? (
                   <div className="text-center py-4 text-neutral-500">
-                    No users found
+                    {t('users.noUsersFound')}
                   </div>
                 ) : (
-                  users
-                    .sort((a, b) => {
-                      if (b.createdAt && a.createdAt) {
-                        return new Date(b.createdAt as Date).getTime() - new Date(a.createdAt as Date).getTime();
-                      }
-                      return 0;
-                    })
-                    .slice(0, 5)
-                    .map(user => (
-                      <div key={user.id} className="flex items-center justify-between p-3 rounded-lg hover:bg-neutral-50">
-                        <div className="flex items-center">
-                          <div className="h-10 w-10 rounded-full bg-primary-light bg-opacity-20 flex items-center justify-center mr-3">
-                            <span className="text-sm font-medium text-primary">
-                              {user.firstName[0]}{user.lastName[0]}
-                            </span>
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium text-neutral-700">{user.firstName} {user.lastName}</p>
-                            <p className="text-xs text-neutral-500">{user.email}</p>
-                          </div>
+                  recentUsers.map(user => (
+                    <div key={user.id} className="flex items-center justify-between p-3 rounded-lg hover:bg-neutral-50 transition-colors">
+                      <div className="flex items-center">
+                        <div className="h-10 w-10 rounded-full bg-primary-light bg-opacity-20 flex items-center justify-center mr-3">
+                          <span className="text-sm font-medium text-primary">
+                            {user.firstName[0]}{user.lastName[0]}
+                          </span>
                         </div>
-                        <Badge className={`capitalize ${user.role === 'admin' ? 'bg-primary' : user.role === 'teacher' ? 'bg-secondary' : 'bg-accent'}`}>
-                          {user.role}
-                        </Badge>
+                        <div>
+                          <p className="text-sm font-medium text-neutral-700">{user.firstName} {user.lastName}</p>
+                          <p className="text-xs text-neutral-500">{user.email}</p>
+                          {user.createdAt && (
+                            <p className="text-xs text-neutral-400">
+                              {t('common.added')} {new Date(user.createdAt).toLocaleDateString()}
+                            </p>
+                          )}
+                        </div>
                       </div>
-                    ))
+                      <Badge className={`capitalize ${getRoleBadgeStyles(user.role)}`}>
+                        {user.role}
+                      </Badge>
+                    </div>
+                  ))
                 )}
               </div>
               <div className="mt-4 text-center">
                 <Link href="/users">
                   <Button variant="outline" className="cursor-pointer">
-                    View All Users
+                    {t('common.viewAllUsers')}
                   </Button>
                 </Link>
               </div>
@@ -171,6 +250,55 @@ const AdminDashboard = () => {
                     <MessageSquare className="h-8 w-8 text-primary" />
                     <span className="text-sm font-medium">{t('chat.title')}</span>
                   </Link>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          {/* Role Statistics Card */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg font-heading">{t('users.roleDistribution')}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {/* Admin users */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div className="h-8 w-8 rounded-full bg-primary bg-opacity-10 flex items-center justify-center mr-3">
+                      <UserCircle className="h-5 w-5 text-primary" />
+                    </div>
+                    <span className="text-sm font-medium">{t('roles.admins')}</span>
+                  </div>
+                  <Badge variant="outline" className="bg-primary bg-opacity-5">
+                    {userStats.adminCount}
+                  </Badge>
+                </div>
+                
+                {/* Teacher users */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div className="h-8 w-8 rounded-full bg-secondary bg-opacity-10 flex items-center justify-center mr-3">
+                      <Briefcase className="h-5 w-5 text-secondary" />
+                    </div>
+                    <span className="text-sm font-medium">{t('roles.teachers')}</span>
+                  </div>
+                  <Badge variant="outline" className="bg-secondary bg-opacity-5">
+                    {userStats.teacherCount}
+                  </Badge>
+                </div>
+                
+                {/* Student users */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div className="h-8 w-8 rounded-full bg-accent bg-opacity-10 flex items-center justify-center mr-3">
+                      <GraduationCap className="h-5 w-5 text-accent" />
+                    </div>
+                    <span className="text-sm font-medium">{t('roles.students')}</span>
+                  </div>
+                  <Badge variant="outline" className="bg-accent bg-opacity-5">
+                    {userStats.studentCount}
+                  </Badge>
                 </div>
               </div>
             </CardContent>
