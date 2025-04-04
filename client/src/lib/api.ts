@@ -135,13 +135,37 @@ export async function uploadFile(endpoint: string, formData: FormData): Promise<
 export function createWebSocketConnection(userId: number | undefined | null, onMessage: (data: any) => void): WebSocket | null {
   // Get token from localStorage
   const token = localStorage.getItem('token');
-  // Skip initialization if token is missing or invalid
-  if (!token || token.length < 5) return null;
   
-  // Determine the WebSocket URL based on environment or fallback to window location
-  const wsUrl = import.meta.env.VITE_WS_URL || `wss://${window.location.host}`;
-  // Skip initialization if WebSocket URL is invalid
-  if (!wsUrl.startsWith('ws')) return null;
+  // Skip initialization if token is missing or invalid
+  if (!token || token.length < 5) {
+    console.log('WebSocket not initialized: Token is missing or invalid');
+    return null;
+  }
+  
+  // User ID validation
+  if (!userId || typeof userId !== 'number' || userId <= 0) {
+    console.log('WebSocket not initialized: User ID is invalid:', userId);
+    return null;
+  }
+  
+  // Get base URL from window location
+  const host = window.location.host;
+  if (!host) {
+    console.log('WebSocket not initialized: Host is undefined');
+    return null;
+  }
+  
+  // Construct WebSocket URL
+  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const wsUrl = import.meta.env.VITE_WS_URL || `${protocol}//${host}`;
+  
+  // Validate WebSocket URL
+  if (!wsUrl || typeof wsUrl !== 'string' || !wsUrl.startsWith('ws')) {
+    console.log('WebSocket not initialized: Invalid WebSocket URL:', wsUrl);
+    return null;
+  }
+  
+  console.log('Creating WebSocket connection with URL:', wsUrl);
   
   let socket: WebSocket;
   let reconnectAttempts = 0;
@@ -162,12 +186,22 @@ export function createWebSocketConnection(userId: number | undefined | null, onM
         }
         
         // Don't retry if token is missing or invalid
-        const token = localStorage.getItem('token');
-        if (!token || token.length < 5) return;
+        const currentToken = localStorage.getItem('token');
+        if (!currentToken || currentToken.length < 5) {
+          console.log('WebSocket reconnect aborted: Token is missing or invalid');
+          return;
+        }
         
-        // Try to reconnect if we haven't reached max attempts and userId is valid
+        // Don't retry if user ID is invalid
+        if (!userId || typeof userId !== 'number' || userId <= 0) {
+          console.log('WebSocket reconnect aborted: User ID is invalid');
+          return;
+        }
+        
+        // Try to reconnect if we haven't reached max attempts
         if (reconnectAttempts < maxReconnectAttempts) {
           reconnectAttempts++;
+          console.log(`WebSocket reconnect attempt ${reconnectAttempts} of ${maxReconnectAttempts}`);
           createWebSocketConnection(userId, onMessage);
         }
       }
@@ -226,8 +260,17 @@ export function createWebSocketConnection(userId: number | undefined | null, onM
       console.log(`WebSocket connection closed: ${event.code} ${event.reason}`);
       
       // Don't retry if token is missing or invalid
-      const token = localStorage.getItem('token');
-      if (!token || token.length < 5) return;
+      const currentToken = localStorage.getItem('token');
+      if (!currentToken || currentToken.length < 5) {
+        console.log('WebSocket reconnect aborted: Token is missing or invalid');
+        return;
+      }
+      
+      // Don't retry if user ID is invalid
+      if (!userId || typeof userId !== 'number' || userId <= 0) {
+        console.log('WebSocket reconnect aborted: User ID is invalid');
+        return;
+      }
       
       // Attempt to reconnect if not a clean close and we haven't reached max attempts
       if (!event.wasClean && reconnectAttempts < maxReconnectAttempts) {
@@ -235,6 +278,7 @@ export function createWebSocketConnection(userId: number | undefined | null, onM
         
         // Add delay before reconnecting
         setTimeout(() => {
+          console.log(`WebSocket reconnect attempt ${reconnectAttempts} of ${maxReconnectAttempts}`);
           createWebSocketConnection(userId, onMessage);
         }, 1000 * reconnectAttempts); // Exponential backoff
       }

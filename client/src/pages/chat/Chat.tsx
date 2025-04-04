@@ -72,24 +72,6 @@ function formatMessageTime(date: Date): string {
         return await response.json();
       }
     });
-
-    useEffect(() => {
-      const token = localStorage.getItem("token");
-
-      if (!token || token.length < 5 || !user?.id) {
-        console.warn("WebSocket skipped — no valid token or userId.");
-        return;
-      }
-
-      socketRef.current = createWebSocketConnection(user.id, (data) => {
-        console.log("📨 New WebSocket message:", data);
-        // Обработка входящих данных, например: обновление чата
-      });
-
-      return () => {
-        socketRef.current?.close();
-      };
-    }, [user]);
   
   // Fetch messages with selected user
   const { 
@@ -201,8 +183,9 @@ function formatMessageTime(date: Date): string {
       socket.addEventListener('close', disconnectionHandler);
       socket.addEventListener('error', errorHandler);
       
-      // Установка WebSocket в состояние компонента
+      // Установка WebSocket в состояние компонента и ref
       setWebSocket(socket);
+      socketRef.current = socket;
       
       // Clean up connection on unmount or when user logs out
       return () => {
