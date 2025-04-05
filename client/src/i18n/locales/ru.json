@@ -426,6 +426,7 @@
     "assigned_to": "Назначена",
     "assignee": "Исполнитель",
     "select_assignee": "Выберите исполнителя",
+    "no_users_available": "Нет доступных пользователей",
     "client": "Клиент",
     "executor": "Исполнитель",
     "created": "Создана",

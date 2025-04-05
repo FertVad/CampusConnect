@@ -217,7 +217,7 @@ const TasksPage = () => {
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
 
   // Получаем список пользователей для назначения исполнителей
-  const { data: users, isLoading: usersLoading } = useQuery({
+  const { data: users, isLoading: usersLoading } = useQuery<{ id: number, firstName: string, lastName: string, role: string }[]>({
     queryKey: ['/api/users'],
     enabled: !!user,
     staleTime: 1000 * 60 * 5, // 5 минут
@@ -248,7 +248,7 @@ const TasksPage = () => {
 
   // Мутация для создания новой задачи
   const createTaskMutation = useMutation({
-    mutationFn: (data: TaskFormData) => 
+    mutationFn: (data: TaskFormData & { clientId: number | undefined }) => 
       apiRequest('POST', '/api/tasks', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/tasks'] });
@@ -297,7 +297,12 @@ const TasksPage = () => {
 
   // Обработчик отправки формы создания задачи
   const onSubmit = (data: TaskFormData) => {
-    createTaskMutation.mutate(data);
+    // Добавляем clientId текущего пользователя к данным задачи
+    const taskWithClient = {
+      ...data,
+      clientId: user?.id // текущий пользователь становится клиентом задачи
+    };
+    createTaskMutation.mutate(taskWithClient);
   };
 
   return (
@@ -415,11 +420,15 @@ const TasksPage = () => {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {users?.map((user: any) => (
-                            <SelectItem key={user.id} value={user.id.toString()}>
-                              {user.firstName} {user.lastName} ({t(`role.${user.role}`)})
-                            </SelectItem>
-                          ))}
+                          {users && users.length > 0 ? (
+                            users.map((user) => (
+                              <SelectItem key={user.id} value={user.id.toString()}>
+                                {user.firstName} {user.lastName} ({t(`role.${user.role}`)})
+                              </SelectItem>
+                            ))
+                          ) : (
+                            <SelectItem value="" disabled>{t('task.no_users_available')}</SelectItem>
+                          )}
                         </SelectContent>
                       </Select>
                       <FormMessage />

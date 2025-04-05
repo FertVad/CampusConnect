@@ -548,6 +548,7 @@
     "assigned_to": "Assigned to",
     "assignee": "Assignee",
     "select_assignee": "Select assignee",
+    "no_users_available": "No users available",
     "client": "Client",
     "executor": "Executor",
     "created": "Created",
