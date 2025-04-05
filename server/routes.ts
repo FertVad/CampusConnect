@@ -2023,7 +2023,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   app.post('/api/tasks', authenticateUser, async (req, res) => {
     try {
-      const taskData = insertTaskSchema.parse(req.body);
+      // Модифицируем схему вставки задачи для преобразования строки даты в объект Date
+      const modifiedTaskSchema = insertTaskSchema.extend({
+        dueDate: z.string().nullable().transform(val => val ? new Date(val) : null)
+      });
+      
+      console.log('Received task data:', req.body);
+      const taskData = modifiedTaskSchema.parse(req.body);
+      console.log('Parsed task data:', taskData);
       
       // Устанавливаем текущего пользователя как клиента, если не указано иное
       if (!taskData.clientId) {
@@ -2071,7 +2078,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Forbidden - You don't have permission to update this task" });
       }
       
-      const taskData = insertTaskSchema.partial().parse(req.body);
+      // Модифицируем схему для обновления задачи, чтобы обрабатывать строковые даты
+      const modifiedUpdateTaskSchema = insertTaskSchema.partial().extend({
+        dueDate: z.string().nullable().optional().transform(val => val ? new Date(val) : null)
+      });
+      
+      const taskData = modifiedUpdateTaskSchema.parse(req.body);
       
       // Ограничиваем поля, которые может изменить исполнитель
       if (req.user.role !== 'admin' && req.user.id === task.executorId && req.user.id !== task.clientId) {
