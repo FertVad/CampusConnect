@@ -13,7 +13,8 @@ import {
   ScheduleItem, InsertScheduleItem, Assignment, InsertAssignment,
   Submission, InsertSubmission, Grade, InsertGrade, Request, InsertRequest,
   Document, InsertDocument, Message, InsertMessage, Notification, InsertNotification,
-  LoginCredentials, ImportedFile, InsertImportedFile
+  LoginCredentials, ImportedFile, InsertImportedFile, ActivityLog, InsertActivityLog,
+  Task, InsertTask
 } from '@shared/schema';
 import { testConnection } from './index';
 import bcrypt from 'bcrypt';
@@ -843,6 +844,141 @@ export class PostgresStorage implements IStorage {
       .from(schema.importedFiles)
       .where(eq(schema.importedFiles.importType, type))
       .orderBy(desc(schema.importedFiles.uploadedAt));
+  }
+
+  // Activity Logs
+  async getActivityLogs(limit?: number): Promise<ActivityLog[]> {
+    const query = db.select()
+      .from(schema.activityLogs)
+      .orderBy(desc(schema.activityLogs.timestamp));
+    
+    if (limit) {
+      query.limit(limit);
+    }
+    
+    return query;
+  }
+  
+  async createActivityLog(logData: InsertActivityLog): Promise<ActivityLog> {
+    const [log] = await db.insert(schema.activityLogs)
+      .values(logData)
+      .returning();
+    
+    return log;
+  }
+  
+  async getActivityLogsByType(type: string, limit?: number): Promise<ActivityLog[]> {
+    const query = db.select()
+      .from(schema.activityLogs)
+      .where(eq(schema.activityLogs.activityType, type as any))
+      .orderBy(desc(schema.activityLogs.timestamp));
+    
+    if (limit) {
+      query.limit(limit);
+    }
+    
+    return query;
+  }
+  
+  async getActivityLogsByUser(userId: number, limit?: number): Promise<ActivityLog[]> {
+    const query = db.select()
+      .from(schema.activityLogs)
+      .where(eq(schema.activityLogs.userId, userId))
+      .orderBy(desc(schema.activityLogs.timestamp));
+    
+    if (limit) {
+      query.limit(limit);
+    }
+    
+    return query;
+  }
+  
+  // Tasks
+  async getTasks(): Promise<Task[]> {
+    return db.select().from(schema.tasks);
+  }
+  
+  async getTask(id: number): Promise<Task | undefined> {
+    const tasks = await db.select()
+      .from(schema.tasks)
+      .where(eq(schema.tasks.id, id))
+      .limit(1);
+    return tasks[0];
+  }
+  
+  async getTasksByClient(clientId: number): Promise<Task[]> {
+    return db.select()
+      .from(schema.tasks)
+      .where(eq(schema.tasks.clientId, clientId))
+      .orderBy(desc(schema.tasks.createdAt));
+  }
+  
+  async getTasksByExecutor(executorId: number): Promise<Task[]> {
+    return db.select()
+      .from(schema.tasks)
+      .where(eq(schema.tasks.executorId, executorId))
+      .orderBy(desc(schema.tasks.createdAt));
+  }
+  
+  async getTasksByStatus(status: string): Promise<Task[]> {
+    return db.select()
+      .from(schema.tasks)
+      .where(eq(schema.tasks.status, status as any))
+      .orderBy(desc(schema.tasks.createdAt));
+  }
+  
+  async getTasksDueSoon(days: number): Promise<Task[]> {
+    const now = new Date();
+    const future = new Date();
+    future.setDate(now.getDate() + days);
+    
+    return db.select()
+      .from(schema.tasks)
+      .where(
+        and(
+          // Только задачи, которые еще не завершены
+          or(
+            eq(schema.tasks.status, 'new'),
+            eq(schema.tasks.status, 'in_progress'),
+            eq(schema.tasks.status, 'on_hold')
+          ),
+          // И их срок выполнения в ближайшие дни
+          and(
+            // dueDate не null
+            schema.tasks.dueDate.isNotNull(),
+            // dueDate <= future
+            schema.tasks.dueDate.lte(future.toISOString())
+          )
+        )
+      )
+      .orderBy(asc(schema.tasks.dueDate));
+  }
+  
+  async createTask(taskData: InsertTask): Promise<Task> {
+    const [task] = await db.insert(schema.tasks)
+      .values(taskData)
+      .returning();
+    
+    return task;
+  }
+  
+  async updateTask(id: number, taskData: Partial<InsertTask>): Promise<Task | undefined> {
+    const [task] = await db.update(schema.tasks)
+      .set({
+        ...taskData,
+        updatedAt: new Date().toISOString()
+      })
+      .where(eq(schema.tasks.id, id))
+      .returning();
+    
+    return task;
+  }
+  
+  async deleteTask(id: number): Promise<boolean> {
+    const result = await db.delete(schema.tasks)
+      .where(eq(schema.tasks.id, id));
+    
+    return result.rowCount > 0;
   }
 }
 

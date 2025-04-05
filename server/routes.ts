@@ -11,6 +11,7 @@ import {
   insertSubmissionSchema, insertGradeSchema,
   insertRequestSchema, insertDocumentSchema,
   insertMessageSchema, insertNotificationSchema,
+  insertTaskSchema, taskPriorityEnum, taskStatusEnum,
   User
 } from "@shared/schema";
 import { object, string, z } from "zod";
@@ -1918,6 +1919,265 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(logs);
     } catch (error) {
       console.error('Error fetching activity logs by user:', error);
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+  
+  // Tasks Routes
+  app.get('/api/tasks', authenticateUser, async (req, res) => {
+    try {
+      const tasks = await getStorage().getTasks();
+      res.json(tasks);
+    } catch (error) {
+      console.error('Error fetching tasks:', error);
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+  
+  app.get('/api/tasks/client/:clientId', authenticateUser, async (req, res) => {
+    try {
+      const clientId = parseInt(req.params.clientId);
+      
+      // Только клиент или администратор может просматривать задачи клиента
+      if (req.user.role !== 'admin' && req.user.id !== clientId) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+      
+      const tasks = await getStorage().getTasksByClient(clientId);
+      res.json(tasks);
+    } catch (error) {
+      console.error('Error fetching client tasks:', error);
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+  
+  app.get('/api/tasks/executor/:executorId', authenticateUser, async (req, res) => {
+    try {
+      const executorId = parseInt(req.params.executorId);
+      
+      // Только исполнитель или администратор может просматривать задачи исполнителя
+      if (req.user.role !== 'admin' && req.user.id !== executorId) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+      
+      const tasks = await getStorage().getTasksByExecutor(executorId);
+      res.json(tasks);
+    } catch (error) {
+      console.error('Error fetching executor tasks:', error);
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+  
+  app.get('/api/tasks/status/:status', authenticateUser, async (req, res) => {
+    try {
+      const status = req.params.status;
+      
+      // Проверяем, что статус валидный
+      if (!['new', 'in_progress', 'completed', 'on_hold'].includes(status)) {
+        return res.status(400).json({ message: "Invalid status" });
+      }
+      
+      const tasks = await getStorage().getTasksByStatus(status);
+      
+      // Если пользователь не админ, фильтруем только те задачи, которые относятся к нему
+      if (req.user.role !== 'admin') {
+        const userId = req.user.id;
+        const filteredTasks = tasks.filter(task => 
+          task.clientId === userId || task.executorId === userId
+        );
+        return res.json(filteredTasks);
+      }
+      
+      res.json(tasks);
+    } catch (error) {
+      console.error('Error fetching tasks by status:', error);
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+  
+  app.get('/api/tasks/due-soon/:days', authenticateUser, async (req, res) => {
+    try {
+      const days = parseInt(req.params.days);
+      
+      if (isNaN(days) || days < 0 || days > 30) {
+        return res.status(400).json({ message: "Invalid days parameter (must be between 0 and 30)" });
+      }
+      
+      const tasks = await getStorage().getTasksDueSoon(days);
+      
+      // Если пользователь не админ, фильтруем только те задачи, которые относятся к нему
+      if (req.user.role !== 'admin') {
+        const userId = req.user.id;
+        const filteredTasks = tasks.filter(task => 
+          task.clientId === userId || task.executorId === userId
+        );
+        return res.json(filteredTasks);
+      }
+      
+      res.json(tasks);
+    } catch (error) {
+      console.error('Error fetching due soon tasks:', error);
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+  
+  app.post('/api/tasks', authenticateUser, async (req, res) => {
+    try {
+      const taskData = insertTaskSchema.parse(req.body);
+      
+      // Устанавливаем текущего пользователя как клиента, если не указано иное
+      if (!taskData.clientId) {
+        taskData.clientId = req.user.id;
+      }
+      
+      // Администраторы могут создавать задачи от имени любого пользователя
+      // Обычные пользователи могут создавать задачи только от своего имени
+      if (req.user.role !== 'admin' && taskData.clientId !== req.user.id) {
+        return res.status(403).json({ message: "Forbidden - You can only create tasks on your own behalf" });
+      }
+      
+      const task = await getStorage().createTask(taskData);
+      
+      // Создаем уведомление для исполнителя
+      await getStorage().createNotification({
+        userId: task.executorId,
+        title: "New Task Assigned",
+        content: `You have been assigned a new task: ${task.title}`,
+        relatedId: task.id,
+        relatedType: "task"
+      });
+      
+      res.status(201).json(task);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Validation error", errors: error.errors });
+      }
+      console.error('Error creating task:', error);
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+  
+  app.put('/api/tasks/:id', authenticateUser, async (req, res) => {
+    try {
+      const taskId = parseInt(req.params.id);
+      const task = await getStorage().getTask(taskId);
+      
+      if (!task) {
+        return res.status(404).json({ message: "Task not found" });
+      }
+      
+      // Проверяем права на изменение задачи
+      if (req.user.role !== 'admin' && req.user.id !== task.clientId && req.user.id !== task.executorId) {
+        return res.status(403).json({ message: "Forbidden - You don't have permission to update this task" });
+      }
+      
+      const taskData = insertTaskSchema.partial().parse(req.body);
+      
+      // Ограничиваем поля, которые может изменить исполнитель
+      if (req.user.role !== 'admin' && req.user.id === task.executorId && req.user.id !== task.clientId) {
+        // Исполнитель может изменить только статус и, возможно, добавить описание
+        const allowedFields = ['status', 'description'];
+        const providedFields = Object.keys(taskData);
+        
+        const disallowedFields = providedFields.filter(field => !allowedFields.includes(field));
+        if (disallowedFields.length > 0) {
+          return res.status(403).json({ 
+            message: "Forbidden - As an executor, you can only update status and description",
+            disallowedFields
+          });
+        }
+      }
+      
+      const updatedTask = await getStorage().updateTask(taskId, taskData);
+      
+      // Создаем уведомление о обновлении задачи
+      if (task.status !== taskData.status && taskData.status) {
+        // Уведомляем клиента, если исполнитель обновил статус
+        if (req.user.id === task.executorId) {
+          await getStorage().createNotification({
+            userId: task.clientId,
+            title: "Task Status Updated",
+            content: `Status of task "${task.title}" has been updated to ${taskData.status}`,
+            relatedId: task.id,
+            relatedType: "task"
+          });
+        } 
+        // Уведомляем исполнителя, если клиент обновил статус
+        else if (req.user.id === task.clientId) {
+          await getStorage().createNotification({
+            userId: task.executorId,
+            title: "Task Status Updated",
+            content: `Status of task "${task.title}" has been updated to ${taskData.status}`,
+            relatedId: task.id,
+            relatedType: "task"
+          });
+        }
+      }
+      
+      res.json(updatedTask);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Validation error", errors: error.errors });
+      }
+      console.error('Error updating task:', error);
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+  
+  app.delete('/api/tasks/:id', authenticateUser, async (req, res) => {
+    try {
+      const taskId = parseInt(req.params.id);
+      const task = await getStorage().getTask(taskId);
+      
+      if (!task) {
+        return res.status(404).json({ message: "Task not found" });
+      }
+      
+      // Только клиент или администратор может удалить задачу
+      if (req.user.role !== 'admin' && req.user.id !== task.clientId) {
+        return res.status(403).json({ message: "Forbidden - Only task clients or admins can delete tasks" });
+      }
+      
+      const success = await getStorage().deleteTask(taskId);
+      
+      if (success) {
+        // Уведомляем исполнителя об удалении задачи
+        await getStorage().createNotification({
+          userId: task.executorId,
+          title: "Task Deleted",
+          content: `Task "${task.title}" has been deleted`,
+          relatedType: "task"
+        });
+        
+        res.status(204).end();
+      } else {
+        res.status(404).json({ message: "Task not found" });
+      }
+    } catch (error) {
+      console.error('Error deleting task:', error);
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+  
+  // Этот маршрут должен быть определен после всех других маршрутов с параметрами, 
+  // чтобы избежать конфликтов с маршрутами tasks/client, tasks/executor и т.д.
+  app.get('/api/tasks/:id', authenticateUser, async (req, res) => {
+    try {
+      const taskId = parseInt(req.params.id);
+      const task = await getStorage().getTask(taskId);
+      
+      if (!task) {
+        return res.status(404).json({ message: "Task not found" });
+      }
+      
+      // Проверяем, имеет ли пользователь право на просмотр этой задачи
+      if (req.user.role !== 'admin' && req.user.id !== task.clientId && req.user.id !== task.executorId) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+      
+      res.json(task);
+    } catch (error) {
+      console.error('Error fetching task:', error);
       res.status(500).json({ message: "Server error" });
     }
   });

@@ -10,6 +10,8 @@ export const messageStatusEnum = pgEnum('message_status', ['sent', 'delivered', 
 export const dayOfWeekEnum = pgEnum('day_of_week', ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье']);
 export const importStatusEnum = pgEnum('import_status', ['success', 'partial', 'failed', 'error']);
 export const activityTypeEnum = pgEnum('activity_type', ['file_upload', 'file_delete', 'teacher_assign', 'user_create', 'user_delete', 'subject_create', 'schedule_change', 'other']);
+export const taskPriorityEnum = pgEnum('task_priority', ['high', 'medium', 'low']);
+export const taskStatusEnum = pgEnum('task_status', ['new', 'in_progress', 'completed', 'on_hold']);
 
 // Users Table
 export const users = pgTable("users", {
@@ -206,6 +208,20 @@ export const activityLogs = pgTable("activity_logs", {
   metadata: text("metadata"), // JSON string with additional data if needed
 });
 
+// Tasks table
+export const tasks = pgTable("tasks", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  dueDate: timestamp("due_date"),
+  priority: taskPriorityEnum("priority").notNull().default('medium'),
+  status: taskStatusEnum("status").notNull().default('new'),
+  clientId: integer("client_id").references(() => users.id).notNull(), // кто поставил задачу (заказчик)
+  executorId: integer("executor_id").references(() => users.id).notNull(), // кто исполняет задачу
+});
+
 // Insert Schemas
 export const insertUserSchema = createInsertSchema(users).omit({ 
   id: true,
@@ -296,6 +312,12 @@ export const insertActivityLogSchema = createInsertSchema(activityLogs).omit({
   timestamp: true
 });
 
+export const insertTaskSchema = createInsertSchema(tasks).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -348,6 +370,9 @@ export type InsertImportedFile = z.infer<typeof insertImportedFileSchema>;
 
 export type ActivityLog = typeof activityLogs.$inferSelect;
 export type InsertActivityLog = z.infer<typeof insertActivityLogSchema>;
+
+export type Task = typeof tasks.$inferSelect;
+export type InsertTask = z.infer<typeof insertTaskSchema>;
 
 // Login schema
 export const loginSchema = z.object({

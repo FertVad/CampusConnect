@@ -7,7 +7,9 @@ import {
   // Новые модели
   Specialty, InsertSpecialty, Course, InsertCourse, Group, InsertGroup,
   ScheduleEntry, InsertScheduleEntry, ImportedFile, InsertImportedFile,
-  ActivityLog, InsertActivityLog
+  ActivityLog, InsertActivityLog,
+  // Task Manager
+  Task, InsertTask
 } from "@shared/schema";
 import session from "express-session";
 import * as expressSession from 'express-session';
@@ -174,6 +176,17 @@ export interface IStorage {
   createActivityLog(logData: InsertActivityLog): Promise<ActivityLog>;
   getActivityLogsByType(type: string, limit?: number): Promise<ActivityLog[]>;
   getActivityLogsByUser(userId: number, limit?: number): Promise<ActivityLog[]>;
+  
+  // Tasks
+  getTasks(): Promise<Task[]>;
+  getTask(id: number): Promise<Task | undefined>;
+  getTasksByClient(clientId: number): Promise<Task[]>;
+  getTasksByExecutor(executorId: number): Promise<Task[]>;
+  getTasksByStatus(status: string): Promise<Task[]>;
+  getTasksDueSoon(days: number): Promise<Task[]>;
+  createTask(taskData: InsertTask): Promise<Task>;
+  updateTask(id: number, taskData: Partial<InsertTask>): Promise<Task | undefined>;
+  deleteTask(id: number): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
@@ -196,6 +209,7 @@ export class MemStorage implements IStorage {
   private scheduleEntries: Map<number, ScheduleEntry>;
   private importedFiles: Map<number, ImportedFile>;
   private activityLogs: Map<number, ActivityLog>;
+  private tasks: Map<number, Task>;
   
   private userIdCounter: number;
   private subjectIdCounter: number;
@@ -216,6 +230,7 @@ export class MemStorage implements IStorage {
   private scheduleEntryIdCounter: number;
   private importedFileIdCounter: number;
   private activityLogIdCounter: number;
+  private taskIdCounter: number;
   
   sessionStore: expressSession.Store;
   
@@ -239,6 +254,7 @@ export class MemStorage implements IStorage {
     this.scheduleEntries = new Map();
     this.importedFiles = new Map();
     this.activityLogs = new Map();
+    this.tasks = new Map();
     
     this.userIdCounter = 1;
     this.subjectIdCounter = 1;
@@ -259,6 +275,7 @@ export class MemStorage implements IStorage {
     this.scheduleEntryIdCounter = 1;
     this.importedFileIdCounter = 1;
     this.activityLogIdCounter = 1;
+    this.taskIdCounter = 1;
     
     // Настройка MemoryStore для длительного хранения сессий
     this.sessionStore = new MemoryStore({
@@ -1260,6 +1277,81 @@ export class MemStorage implements IStorage {
     });
     
     return limit ? logs.slice(0, limit) : logs;
+  }
+  
+  // Tasks
+  async getTasks(): Promise<Task[]> {
+    return Array.from(this.tasks.values());
+  }
+  
+  async getTask(id: number): Promise<Task | undefined> {
+    return this.tasks.get(id);
+  }
+  
+  async getTasksByClient(clientId: number): Promise<Task[]> {
+    return Array.from(this.tasks.values())
+      .filter(task => task.clientId === clientId);
+  }
+  
+  async getTasksByExecutor(executorId: number): Promise<Task[]> {
+    return Array.from(this.tasks.values())
+      .filter(task => task.executorId === executorId);
+  }
+  
+  async getTasksByStatus(status: string): Promise<Task[]> {
+    return Array.from(this.tasks.values())
+      .filter(task => task.status === status);
+  }
+  
+  async getTasksDueSoon(days: number): Promise<Task[]> {
+    const now = new Date();
+    const future = new Date();
+    future.setDate(now.getDate() + days);
+    
+    return Array.from(this.tasks.values())
+      .filter(task => {
+        // Только задачи, которые не завершены
+        if (task.status === 'completed') return false;
+        
+        // Проверка на дедлайн в ближайшие дни
+        if (task.dueDate && task.dueDate > now && task.dueDate <= future) {
+          return true;
+        }
+        return false;
+      });
+  }
+  
+  async createTask(taskData: InsertTask): Promise<Task> {
+    const id = this.taskIdCounter++;
+    const now = new Date();
+    
+    const task: Task = {
+      ...taskData,
+      id,
+      createdAt: now,
+      updatedAt: now
+    };
+    
+    this.tasks.set(id, task);
+    return task;
+  }
+  
+  async updateTask(id: number, taskData: Partial<InsertTask>): Promise<Task | undefined> {
+    const task = this.tasks.get(id);
+    if (!task) return undefined;
+    
+    const updatedTask: Task = {
+      ...task,
+      ...taskData,
+      updatedAt: new Date()
+    };
+    
+    this.tasks.set(id, updatedTask);
+    return updatedTask;
+  }
+  
+  async deleteTask(id: number): Promise<boolean> {
+    return this.tasks.delete(id);
   }
   
   private seedData() {

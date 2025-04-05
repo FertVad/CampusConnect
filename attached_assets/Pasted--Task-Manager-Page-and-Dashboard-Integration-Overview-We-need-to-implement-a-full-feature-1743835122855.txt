@@ -1,0 +1,59 @@
+### Task Manager Page and Dashboard Integration
+
+**Overview:**  
+We need to implement a full-featured Task Manager page for employees (not for students) using a card layout. Additionally, on the main dashboard, there should be a mini-window displaying current tasks.
+
+---
+
+#### 1. Task Manager Page (for employees)
+
+- **Card Layout for Tasks:**
+  - Display each task as a card showing:
+    - Task Title
+    - Description
+    - Created Date
+    - Due Date
+    - Priority (High, Medium, Low)
+    - Status (New, In Progress, Completed, On Hold)
+    - (Optionally) Client and Executor information
+- **Task Operations:**
+  - Ability to create new tasks via a form (fields: Title, Description, Due Date, Priority, Status)
+  - Ability to edit existing tasks (only by the assigned client and executor)
+  - Ability to mark tasks as completed
+  - Ability to delete tasks
+- **Task Visibility:**
+  - **Default behavior:** All employees can view the list of tasks.
+  - However, only the assigned **client (заказчик)** and **executor (исполнитель)** have the rights to modify task details (edit, update status, delete).
+  - (If needed later, additional confidentiality options can be implemented.)
+
+---
+
+#### 2. Dashboard Integration
+
+- **Mini-Window for Current Tasks:**
+  - Add a widget on the dashboard that displays a list of current tasks.
+  - The widget should show key information for each task (e.g., task title, status, due date).
+  - It should update dynamically and provide a quick link to the full Task Manager page.
+
+---
+
+#### 3. UI & Styling Considerations
+
+- The card layout must be clean, responsive, and consistent with the app's dark theme.
+- Use proper spacing, borders, and typography to ensure good readability.
+- All text (labels, statuses, messages) must be properly localized.
+
+---
+
+#### 4. Navigation & Access
+
+- Ensure that tasks are visible to all employees by default.
+- Only the assigned client and executor can edit or delete tasks.
+- The mini-window on the dashboard should provide a clear call-to-action (e.g., “View All Tasks”) that navigates to the Task Manager page.
+
+---
+
+**Prompt for Implementation:**  
+Please implement the Task Manager page with the card layout as described above, and add a mini-window widget on the admin dashboard displaying current tasks. Task visibility should be such that all employees can see all tasks, but only the assigned client and executor have edit rights. Ensure the UI is responsive and all task-related text is properly localized.
+
+Let me know once this is implemented so I can test the functionality.
