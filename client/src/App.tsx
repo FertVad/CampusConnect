@@ -11,6 +11,7 @@ import Chat from "@/pages/chat/Chat";
 import Invoices from "@/pages/documents/Invoices";
 import Certificates from "@/pages/documents/Certificates";
 import ImportedFiles from "@/pages/admin/ImportedFiles";
+import TasksPage from "@/pages/tasks/Tasks";
 import NotFound from "@/pages/not-found";
 import AuthPage from "@/pages/auth-page";
 import { ProtectedRoute } from "@/lib/protected-route";
@@ -79,6 +80,13 @@ const ProtectedCertificates = () => (
   </MainLayout>
 );
 
+// Tasks page
+const ProtectedTasks = () => (
+  <MainLayout>
+    <TasksPage />
+  </MainLayout>
+);
+
 // Admin pages
 const ProtectedImportedFiles = () => (
   <MainLayout>
@@ -126,6 +134,9 @@ function App() {
       {/* Documents routes */}
       <ProtectedRoute path="/invoices" component={ProtectedInvoices} />
       <ProtectedRoute path="/certificates" component={ProtectedCertificates} />
+      
+      {/* Tasks route */}
+      <ProtectedRoute path="/tasks" component={ProtectedTasks} />
       
       {/* Admin routes с проверкой на роль admin */}
       <ProtectedRoute path="/admin/imported-files" component={ProtectedImportedFiles} adminOnly={true} />
