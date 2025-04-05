@@ -963,15 +963,21 @@ export class PostgresStorage implements IStorage {
   }
   
   async updateTask(id: number, taskData: Partial<InsertTask>): Promise<Task | undefined> {
-    const [task] = await db.update(schema.tasks)
-      .set({
-        ...taskData,
-        updatedAt: new Date().toISOString()
-      })
-      .where(eq(schema.tasks.id, id))
-      .returning();
-    
-    return task;
+    try {
+      // Используем новый объект Date вместо строки ISO для updatedAt
+      const [task] = await db.update(schema.tasks)
+        .set({
+          ...taskData,
+          updatedAt: new Date() // Передаем объект Date напрямую
+        })
+        .where(eq(schema.tasks.id, id))
+        .returning();
+      
+      return task;
+    } catch (error) {
+      console.error('Error updating task in DB:', error);
+      throw error; // Передаем ошибку дальше для обработки
+    }
   }
   
   async deleteTask(id: number): Promise<boolean> {

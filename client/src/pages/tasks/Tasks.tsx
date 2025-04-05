@@ -249,7 +249,15 @@ const TasksPage = () => {
 
   // Мутация для создания новой задачи
   const createTaskMutation = useMutation({
-    mutationFn: async (data: TaskFormData & { clientId: number | undefined }) => {
+    mutationFn: async (data: {
+      title: string;
+      description?: string;
+      status: string;
+      priority: string;
+      dueDate: string | null;
+      executorId: number;
+      clientId: number;
+    }) => {
       try {
         console.log('Sending API request with data:', data);
         const result = await apiRequest('POST', '/api/tasks', data);
@@ -284,8 +292,17 @@ const TasksPage = () => {
 
   // Мутация для обновления статуса задачи
   const updateTaskStatusMutation = useMutation({
-    mutationFn: ({ id, status }: { id: number, status: string }) => 
-      apiRequest('PUT', `/api/tasks/${id}`, { status }),
+    mutationFn: async ({ id, status }: { id: number, status: string }) => {
+      try {
+        console.log(`Updating task status: ID=${id}, status=${status}`);
+        const result = await apiRequest('PUT', `/api/tasks/${id}`, { status });
+        console.log('Task update response:', result);
+        return result;
+      } catch (error) {
+        console.error('API error details for task update:', error);
+        throw error;
+      }
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/tasks'] });
       toast({
@@ -293,11 +310,13 @@ const TasksPage = () => {
         description: t('task.status_updated_description'),
       });
     },
-    onError: (error) => {
+    onError: (error: any) => {
       console.error('Error updating task status:', error);
+      // Показываем более детальную информацию об ошибке
+      const errorMessage = error?.message || error?.error?.message || t('task.try_again');
       toast({
         title: t('task.error_updating'),
-        description: t('task.try_again'),
+        description: errorMessage,
         variant: 'destructive',
       });
     }
@@ -327,20 +346,19 @@ const TasksPage = () => {
       return;
     }
     
-    // Преобразуем дату в ISO-строку, если она существует
-    const formattedData = {
-      ...data,
+    // Преобразуем дату в ISO-строку и создаем объект с типами, которые ожидает мутация
+    const taskData = {
+      title: data.title,
+      description: data.description || '',
+      status: data.status,
+      priority: data.priority,
       dueDate: data.dueDate ? data.dueDate.toISOString() : null,
-    };
-    
-    // Добавляем clientId текущего пользователя к данным задачи
-    const taskWithClient = {
-      ...formattedData,
+      executorId: data.executorId,
       clientId: user.id // текущий пользователь становится клиентом задачи
     };
     
-    console.log('Submitting task data:', taskWithClient);
-    createTaskMutation.mutate(taskWithClient);
+    console.log('Submitting task data:', taskData);
+    createTaskMutation.mutate(taskData);
   };
 
   return (

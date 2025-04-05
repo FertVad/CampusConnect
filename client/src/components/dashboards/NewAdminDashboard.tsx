@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import StatusCard from '@/components/cards/StatusCard';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { BookOpen, FilePlus, Users, UserCircle, Briefcase, GraduationCap, FileText, MessageSquare, Loader2, ClipboardList } from 'lucide-react';
+import { BookOpen, FilePlus, Users, UserCircle, Briefcase, GraduationCap, FileText, MessageSquare, Loader2, ClipboardList, AlertCircle, Clock, CheckCircle, PauseCircle } from 'lucide-react';
 import { Link } from 'wouter';
 import { User, Request } from '@shared/schema';
 import { Button } from '@/components/ui/button';
@@ -31,6 +31,13 @@ const AdminDashboard = () => {
   const { data: requests = [] } = useQuery<Request[]>({
     queryKey: ['/api/requests'],
   });
+
+  // Get all tasks
+  const { data: tasks = [], isLoading: isLoadingTasks } = useQuery<any[]>({
+    queryKey: ['/api/tasks'],
+    refetchOnWindowFocus: true,
+    refetchInterval: 30000, // Refresh every 30 seconds
+  });
   
   // Calculate user statistics using useMemo for performance
   const userStats = useMemo(() => {
@@ -48,6 +55,35 @@ const AdminDashboard = () => {
   
   // Count pending requests
   const pendingRequests = requests.filter(r => r.status === 'pending');
+  
+  // Рассчитываем статистику задач
+  const taskStats = useMemo(() => {
+    const totalTasks = tasks.length;
+    const newTasks = tasks.filter(t => t.status === 'new').length;
+    const inProgressTasks = tasks.filter(t => t.status === 'in_progress').length;
+    const completedTasks = tasks.filter(t => t.status === 'completed').length;
+    const onHoldTasks = tasks.filter(t => t.status === 'on_hold').length;
+    
+    // Расчет задач с высоким приоритетом
+    const highPriorityTasks = tasks.filter(t => t.priority === 'high').length;
+    
+    // Расчет просроченных задач (если дата выполнения прошла, а задача не выполнена)
+    const overdueTasks = tasks.filter(t => {
+      if (!t.dueDate || t.status === 'completed') return false;
+      const dueDate = new Date(t.dueDate);
+      return dueDate < new Date() && t.status !== 'completed';
+    }).length;
+    
+    return {
+      total: totalTasks,
+      new: newTasks,
+      inProgress: inProgressTasks,
+      completed: completedTasks,
+      onHold: onHoldTasks,
+      highPriority: highPriorityTasks,
+      overdue: overdueTasks
+    };
+  }, [tasks]);
   
   // Sort users by creation date (newest first)
   const sortedUsers = useMemo(() => {
@@ -92,7 +128,7 @@ const AdminDashboard = () => {
   
   return (
     <div className="space-y-6">
-      {/* User Statistics Cards */}
+      {/* User and Task Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatusCard
           title={t('users.roles.students')}
@@ -111,19 +147,19 @@ const AdminDashboard = () => {
         />
         
         <StatusCard
-          title={t('users.roles.admins')}
-          value={userStats.adminCount.toString()}
-          icon={<UserCircle className="h-6 w-6" />}
+          title={t('task.total')}
+          value={taskStats.total.toString()}
+          icon={<ClipboardList className="h-6 w-6" />}
           iconBgColor="bg-primary bg-opacity-10"
           iconColor="text-primary"
         />
         
         <StatusCard
-          title={t('common.total')}
-          value={userStats.total.toString()}
-          icon={<Users className="h-6 w-6" />}
-          iconBgColor="bg-info bg-opacity-10"
-          iconColor="text-info"
+          title={t('task.completed')}
+          value={taskStats.completed.toString()}
+          icon={<CheckCircle className="h-6 w-6" />}
+          iconBgColor="bg-green-500 bg-opacity-10"
+          iconColor="text-green-500"
         />
       </div>
       
@@ -197,22 +233,73 @@ const AdminDashboard = () => {
           {/* Task Manager Card */}
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-lg font-heading">{t('common.taskManager')}</CardTitle>
+              <CardTitle className="text-lg font-heading">
+                <div className="flex justify-between items-center">
+                  <span>{t('common.taskManager')}</span>
+                  <Link href="/tasks" className="text-sm font-normal text-primary hover:underline">
+                    {t('common.viewAll')}
+                  </Link>
+                </div>
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex flex-col items-center text-center">
-                <div className="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                  <ClipboardList className="h-10 w-10 text-primary" />
+              {isLoadingTasks ? (
+                <div className="flex justify-center items-center py-8">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
                 </div>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Управляйте задачами, назначайте их студентам и отслеживайте прогресс выполнения
-                </p>
-                <Link href="/tasks">
-                  <Button className="w-full">
-                    {t('common.taskManager')}
-                  </Button>
-                </Link>
-              </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-2 gap-3 mb-4">
+                    <div className="rounded-lg border bg-card p-3">
+                      <div className="flex justify-between items-center mb-2">
+                        <div className="text-sm font-medium">{t('task.status.new')}</div>
+                        <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center">
+                          <AlertCircle className="h-4 w-4 text-primary" />
+                        </div>
+                      </div>
+                      <div className="text-2xl font-bold">{taskStats.new}</div>
+                    </div>
+                    
+                    <div className="rounded-lg border bg-card p-3">
+                      <div className="flex justify-between items-center mb-2">
+                        <div className="text-sm font-medium">{t('task.status.in_progress')}</div>
+                        <div className="h-6 w-6 rounded-full bg-amber-500/10 flex items-center justify-center">
+                          <Clock className="h-4 w-4 text-amber-500" />
+                        </div>
+                      </div>
+                      <div className="text-2xl font-bold">{taskStats.inProgress}</div>
+                    </div>
+                    
+                    <div className="rounded-lg border bg-card p-3">
+                      <div className="flex justify-between items-center mb-2">
+                        <div className="text-sm font-medium">{t('task.status.completed')}</div>
+                        <div className="h-6 w-6 rounded-full bg-green-500/10 flex items-center justify-center">
+                          <CheckCircle className="h-4 w-4 text-green-500" />
+                        </div>
+                      </div>
+                      <div className="text-2xl font-bold">{taskStats.completed}</div>
+                    </div>
+                    
+                    <div className="rounded-lg border bg-card p-3">
+                      <div className="flex justify-between items-center mb-2">
+                        <div className="text-sm font-medium">{t('task.status.on_hold')}</div>
+                        <div className="h-6 w-6 rounded-full bg-neutral-500/10 flex items-center justify-center">
+                          <PauseCircle className="h-4 w-4 text-neutral-500" />
+                        </div>
+                      </div>
+                      <div className="text-2xl font-bold">{taskStats.onHold}</div>
+                    </div>
+                  </div>
+                  
+                  <div className="text-center mt-4">
+                    <Link href="/tasks">
+                      <Button className="w-full">
+                        {t('common.taskManager')}
+                      </Button>
+                    </Link>
+                  </div>
+                </>
+              )}
             </CardContent>
           </Card>
         
