@@ -896,9 +896,9 @@ export class PostgresStorage implements IStorage {
   // Tasks
   async getTasks(): Promise<(Task & { client?: User, executor?: User })[]> {
     try {
-      // Use distinct aliases for the user tables to avoid conflicts
-      const clientsTable = schema.users;
-      const executorsTable = schema.users;
+      // Create distinct aliases for the user tables
+      const clientsTable = schema.users.as('clients');
+      const executorsTable = schema.users.as('executors');
       
       const result = await db.select({
         id: schema.tasks.id,
@@ -999,9 +999,9 @@ export class PostgresStorage implements IStorage {
   
   async getTask(id: number): Promise<(Task & { client?: User, executor?: User }) | undefined> {
     try {
-      // Use distinct aliases for the user tables to avoid conflicts
-      const clientsTable = schema.users;
-      const executorsTable = schema.users;
+      // Create distinct aliases for the user tables
+      const clientsTable = schema.users.as('clients');
+      const executorsTable = schema.users.as('executors');
       
       const result = await db.select({
         id: schema.tasks.id,
@@ -1086,9 +1086,9 @@ export class PostgresStorage implements IStorage {
   
   async getTasksByClient(clientId: number): Promise<(Task & { client?: User, executor?: User })[]> {
     try {
-      // Use distinct aliases for the user tables to avoid conflicts
-      const clientsTable = schema.users;
-      const executorsTable = schema.users;
+      // Create distinct aliases for the user tables
+      const clientsTable = schema.users.as('clients');
+      const executorsTable = schema.users.as('executors');
       
       const result = await db.select({
         id: schema.tasks.id,
@@ -1190,9 +1190,9 @@ export class PostgresStorage implements IStorage {
   
   async getTasksByExecutor(executorId: number): Promise<(Task & { client?: User, executor?: User })[]> {
     try {
-      // Use distinct aliases for the user tables to avoid conflicts
-      const clientsTable = schema.users;
-      const executorsTable = schema.users;
+      // Create distinct aliases for the user tables
+      const clientsTable = schema.users.as('clients');
+      const executorsTable = schema.users.as('executors');
       
       const result = await db.select({
         id: schema.tasks.id,
@@ -1294,9 +1294,9 @@ export class PostgresStorage implements IStorage {
   
   async getTasksByStatus(status: string): Promise<(Task & { client?: User, executor?: User })[]> {
     try {
-      // Use distinct aliases for the user tables to avoid conflicts
-      const clientsTable = schema.users;
-      const executorsTable = schema.users;
+      // Create distinct aliases for the user tables
+      const clientsTable = schema.users.as('clients');
+      const executorsTable = schema.users.as('executors');
       
       const result = await db.select({
         id: schema.tasks.id,
@@ -1394,9 +1394,9 @@ export class PostgresStorage implements IStorage {
       const future = new Date();
       future.setDate(now.getDate() + days);
       
-      // Use distinct aliases for the user tables to avoid conflicts
-      const clientsTable = schema.users;
-      const executorsTable = schema.users;
+      // Create distinct aliases for the user tables
+      const clientsTable = schema.users.as('clients');
+      const executorsTable = schema.users.as('executors');
       
       const result = await db.select({
         id: schema.tasks.id,
