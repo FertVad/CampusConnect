@@ -896,30 +896,35 @@ export class PostgresStorage implements IStorage {
   // Tasks
   async getTasks(): Promise<(Task & { client?: User, executor?: User })[]> {
     try {
-      // Get user table aliases
-      const clientTable = schema.users;
-      const executorTable = schema.users;
+      // Use distinct aliases for the user tables to avoid conflicts
+      const clientsTable = schema.users;
+      const executorsTable = schema.users;
       
-      const tasks = await db.select({
-        tasks: schema.tasks,
-        client: {
-          id: clientTable.id,
-          firstName: clientTable.firstName,
-          lastName: clientTable.lastName,
-          email: clientTable.email,
-          role: clientTable.role
-        },
-        executor: {
-          id: executorTable.id,
-          firstName: executorTable.firstName,
-          lastName: executorTable.lastName,
-          email: executorTable.email,
-          role: executorTable.role
-        }
+      const result = await db.select({
+        id: schema.tasks.id,
+        title: schema.tasks.title,
+        description: schema.tasks.description,
+        status: schema.tasks.status,
+        priority: schema.tasks.priority,
+        createdAt: schema.tasks.createdAt,
+        updatedAt: schema.tasks.updatedAt,
+        dueDate: schema.tasks.dueDate,
+        clientId: schema.tasks.clientId,
+        executorId: schema.tasks.executorId,
+        // Client fields
+        clientFirstName: clientsTable.firstName,
+        clientLastName: clientsTable.lastName,
+        clientEmail: clientsTable.email,
+        clientRole: clientsTable.role,
+        // Executor fields
+        executorFirstName: executorsTable.firstName,
+        executorLastName: executorsTable.lastName,
+        executorEmail: executorsTable.email,
+        executorRole: executorsTable.role
       })
       .from(schema.tasks)
-      .leftJoin(clientTable, eq(schema.tasks.clientId, clientTable.id))
-      .leftJoin(executorTable, eq(schema.tasks.executorId, executorTable.id))
+      .leftJoin(clientsTable, eq(schema.tasks.clientId, clientsTable.id))
+      .leftJoin(executorsTable, eq(schema.tasks.executorId, executorsTable.id))
       .orderBy(
         // Order by status priority (new → in_progress → on_hold → completed)
         sql`CASE 
@@ -940,40 +945,45 @@ export class PostgresStorage implements IStorage {
         desc(schema.tasks.createdAt)
       );
       
-      // Format the result to include client and executor objects
-      return tasks.map(task => {
-        // Extract base task properties
+      // Format the results to include client and executor objects
+      return result.map(task => {
+        // Base task properties
         const baseTask = {
-          id: task.tasks.id,
-          title: task.tasks.title,
-          description: task.tasks.description,
-          status: task.tasks.status,
-          priority: task.tasks.priority,
-          createdAt: task.tasks.createdAt,
-          updatedAt: task.tasks.updatedAt,
-          dueDate: task.tasks.dueDate,
-          clientId: task.tasks.clientId,
-          executorId: task.tasks.executorId,
+          id: task.id,
+          title: task.title,
+          description: task.description,
+          status: task.status,
+          priority: task.priority,
+          createdAt: task.createdAt,
+          updatedAt: task.updatedAt,
+          dueDate: task.dueDate,
+          clientId: task.clientId,
+          executorId: task.executorId
         };
         
-        // Add client and executor info if available
-        // Client will be null if there's no match in the join
-        const client = task.client?.id ? {
-          id: task.client.id,
-          firstName: task.client.firstName,
-          lastName: task.client.lastName,
-          email: task.client.email,
-          role: task.client.role,
-        } : undefined;
+        // Add client info if available (all fields must be present)
+        let client = undefined;
+        if (task.clientFirstName && task.clientLastName && task.clientEmail && task.clientRole) {
+          client = {
+            id: task.clientId,
+            firstName: task.clientFirstName,
+            lastName: task.clientLastName,
+            email: task.clientEmail,
+            role: task.clientRole
+          };
+        }
         
-        // Executor will be null if there's no match in the join
-        const executor = task.executor?.id ? {
-          id: task.executor.id,
-          firstName: task.executor.firstName,
-          lastName: task.executor.lastName,
-          email: task.executor.email,
-          role: task.executor.role,
-        } : undefined;
+        // Add executor info if available (all fields must be present)
+        let executor = undefined;
+        if (task.executorFirstName && task.executorLastName && task.executorEmail && task.executorRole) {
+          executor = {
+            id: task.executorId,
+            firstName: task.executorFirstName,
+            lastName: task.executorLastName,
+            email: task.executorEmail,
+            role: task.executorRole
+          };
+        }
         
         return {
           ...baseTask,
@@ -989,67 +999,79 @@ export class PostgresStorage implements IStorage {
   
   async getTask(id: number): Promise<(Task & { client?: User, executor?: User }) | undefined> {
     try {
-      // Get user table aliases
-      const clientTable = schema.users;
-      const executorTable = schema.users;
+      // Use distinct aliases for the user tables to avoid conflicts
+      const clientsTable = schema.users;
+      const executorsTable = schema.users;
       
-      const tasks = await db.select({
-        tasks: schema.tasks,
-        client: {
-          id: clientTable.id,
-          firstName: clientTable.firstName,
-          lastName: clientTable.lastName,
-          email: clientTable.email,
-          role: clientTable.role
-        },
-        executor: {
-          id: executorTable.id,
-          firstName: executorTable.firstName,
-          lastName: executorTable.lastName,
-          email: executorTable.email,
-          role: executorTable.role
-        }
+      const result = await db.select({
+        id: schema.tasks.id,
+        title: schema.tasks.title,
+        description: schema.tasks.description,
+        status: schema.tasks.status,
+        priority: schema.tasks.priority,
+        createdAt: schema.tasks.createdAt,
+        updatedAt: schema.tasks.updatedAt,
+        dueDate: schema.tasks.dueDate,
+        clientId: schema.tasks.clientId,
+        executorId: schema.tasks.executorId,
+        // Client fields
+        clientFirstName: clientsTable.firstName,
+        clientLastName: clientsTable.lastName,
+        clientEmail: clientsTable.email,
+        clientRole: clientsTable.role,
+        // Executor fields
+        executorFirstName: executorsTable.firstName,
+        executorLastName: executorsTable.lastName,
+        executorEmail: executorsTable.email,
+        executorRole: executorsTable.role
       })
       .from(schema.tasks)
-      .leftJoin(clientTable, eq(schema.tasks.clientId, clientTable.id))
-      .leftJoin(executorTable, eq(schema.tasks.executorId, executorTable.id))
+      .leftJoin(clientsTable, eq(schema.tasks.clientId, clientsTable.id))
+      .leftJoin(executorsTable, eq(schema.tasks.executorId, executorsTable.id))
       .where(eq(schema.tasks.id, id))
       .limit(1);
       
-      if (tasks.length === 0) return undefined;
+      if (result.length === 0) return undefined;
       
-      const task = tasks[0];
+      const task = result[0];
       
-      // Format the result to include client and executor objects
+      // Base task properties
       const baseTask = {
-        id: task.tasks.id,
-        title: task.tasks.title,
-        description: task.tasks.description,
-        status: task.tasks.status,
-        priority: task.tasks.priority,
-        createdAt: task.tasks.createdAt,
-        updatedAt: task.tasks.updatedAt,
-        dueDate: task.tasks.dueDate,
-        clientId: task.tasks.clientId,
-        executorId: task.tasks.executorId,
+        id: task.id,
+        title: task.title,
+        description: task.description,
+        status: task.status,
+        priority: task.priority,
+        createdAt: task.createdAt,
+        updatedAt: task.updatedAt,
+        dueDate: task.dueDate,
+        clientId: task.clientId,
+        executorId: task.executorId
       };
       
-      // Add client and executor info if available
-      const client = task.client?.id ? {
-        id: task.client.id,
-        firstName: task.client.firstName,
-        lastName: task.client.lastName,
-        email: task.client.email,
-        role: task.client.role,
-      } : undefined;
+      // Add client info if available (all fields must be present)
+      let client = undefined;
+      if (task.clientFirstName && task.clientLastName && task.clientEmail && task.clientRole) {
+        client = {
+          id: task.clientId,
+          firstName: task.clientFirstName,
+          lastName: task.clientLastName,
+          email: task.clientEmail,
+          role: task.clientRole
+        };
+      }
       
-      const executor = task.executor?.id ? {
-        id: task.executor.id,
-        firstName: task.executor.firstName,
-        lastName: task.executor.lastName,
-        email: task.executor.email,
-        role: task.executor.role,
-      } : undefined;
+      // Add executor info if available (all fields must be present)
+      let executor = undefined;
+      if (task.executorFirstName && task.executorLastName && task.executorEmail && task.executorRole) {
+        executor = {
+          id: task.executorId,
+          firstName: task.executorFirstName,
+          lastName: task.executorLastName,
+          email: task.executorEmail,
+          role: task.executorRole
+        };
+      }
       
       return {
         ...baseTask,
@@ -1064,30 +1086,35 @@ export class PostgresStorage implements IStorage {
   
   async getTasksByClient(clientId: number): Promise<(Task & { client?: User, executor?: User })[]> {
     try {
-      // Get user table aliases
-      const clientTable = schema.users;
-      const executorTable = schema.users;
+      // Use distinct aliases for the user tables to avoid conflicts
+      const clientsTable = schema.users;
+      const executorsTable = schema.users;
       
-      const tasks = await db.select({
-        tasks: schema.tasks,
-        client: {
-          id: clientTable.id,
-          firstName: clientTable.firstName,
-          lastName: clientTable.lastName,
-          email: clientTable.email,
-          role: clientTable.role
-        },
-        executor: {
-          id: executorTable.id,
-          firstName: executorTable.firstName,
-          lastName: executorTable.lastName,
-          email: executorTable.email,
-          role: executorTable.role
-        }
+      const result = await db.select({
+        id: schema.tasks.id,
+        title: schema.tasks.title,
+        description: schema.tasks.description,
+        status: schema.tasks.status,
+        priority: schema.tasks.priority,
+        createdAt: schema.tasks.createdAt,
+        updatedAt: schema.tasks.updatedAt,
+        dueDate: schema.tasks.dueDate,
+        clientId: schema.tasks.clientId,
+        executorId: schema.tasks.executorId,
+        // Client fields
+        clientFirstName: clientsTable.firstName,
+        clientLastName: clientsTable.lastName,
+        clientEmail: clientsTable.email,
+        clientRole: clientsTable.role,
+        // Executor fields
+        executorFirstName: executorsTable.firstName,
+        executorLastName: executorsTable.lastName,
+        executorEmail: executorsTable.email,
+        executorRole: executorsTable.role
       })
       .from(schema.tasks)
-      .leftJoin(clientTable, eq(schema.tasks.clientId, clientTable.id))
-      .leftJoin(executorTable, eq(schema.tasks.executorId, executorTable.id))
+      .leftJoin(clientsTable, eq(schema.tasks.clientId, clientsTable.id))
+      .leftJoin(executorsTable, eq(schema.tasks.executorId, executorsTable.id))
       .where(eq(schema.tasks.clientId, clientId))
       .orderBy(
         // Order by status priority (new → in_progress → on_hold → completed)
@@ -1109,38 +1136,45 @@ export class PostgresStorage implements IStorage {
         desc(schema.tasks.createdAt)
       );
       
-      // Format the result to include client and executor objects
-      return tasks.map(task => {
-        // Extract base task properties
+      // Format the results to include client and executor objects
+      return result.map(task => {
+        // Base task properties
         const baseTask = {
-          id: task.tasks.id,
-          title: task.tasks.title,
-          description: task.tasks.description,
-          status: task.tasks.status,
-          priority: task.tasks.priority,
-          createdAt: task.tasks.createdAt,
-          updatedAt: task.tasks.updatedAt,
-          dueDate: task.tasks.dueDate,
-          clientId: task.tasks.clientId,
-          executorId: task.tasks.executorId,
+          id: task.id,
+          title: task.title,
+          description: task.description,
+          status: task.status,
+          priority: task.priority,
+          createdAt: task.createdAt,
+          updatedAt: task.updatedAt,
+          dueDate: task.dueDate,
+          clientId: task.clientId,
+          executorId: task.executorId
         };
         
-        // Add client and executor info if available
-        const client = task.client?.id ? {
-          id: task.client.id,
-          firstName: task.client.firstName,
-          lastName: task.client.lastName,
-          email: task.client.email,
-          role: task.client.role,
-        } : undefined;
+        // Add client info if available (all fields must be present)
+        let client = undefined;
+        if (task.clientFirstName && task.clientLastName && task.clientEmail && task.clientRole) {
+          client = {
+            id: task.clientId,
+            firstName: task.clientFirstName,
+            lastName: task.clientLastName,
+            email: task.clientEmail,
+            role: task.clientRole
+          };
+        }
         
-        const executor = task.executor?.id ? {
-          id: task.executor.id,
-          firstName: task.executor.firstName,
-          lastName: task.executor.lastName,
-          email: task.executor.email,
-          role: task.executor.role,
-        } : undefined;
+        // Add executor info if available (all fields must be present)
+        let executor = undefined;
+        if (task.executorFirstName && task.executorLastName && task.executorEmail && task.executorRole) {
+          executor = {
+            id: task.executorId,
+            firstName: task.executorFirstName,
+            lastName: task.executorLastName,
+            email: task.executorEmail,
+            role: task.executorRole
+          };
+        }
         
         return {
           ...baseTask,
@@ -1156,30 +1190,35 @@ export class PostgresStorage implements IStorage {
   
   async getTasksByExecutor(executorId: number): Promise<(Task & { client?: User, executor?: User })[]> {
     try {
-      // Get user table aliases
-      const clientTable = schema.users;
-      const executorTable = schema.users;
+      // Use distinct aliases for the user tables to avoid conflicts
+      const clientsTable = schema.users;
+      const executorsTable = schema.users;
       
-      const tasks = await db.select({
-        tasks: schema.tasks,
-        client: {
-          id: clientTable.id,
-          firstName: clientTable.firstName,
-          lastName: clientTable.lastName,
-          email: clientTable.email,
-          role: clientTable.role
-        },
-        executor: {
-          id: executorTable.id,
-          firstName: executorTable.firstName,
-          lastName: executorTable.lastName,
-          email: executorTable.email,
-          role: executorTable.role
-        }
+      const result = await db.select({
+        id: schema.tasks.id,
+        title: schema.tasks.title,
+        description: schema.tasks.description,
+        status: schema.tasks.status,
+        priority: schema.tasks.priority,
+        createdAt: schema.tasks.createdAt,
+        updatedAt: schema.tasks.updatedAt,
+        dueDate: schema.tasks.dueDate,
+        clientId: schema.tasks.clientId,
+        executorId: schema.tasks.executorId,
+        // Client fields
+        clientFirstName: clientsTable.firstName,
+        clientLastName: clientsTable.lastName,
+        clientEmail: clientsTable.email,
+        clientRole: clientsTable.role,
+        // Executor fields
+        executorFirstName: executorsTable.firstName,
+        executorLastName: executorsTable.lastName,
+        executorEmail: executorsTable.email,
+        executorRole: executorsTable.role
       })
       .from(schema.tasks)
-      .leftJoin(clientTable, eq(schema.tasks.clientId, clientTable.id))
-      .leftJoin(executorTable, eq(schema.tasks.executorId, executorTable.id))
+      .leftJoin(clientsTable, eq(schema.tasks.clientId, clientsTable.id))
+      .leftJoin(executorsTable, eq(schema.tasks.executorId, executorsTable.id))
       .where(eq(schema.tasks.executorId, executorId))
       .orderBy(
         // Order by status priority (new → in_progress → on_hold → completed)
@@ -1201,38 +1240,45 @@ export class PostgresStorage implements IStorage {
         desc(schema.tasks.createdAt)
       );
       
-      // Format the result to include client and executor objects
-      return tasks.map(task => {
-        // Extract base task properties
+      // Format the results to include client and executor objects
+      return result.map(task => {
+        // Base task properties
         const baseTask = {
-          id: task.tasks.id,
-          title: task.tasks.title,
-          description: task.tasks.description,
-          status: task.tasks.status,
-          priority: task.tasks.priority,
-          createdAt: task.tasks.createdAt,
-          updatedAt: task.tasks.updatedAt,
-          dueDate: task.tasks.dueDate,
-          clientId: task.tasks.clientId,
-          executorId: task.tasks.executorId,
+          id: task.id,
+          title: task.title,
+          description: task.description,
+          status: task.status,
+          priority: task.priority,
+          createdAt: task.createdAt,
+          updatedAt: task.updatedAt,
+          dueDate: task.dueDate,
+          clientId: task.clientId,
+          executorId: task.executorId
         };
         
-        // Add client and executor info if available
-        const client = task.client?.id ? {
-          id: task.client.id,
-          firstName: task.client.firstName,
-          lastName: task.client.lastName,
-          email: task.client.email,
-          role: task.client.role,
-        } : undefined;
+        // Add client info if available (all fields must be present)
+        let client = undefined;
+        if (task.clientFirstName && task.clientLastName && task.clientEmail && task.clientRole) {
+          client = {
+            id: task.clientId,
+            firstName: task.clientFirstName,
+            lastName: task.clientLastName,
+            email: task.clientEmail,
+            role: task.clientRole
+          };
+        }
         
-        const executor = task.executor?.id ? {
-          id: task.executor.id,
-          firstName: task.executor.firstName,
-          lastName: task.executor.lastName,
-          email: task.executor.email,
-          role: task.executor.role,
-        } : undefined;
+        // Add executor info if available (all fields must be present)
+        let executor = undefined;
+        if (task.executorFirstName && task.executorLastName && task.executorEmail && task.executorRole) {
+          executor = {
+            id: task.executorId,
+            firstName: task.executorFirstName,
+            lastName: task.executorLastName,
+            email: task.executorEmail,
+            role: task.executorRole
+          };
+        }
         
         return {
           ...baseTask,
@@ -1248,30 +1294,35 @@ export class PostgresStorage implements IStorage {
   
   async getTasksByStatus(status: string): Promise<(Task & { client?: User, executor?: User })[]> {
     try {
-      // Get user table aliases
-      const clientTable = schema.users;
-      const executorTable = schema.users;
+      // Use distinct aliases for the user tables to avoid conflicts
+      const clientsTable = schema.users;
+      const executorsTable = schema.users;
       
-      const tasks = await db.select({
-        tasks: schema.tasks,
-        client: {
-          id: clientTable.id,
-          firstName: clientTable.firstName,
-          lastName: clientTable.lastName,
-          email: clientTable.email,
-          role: clientTable.role
-        },
-        executor: {
-          id: executorTable.id,
-          firstName: executorTable.firstName,
-          lastName: executorTable.lastName,
-          email: executorTable.email,
-          role: executorTable.role
-        }
+      const result = await db.select({
+        id: schema.tasks.id,
+        title: schema.tasks.title,
+        description: schema.tasks.description,
+        status: schema.tasks.status,
+        priority: schema.tasks.priority,
+        createdAt: schema.tasks.createdAt,
+        updatedAt: schema.tasks.updatedAt,
+        dueDate: schema.tasks.dueDate,
+        clientId: schema.tasks.clientId,
+        executorId: schema.tasks.executorId,
+        // Client fields
+        clientFirstName: clientsTable.firstName,
+        clientLastName: clientsTable.lastName,
+        clientEmail: clientsTable.email,
+        clientRole: clientsTable.role,
+        // Executor fields
+        executorFirstName: executorsTable.firstName,
+        executorLastName: executorsTable.lastName,
+        executorEmail: executorsTable.email,
+        executorRole: executorsTable.role
       })
       .from(schema.tasks)
-      .leftJoin(clientTable, eq(schema.tasks.clientId, clientTable.id))
-      .leftJoin(executorTable, eq(schema.tasks.executorId, executorTable.id))
+      .leftJoin(clientsTable, eq(schema.tasks.clientId, clientsTable.id))
+      .leftJoin(executorsTable, eq(schema.tasks.executorId, executorsTable.id))
       .where(eq(schema.tasks.status, status as any))
       .orderBy(
         // For same status tasks, order by priority (high → medium → low)
@@ -1285,38 +1336,45 @@ export class PostgresStorage implements IStorage {
         desc(schema.tasks.createdAt)
       );
       
-      // Format the result to include client and executor objects
-      return tasks.map(task => {
-        // Extract base task properties
+      // Format the results to include client and executor objects
+      return result.map(task => {
+        // Base task properties
         const baseTask = {
-          id: task.tasks.id,
-          title: task.tasks.title,
-          description: task.tasks.description,
-          status: task.tasks.status,
-          priority: task.tasks.priority,
-          createdAt: task.tasks.createdAt,
-          updatedAt: task.tasks.updatedAt,
-          dueDate: task.tasks.dueDate,
-          clientId: task.tasks.clientId,
-          executorId: task.tasks.executorId,
+          id: task.id,
+          title: task.title,
+          description: task.description,
+          status: task.status,
+          priority: task.priority,
+          createdAt: task.createdAt,
+          updatedAt: task.updatedAt,
+          dueDate: task.dueDate,
+          clientId: task.clientId,
+          executorId: task.executorId
         };
         
-        // Add client and executor info if available
-        const client = task.client?.id ? {
-          id: task.client.id,
-          firstName: task.client.firstName,
-          lastName: task.client.lastName,
-          email: task.client.email,
-          role: task.client.role,
-        } : undefined;
+        // Add client info if available (all fields must be present)
+        let client = undefined;
+        if (task.clientFirstName && task.clientLastName && task.clientEmail && task.clientRole) {
+          client = {
+            id: task.clientId,
+            firstName: task.clientFirstName,
+            lastName: task.clientLastName,
+            email: task.clientEmail,
+            role: task.clientRole
+          };
+        }
         
-        const executor = task.executor?.id ? {
-          id: task.executor.id,
-          firstName: task.executor.firstName,
-          lastName: task.executor.lastName,
-          email: task.executor.email,
-          role: task.executor.role,
-        } : undefined;
+        // Add executor info if available (all fields must be present)
+        let executor = undefined;
+        if (task.executorFirstName && task.executorLastName && task.executorEmail && task.executorRole) {
+          executor = {
+            id: task.executorId,
+            firstName: task.executorFirstName,
+            lastName: task.executorLastName,
+            email: task.executorEmail,
+            role: task.executorRole
+          };
+        }
         
         return {
           ...baseTask,
@@ -1336,30 +1394,35 @@ export class PostgresStorage implements IStorage {
       const future = new Date();
       future.setDate(now.getDate() + days);
       
-      // Get user table aliases
-      const clientTable = schema.users;
-      const executorTable = schema.users;
+      // Use distinct aliases for the user tables to avoid conflicts
+      const clientsTable = schema.users;
+      const executorsTable = schema.users;
       
-      const tasks = await db.select({
-        tasks: schema.tasks,
-        client: {
-          id: clientTable.id,
-          firstName: clientTable.firstName,
-          lastName: clientTable.lastName,
-          email: clientTable.email,
-          role: clientTable.role
-        },
-        executor: {
-          id: executorTable.id,
-          firstName: executorTable.firstName,
-          lastName: executorTable.lastName,
-          email: executorTable.email,
-          role: executorTable.role
-        }
+      const result = await db.select({
+        id: schema.tasks.id,
+        title: schema.tasks.title,
+        description: schema.tasks.description,
+        status: schema.tasks.status,
+        priority: schema.tasks.priority,
+        createdAt: schema.tasks.createdAt,
+        updatedAt: schema.tasks.updatedAt,
+        dueDate: schema.tasks.dueDate,
+        clientId: schema.tasks.clientId,
+        executorId: schema.tasks.executorId,
+        // Client fields
+        clientFirstName: clientsTable.firstName,
+        clientLastName: clientsTable.lastName,
+        clientEmail: clientsTable.email,
+        clientRole: clientsTable.role,
+        // Executor fields
+        executorFirstName: executorsTable.firstName,
+        executorLastName: executorsTable.lastName,
+        executorEmail: executorsTable.email,
+        executorRole: executorsTable.role
       })
       .from(schema.tasks)
-      .leftJoin(clientTable, eq(schema.tasks.clientId, clientTable.id))
-      .leftJoin(executorTable, eq(schema.tasks.executorId, executorTable.id))
+      .leftJoin(clientsTable, eq(schema.tasks.clientId, clientsTable.id))
+      .leftJoin(executorsTable, eq(schema.tasks.executorId, executorsTable.id))
       .where(
         and(
           // Only tasks that aren't completed
@@ -1389,38 +1452,45 @@ export class PostgresStorage implements IStorage {
         END`
       );
         
-      // Format the result to include client and executor objects
-      return tasks.map(task => {
-        // Extract base task properties
+      // Format the results to include client and executor objects
+      return result.map(task => {
+        // Base task properties
         const baseTask = {
-          id: task.tasks.id,
-          title: task.tasks.title,
-          description: task.tasks.description,
-          status: task.tasks.status,
-          priority: task.tasks.priority,
-          createdAt: task.tasks.createdAt,
-          updatedAt: task.tasks.updatedAt,
-          dueDate: task.tasks.dueDate,
-          clientId: task.tasks.clientId,
-          executorId: task.tasks.executorId,
+          id: task.id,
+          title: task.title,
+          description: task.description,
+          status: task.status,
+          priority: task.priority,
+          createdAt: task.createdAt,
+          updatedAt: task.updatedAt,
+          dueDate: task.dueDate,
+          clientId: task.clientId,
+          executorId: task.executorId
         };
         
-        // Add client and executor info if available
-        const client = task.client?.id ? {
-          id: task.client.id,
-          firstName: task.client.firstName,
-          lastName: task.client.lastName,
-          email: task.client.email,
-          role: task.client.role,
-        } : undefined;
+        // Add client info if available (all fields must be present)
+        let client = undefined;
+        if (task.clientFirstName && task.clientLastName && task.clientEmail && task.clientRole) {
+          client = {
+            id: task.clientId,
+            firstName: task.clientFirstName,
+            lastName: task.clientLastName,
+            email: task.clientEmail,
+            role: task.clientRole
+          };
+        }
         
-        const executor = task.executor?.id ? {
-          id: task.executor.id,
-          firstName: task.executor.firstName,
-          lastName: task.executor.lastName,
-          email: task.executor.email,
-          role: task.executor.role,
-        } : undefined;
+        // Add executor info if available (all fields must be present)
+        let executor = undefined;
+        if (task.executorFirstName && task.executorLastName && task.executorEmail && task.executorRole) {
+          executor = {
+            id: task.executorId,
+            firstName: task.executorFirstName,
+            lastName: task.executorLastName,
+            email: task.executorEmail,
+            role: task.executorRole
+          };
+        }
         
         return {
           ...baseTask,
