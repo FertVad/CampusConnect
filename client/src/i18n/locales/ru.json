@@ -378,7 +378,28 @@
       "en": "Английский"
     },
     "updateSuccess": "Настройки успешно обновлены",
-    "updateError": "Ошибка обновления настроек: {{message}}"
+    "updateError": "Ошибка обновления настроек: {{message}}",
+    "title": "Настройки",
+    "theme": "Тема",
+    "toggleTheme": "Переключить тему",
+    "themeOptions": "Варианты темы",
+    "themeTitle": "Выбор темы",
+    "lightTheme": "Светлая тема",
+    "darkTheme": "Тёмная тема",
+    "systemTheme": "Системная тема",
+    "appearance": "Внешний вид"
+  },
+  "assignments": {
+    "title": "Задания"
+  },
+  "grades": {
+    "title": "Оценки"
+  },
+  "chat": {
+    "title": "Чат"
+  },
+  "requests": {
+    "title": "Запросы"
   },
   "errors": {
     "notFound": "Страница не найдена",
