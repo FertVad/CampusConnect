@@ -1,6 +1,7 @@
 import { db } from './index';
 import * as schema from '@shared/schema';
 import { eq, and, or, desc, asc, sql, isNotNull } from 'drizzle-orm';
+import { aliasedTable } from 'drizzle-orm/alias';
 import { IStorage } from '../storage';
 import session from 'express-session';
 import createMemoryStore from 'memorystore';
@@ -897,8 +898,8 @@ export class PostgresStorage implements IStorage {
   async getTasks(): Promise<(Task & { client?: User, executor?: User })[]> {
     try {
       // Create distinct aliases for the user tables
-      const clientsTable = schema.users.as('clients');
-      const executorsTable = schema.users.as('executors');
+      const clientsTable = aliasedTable(schema.users, 'clients');
+      const executorsTable = aliasedTable(schema.users, 'executors');
       
       const result = await db.select({
         id: schema.tasks.id,
@@ -1000,8 +1001,8 @@ export class PostgresStorage implements IStorage {
   async getTask(id: number): Promise<(Task & { client?: User, executor?: User }) | undefined> {
     try {
       // Create distinct aliases for the user tables
-      const clientsTable = schema.users.as('clients');
-      const executorsTable = schema.users.as('executors');
+      const clientsTable = aliasedTable(schema.users, 'clients');
+      const executorsTable = aliasedTable(schema.users, 'executors');
       
       const result = await db.select({
         id: schema.tasks.id,
@@ -1087,8 +1088,8 @@ export class PostgresStorage implements IStorage {
   async getTasksByClient(clientId: number): Promise<(Task & { client?: User, executor?: User })[]> {
     try {
       // Create distinct aliases for the user tables
-      const clientsTable = schema.users.as('clients');
-      const executorsTable = schema.users.as('executors');
+      const clientsTable = aliasedTable(schema.users, 'clients');
+      const executorsTable = aliasedTable(schema.users, 'executors');
       
       const result = await db.select({
         id: schema.tasks.id,
@@ -1191,8 +1192,8 @@ export class PostgresStorage implements IStorage {
   async getTasksByExecutor(executorId: number): Promise<(Task & { client?: User, executor?: User })[]> {
     try {
       // Create distinct aliases for the user tables
-      const clientsTable = schema.users.as('clients');
-      const executorsTable = schema.users.as('executors');
+      const clientsTable = aliasedTable(schema.users, 'clients');
+      const executorsTable = aliasedTable(schema.users, 'executors');
       
       const result = await db.select({
         id: schema.tasks.id,
@@ -1295,8 +1296,8 @@ export class PostgresStorage implements IStorage {
   async getTasksByStatus(status: string): Promise<(Task & { client?: User, executor?: User })[]> {
     try {
       // Create distinct aliases for the user tables
-      const clientsTable = schema.users.as('clients');
-      const executorsTable = schema.users.as('executors');
+      const clientsTable = aliasedTable(schema.users, 'clients');
+      const executorsTable = aliasedTable(schema.users, 'executors');
       
       const result = await db.select({
         id: schema.tasks.id,
@@ -1395,8 +1396,8 @@ export class PostgresStorage implements IStorage {
       future.setDate(now.getDate() + days);
       
       // Create distinct aliases for the user tables
-      const clientsTable = schema.users.as('clients');
-      const executorsTable = schema.users.as('executors');
+      const clientsTable = aliasedTable(schema.users, 'clients');
+      const executorsTable = aliasedTable(schema.users, 'executors');
       
       const result = await db.select({
         id: schema.tasks.id,
