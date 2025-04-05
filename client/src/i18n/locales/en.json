@@ -29,6 +29,7 @@
     "courses": "Courses",
     "total": "Total",
     "added": "Added:",
+    "taskManager": "Task Manager",
     "status": {
       "loading": "Loading...",
       "success": "Success",

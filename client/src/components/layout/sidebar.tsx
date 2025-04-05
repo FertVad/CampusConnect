@@ -14,7 +14,8 @@ import {
   ChevronRight,
   ChevronLeft,
   Settings,
-  LayoutDashboard
+  LayoutDashboard,
+  ClipboardList
 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
@@ -28,6 +29,7 @@ const navigationItems = [
   { key: "assignments.title", href: "/assignments", icon: FileText },
   { key: "grades.title", href: "/grades", icon: Award },
   { key: "chat.title", href: "/chat", icon: MessageSquare },
+  { key: "common.taskManager", href: "/tasks", icon: ClipboardList },
   { key: "users.title", href: "/users", icon: Users, adminOnly: true },
   { key: "schedule.import.fileManager", href: "/admin/imported-files", icon: FileManagerIcon, adminOnly: true },
   { key: "settings.title", href: "/settings", icon: Settings },

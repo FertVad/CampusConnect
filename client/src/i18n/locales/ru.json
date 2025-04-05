@@ -29,6 +29,7 @@
     "courses": "Курсы",
     "total": "Всего",
     "added": "Добавлен:",
+    "taskManager": "Менеджер задач",
     "status": {
       "loading": "Загрузка...",
       "success": "Успешно",
