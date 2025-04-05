@@ -407,6 +407,9 @@
     "title": "Заголовок",
     "description": "Описание",
     "no_description": "Описание отсутствует",
+    "relevantTasksDescription": "Приоритетные задачи, требующие вашего внимания",
+    "total": "Всего задач",
+    "completed": "Завершено",
     "status": {
       "label": "Статус",
       "select": "Выберите статус",

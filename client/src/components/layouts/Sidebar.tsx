@@ -1,10 +1,10 @@
 import { Link, useLocation } from 'wouter';
 import { useAuth } from '@/hooks/use-auth';
 import { 
-  Home, Clock, FileText, BarChart2, 
-  HelpCircle, Receipt, Award, MessageSquare, 
+  Home, Clock, HelpCircle, 
+  Receipt, Award, MessageSquare, 
   Bell, Settings, Users as UsersIcon,
-  FileUp, Database
+  FileUp, ClipboardList
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
@@ -20,9 +20,8 @@ const Sidebar = () => {
         label: 'Main', 
         items: [
           { icon: <Home className="h-5 w-5 mr-3" />, label: 'Dashboard', href: '/dashboard' },
+          { icon: <ClipboardList className="h-5 w-5 mr-3" />, label: t('common.taskManager', 'Task Manager'), href: '/tasks' },
           { icon: <Clock className="h-5 w-5 mr-3" />, label: 'Schedule', href: '/schedule' },
-          { icon: <FileText className="h-5 w-5 mr-3" />, label: 'Assignments', href: '/assignments' },
-          { icon: <BarChart2 className="h-5 w-5 mr-3" />, label: 'Grades', href: '/grades' },
           { icon: <HelpCircle className="h-5 w-5 mr-3" />, label: 'Requests', href: '/requests' },
         ]
       },

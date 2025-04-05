@@ -4,12 +4,11 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import StatusCard from '@/components/cards/StatusCard';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { BookOpen, FilePlus, Users, UserCircle, Briefcase, GraduationCap, FileText, MessageSquare, Loader2, ClipboardList, AlertCircle, Clock, CheckCircle, PauseCircle } from 'lucide-react';
+import { FilePlus, Users, UserCircle, Briefcase, GraduationCap, FileText, MessageSquare, Loader2, ClipboardList, AlertCircle, Clock, CheckCircle, PauseCircle } from 'lucide-react';
 import { Link } from 'wouter';
 import { User, Request } from '@shared/schema';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from 'react-i18next';
-import ActivityFeed from '@/components/activity/ActivityFeed';
 
 const AdminDashboard = () => {
   const { t } = useTranslation();
@@ -167,65 +166,95 @@ const AdminDashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main content (2/3 width) */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Recent Users */}
+          {/* Current Tasks Card */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <div>
-                <CardTitle className="text-lg font-heading">{t('users.recentlyAdded')}</CardTitle>
-                <CardDescription>{t('users.recentUsersDescription')}</CardDescription>
+                <CardTitle className="text-lg font-heading">{t('dashboard.myTasks')}</CardTitle>
+                <CardDescription>{t('task.relevantTasksDescription', 'Priority tasks requiring your attention')}</CardDescription>
               </div>
-              <Link href="/users" className="text-sm font-medium text-primary hover:text-primary-dark">
-                {t('common.manageUsers')}
+              <Link href="/tasks" className="text-sm font-medium text-primary hover:text-primary-dark">
+                {t('common.viewAll')}
               </Link>
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                {isLoadingUsers ? (
+                {isLoadingTasks ? (
                   <div className="flex justify-center items-center h-64">
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
                   </div>
-                ) : users.length === 0 ? (
+                ) : tasks.length === 0 ? (
                   <div className="text-center py-4 text-neutral-500">
-                    {t('users.noUsersFound')}
+                    {t('task.no_tasks_found')}
                   </div>
                 ) : (
-                  recentUsers.map(user => (
-                    <div key={user.id} className="flex items-center justify-between p-3 rounded-lg hover:bg-neutral-50 transition-colors">
-                      <div className="flex items-center">
-                        <div className="h-10 w-10 rounded-full bg-primary-light bg-opacity-20 flex items-center justify-center mr-3">
-                          <span className="text-sm font-medium text-primary">
-                            {user.firstName[0]}{user.lastName[0]}
-                          </span>
+                  tasks
+                    .filter(task => ['new', 'in_progress'].includes(task.status))
+                    .sort((a, b) => {
+                      // Сначала сортируем по приоритету (high, medium, low)
+                      const priorityOrder = { high: 0, medium: 1, low: 2 };
+                      const priorityDiff = priorityOrder[a.priority] - priorityOrder[b.priority];
+                      
+                      // Если приоритеты одинаковые, сортируем по дате выполнения
+                      if (priorityDiff === 0) {
+                        if (!a.dueDate) return 1;
+                        if (!b.dueDate) return -1;
+                        return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+                      }
+                      
+                      return priorityDiff;
+                    })
+                    .slice(0, 6)
+                    .map(task => (
+                      <div key={task.id} className="flex items-center justify-between p-3 rounded-lg hover:bg-neutral-50 transition-colors border-l-4 border-l-transparent hover:border-l-primary">
+                        <div className="flex items-center">
+                          <div className={`h-10 w-10 rounded-full flex items-center justify-center mr-3 ${
+                            task.priority === 'high' 
+                              ? 'bg-error bg-opacity-10 text-error' 
+                              : task.priority === 'medium'
+                                ? 'bg-warning bg-opacity-10 text-warning'
+                                : 'bg-success bg-opacity-10 text-success'
+                          }`}>
+                            {task.status === 'new' ? (
+                              <AlertCircle className="h-5 w-5" />
+                            ) : task.status === 'in_progress' ? (
+                              <Clock className="h-5 w-5" />
+                            ) : (
+                              <CheckCircle className="h-5 w-5" />
+                            )}
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-neutral-700">{task.title}</p>
+                            <p className="text-xs text-neutral-500 truncate max-w-xs">{task.description}</p>
+                            {task.dueDate && (
+                              <p className="text-xs text-neutral-400">
+                                {t('task.due_date')}: {new Date(task.dueDate).toLocaleDateString()}
+                              </p>
+                            )}
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-sm font-medium text-neutral-700">{user.firstName} {user.lastName}</p>
-                          <p className="text-xs text-neutral-500">{user.email}</p>
-                          {user.createdAt && (
-                            <p className="text-xs text-neutral-400">
-                              {t('common.added')} {new Date(user.createdAt).toLocaleDateString()}
-                            </p>
-                          )}
-                        </div>
+                        <Badge className={`capitalize ${
+                          task.status === 'new' 
+                            ? 'bg-primary' 
+                            : task.status === 'in_progress' 
+                              ? 'bg-amber-500'
+                              : 'bg-green-500'
+                        }`}>
+                          {t(`task.status.${task.status}`)}
+                        </Badge>
                       </div>
-                      <Badge className={`capitalize ${getRoleBadgeStyles(user.role)}`}>
-                        {t(`users.roles.${user.role}`)}
-                      </Badge>
-                    </div>
-                  ))
+                    ))
                 )}
               </div>
               <div className="mt-4 text-center">
-                <Link href="/users">
+                <Link href="/tasks">
                   <Button variant="outline" className="cursor-pointer">
-                    {t('common.viewAllUsers')}
+                    {t('common.taskManager')}
                   </Button>
                 </Link>
               </div>
             </CardContent>
           </Card>
-          
-          {/* Activity Feed */}
-          <ActivityFeed />
         </div>
         
         {/* Right column (1/3 width) */}
