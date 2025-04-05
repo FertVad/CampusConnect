@@ -82,11 +82,13 @@ type TaskFormData = z.infer<typeof taskFormSchema>;
 const TaskCard = ({ 
   task, 
   onStatusChange,
-  onEditClick
+  onEditClick,
+  onDeleteClick
 }: { 
   task: Task, 
   onStatusChange: (id: number, status: string) => void,
-  onEditClick?: (task: Task) => void
+  onEditClick?: (task: Task) => void,
+  onDeleteClick?: (task: Task) => void
 }) => {
   const { t } = useTranslation();
   const { user } = useAuth();
@@ -242,20 +244,39 @@ const TaskCard = ({
           
           {/* Edit button only for task creators (clients) and admins */}
           {(isCreator || isAdmin) && (
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="flex-shrink-0 h-10" 
-              title={t('task.edit_task')} 
-              onClick={() => onEditClick && onEditClick(task)}
-            >
-              <span className="sr-only">{t('task.edit_task')}</span>
-              {/* Edit icon */}
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 20h9"></path>
-                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
-              </svg>
-            </Button>
+            <>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="flex-shrink-0 h-10" 
+                title={t('task.edit_task')} 
+                onClick={() => onEditClick && onEditClick(task)}
+              >
+                <span className="sr-only">{t('task.edit_task')}</span>
+                {/* Edit icon */}
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 20h9"></path>
+                  <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                </svg>
+              </Button>
+              
+              {/* Delete button only for task creators (clients) and admins */}
+              <Button 
+                variant="destructive" 
+                size="sm" 
+                className="flex-shrink-0 h-10" 
+                title={t('task.delete_task')} 
+                onClick={() => onDeleteClick && onDeleteClick(task)}
+              >
+                <span className="sr-only">{t('task.delete_task')}</span>
+                {/* Trash icon */}
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 6h18"></path>
+                  <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                  <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                </svg>
+              </Button>
+            </>
           )}
         </div>
       </CardFooter>
@@ -271,6 +292,7 @@ const TasksPage = () => {
   const { user } = useAuth();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [currentTask, setCurrentTask] = useState<Task | null>(null);
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
 
@@ -393,6 +415,39 @@ const TasksPage = () => {
     }
   });
   
+  // Мутация для удаления задачи
+  const deleteTaskMutation = useMutation({
+    mutationFn: async (id: number) => {
+      try {
+        console.log(`Deleting task with ID: ${id}`);
+        const result = await apiRequest('DELETE', `/api/tasks/${id}`);
+        console.log('Task deletion response:', result);
+        return result;
+      } catch (error) {
+        console.error('API error details for task deletion:', error);
+        throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/tasks'] });
+      toast({
+        title: t('task.deleted_success'),
+        description: t('task.deleted_description'),
+      });
+      setDeleteDialogOpen(false);
+      setCurrentTask(null);
+    },
+    onError: (error: any) => {
+      console.error('Error deleting task:', error);
+      const errorMessage = error?.message || error?.error?.message || t('task.try_again');
+      toast({
+        title: t('task.error_deleting'),
+        description: errorMessage,
+        variant: 'destructive',
+      });
+    }
+  });
+
   // Мутация для полного обновления задачи (для создателей и админов)
   const updateTaskMutation = useMutation({
     mutationFn: async (data: {
@@ -461,6 +516,23 @@ const TasksPage = () => {
     
     // Открыть диалог
     setEditDialogOpen(true);
+  };
+  
+  // Обработчик для открытия диалога удаления задачи
+  const handleDeleteClick = (task: Task) => {
+    console.log('Opening delete dialog for task:', task);
+    setCurrentTask(task);
+    setDeleteDialogOpen(true);
+  };
+  
+  // Обработчик подтверждения удаления задачи
+  const handleDeleteConfirm = () => {
+    if (!currentTask?.id) {
+      console.error('No current task to delete');
+      return;
+    }
+    
+    deleteTaskMutation.mutate(currentTask.id);
   };
   
   // Обработчик отправки формы редактирования
@@ -533,7 +605,7 @@ const TasksPage = () => {
           <DialogTrigger asChild>
             <Button>{t('task.create_new')}</Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[500px]">
+          <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{t('task.new_task')}</DialogTitle>
               <DialogDescription>
@@ -709,7 +781,7 @@ const TasksPage = () => {
 
       {/* Диалог редактирования задачи */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{t('task.edit_task')}</DialogTitle>
             <DialogDescription>
@@ -880,6 +952,43 @@ const TasksPage = () => {
         </DialogContent>
       </Dialog>
 
+      {/* Диалог подтверждения удаления задачи */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle>{t('task.delete_task')}</DialogTitle>
+            <DialogDescription>
+              {t('task.confirm_delete')}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            {currentTask && (
+              <div>
+                <p className="font-semibold">{currentTask.title}</p>
+                <p className="text-sm text-muted-foreground mt-2">
+                  {currentTask.description || t('task.no_description')}
+                </p>
+              </div>
+            )}
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={() => setDeleteDialogOpen(false)}
+            >
+              {t('common.actions.cancel')}
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteConfirm}
+              disabled={deleteTaskMutation.isPending}
+            >
+              {t('task.delete_task')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Фильтры */}
       <div className="mb-6">
         <div className="flex flex-wrap gap-2">
@@ -937,7 +1046,12 @@ const TasksPage = () => {
           <div className="cards-container grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {filteredTasks.map((task) => (
               <div key={task.id} className="h-full">
-                <TaskCard task={task} onStatusChange={handleStatusChange} onEditClick={handleEditClick} />
+                <TaskCard 
+                  task={task} 
+                  onStatusChange={handleStatusChange} 
+                  onEditClick={handleEditClick}
+                  onDeleteClick={handleDeleteClick}
+                />
               </div>
             ))}
           </div>

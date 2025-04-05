@@ -2114,6 +2114,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Endpoint для удаления задачи
+  app.delete('/api/tasks/:id', authenticateUser, async (req, res) => {
+    try {
+      const taskId = parseInt(req.params.id);
+      const task = await getStorage().getTask(taskId);
+      
+      if (!task) {
+        return res.status(404).json({ 
+          message: "Task not found", 
+          details: `No task exists with ID ${taskId}`
+        });
+      }
+      
+      // Проверяем права на удаление
+      // Только создатель задачи (клиент) или администратор может удалить задачу
+      if (req.user.role !== 'admin' && req.user.id !== task.clientId) {
+        return res.status(403).json({ 
+          message: "Forbidden - Only task creators or admins can delete tasks",
+          details: "You don't have permission to delete this task" 
+        });
+      }
+      
+      // Удаляем задачу
+      await getStorage().deleteTask(taskId);
+      
+      // Отправляем успешный ответ
+      res.status(200).json({ 
+        message: "Task deleted successfully",
+        taskId: taskId
+      });
+    } catch (error) {
+      console.error('Error deleting task:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error('Detailed error:', errorMessage);
+      res.status(500).json({ 
+        message: "Error deleting task", 
+        details: errorMessage,
+        timestamp: new Date().toISOString()
+      });
+    }
+  });
+
   app.put('/api/tasks/:id', authenticateUser, async (req, res) => {
     try {
       const taskId = parseInt(req.params.id);
@@ -2209,55 +2251,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.delete('/api/tasks/:id', authenticateUser, async (req, res) => {
-    try {
-      const taskId = parseInt(req.params.id);
-      const task = await getStorage().getTask(taskId);
-      
-      if (!task) {
-        return res.status(404).json({ 
-          message: "Task not found",
-          details: `No task exists with ID ${taskId}`
-        });
-      }
-      
-      // Только клиент или администратор может удалить задачу
-      if (req.user.role !== 'admin' && req.user.id !== task.clientId) {
-        return res.status(403).json({ 
-          message: "Forbidden - Only task clients or admins can delete tasks",
-          details: "Task executors cannot delete tasks"
-        });
-      }
-      
-      const success = await getStorage().deleteTask(taskId);
-      
-      if (success) {
-        // Уведомляем исполнителя об удалении задачи
-        await getStorage().createNotification({
-          userId: task.executorId,
-          title: "Task Deleted",
-          content: `Task "${task.title}" has been deleted`,
-          relatedType: "task"
-        });
-        
-        res.status(204).end();
-      } else {
-        res.status(404).json({ 
-          message: "Task could not be deleted",
-          details: "The task may have already been deleted" 
-        });
-      }
-    } catch (error) {
-      console.error('Error deleting task:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      console.error('Detailed error:', errorMessage);
-      res.status(500).json({ 
-        message: "Error deleting task", 
-        details: errorMessage,
-        timestamp: new Date().toISOString()
-      });
-    }
-  });
+
   
   // Этот маршрут должен быть определен после всех других маршрутов с параметрами, 
   // чтобы избежать конфликтов с маршрутами tasks/client, tasks/executor и т.д.
