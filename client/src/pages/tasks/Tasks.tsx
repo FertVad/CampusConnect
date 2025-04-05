@@ -327,9 +327,15 @@ const TasksPage = () => {
       return;
     }
     
+    // Преобразуем дату в ISO-строку, если она существует
+    const formattedData = {
+      ...data,
+      dueDate: data.dueDate ? data.dueDate.toISOString() : null,
+    };
+    
     // Добавляем clientId текущего пользователя к данным задачи
     const taskWithClient = {
-      ...data,
+      ...formattedData,
       clientId: user.id // текущий пользователь становится клиентом задачи
     };
     
