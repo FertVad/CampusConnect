@@ -72,7 +72,7 @@ const taskFormSchema = z.object({
   description: z.string().optional(),
   status: z.enum(['new', 'in_progress', 'completed', 'on_hold']),
   priority: z.enum(['high', 'medium', 'low']),
-  dueDate: z.date().optional(),
+  dueDate: z.date().optional().nullable(),
   executorId: z.number().positive(),
 });
 
@@ -242,15 +242,26 @@ const TasksPage = () => {
       description: '',
       status: 'new',
       priority: 'medium',
-      executorId: 0
+      executorId: 0,
+      dueDate: null
     }
   });
 
   // Мутация для создания новой задачи
   const createTaskMutation = useMutation({
-    mutationFn: (data: TaskFormData & { clientId: number | undefined }) => 
-      apiRequest('POST', '/api/tasks', data),
-    onSuccess: () => {
+    mutationFn: async (data: TaskFormData & { clientId: number | undefined }) => {
+      try {
+        console.log('Sending API request with data:', data);
+        const result = await apiRequest('POST', '/api/tasks', data);
+        console.log('API response:', result);
+        return result;
+      } catch (error) {
+        console.error('API error details:', error);
+        throw error;
+      }
+    },
+    onSuccess: (data) => {
+      console.log('Task created successfully:', data);
       queryClient.invalidateQueries({ queryKey: ['/api/tasks'] });
       toast({
         title: t('task.created_success'),
@@ -259,11 +270,13 @@ const TasksPage = () => {
       setCreateDialogOpen(false);
       form.reset();
     },
-    onError: (error) => {
+    onError: (error: any) => {
       console.error('Error creating task:', error);
+      // Показываем более подробную информацию об ошибке, если она доступна
+      const errorMessage = error?.message || error?.error?.message || t('task.try_again');
       toast({
         title: t('task.error_creating'),
-        description: t('task.try_again'),
+        description: errorMessage,
         variant: 'destructive',
       });
     }
@@ -297,11 +310,30 @@ const TasksPage = () => {
 
   // Обработчик отправки формы создания задачи
   const onSubmit = (data: TaskFormData) => {
+    // Проверяем наличие ошибок
+    if (form.formState.errors && Object.keys(form.formState.errors).length > 0) {
+      console.log('Form validation errors:', form.formState.errors);
+      return; // Прерываем отправку при наличии ошибок
+    }
+    
+    // Проверяем критические данные
+    if (!user?.id) {
+      console.log('User ID is missing');
+      toast({
+        title: t('task.error_creating'),
+        description: t('auth.user_not_found'),
+        variant: 'destructive',
+      });
+      return;
+    }
+    
     // Добавляем clientId текущего пользователя к данным задачи
     const taskWithClient = {
       ...data,
-      clientId: user?.id // текущий пользователь становится клиентом задачи
+      clientId: user.id // текущий пользователь становится клиентом задачи
     };
+    
+    console.log('Submitting task data:', taskWithClient);
     createTaskMutation.mutate(taskWithClient);
   };
 
@@ -427,7 +459,7 @@ const TasksPage = () => {
                               </SelectItem>
                             ))
                           ) : (
-                            <SelectItem value="" disabled>{t('task.no_users_available')}</SelectItem>
+                            <SelectItem value="no_users" disabled>{t('task.no_users_available')}</SelectItem>
                           )}
                         </SelectContent>
                       </Select>
@@ -464,7 +496,7 @@ const TasksPage = () => {
                         <PopoverContent className="w-auto p-0" align="start">
                           <Calendar
                             mode="single"
-                            selected={field.value}
+                            selected={field.value || undefined}
                             onSelect={field.onChange}
                             disabled={(date) =>
                               date < new Date(new Date().setHours(0, 0, 0, 0))
