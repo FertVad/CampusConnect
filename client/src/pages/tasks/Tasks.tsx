@@ -131,47 +131,71 @@ const TaskCard = ({ task, onStatusChange }: { task: Task, onStatusChange: (id: n
 
   // Форматирование даты
   const formatDate = (dateString: string | null) => {
-    if (!dateString) return 'No date';
+    if (!dateString) return t('task.no_date');
     const date = new Date(dateString);
     return format(date, 'PP');
   };
 
+  // Информация о постановщике и исполнителе
+  const clientName = task.client 
+    ? `${task.client.firstName} ${task.client.lastName}` 
+    : t('task.not_assigned');
+    
+  const executorName = task.executor 
+    ? `${task.executor.firstName} ${task.executor.lastName}` 
+    : t('task.not_assigned');
+
   return (
-    <Card className="mb-4">
-      <CardHeader className="pb-2">
+    <Card className="h-full flex flex-col bg-gray-900 border border-gray-800 shadow-md">
+      <CardHeader className="pb-2 space-y-2">
         <div className="flex justify-between items-start">
-          <CardTitle className="text-lg">{task.title}</CardTitle>
-          <div className="flex gap-2">
+          <CardTitle className="text-lg truncate" title={task.title}>{task.title}</CardTitle>
+          <div className="flex gap-1">
             {getPriorityBadge(task.priority)}
             {getStatusBadge(task.status)}
           </div>
         </div>
-        <CardDescription>
-          <span className="font-medium">
-            {t('task.assigned_to')}: {task.executor?.firstName} {task.executor?.lastName}
-          </span>
-          {task.dueDate && (
-            <div className="text-sm mt-1">
-              <span className="text-muted-foreground">{t('task.due_date')}: {formatDate(task.dueDate)}</span>
-            </div>
-          )}
-        </CardDescription>
       </CardHeader>
-      <CardContent>
-        <p className="text-sm">
+      <CardContent className="flex-grow">
+        <p className="text-sm mb-3 line-clamp-3" title={task.description || t('task.no_description')}>
           {task.description || t('task.no_description')}
         </p>
-      </CardContent>
-      <CardFooter className="flex justify-between pt-2">
-        <div className="text-xs text-muted-foreground">
-          {t('task.created')}: {formatDate(task.createdAt)}
+        
+        <div className="space-y-2 text-sm">
+          <div className="flex items-center justify-between text-muted-foreground">
+            <span>{t('task.client')}:</span>
+            <span className="font-medium text-foreground">{clientName}</span>
+          </div>
+          
+          <div className="flex items-center justify-between text-muted-foreground">
+            <span>{t('task.executor')}:</span>
+            <span className="font-medium text-foreground">{executorName}</span>
+          </div>
+          
+          {task.dueDate && (
+            <div className="flex items-center justify-between text-muted-foreground">
+              <span>{t('task.due_date')}:</span>
+              <span className="font-medium text-foreground">{formatDate(task.dueDate)}</span>
+            </div>
+          )}
         </div>
-        {isExecutor && task.status !== 'completed' && (
+      </CardContent>
+      <CardFooter className="flex flex-col gap-2 pt-2 border-t border-gray-800">
+        <div className="flex justify-between w-full items-center">
+          <div className="text-xs text-muted-foreground">
+            {t('task.created')}: {formatDate(task.createdAt)}
+          </div>
+          <div className="text-xs text-muted-foreground">
+            ID: {task.id}
+          </div>
+        </div>
+        
+        {(isExecutor || user?.role === 'admin') && (
           <Select
             defaultValue={task.status}
             onValueChange={(value) => onStatusChange(task.id, value)}
           >
-            <SelectTrigger className="w-[160px]">
+            <SelectTrigger className="w-full">
               <SelectValue placeholder={t('task.change_status')} />
             </SelectTrigger>
             <SelectContent>
@@ -597,9 +621,13 @@ const TasksPage = () => {
         {tasksLoading ? (
           <div className="text-center py-8">{t('task.loading')}</div>
         ) : filteredTasks && filteredTasks.length > 0 ? (
-          filteredTasks.map((task) => (
-            <TaskCard key={task.id} task={task} onStatusChange={handleStatusChange} />
-          ))
+          <div className="cards-container grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {filteredTasks.map((task) => (
+              <div key={task.id} className="h-full">
+                <TaskCard task={task} onStatusChange={handleStatusChange} />
+              </div>
+            ))}
+          </div>
         ) : (
           <div className="text-center py-8">
             <p className="text-muted-foreground">{t('task.no_tasks_found')}</p>
