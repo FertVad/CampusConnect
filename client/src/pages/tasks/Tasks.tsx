@@ -83,12 +83,14 @@ const TaskCard = ({
   task, 
   onStatusChange,
   onEditClick,
-  onDeleteClick
+  onDeleteClick,
+  onViewDetails
 }: { 
   task: Task, 
   onStatusChange: (id: number, status: string) => void,
   onEditClick?: (task: Task) => void,
-  onDeleteClick?: (task: Task) => void
+  onDeleteClick?: (task: Task) => void,
+  onViewDetails?: (task: Task) => void
 }) => {
   const { t } = useTranslation();
   const { user } = useAuth();
@@ -159,7 +161,21 @@ const TaskCard = ({
     : t('task.not_assigned');
 
   return (
-    <Card className="h-full flex flex-col bg-gray-900 border border-gray-800 shadow-md">
+    <Card 
+      className="h-full flex flex-col bg-gray-900 border border-gray-800 shadow-md cursor-pointer hover:border-primary transition-colors duration-200"
+      onClick={(e) => {
+        // Предотвращаем всплытие события с Select и кнопок
+        if (
+          e.target instanceof HTMLElement && 
+          (e.target.closest('button') || e.target.closest('[role="combobox"]'))
+        ) {
+          return;
+        }
+        
+        // Открываем детали задачи
+        onViewDetails && onViewDetails(task);
+      }}
+    >
       <CardHeader className="pb-2 space-y-2">
         <div className="flex justify-between items-start">
           <CardTitle className="text-lg truncate" title={task.title}>{task.title}</CardTitle>
@@ -293,6 +309,7 @@ const TasksPage = () => {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [currentTask, setCurrentTask] = useState<Task | null>(null);
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
 
@@ -533,6 +550,13 @@ const TasksPage = () => {
     }
     
     deleteTaskMutation.mutate(currentTask.id);
+  };
+  
+  // Обработчик для просмотра деталей задачи
+  const handleViewDetails = (task: Task) => {
+    console.log('Opening details dialog for task:', task);
+    setCurrentTask(task);
+    setDetailDialogOpen(true);
   };
   
   // Обработчик отправки формы редактирования
@@ -988,6 +1012,133 @@ const TasksPage = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      
+      {/* Диалог просмотра деталей задачи */}
+      <Dialog open={detailDialogOpen} onOpenChange={setDetailDialogOpen}>
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-xl">
+              {currentTask?.title}
+            </DialogTitle>
+            <div className="flex flex-wrap gap-2 mt-2">
+              {currentTask && (
+                <>
+                  {(() => {
+                    switch (currentTask.priority) {
+                      case 'high':
+                        return <Badge variant="outline" className="bg-red-50 text-red-600 border-red-200">{t('task.priority.high')}</Badge>;
+                      case 'medium':
+                        return <Badge variant="outline" className="bg-orange-50 text-orange-600 border-orange-200">{t('task.priority.medium')}</Badge>;
+                      case 'low':
+                        return <Badge variant="outline" className="bg-green-50 text-green-600 border-green-200">{t('task.priority.low')}</Badge>;
+                      default:
+                        return <Badge variant="outline">{currentTask.priority}</Badge>;
+                    }
+                  })()}
+                  {(() => {
+                    switch (currentTask.status) {
+                      case 'new':
+                        return <Badge variant="outline" className="bg-blue-50 text-blue-600 border-blue-200">{t('task.status.new')}</Badge>;
+                      case 'in_progress':
+                        return <Badge variant="outline" className="bg-yellow-50 text-yellow-600 border-yellow-200">{t('task.status.in_progress')}</Badge>;
+                      case 'completed':
+                        return <Badge variant="outline" className="bg-green-50 text-green-600 border-green-200">{t('task.status.completed')}</Badge>;
+                      case 'on_hold':
+                        return <Badge variant="outline" className="bg-gray-50 text-gray-600 border-gray-200">{t('task.status.on_hold')}</Badge>;
+                      default:
+                        return <Badge variant="outline">{currentTask.status}</Badge>;
+                    }
+                  })()}
+                </>
+              )}
+            </div>
+          </DialogHeader>
+          
+          {currentTask && (
+            <div className="py-4 space-y-4">
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground">{t('task.description')}</h3>
+                <p className="mt-1 whitespace-pre-line">
+                  {currentTask.description || t('task.no_description')}
+                </p>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <h3 className="text-sm font-medium text-muted-foreground">{t('task.client')}</h3>
+                  <p className="font-medium">
+                    {currentTask.client 
+                      ? `${currentTask.client.firstName} ${currentTask.client.lastName}` 
+                      : t('task.not_assigned')}
+                  </p>
+                </div>
+                
+                <div>
+                  <h3 className="text-sm font-medium text-muted-foreground">{t('task.executor')}</h3>
+                  <p className="font-medium">
+                    {currentTask.executor 
+                      ? `${currentTask.executor.firstName} ${currentTask.executor.lastName}` 
+                      : t('task.not_assigned')}
+                  </p>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <h3 className="text-sm font-medium text-muted-foreground">{t('task.created')}</h3>
+                  <p className="font-medium">{format(new Date(currentTask.createdAt), 'PPP, HH:mm')}</p>
+                </div>
+                
+                <div>
+                  <h3 className="text-sm font-medium text-muted-foreground">{t('task.updated')}</h3>
+                  <p className="font-medium">{format(new Date(currentTask.updatedAt), 'PPP, HH:mm')}</p>
+                </div>
+              </div>
+              
+              {currentTask.dueDate && (
+                <div>
+                  <h3 className="text-sm font-medium text-muted-foreground">{t('task.due_date')}</h3>
+                  <p className="font-medium">{format(new Date(currentTask.dueDate), 'PPP')}</p>
+                </div>
+              )}
+              
+              <div className="pt-2">
+                <p className="text-xs text-muted-foreground">
+                  ID: {currentTask.id}
+                </p>
+              </div>
+            </div>
+          )}
+          
+          <DialogFooter className="gap-2">
+            {currentTask && (user?.id === currentTask.clientId || user?.role === 'admin') && (
+              <>
+                <Button 
+                  variant="outline"
+                  onClick={() => {
+                    setDetailDialogOpen(false);
+                    handleEditClick(currentTask);
+                  }}
+                >
+                  {t('task.edit_task')}
+                </Button>
+                <Button 
+                  variant="destructive"
+                  onClick={() => {
+                    setDetailDialogOpen(false);
+                    handleDeleteClick(currentTask);
+                  }}
+                >
+                  {t('task.delete_task')}
+                </Button>
+              </>
+            )}
+            <Button onClick={() => setDetailDialogOpen(false)}>
+              {t('common.close')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Фильтры */}
       <div className="mb-6">
@@ -1051,6 +1202,7 @@ const TasksPage = () => {
                   onStatusChange={handleStatusChange} 
                   onEditClick={handleEditClick}
                   onDeleteClick={handleDeleteClick}
+                  onViewDetails={handleViewDetails}
                 />
               </div>
             ))}
