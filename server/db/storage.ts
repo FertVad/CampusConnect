@@ -1,6 +1,6 @@
 import { db } from './index';
 import * as schema from '@shared/schema';
-import { eq, and, or, desc, asc } from 'drizzle-orm';
+import { eq, and, or, desc, asc, sql } from 'drizzle-orm';
 import { IStorage } from '../storage';
 import session from 'express-session';
 import createMemoryStore from 'memorystore';
@@ -894,64 +894,392 @@ export class PostgresStorage implements IStorage {
   }
   
   // Tasks
-  async getTasks(): Promise<Task[]> {
-    return db.select().from(schema.tasks);
-  }
-  
-  async getTask(id: number): Promise<Task | undefined> {
+  async getTasks(): Promise<(Task & { client?: User, executor?: User })[]> {
     const tasks = await db.select()
       .from(schema.tasks)
+      .leftJoin(schema.users.as('client'), eq(schema.tasks.clientId, schema.users.as('client').id))
+      .leftJoin(schema.users.as('executor'), eq(schema.tasks.executorId, schema.users.as('executor').id))
+      .orderBy(
+        // Order by status priority (new → in_progress → on_hold → completed)
+        sql`CASE 
+          WHEN ${schema.tasks.status} = 'new' THEN 1
+          WHEN ${schema.tasks.status} = 'in_progress' THEN 2
+          WHEN ${schema.tasks.status} = 'on_hold' THEN 3
+          WHEN ${schema.tasks.status} = 'completed' THEN 4
+          ELSE 5
+        END`,
+        // Then by priority (high → medium → low)
+        sql`CASE 
+          WHEN ${schema.tasks.priority} = 'high' THEN 1
+          WHEN ${schema.tasks.priority} = 'medium' THEN 2
+          WHEN ${schema.tasks.priority} = 'low' THEN 3
+          ELSE 4
+        END`,
+        // Finally by creation date (newest first)
+        desc(schema.tasks.createdAt)
+      );
+      
+    // Format the result to include client and executor objects
+    return tasks.map(task => {
+      // Extract base task properties
+      const baseTask = {
+        id: task.tasks.id,
+        title: task.tasks.title,
+        description: task.tasks.description,
+        status: task.tasks.status,
+        priority: task.tasks.priority,
+        createdAt: task.tasks.createdAt,
+        updatedAt: task.tasks.updatedAt,
+        dueDate: task.tasks.dueDate,
+        clientId: task.tasks.clientId,
+        executorId: task.tasks.executorId,
+      };
+      
+      // Add client and executor info if available
+      const client = task.client ? {
+        id: task.client.id,
+        firstName: task.client.firstName,
+        lastName: task.client.lastName,
+        email: task.client.email,
+        role: task.client.role,
+      } : undefined;
+      
+      const executor = task.executor ? {
+        id: task.executor.id,
+        firstName: task.executor.firstName,
+        lastName: task.executor.lastName,
+        email: task.executor.email,
+        role: task.executor.role,
+      } : undefined;
+      
+      return {
+        ...baseTask,
+        client,
+        executor
+      };
+    });
+  }
+  
+  async getTask(id: number): Promise<(Task & { client?: User, executor?: User }) | undefined> {
+    const tasks = await db.select()
+      .from(schema.tasks)
+      .leftJoin(schema.users.as('client'), eq(schema.tasks.clientId, schema.users.as('client').id))
+      .leftJoin(schema.users.as('executor'), eq(schema.tasks.executorId, schema.users.as('executor').id))
       .where(eq(schema.tasks.id, id))
       .limit(1);
-    return tasks[0];
+      
+    if (tasks.length === 0) return undefined;
+    
+    const task = tasks[0];
+    
+    // Format the result to include client and executor objects
+    const baseTask = {
+      id: task.tasks.id,
+      title: task.tasks.title,
+      description: task.tasks.description,
+      status: task.tasks.status,
+      priority: task.tasks.priority,
+      createdAt: task.tasks.createdAt,
+      updatedAt: task.tasks.updatedAt,
+      dueDate: task.tasks.dueDate,
+      clientId: task.tasks.clientId,
+      executorId: task.tasks.executorId,
+    };
+    
+    // Add client and executor info if available
+    const client = task.client ? {
+      id: task.client.id,
+      firstName: task.client.firstName,
+      lastName: task.client.lastName,
+      email: task.client.email,
+      role: task.client.role,
+    } : undefined;
+    
+    const executor = task.executor ? {
+      id: task.executor.id,
+      firstName: task.executor.firstName,
+      lastName: task.executor.lastName,
+      email: task.executor.email,
+      role: task.executor.role,
+    } : undefined;
+    
+    return {
+      ...baseTask,
+      client,
+      executor
+    };
   }
   
-  async getTasksByClient(clientId: number): Promise<Task[]> {
-    return db.select()
+  async getTasksByClient(clientId: number): Promise<(Task & { client?: User, executor?: User })[]> {
+    const tasks = await db.select()
       .from(schema.tasks)
+      .leftJoin(schema.users.as('client'), eq(schema.tasks.clientId, schema.users.as('client').id))
+      .leftJoin(schema.users.as('executor'), eq(schema.tasks.executorId, schema.users.as('executor').id))
       .where(eq(schema.tasks.clientId, clientId))
-      .orderBy(desc(schema.tasks.createdAt));
+      .orderBy(
+        // Order by status priority (new → in_progress → on_hold → completed)
+        sql`CASE 
+          WHEN ${schema.tasks.status} = 'new' THEN 1
+          WHEN ${schema.tasks.status} = 'in_progress' THEN 2
+          WHEN ${schema.tasks.status} = 'on_hold' THEN 3
+          WHEN ${schema.tasks.status} = 'completed' THEN 4
+          ELSE 5
+        END`,
+        // Then by priority (high → medium → low)
+        sql`CASE 
+          WHEN ${schema.tasks.priority} = 'high' THEN 1
+          WHEN ${schema.tasks.priority} = 'medium' THEN 2
+          WHEN ${schema.tasks.priority} = 'low' THEN 3
+          ELSE 4
+        END`,
+        // Finally by creation date (newest first)
+        desc(schema.tasks.createdAt)
+      );
+    
+    // Format the result to include client and executor objects
+    return tasks.map(task => {
+      // Extract base task properties
+      const baseTask = {
+        id: task.tasks.id,
+        title: task.tasks.title,
+        description: task.tasks.description,
+        status: task.tasks.status,
+        priority: task.tasks.priority,
+        createdAt: task.tasks.createdAt,
+        updatedAt: task.tasks.updatedAt,
+        dueDate: task.tasks.dueDate,
+        clientId: task.tasks.clientId,
+        executorId: task.tasks.executorId,
+      };
+      
+      // Add client and executor info if available
+      const client = task.client ? {
+        id: task.client.id,
+        firstName: task.client.firstName,
+        lastName: task.client.lastName,
+        email: task.client.email,
+        role: task.client.role,
+      } : undefined;
+      
+      const executor = task.executor ? {
+        id: task.executor.id,
+        firstName: task.executor.firstName,
+        lastName: task.executor.lastName,
+        email: task.executor.email,
+        role: task.executor.role,
+      } : undefined;
+      
+      return {
+        ...baseTask,
+        client,
+        executor
+      };
+    });
   }
   
-  async getTasksByExecutor(executorId: number): Promise<Task[]> {
-    return db.select()
+  async getTasksByExecutor(executorId: number): Promise<(Task & { client?: User, executor?: User })[]> {
+    const tasks = await db.select()
       .from(schema.tasks)
+      .leftJoin(schema.users.as('client'), eq(schema.tasks.clientId, schema.users.as('client').id))
+      .leftJoin(schema.users.as('executor'), eq(schema.tasks.executorId, schema.users.as('executor').id))
       .where(eq(schema.tasks.executorId, executorId))
-      .orderBy(desc(schema.tasks.createdAt));
+      .orderBy(
+        // Order by status priority (new → in_progress → on_hold → completed)
+        sql`CASE 
+          WHEN ${schema.tasks.status} = 'new' THEN 1
+          WHEN ${schema.tasks.status} = 'in_progress' THEN 2
+          WHEN ${schema.tasks.status} = 'on_hold' THEN 3
+          WHEN ${schema.tasks.status} = 'completed' THEN 4
+          ELSE 5
+        END`,
+        // Then by priority (high → medium → low)
+        sql`CASE 
+          WHEN ${schema.tasks.priority} = 'high' THEN 1
+          WHEN ${schema.tasks.priority} = 'medium' THEN 2
+          WHEN ${schema.tasks.priority} = 'low' THEN 3
+          ELSE 4
+        END`,
+        // Finally by creation date (newest first)
+        desc(schema.tasks.createdAt)
+      );
+    
+    // Format the result to include client and executor objects
+    return tasks.map(task => {
+      // Extract base task properties
+      const baseTask = {
+        id: task.tasks.id,
+        title: task.tasks.title,
+        description: task.tasks.description,
+        status: task.tasks.status,
+        priority: task.tasks.priority,
+        createdAt: task.tasks.createdAt,
+        updatedAt: task.tasks.updatedAt,
+        dueDate: task.tasks.dueDate,
+        clientId: task.tasks.clientId,
+        executorId: task.tasks.executorId,
+      };
+      
+      // Add client and executor info if available
+      const client = task.client ? {
+        id: task.client.id,
+        firstName: task.client.firstName,
+        lastName: task.client.lastName,
+        email: task.client.email,
+        role: task.client.role,
+      } : undefined;
+      
+      const executor = task.executor ? {
+        id: task.executor.id,
+        firstName: task.executor.firstName,
+        lastName: task.executor.lastName,
+        email: task.executor.email,
+        role: task.executor.role,
+      } : undefined;
+      
+      return {
+        ...baseTask,
+        client,
+        executor
+      };
+    });
   }
   
-  async getTasksByStatus(status: string): Promise<Task[]> {
-    return db.select()
+  async getTasksByStatus(status: string): Promise<(Task & { client?: User, executor?: User })[]> {
+    const tasks = await db.select()
       .from(schema.tasks)
+      .leftJoin(schema.users.as('client'), eq(schema.tasks.clientId, schema.users.as('client').id))
+      .leftJoin(schema.users.as('executor'), eq(schema.tasks.executorId, schema.users.as('executor').id))
       .where(eq(schema.tasks.status, status as any))
-      .orderBy(desc(schema.tasks.createdAt));
+      .orderBy(
+        // For same status tasks, order by priority (high → medium → low)
+        sql`CASE 
+          WHEN ${schema.tasks.priority} = 'high' THEN 1
+          WHEN ${schema.tasks.priority} = 'medium' THEN 2
+          WHEN ${schema.tasks.priority} = 'low' THEN 3
+          ELSE 4
+        END`,
+        // Then by creation date (newest first)
+        desc(schema.tasks.createdAt)
+      );
+    
+    // Format the result to include client and executor objects
+    return tasks.map(task => {
+      // Extract base task properties
+      const baseTask = {
+        id: task.tasks.id,
+        title: task.tasks.title,
+        description: task.tasks.description,
+        status: task.tasks.status,
+        priority: task.tasks.priority,
+        createdAt: task.tasks.createdAt,
+        updatedAt: task.tasks.updatedAt,
+        dueDate: task.tasks.dueDate,
+        clientId: task.tasks.clientId,
+        executorId: task.tasks.executorId,
+      };
+      
+      // Add client and executor info if available
+      const client = task.client ? {
+        id: task.client.id,
+        firstName: task.client.firstName,
+        lastName: task.client.lastName,
+        email: task.client.email,
+        role: task.client.role,
+      } : undefined;
+      
+      const executor = task.executor ? {
+        id: task.executor.id,
+        firstName: task.executor.firstName,
+        lastName: task.executor.lastName,
+        email: task.executor.email,
+        role: task.executor.role,
+      } : undefined;
+      
+      return {
+        ...baseTask,
+        client,
+        executor
+      };
+    });
   }
   
-  async getTasksDueSoon(days: number): Promise<Task[]> {
+  async getTasksDueSoon(days: number): Promise<(Task & { client?: User, executor?: User })[]> {
     const now = new Date();
     const future = new Date();
     future.setDate(now.getDate() + days);
     
-    return db.select()
+    const tasks = await db.select()
       .from(schema.tasks)
+      .leftJoin(schema.users.as('client'), eq(schema.tasks.clientId, schema.users.as('client').id))
+      .leftJoin(schema.users.as('executor'), eq(schema.tasks.executorId, schema.users.as('executor').id))
       .where(
         and(
-          // Только задачи, которые еще не завершены
+          // Only tasks that aren't completed
           or(
             eq(schema.tasks.status, 'new'),
             eq(schema.tasks.status, 'in_progress'),
             eq(schema.tasks.status, 'on_hold')
           ),
-          // И их срок выполнения в ближайшие дни
+          // And their due date is within the specified number of days
           and(
-            // dueDate не null
-            schema.tasks.dueDate.isNotNull(),
+            // dueDate is not null
+            schema.tasks.dueDate.notNull(),
             // dueDate <= future
-            schema.tasks.dueDate.lte(future.toISOString())
+            sql`${schema.tasks.dueDate} <= ${future.toISOString()}`
           )
         )
       )
-      .orderBy(asc(schema.tasks.dueDate));
+      .orderBy(
+        // First by due date (ascending)
+        asc(schema.tasks.dueDate),
+        // Then by priority (high → medium → low)
+        sql`CASE 
+          WHEN ${schema.tasks.priority} = 'high' THEN 1
+          WHEN ${schema.tasks.priority} = 'medium' THEN 2
+          WHEN ${schema.tasks.priority} = 'low' THEN 3
+          ELSE 4
+        END`
+      );
+      
+    // Format the result to include client and executor objects
+    return tasks.map(task => {
+      // Extract base task properties
+      const baseTask = {
+        id: task.tasks.id,
+        title: task.tasks.title,
+        description: task.tasks.description,
+        status: task.tasks.status,
+        priority: task.tasks.priority,
+        createdAt: task.tasks.createdAt,
+        updatedAt: task.tasks.updatedAt,
+        dueDate: task.tasks.dueDate,
+        clientId: task.tasks.clientId,
+        executorId: task.tasks.executorId,
+      };
+      
+      // Add client and executor info if available
+      const client = task.client ? {
+        id: task.client.id,
+        firstName: task.client.firstName,
+        lastName: task.client.lastName,
+        email: task.client.email,
+        role: task.client.role,
+      } : undefined;
+      
+      const executor = task.executor ? {
+        id: task.executor.id,
+        firstName: task.executor.firstName,
+        lastName: task.executor.lastName,
+        email: task.executor.email,
+        role: task.executor.role,
+      } : undefined;
+      
+      return {
+        ...baseTask,
+        client,
+        executor
+      };
+    });
   }
   
   async createTask(taskData: InsertTask): Promise<Task> {

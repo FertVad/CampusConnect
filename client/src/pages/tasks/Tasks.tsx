@@ -79,10 +79,21 @@ const taskFormSchema = z.object({
 type TaskFormData = z.infer<typeof taskFormSchema>;
 
 // Компонент карточки задачи
-const TaskCard = ({ task, onStatusChange }: { task: Task, onStatusChange: (id: number, status: string) => void }) => {
+const TaskCard = ({ 
+  task, 
+  onStatusChange,
+  onEditClick
+}: { 
+  task: Task, 
+  onStatusChange: (id: number, status: string) => void,
+  onEditClick?: (task: Task) => void
+}) => {
   const { t } = useTranslation();
   const { user } = useAuth();
   const isExecutor = user?.id === task.executorId;
+  const isClient = user?.id === task.clientId;
+  const isCreator = isClient; // Creator is the client
+  const isAdmin = user?.role === 'admin';
   
   // Получаем статус и цвет
   const getStatusBadge = (status: string) => {
@@ -190,42 +201,63 @@ const TaskCard = ({ task, onStatusChange }: { task: Task, onStatusChange: (id: n
           </div>
         </div>
         
-        {(isExecutor || user?.role === 'admin') && (
-          <Select
-            defaultValue={task.status}
-            onValueChange={(value) => onStatusChange(task.id, value)}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder={t('task.change_status')} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="new">
-                <div className="flex items-center gap-2">
-                  <AlertCircle className="h-4 w-4 text-blue-500" />
-                  {t('task.status.new')}
-                </div>
-              </SelectItem>
-              <SelectItem value="in_progress">
-                <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4 text-yellow-500" />
-                  {t('task.status.in_progress')}
-                </div>
-              </SelectItem>
-              <SelectItem value="completed">
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  {t('task.status.completed')}
-                </div>
-              </SelectItem>
-              <SelectItem value="on_hold">
-                <div className="flex items-center gap-2">
-                  <PauseCircle className="h-4 w-4 text-gray-500" />
-                  {t('task.status.on_hold')}
-                </div>
-              </SelectItem>
-            </SelectContent>
-          </Select>
-        )}
+        <div className="flex flex-row gap-2 w-full">
+          {/* Status dropdown for executors and admins */}
+          {(isExecutor || isAdmin) && (
+            <Select
+              defaultValue={task.status}
+              onValueChange={(value) => onStatusChange(task.id, value)}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder={t('task.change_status')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="new">
+                  <div className="flex items-center gap-2">
+                    <AlertCircle className="h-4 w-4 text-blue-500" />
+                    {t('task.status.new')}
+                  </div>
+                </SelectItem>
+                <SelectItem value="in_progress">
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-4 w-4 text-yellow-500" />
+                    {t('task.status.in_progress')}
+                  </div>
+                </SelectItem>
+                <SelectItem value="completed">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    {t('task.status.completed')}
+                  </div>
+                </SelectItem>
+                <SelectItem value="on_hold">
+                  <div className="flex items-center gap-2">
+                    <PauseCircle className="h-4 w-4 text-gray-500" />
+                    {t('task.status.on_hold')}
+                  </div>
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          )}
+          
+          {/* Edit button only for task creators (clients) and admins */}
+          {(isCreator || isAdmin) && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="flex-shrink-0 h-10" 
+              title={t('task.edit_task')} 
+              onClick={() => onEditClick && onEditClick(task)}
+            >
+              <span className="sr-only">{t('task.edit_task')}</span>
+              {/* Edit icon */}
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 20h9"></path>
+                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+              </svg>
+            </Button>
+          )}
+        </div>
       </CardFooter>
     </Card>
   );
@@ -238,6 +270,8 @@ const TasksPage = () => {
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [currentTask, setCurrentTask] = useState<Task | null>(null);
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
 
   // Получаем список пользователей для назначения исполнителей
@@ -260,6 +294,19 @@ const TasksPage = () => {
 
   // Форма создания новой задачи
   const form = useForm<TaskFormData>({
+    resolver: zodResolver(taskFormSchema),
+    defaultValues: {
+      title: '',
+      description: '',
+      status: 'new',
+      priority: 'medium',
+      executorId: 0,
+      dueDate: null
+    }
+  });
+  
+  // Форма редактирования задачи
+  const editForm = useForm<TaskFormData>({
     resolver: zodResolver(taskFormSchema),
     defaultValues: {
       title: '',
@@ -345,10 +392,103 @@ const TasksPage = () => {
       });
     }
   });
+  
+  // Мутация для полного обновления задачи (для создателей и админов)
+  const updateTaskMutation = useMutation({
+    mutationFn: async (data: {
+      id: number,
+      title?: string;
+      description?: string;
+      status?: string;
+      priority?: string;
+      dueDate?: string | null;
+      executorId?: number;
+    }) => {
+      try {
+        const { id, ...taskData } = data;
+        console.log(`Updating full task: ID=${id}`, taskData);
+        const result = await apiRequest('PUT', `/api/tasks/${id}`, taskData);
+        console.log('Full task update response:', result);
+        return result;
+      } catch (error) {
+        console.error('API error details for full task update:', error);
+        throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/tasks'] });
+      toast({
+        title: t('task.updated'),
+        description: t('task.updated_description'),
+      });
+      // Close the edit dialog
+      setEditDialogOpen(false);
+      // Reset edit form
+      editForm.reset();
+    },
+    onError: (error: any) => {
+      console.error('Error updating task:', error);
+      const errorMessage = error?.message || error?.error?.message || t('task.try_again');
+      toast({
+        title: t('task.error_updating'),
+        description: errorMessage,
+        variant: 'destructive',
+      });
+    }
+  });
 
   // Обработчик изменения статуса
   const handleStatusChange = (id: number, status: string) => {
     updateTaskStatusMutation.mutate({ id, status });
+  };
+  
+  // Обработчик для открытия диалога редактирования задачи
+  const handleEditClick = (task: Task) => {
+    console.log('Opening edit dialog for task:', task);
+    
+    // Установить текущую задачу
+    setCurrentTask(task);
+    
+    // Заполнить форму существующими данными
+    editForm.reset({
+      title: task.title,
+      description: task.description || '',
+      status: task.status,
+      priority: task.priority,
+      executorId: task.executorId,
+      dueDate: task.dueDate ? new Date(task.dueDate) : null
+    });
+    
+    // Открыть диалог
+    setEditDialogOpen(true);
+  };
+  
+  // Обработчик отправки формы редактирования
+  const onEditSubmit = (data: TaskFormData) => {
+    if (!currentTask?.id) {
+      console.error('No current task to edit');
+      return;
+    }
+    
+    // Проверяем наличие ошибок
+    if (editForm.formState.errors && Object.keys(editForm.formState.errors).length > 0) {
+      console.log('Edit form validation errors:', editForm.formState.errors);
+      return;
+    }
+    
+    // Создаем объект для обновления
+    const taskData = {
+      id: currentTask.id,
+      title: data.title,
+      description: data.description || '',
+      status: data.status,
+      priority: data.priority,
+      dueDate: data.dueDate ? data.dueDate.toISOString() : null,
+      executorId: data.executorId
+    };
+    
+    console.log('Submitting edit task data:', taskData);
+    updateTaskMutation.mutate(taskData);
   };
 
   // Обработчик отправки формы создания задачи
@@ -567,6 +707,179 @@ const TasksPage = () => {
         </Dialog>
       </div>
 
+      {/* Диалог редактирования задачи */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>{t('task.edit_task')}</DialogTitle>
+            <DialogDescription>
+              {t('task.edit_task_description')}
+            </DialogDescription>
+          </DialogHeader>
+          <Form {...editForm}>
+            <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-4">
+              <FormField
+                control={editForm.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('task.title')}</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={editForm.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('task.description')}</FormLabel>
+                    <FormControl>
+                      <Textarea {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={editForm.control}
+                  name="priority"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('task.priority.label')}</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder={t('task.priority.select')} />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="high">{t('task.priority.high')}</SelectItem>
+                          <SelectItem value="medium">{t('task.priority.medium')}</SelectItem>
+                          <SelectItem value="low">{t('task.priority.low')}</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={editForm.control}
+                  name="status"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('task.status.label')}</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder={t('task.status.select')} />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="new">{t('task.status.new')}</SelectItem>
+                          <SelectItem value="in_progress">{t('task.status.in_progress')}</SelectItem>
+                          <SelectItem value="on_hold">{t('task.status.on_hold')}</SelectItem>
+                          <SelectItem value="completed">{t('task.status.completed')}</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              
+              <FormField
+                control={editForm.control}
+                name="executorId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('task.assignee')}</FormLabel>
+                    <Select
+                      onValueChange={(value) => field.onChange(parseInt(value))}
+                      defaultValue={field.value ? field.value.toString() : undefined}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder={t('task.select_assignee')} />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {users && users.length > 0 ? (
+                          users.map((user) => (
+                            <SelectItem key={user.id} value={user.id.toString()}>
+                              {user.firstName} {user.lastName} ({t(`role.${user.role}`)})
+                            </SelectItem>
+                          ))
+                        ) : (
+                          <SelectItem value="no_users" disabled>{t('task.no_users_available')}</SelectItem>
+                        )}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={editForm.control}
+                name="dueDate"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>{t('task.due_date')}</FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-full pl-3 text-left font-normal",
+                              !field.value && "text-muted-foreground"
+                            )}
+                          >
+                            {field.value ? (
+                              format(field.value, "PPP")
+                            ) : (
+                              <span>{t('task.pick_date')}</span>
+                            )}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value || undefined}
+                          onSelect={field.onChange}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <DialogFooter>
+                <Button type="submit" disabled={updateTaskMutation.isPending}>{t('task.save')}</Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
       {/* Фильтры */}
       <div className="mb-6">
         <div className="flex flex-wrap gap-2">
@@ -624,7 +937,7 @@ const TasksPage = () => {
           <div className="cards-container grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {filteredTasks.map((task) => (
               <div key={task.id} className="h-full">
-                <TaskCard task={task} onStatusChange={handleStatusChange} />
+                <TaskCard task={task} onStatusChange={handleStatusChange} onEditClick={handleEditClick} />
               </div>
             ))}
           </div>

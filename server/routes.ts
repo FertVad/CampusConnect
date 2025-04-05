@@ -2073,9 +2073,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Task not found" });
       }
       
-      // Проверяем права на изменение задачи
-      if (req.user.role !== 'admin' && req.user.id !== task.clientId && req.user.id !== task.executorId) {
-        return res.status(403).json({ message: "Forbidden - You don't have permission to update this task" });
+      // Check permission to edit the task
+      // Only the task creator (client) or admin can edit the task
+      if (req.user.role !== 'admin' && req.user.id !== task.clientId) {
+        // Allow executor to change status only, not other fields
+        if (req.user.id === task.executorId && Object.keys(req.body).length === 1 && 'status' in req.body) {
+          // Executor can only update status
+        } else {
+          return res.status(403).json({ message: "Forbidden - Only task creators or admins can edit tasks" });
+        }
       }
       
       // Модифицируем схему для обновления задачи, чтобы обрабатывать строковые даты
