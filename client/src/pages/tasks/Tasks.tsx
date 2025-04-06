@@ -103,13 +103,13 @@ const TaskCard = ({
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'new':
-        return <Badge variant="outline" className="bg-blue-50 text-blue-600 border-blue-200">{t('task.status.new')}</Badge>;
+        return <Badge variant="outline" className="bg-blue-100/70 text-blue-700 border-blue-200 dark:bg-blue-950/50 dark:text-blue-400 dark:border-blue-800">{t('task.status.new')}</Badge>;
       case 'in_progress':
-        return <Badge variant="outline" className="bg-yellow-50 text-yellow-600 border-yellow-200">{t('task.status.in_progress')}</Badge>;
+        return <Badge variant="outline" className="bg-amber-100/70 text-amber-700 border-amber-200 dark:bg-amber-950/50 dark:text-amber-400 dark:border-amber-800">{t('task.status.in_progress')}</Badge>;
       case 'completed':
-        return <Badge variant="outline" className="bg-green-50 text-green-600 border-green-200">{t('task.status.completed')}</Badge>;
+        return <Badge variant="outline" className="bg-green-100/70 text-green-700 border-green-200 dark:bg-green-950/50 dark:text-green-400 dark:border-green-800">{t('task.status.completed')}</Badge>;
       case 'on_hold':
-        return <Badge variant="outline" className="bg-gray-50 text-gray-600 border-gray-200">{t('task.status.on_hold')}</Badge>;
+        return <Badge variant="outline" className="bg-gray-100/70 text-gray-700 border-gray-200 dark:bg-gray-800/50 dark:text-gray-400 dark:border-gray-700">{t('task.status.on_hold')}</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -118,11 +118,11 @@ const TaskCard = ({
   const getPriorityBadge = (priority: string) => {
     switch (priority) {
       case 'high':
-        return <Badge variant="outline" className="bg-red-50 text-red-600 border-red-200">{t('task.priority.high')}</Badge>;
+        return <Badge variant="outline" className="bg-red-100/70 text-red-700 border-red-200 dark:bg-red-950/50 dark:text-red-400 dark:border-red-800">{t('task.priority.high')}</Badge>;
       case 'medium':
-        return <Badge variant="outline" className="bg-orange-50 text-orange-600 border-orange-200">{t('task.priority.medium')}</Badge>;
+        return <Badge variant="outline" className="bg-orange-100/70 text-orange-700 border-orange-200 dark:bg-orange-950/50 dark:text-orange-400 dark:border-orange-800">{t('task.priority.medium')}</Badge>;
       case 'low':
-        return <Badge variant="outline" className="bg-green-50 text-green-600 border-green-200">{t('task.priority.low')}</Badge>;
+        return <Badge variant="outline" className="bg-green-100/70 text-green-700 border-green-200 dark:bg-green-950/50 dark:text-green-400 dark:border-green-800">{t('task.priority.low')}</Badge>;
       default:
         return <Badge variant="outline">{priority}</Badge>;
     }
@@ -162,7 +162,7 @@ const TaskCard = ({
 
   return (
     <Card 
-      className="h-full flex flex-col bg-gray-900 border border-gray-800 shadow-md cursor-pointer hover:border-primary transition-colors duration-200"
+      className="h-full flex flex-col border shadow-sm cursor-pointer hover:border-primary hover:shadow-md transition-all duration-200 card-hover"
       onClick={(e) => {
         // Предотвращаем всплытие события с Select и кнопок
         if (
@@ -209,7 +209,7 @@ const TaskCard = ({
           )}
         </div>
       </CardContent>
-      <CardFooter className="flex flex-col gap-2 pt-2 border-t border-gray-800">
+      <CardFooter className="flex flex-col gap-2 pt-2 border-t border-gray-200">
         <div className="flex justify-between w-full items-center">
           <div className="text-xs text-muted-foreground">
             {t('task.created')}: {formatDate(task.createdAt)}

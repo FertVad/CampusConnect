@@ -7,6 +7,20 @@ import { Badge } from '@/components/ui/badge';
 import { FilePlus, Users, UserCircle, Briefcase, GraduationCap, FileText, MessageSquare, Loader2, ClipboardList, AlertCircle, Clock, CheckCircle, PauseCircle } from 'lucide-react';
 import { Link } from 'wouter';
 import { User, Request } from '@shared/schema';
+
+// Интерфейс для задачи (Task)
+interface Task {
+  id: number;
+  title: string;
+  description: string | null;
+  status: 'new' | 'in_progress' | 'completed' | 'on_hold';
+  priority: 'high' | 'medium' | 'low';
+  dueDate: string | null;
+  clientId: number;
+  executorId: number;
+  createdAt: string;
+  updatedAt: string;
+}
 import { Button } from '@/components/ui/button';
 import { useTranslation } from 'react-i18next';
 
@@ -32,7 +46,7 @@ const AdminDashboard = () => {
   });
 
   // Get all tasks
-  const { data: tasks = [], isLoading: isLoadingTasks } = useQuery<any[]>({
+  const { data: tasks = [], isLoading: isLoadingTasks } = useQuery<Task[]>({
     queryKey: ['/api/tasks'],
     refetchOnWindowFocus: true,
     refetchInterval: 30000, // Refresh every 30 seconds
@@ -192,8 +206,8 @@ const AdminDashboard = () => {
                     .filter(task => ['new', 'in_progress'].includes(task.status))
                     .sort((a, b) => {
                       // Сначала сортируем по приоритету (high, medium, low)
-                      const priorityOrder = { high: 0, medium: 1, low: 2 };
-                      const priorityDiff = priorityOrder[a.priority] - priorityOrder[b.priority];
+                      const priorityOrder: Record<string, number> = { high: 0, medium: 1, low: 2 };
+                      const priorityDiff = priorityOrder[a.priority as string] - priorityOrder[b.priority as string];
                       
                       // Если приоритеты одинаковые, сортируем по дате выполнения
                       if (priorityDiff === 0) {
@@ -206,14 +220,14 @@ const AdminDashboard = () => {
                     })
                     .slice(0, 6)
                     .map(task => (
-                      <div key={task.id} className="flex items-center justify-between p-3 rounded-lg hover:bg-neutral-50 transition-colors border-l-4 border-l-transparent hover:border-l-primary">
+                      <div key={task.id} className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors border border-gray-100 dark:border-gray-800 hover:border-primary dark:hover:border-primary shadow-sm hover:shadow mb-2">
                         <div className="flex items-center">
                           <div className={`h-10 w-10 rounded-full flex items-center justify-center mr-3 ${
                             task.priority === 'high' 
-                              ? 'bg-error bg-opacity-10 text-error' 
+                              ? 'bg-red-100/70 text-red-700 dark:bg-red-900/30 dark:text-red-400' 
                               : task.priority === 'medium'
-                                ? 'bg-warning bg-opacity-10 text-warning'
-                                : 'bg-success bg-opacity-10 text-success'
+                                ? 'bg-orange-100/70 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'
+                                : 'bg-green-100/70 text-green-700 dark:bg-green-900/30 dark:text-green-400'
                           }`}>
                             {task.status === 'new' ? (
                               <AlertCircle className="h-5 w-5" />
@@ -224,21 +238,21 @@ const AdminDashboard = () => {
                             )}
                           </div>
                           <div>
-                            <p className="text-sm font-medium text-neutral-700">{task.title}</p>
-                            <p className="text-xs text-neutral-500 truncate max-w-xs">{task.description}</p>
+                            <p className="text-sm font-medium text-gray-800 dark:text-gray-100">{task.title}</p>
+                            <p className="text-xs text-gray-600 dark:text-gray-400 truncate max-w-xs">{task.description}</p>
                             {task.dueDate && (
-                              <p className="text-xs text-neutral-400">
+                              <p className="text-xs text-gray-500 dark:text-gray-500">
                                 {t('task.due_date')}: {new Date(task.dueDate).toLocaleDateString()}
                               </p>
                             )}
                           </div>
                         </div>
-                        <Badge className={`capitalize ${
+                        <Badge variant="outline" className={`capitalize ${
                           task.status === 'new' 
-                            ? 'bg-primary' 
+                            ? 'bg-blue-100/70 text-blue-700 border-blue-200 dark:bg-blue-950/50 dark:text-blue-400 dark:border-blue-800' 
                             : task.status === 'in_progress' 
-                              ? 'bg-amber-500'
-                              : 'bg-green-500'
+                              ? 'bg-amber-100/70 text-amber-700 border-amber-200 dark:bg-amber-950/50 dark:text-amber-400 dark:border-amber-800'
+                              : 'bg-green-100/70 text-green-700 border-green-200 dark:bg-green-950/50 dark:text-green-400 dark:border-green-800'
                         }`}>
                           {t(`task.status.${task.status}`)}
                         </Badge>
@@ -279,44 +293,44 @@ const AdminDashboard = () => {
               ) : (
                 <>
                   <div className="grid grid-cols-2 gap-3 mb-4">
-                    <div className="rounded-lg border bg-card p-3">
+                    <div className="rounded-lg border border-gray-200 dark:border-gray-800 shadow-sm bg-white dark:bg-gray-900 p-3">
                       <div className="flex justify-between items-center mb-2">
-                        <div className="text-sm font-medium">{t('task.status.new')}</div>
-                        <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center">
-                          <AlertCircle className="h-4 w-4 text-primary" />
+                        <div className="text-sm font-medium text-gray-800 dark:text-gray-100">{t('task.status.new')}</div>
+                        <div className="h-6 w-6 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center">
+                          <AlertCircle className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                         </div>
                       </div>
-                      <div className="text-2xl font-bold">{taskStats.new}</div>
+                      <div className="text-2xl font-bold text-gray-900 dark:text-white">{taskStats.new}</div>
                     </div>
                     
-                    <div className="rounded-lg border bg-card p-3">
+                    <div className="rounded-lg border border-gray-200 dark:border-gray-800 shadow-sm bg-white dark:bg-gray-900 p-3">
                       <div className="flex justify-between items-center mb-2">
-                        <div className="text-sm font-medium">{t('task.status.in_progress')}</div>
-                        <div className="h-6 w-6 rounded-full bg-amber-500/10 flex items-center justify-center">
-                          <Clock className="h-4 w-4 text-amber-500" />
+                        <div className="text-sm font-medium text-gray-800 dark:text-gray-100">{t('task.status.in_progress')}</div>
+                        <div className="h-6 w-6 rounded-full bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center">
+                          <Clock className="h-4 w-4 text-amber-600 dark:text-amber-400" />
                         </div>
                       </div>
-                      <div className="text-2xl font-bold">{taskStats.inProgress}</div>
+                      <div className="text-2xl font-bold text-gray-900 dark:text-white">{taskStats.inProgress}</div>
                     </div>
                     
-                    <div className="rounded-lg border bg-card p-3">
+                    <div className="rounded-lg border border-gray-200 dark:border-gray-800 shadow-sm bg-white dark:bg-gray-900 p-3">
                       <div className="flex justify-between items-center mb-2">
-                        <div className="text-sm font-medium">{t('task.status.completed')}</div>
-                        <div className="h-6 w-6 rounded-full bg-green-500/10 flex items-center justify-center">
-                          <CheckCircle className="h-4 w-4 text-green-500" />
+                        <div className="text-sm font-medium text-gray-800 dark:text-gray-100">{t('task.status.completed')}</div>
+                        <div className="h-6 w-6 rounded-full bg-green-100 dark:bg-green-900/40 flex items-center justify-center">
+                          <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
                         </div>
                       </div>
-                      <div className="text-2xl font-bold">{taskStats.completed}</div>
+                      <div className="text-2xl font-bold text-gray-900 dark:text-white">{taskStats.completed}</div>
                     </div>
                     
-                    <div className="rounded-lg border bg-card p-3">
+                    <div className="rounded-lg border border-gray-200 dark:border-gray-800 shadow-sm bg-white dark:bg-gray-900 p-3">
                       <div className="flex justify-between items-center mb-2">
-                        <div className="text-sm font-medium">{t('task.status.on_hold')}</div>
-                        <div className="h-6 w-6 rounded-full bg-neutral-500/10 flex items-center justify-center">
-                          <PauseCircle className="h-4 w-4 text-neutral-500" />
+                        <div className="text-sm font-medium text-gray-800 dark:text-gray-100">{t('task.status.on_hold')}</div>
+                        <div className="h-6 w-6 rounded-full bg-gray-100 dark:bg-gray-700/50 flex items-center justify-center">
+                          <PauseCircle className="h-4 w-4 text-gray-600 dark:text-gray-400" />
                         </div>
                       </div>
-                      <div className="text-2xl font-bold">{taskStats.onHold}</div>
+                      <div className="text-2xl font-bold text-gray-900 dark:text-white">{taskStats.onHold}</div>
                     </div>
                   </div>
                   
