@@ -162,7 +162,7 @@ const TaskCard = ({
 
   return (
     <Card 
-      className="h-full flex flex-col border shadow-sm cursor-pointer hover:border-primary hover:shadow-md transition-all duration-200 card-hover"
+      className="h-full flex flex-col border border-gray-200 dark:border-gray-800 shadow-sm bg-white dark:bg-gray-900 cursor-pointer hover:border-primary hover:shadow-md transition-all duration-200 card-hover"
       onClick={(e) => {
         // Предотвращаем всплытие события с Select и кнопок
         if (
@@ -178,7 +178,7 @@ const TaskCard = ({
     >
       <CardHeader className="pb-2 space-y-2">
         <div className="flex justify-between items-start">
-          <CardTitle className="text-lg truncate" title={task.title}>{task.title}</CardTitle>
+          <CardTitle className="text-lg break-words" title={task.title}>{task.title}</CardTitle>
           <div className="flex gap-1">
             {getPriorityBadge(task.priority)}
             {getStatusBadge(task.status)}
@@ -209,7 +209,7 @@ const TaskCard = ({
           )}
         </div>
       </CardContent>
-      <CardFooter className="flex flex-col gap-2 pt-2 border-t border-gray-200">
+      <CardFooter className="flex flex-col gap-2 pt-2 border-t border-gray-200 dark:border-gray-800">
         <div className="flex justify-between w-full items-center">
           <div className="text-xs text-muted-foreground">
             {t('task.created')}: {formatDate(task.createdAt)}
@@ -622,9 +622,9 @@ const TasksPage = () => {
   };
 
   return (
-    <div className="container py-6">
+    <div className="container py-8 px-8">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">{t('task.manager')}</h1>
+        <h1 className="text-2xl font-bold font-heading">{t('task.manager')}</h1>
         <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
           <DialogTrigger asChild>
             <Button>{t('task.create_new')}</Button>

@@ -14,7 +14,7 @@ export function MainLayout({ children }: MainLayoutProps) {
       <Sidebar />
       
       {/* Main content area - fixed margin for collapsed sidebar */}
-      <div className="ml-16 min-h-screen">
+      <div className="ml-16 lg:ml-[4.5rem] min-h-screen">
         {/* Content container */}
         <main className="w-full">
           {children}
