@@ -1879,6 +1879,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/notifications', authenticateUser, async (req, res) => {
     try {
       const userId = req.user.id;
+      console.log(`ROUTE: Getting notifications for user ${userId}, req.user:`, req.user);
       const notifications = await getStorage().getNotificationsByUser(userId);
       res.json(notifications);
     } catch (error) {
@@ -1891,10 +1892,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/notifications/unread', authenticateUser, async (req, res) => {
     try {
       const userId = req.user.id;
+      console.log(`ROUTE: Getting unread notifications for user ${userId}, req.user:`, req.user);
       const notifications = await getStorage().getUnreadNotificationsByUser(userId);
       res.json(notifications);
     } catch (error) {
       console.error('Error getting unread notifications:', error);
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+  
+  // POST /api/notifications/:id/read - отметить уведомление как прочитанное
+  app.post('/api/notifications/:id/read', authenticateUser, async (req, res) => {
+    try {
+      const notificationId = parseInt(req.params.id);
+      console.log(`ROUTE: Marking notification ${notificationId} as read`);
+      
+      // First make sure the notification exists and belongs to the current user
+      const notification = await getStorage().getNotification(notificationId);
+      if (!notification) {
+        return res.status(404).json({ message: "Notification not found" });
+      }
+      
+      if (notification.userId !== req.user.id) {
+        console.log(`ROUTE: User ${req.user.id} tried to mark notification ${notificationId} as read but it belongs to user ${notification.userId}`);
+        return res.status(403).json({ message: "You don't have permission to modify this notification" });
+      }
+      
+      const updatedNotification = await getStorage().markNotificationAsRead(notificationId);
+      res.json(updatedNotification);
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+  
+  // DELETE /api/notifications/:id - удалить уведомление
+  app.delete('/api/notifications/:id', authenticateUser, async (req, res) => {
+    try {
+      const notificationId = parseInt(req.params.id);
+      console.log(`ROUTE: Deleting notification ${notificationId}`);
+      
+      // First make sure the notification exists and belongs to the current user
+      const notification = await getStorage().getNotification(notificationId);
+      if (!notification) {
+        return res.status(404).json({ message: "Notification not found" });
+      }
+      
+      if (notification.userId !== req.user.id) {
+        console.log(`ROUTE: User ${req.user.id} tried to delete notification ${notificationId} but it belongs to user ${notification.userId}`);
+        return res.status(403).json({ message: "You don't have permission to delete this notification" });
+      }
+      
+      const success = await getStorage().deleteNotification(notificationId);
+      if (success) {
+        res.json({ success: true });
+      } else {
+        res.status(500).json({ message: "Failed to delete notification" });
+      }
+    } catch (error) {
+      console.error('Error deleting notification:', error);
       res.status(500).json({ message: "Server error" });
     }
   });

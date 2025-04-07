@@ -267,11 +267,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Update authentication status whenever user data changes
   useEffect(() => {
     const isAuthenticated = user !== null;
+    console.log('Auth useEffect - User state changed:', { 
+      user, 
+      isAuthenticated, 
+      userId: user?.id,
+      userEmail: user?.email
+    });
     dispatchAuthStatusChanged(isAuthenticated);
   }, [user]);
 
-  // Вычисляем значение isAuthenticated
-  const isAuthenticated = user !== null;
+  // Вычисляем значение isAuthenticated, также проверяя localStorage
+  const authFromStorage = localStorage.getItem('isAuthenticated') === 'true';
+  // Считаем пользователя аутентифицированным, если есть данные пользователя ИЛИ в localStorage установлен флаг
+  const isAuthenticated = user !== null || authFromStorage;
+  
+  // Добавляем дополнительный лог для отслеживания возвращаемого статуса аутентификации
+  console.log('Auth context final state:', { 
+    isAuthenticatedByUser: user !== null,
+    isAuthenticatedFromStorage: authFromStorage,
+    combinedAuthStatus: isAuthenticated, 
+    userPresent: user !== null, 
+    user
+  });
 
   return (
     <AuthContext.Provider

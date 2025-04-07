@@ -32,13 +32,28 @@ const NotificationBell = () => {
   const queryClient = useQueryClient();
   const [isOpen, setIsOpen] = useState(false);
 
+  // Добавляем логи для отладки проблемы с аутентификацией
+  console.log('NotificationBell auth state:', { 
+    isAuthenticated, 
+    userId: user?.id, 
+    userRole: user?.role,
+    userEmail: user?.email,
+    userExists: !!user,
+    authState: localStorage.getItem('isAuthenticated')
+  });
+
   // Определяем языковую локаль для форматирования дат
   const dateLocale = i18n.language === 'ru' ? ru : enUS;
 
+  // Определяем статус аутентификации из нескольких источников
+  const storageAuthValue = localStorage.getItem('isAuthenticated');
+  const authFromStorage = storageAuthValue === 'true';
+  const combinedAuthCheck = (isAuthenticated || authFromStorage) && !!user;
+  
   // Получаем уведомления текущего пользователя
   const { data: notifications = [], isLoading } = useQuery<Notification[]>({
     queryKey: ['/api/notifications'],
-    enabled: !!user && isAuthenticated, // Запрос только для аутентифицированных пользователей
+    enabled: combinedAuthCheck, // Запрос только для аутентифицированных пользователей с учётом всех проверок
     refetchInterval: 60000, // Обновляем каждую минуту
   });
 
@@ -58,15 +73,12 @@ const NotificationBell = () => {
   // Помечаем все уведомления как прочитанные
   const markAllAsRead = async () => {
     try {
-      const unreadNotifications = notifications.filter(notification => !notification.isRead);
+      console.log('Marking all notifications as read');
       
-      // Используем Promise.all для параллельной обработки запросов
-      await Promise.all(
-        unreadNotifications.map(notification => 
-          apiRequest('PATCH', `/api/notifications/${notification.id}/read`)
-        )
-      );
+      // Используем новый API эндпоинт для отметки всех уведомлений как прочитанных
+      await apiRequest('PATCH', '/api/notifications/read-all');
       
+      // Обновляем кэш запросов
       queryClient.invalidateQueries({ queryKey: ['/api/notifications'] });
     } catch (error) {
       console.error('Failed to mark all notifications as read:', error);
@@ -81,8 +93,17 @@ const NotificationBell = () => {
     });
   };
 
-  // Если пользователь не авторизован, не показываем компонент
-  if (!isAuthenticated || !user) {
+  // Проверяем финальное условие аутентификации
+  console.log('Authorization check in NotificationBell:', {
+    authFromHook: isAuthenticated,
+    authFromStorage,
+    userExists: !!user,
+    combinedCheck: combinedAuthCheck
+  });
+  
+  // Используем комбинированную проверку аутентификации: из хука и из localStorage
+  if (!combinedAuthCheck) {
+    console.log('NotificationBell: hiding because not authenticated');
     return null;
   }
 

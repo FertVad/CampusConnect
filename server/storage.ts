@@ -121,6 +121,7 @@ export interface IStorage {
   getUnreadNotificationsByUser(userId: number): Promise<Notification[]>;
   createNotification(notification: InsertNotification): Promise<Notification>;
   markNotificationAsRead(id: number): Promise<Notification | undefined>;
+  markAllNotificationsAsRead(userId: number): Promise<void>;
   deleteNotification(id: number): Promise<boolean>;
   
   // Специальности
@@ -855,6 +856,19 @@ export class MemStorage implements IStorage {
     const updatedNotification = { ...notification, isRead: true };
     this.notifications.set(id, updatedNotification);
     return updatedNotification;
+  }
+  
+  async markAllNotificationsAsRead(userId: number): Promise<void> {
+    console.log(`MEM: Marking all notifications as read for user ${userId}`);
+    const userNotifications = Array.from(this.notifications.values())
+      .filter(notification => notification.userId === userId && !notification.isRead);
+    
+    userNotifications.forEach(notification => {
+      const updatedNotification = { ...notification, isRead: true };
+      this.notifications.set(notification.id, updatedNotification);
+    });
+    
+    console.log(`MEM: Marked ${userNotifications.length} notifications as read for user ${userId}`);
   }
   
   async deleteNotification(id: number): Promise<boolean> {

@@ -13,6 +13,14 @@ const TopBar = () => {
   const [, setLocation] = useLocation();
   const { t } = useTranslation();
   
+  // Добавляем логи для отладки проблемы с аутентификацией в TopBar
+  console.log('TopBar auth state:', { 
+    isAuthenticated, 
+    userId: user?.id, 
+    userRole: user?.role,
+    userEmail: user?.email
+  });
+  
   const handleLogout = () => {
     logoutMutation.mutate();
   };
