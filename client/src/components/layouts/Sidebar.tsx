@@ -1,5 +1,6 @@
 import { Link, useLocation } from 'wouter';
 import { useAuth } from '@/hooks/use-auth';
+import NotificationBell from '@/components/notifications/NotificationBell';
 import { 
   Home, Clock, HelpCircle, 
   Receipt, Award, MessageSquare, 
@@ -36,7 +37,14 @@ const Sidebar = () => {
         label: 'Communication',
         items: [
           { icon: <MessageSquare className="h-5 w-5 mr-3" />, label: 'Chat', href: '/chat' },
-          { icon: <Bell className="h-5 w-5 mr-3" />, label: 'Notifications', href: '/notifications' },
+          { 
+            icon: <div className="relative mr-3">
+              <NotificationBell />
+            </div>,
+            label: 'Notifications', 
+            href: '/notifications',
+            customComponent: true
+          },
         ]
       }
     ];
@@ -94,10 +102,11 @@ const Sidebar = () => {
                       : 'text-neutral-700 hover:bg-primary-light hover:bg-opacity-10 hover:text-primary transition-all'
                     }`}
                   >
-                    {item.icon}
-                    {item.label}
-                    {item.label === 'Notifications' && (
-                      <span className="absolute right-3 flex items-center justify-center h-5 w-5 bg-error text-white text-xs rounded-full">3</span>
+                    {item.customComponent ? item.icon : (
+                      <>
+                        {item.icon}
+                        {item.label}
+                      </>
                     )}
                   </Link>
                 );
