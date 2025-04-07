@@ -1,5 +1,6 @@
 {
   "common": {
+    "locale": "en",
     "actions": {
       "add": "Add",
       "edit": "Edit",
@@ -26,6 +27,7 @@
     "users": "Users",
     "manageUsers": "Manage Users",
     "viewAllUsers": "View All Users",
+    "viewAll": "View All",
     "courses": "Courses",
     "total": "Total",
     "added": "Added:",

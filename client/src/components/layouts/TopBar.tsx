@@ -5,6 +5,7 @@ import { Menu, Search, MessageSquare, Bell, BellRing, CheckCircle } from 'lucide
 import { useToast } from '@/hooks/use-toast';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
+import { ru, enUS } from 'date-fns/locale';
 import { apiRequest } from '@/lib/queryClient';
 import { useTranslation } from 'react-i18next';
 
@@ -177,7 +178,11 @@ const TopBar = () => {
                               <p className="text-sm text-gray-800">{notification.title}</p>
                               <p className="text-xs text-gray-500 mt-1">{notification.content}</p>
                               <p className="text-xs text-gray-400 mt-1">
-                                {format(new Date(notification.createdAt), 'dd MMM, HH:mm')}
+                                {format(
+                                  new Date(notification.createdAt), 
+                                  'dd MMM, HH:mm', 
+                                  { locale: t('common.locale') === 'ru' ? ru : enUS }
+                                )}
                               </p>
                             </div>
                             {!notification.isRead && (
