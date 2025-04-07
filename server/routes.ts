@@ -1960,27 +1960,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Оставляем PUT для обратной совместимости
-  app.put('/api/notifications/:id/read', authenticateUser, async (req, res) => {
-    try {
-      const notificationId = parseInt(req.params.id);
-      const notification = await getStorage().getNotification(notificationId);
-      
-      if (!notification) {
-        return res.status(404).json({ message: "Notification not found" });
-      }
-      
-      // Users can only mark their own notifications as read
-      if (req.user.id !== notification.userId) {
-        return res.status(403).json({ message: "Forbidden" });
-      }
-      
-      const updatedNotification = await getStorage().markNotificationAsRead(notificationId);
-      res.json(updatedNotification);
-    } catch (error) {
-      res.status(500).json({ message: "Server error" });
-    }
-  });
+  // PUT маршрут удалён, так как клиент использует PATCH
   
   // Activity Logs Endpoints
   app.get('/api/activity-logs', authenticateUser, requireRole(['admin']), async (req, res) => {
