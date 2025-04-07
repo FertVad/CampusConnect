@@ -81,24 +81,28 @@ export const NotificationBell = () => {
     });
   };
 
+  // Отладочный лог для проверки рендера компонента
+  console.log("🔔 NotificationBell rendered", { isAuthenticated, user });
+  
   // Если пользователь не авторизован, не показываем компонент
   if (!isAuthenticated || !user) {
+    console.log("🔔 NotificationBell не отображается: пользователь не авторизован");
     return null;
   }
 
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative">
+        <Button variant="ghost" size="icon" className="w-8 h-8 bg-red-200 relative">
           {unreadCount > 0 ? (
             <>
-              <BellRingIcon className="h-5 w-5" />
+              <BellRingIcon className="h-5 w-5 text-red-600" />
               <span className="absolute top-0 right-0 -mt-1 -mr-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] text-white">
                 {unreadCount > 9 ? '9+' : unreadCount}
               </span>
             </>
           ) : (
-            <BellIcon className="h-5 w-5" />
+            <BellIcon className="h-5 w-5 text-blue-600" />
           )}
         </Button>
       </PopoverTrigger>

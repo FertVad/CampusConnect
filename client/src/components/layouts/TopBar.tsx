@@ -3,7 +3,7 @@ import { Link, useLocation } from 'wouter';
 import { useAuth } from '@/hooks/use-auth';
 import { Menu, Search, MessageSquare, Bell } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import NotificationBell from '@/components/notifications/NotificationBell';
+import { NotificationBell } from '@/components/notifications/NotificationBell';
 
 const TopBar = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -60,17 +60,7 @@ const TopBar = () => {
         {/* Action Icons */}
         <div className="flex items-center space-x-4">
           {user && isAuthenticated && (
-            <>
-              <NotificationBell />
-              
-              {/* Временная иконка уведомлений для отладки */}
-              <button className="text-neutral-500 hover:text-neutral-700 focus:outline-none relative">
-                <Bell className="h-6 w-6" />
-                <span className="absolute top-0 right-0 -mt-1 -mr-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] text-white">
-                  5
-                </span>
-              </button>
-            </>
+            <NotificationBell />
           )}
           
           <Link href="/chat">
