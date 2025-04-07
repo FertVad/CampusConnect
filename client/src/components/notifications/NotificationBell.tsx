@@ -32,36 +32,23 @@ export const NotificationBell = () => {
   const queryClient = useQueryClient();
   const [isOpen, setIsOpen] = useState(false);
 
-  console.log('[NotificationBell] Component rendering:', {
-    user,
-    isAuthenticated,
-    userId: user?.id,
-    mounted: true
-  });
-
-  // Добавляем логи для отладки проблемы с аутентификацией
+  // Отладочные логи
+  console.log('🔔 NotificationBell mounted');
   console.log('NotificationBell auth state:', { 
     isAuthenticated, 
     userId: user?.id, 
     userRole: user?.role,
     userEmail: user?.email,
-    userExists: !!user,
-    authState: localStorage.getItem('isAuthenticated')
+    userExists: !!user
   });
 
   // Определяем языковую локаль для форматирования дат
   const dateLocale = i18n.language === 'ru' ? ru : enUS;
-
-  // Определяем статус аутентификации из нескольких источников
-  const storageAuthValue = localStorage.getItem('isAuthenticated');
-  const authFromStorage = storageAuthValue === 'true';
-  // ВАЖНО: Требуем наличия объекта пользователя в любом случае, чтобы избежать ошибок при запросах
-  const combinedAuthCheck = isAuthenticated && !!user;
   
   // Получаем уведомления текущего пользователя
   const { data: notifications = [], isLoading } = useQuery<Notification[]>({
     queryKey: ['/api/notifications'],
-    enabled: isAuthenticated, // Query still depends on auth, but component will show for all
+    enabled: isAuthenticated,
     refetchInterval: 60000,
   });
 
@@ -81,12 +68,7 @@ export const NotificationBell = () => {
   // Помечаем все уведомления как прочитанные
   const markAllAsRead = async () => {
     try {
-      console.log('Marking all notifications as read');
-      
-      // Используем новый API эндпоинт для отметки всех уведомлений как прочитанных
       await apiRequest('PATCH', '/api/notifications/read-all');
-      
-      // Обновляем кэш запросов
       queryClient.invalidateQueries({ queryKey: ['/api/notifications'] });
     } catch (error) {
       console.error('Failed to mark all notifications as read:', error);
@@ -101,32 +83,20 @@ export const NotificationBell = () => {
     });
   };
 
-  // Добавляем отладочный лог
-  console.log('🔔 NotificationBell mounted');
-  console.log('Authorization debug in NotificationBell:', {
-    authFromHook: isAuthenticated,
-    authFromStorage,
-    userExists: !!user,
-    combinedCheck: combinedAuthCheck,
-    userId: user?.id
-  });
-
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
-        <div className="border border-red-500 p-0.5"> {/* Добавлена красная рамка для отладки */}
-          <div className="w-10 h-10 bg-primary/10 hover:bg-primary/20 transition-colors rounded-full flex items-center justify-center cursor-pointer relative">
-            {unreadCount > 0 ? (
-              <>
-                <BellRingIcon className="h-6 w-6 text-primary" />
-                <span className="absolute top-0 right-0 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] text-white">
-                  {unreadCount > 9 ? '9+' : unreadCount}
-                </span>
-              </>
-            ) : (
-              <BellIcon className="h-6 w-6 text-primary" />
-            )}
-          </div>
+        <div className="w-10 h-10 bg-primary/10 hover:bg-primary/20 transition-colors rounded-full flex items-center justify-center cursor-pointer relative">
+          {unreadCount > 0 ? (
+            <>
+              <BellRingIcon className="h-6 w-6 text-primary" />
+              <span className="absolute top-0 right-0 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] text-white">
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            </>
+          ) : (
+            <BellIcon className="h-6 w-6 text-primary" />
+          )}
         </div>
       </PopoverTrigger>
       <PopoverContent className="w-80 p-0" align="end">
@@ -191,4 +161,5 @@ export const NotificationBell = () => {
   );
 };
 
-// Именованный экспорт уже добавлен выше
+// Добавляем экспорт по умолчанию для совместимости
+export default NotificationBell;

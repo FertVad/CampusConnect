@@ -71,8 +71,10 @@ const TopBar = () => {
         
         {/* Action Icons */}
         <div className="flex items-center space-x-4">
-          {/* Notification Bell always visible */}
-          <NotificationBell />
+          {/* Notification Bell в новой структуре - абсолютно видимый */}
+          <div className="relative z-50">
+            <NotificationBell />
+          </div>
           
           <Link href="/chat">
             <button className="text-neutral-500 hover:text-neutral-700 focus:outline-none">
