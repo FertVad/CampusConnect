@@ -18,7 +18,9 @@ const TopBar = () => {
     isAuthenticated, 
     userId: user?.id, 
     userRole: user?.role,
-    userEmail: user?.email
+    userEmail: user?.email,
+    hasUser: !!user,
+    fullAuthCheck: !!(user && user.id && isAuthenticated)
   });
   
   const handleLogout = () => {
