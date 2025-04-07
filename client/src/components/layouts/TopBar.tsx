@@ -4,7 +4,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { Menu, Search, MessageSquare } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslation } from 'react-i18next';
-import NotificationBell from '@/components/notifications/NotificationBell';
+import { default as NotificationBell } from '@/components/notifications/NotificationBell';
 
 const TopBar = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -71,12 +71,19 @@ const TopBar = () => {
         
         {/* Action Icons */}
         <div className="flex items-center space-x-4">
-          {/* Notification Bell - показываем только если пользователь точно аутентифицирован и объект пользователя существует */}
-          {user && user.id && isAuthenticated ? (
-            <NotificationBell />
-          ) : (
-            <div className="w-10 h-10"></div> // Пустой блок для сохранения разметки
-          )}
+          {/* Notification Bell with debug logging */}
+          {(() => {
+            console.log('[TopBar] NotificationBell render check:', { 
+              isAuthenticated, 
+              hasUser: !!user, 
+              userId: user?.id 
+            });
+            return isAuthenticated && user?.id ? (
+              <NotificationBell />
+            ) : (
+              <div className="w-10 h-10"></div> // Placeholder for layout stability
+            );
+          })()}
           
           <Link href="/chat">
             <button className="text-neutral-500 hover:text-neutral-700 focus:outline-none">

@@ -32,6 +32,13 @@ const NotificationBell = () => {
   const queryClient = useQueryClient();
   const [isOpen, setIsOpen] = useState(false);
 
+  console.log('[NotificationBell] Component rendering:', {
+    user,
+    isAuthenticated,
+    userId: user?.id,
+    mounted: true
+  });
+
   // Добавляем логи для отладки проблемы с аутентификацией
   console.log('NotificationBell auth state:', { 
     isAuthenticated, 
@@ -112,7 +119,7 @@ const NotificationBell = () => {
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
-        <div className="w-10 h-10 bg-primary/10 hover:bg-primary/20 transition-colors rounded-full flex items-center justify-center cursor-pointer">
+        <div style={{ backgroundColor: 'rgba(255,0,0,0.1)', padding: '8px' }} className="w-10 h-10 bg-primary/10 hover:bg-primary/20 transition-colors rounded-full flex items-center justify-center cursor-pointer">
           {unreadCount > 0 ? (
             <>
               <BellRingIcon className="h-6 w-6 text-primary" />
