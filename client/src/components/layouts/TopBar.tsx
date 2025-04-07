@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'wouter';
 import { useAuth } from '@/hooks/use-auth';
-import { Menu, Search, Bell, MessageSquare } from 'lucide-react';
+import { Menu, Search, MessageSquare } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { NotificationBell } from '@/components/notifications/NotificationBell';
 
 const TopBar = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -58,10 +59,7 @@ const TopBar = () => {
         
         {/* Action Icons */}
         <div className="flex items-center space-x-4">
-          <button className="text-neutral-500 hover:text-neutral-700 focus:outline-none relative">
-            <Bell className="h-6 w-6" />
-            <span className="absolute top-0 right-0 flex h-4 w-4 items-center justify-center rounded-full bg-error text-xs text-white">3</span>
-          </button>
+          <NotificationBell />
           
           <Link href="/chat">
             <button className="text-neutral-500 hover:text-neutral-700 focus:outline-none">

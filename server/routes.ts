@@ -235,11 +235,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userData = insertUserSchema.parse(req.body);
       const user = await getStorage().createUser(userData);
+      
+      // Отправляем уведомление всем администраторам кроме текущего пользователя
+      const admins = await getStorage().getUsersByRole('admin');
+      
+      // Получаем полное имя нового пользователя для уведомления
+      const fullName = `${user.firstName} ${user.lastName}`;
+      
+      // Отправляем уведомления всем администраторам, кроме текущего (если он админ)
+      for (const admin of admins) {
+        if (admin.id !== req.user?.id) {
+          await getStorage().createNotification({
+            userId: admin.id,
+            title: "New User Registered",
+            content: `A new user ${fullName} has been registered with role: ${user.role}`,
+            relatedId: user.id,
+            relatedType: "user"
+          });
+        }
+      }
+      
       res.status(201).json(user);
     } catch (error) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Validation error", errors: error.errors });
       }
+      console.error('Error creating user:', error);
       res.status(500).json({ message: "Server error" });
     }
   });
@@ -1834,6 +1855,79 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Notification Routes
+  // GET /api/notifications - получить все уведомления для текущего пользователя
+  app.get('/api/notifications', authenticateUser, async (req, res) => {
+    try {
+      const userId = req.user.id;
+      const notifications = await getStorage().getNotificationsByUser(userId);
+      res.json(notifications);
+    } catch (error) {
+      console.error('Error getting notifications:', error);
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+  
+  // GET /api/notifications/unread - получить все непрочитанные уведомления для текущего пользователя
+  app.get('/api/notifications/unread', authenticateUser, async (req, res) => {
+    try {
+      const userId = req.user.id;
+      const notifications = await getStorage().getUnreadNotificationsByUser(userId);
+      res.json(notifications);
+    } catch (error) {
+      console.error('Error getting unread notifications:', error);
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+  
+  // POST /api/notifications - создать новое уведомление
+  app.post('/api/notifications', authenticateUser, requireRole(['admin', 'teacher']), async (req, res) => {
+    try {
+      const { userId, title, content, relatedId, relatedType } = req.body;
+      
+      if (!userId || !title || !content) {
+        return res.status(400).json({ message: "userId, title and content are required" });
+      }
+      
+      const notificationData = {
+        userId,
+        title,
+        content,
+        relatedId,
+        relatedType
+      };
+      
+      const notification = await getStorage().createNotification(notificationData);
+      res.status(201).json(notification);
+    } catch (error) {
+      console.error('Error creating notification:', error);
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+  
+  // PATCH /api/notifications/:id/read - отметить уведомление как прочитанное
+  app.patch('/api/notifications/:id/read', authenticateUser, async (req, res) => {
+    try {
+      const notificationId = parseInt(req.params.id);
+      const notification = await getStorage().getNotification(notificationId);
+      
+      if (!notification) {
+        return res.status(404).json({ message: "Notification not found" });
+      }
+      
+      // Users can only mark their own notifications as read
+      if (req.user.id !== notification.userId) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+      
+      const updatedNotification = await getStorage().markNotificationAsRead(notificationId);
+      res.json(updatedNotification);
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+  
+  // Оставляем старые эндпоинты для обратной совместимости
   app.get('/api/notifications/user/:userId', authenticateUser, async (req, res) => {
     try {
       const userId = parseInt(req.params.userId);
@@ -1866,6 +1960,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Оставляем PUT для обратной совместимости
   app.put('/api/notifications/:id/read', authenticateUser, async (req, res) => {
     try {
       const notificationId = parseInt(req.params.id);
@@ -2139,6 +2234,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Удаляем задачу
       await getStorage().deleteTask(taskId);
       
+      // Уведомляем исполнителя о удалении задачи, если задача была назначена
+      if (task.executorId && task.executorId !== req.user.id) {
+        await getStorage().createNotification({
+          userId: task.executorId,
+          title: "Task Deleted",
+          content: `Task "${task.title}" has been deleted`,
+          relatedType: "task"
+        });
+      }
+      
       // Отправляем успешный ответ
       res.status(200).json({ 
         message: "Task deleted successfully",
@@ -2209,25 +2314,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Создаем уведомление о обновлении задачи
       if (task.status !== taskData.status && taskData.status) {
-        // Уведомляем клиента, если исполнитель обновил статус
-        if (req.user.id === task.executorId) {
+        // Специальное уведомление для завершенных задач
+        if (taskData.status === 'completed') {
+          // Уведомляем клиента о завершении задачи
           await getStorage().createNotification({
             userId: task.clientId,
-            title: "Task Status Updated",
-            content: `Status of task "${task.title}" has been updated to ${taskData.status}`,
+            title: "Task Completed",
+            content: `Task "${task.title}" has been marked as completed`,
             relatedId: task.id,
             relatedType: "task"
           });
-        } 
-        // Уведомляем исполнителя, если клиент обновил статус
-        else if (req.user.id === task.clientId) {
-          await getStorage().createNotification({
-            userId: task.executorId,
-            title: "Task Status Updated",
-            content: `Status of task "${task.title}" has been updated to ${taskData.status}`,
-            relatedId: task.id,
-            relatedType: "task"
-          });
+          
+          // Уведомление для администраторов
+          const admins = await getStorage().getUsersByRole('admin');
+          for (const admin of admins) {
+            // Не отправляем уведомление админу, если он уже является клиентом или исполнителем задачи
+            if (admin.id !== task.clientId && admin.id !== task.executorId) {
+              await getStorage().createNotification({
+                userId: admin.id,
+                title: "Task Completed",
+                content: `Task "${task.title}" has been marked as completed`,
+                relatedId: task.id,
+                relatedType: "task"
+              });
+            }
+          }
+        } else {
+          // Обычное уведомление об изменении статуса
+          // Уведомляем клиента, если исполнитель обновил статус
+          if (req.user.id === task.executorId) {
+            await getStorage().createNotification({
+              userId: task.clientId,
+              title: "Task Status Updated",
+              content: `Status of task "${task.title}" has been updated to ${taskData.status}`,
+              relatedId: task.id,
+              relatedType: "task"
+            });
+          } 
+          // Уведомляем исполнителя, если клиент обновил статус
+          else if (req.user.id === task.clientId) {
+            await getStorage().createNotification({
+              userId: task.executorId,
+              title: "Task Status Updated",
+              content: `Status of task "${task.title}" has been updated to ${taskData.status}`,
+              relatedId: task.id,
+              relatedType: "task"
+            });
+          }
         }
       }
       

@@ -29,6 +29,7 @@ type AuthContextType = {
   user: User | null;
   isLoading: boolean;
   error: Error | null;
+  isAuthenticated: boolean;
   loginMutation: UseMutationResult<User, Error, LoginData>;
   logoutMutation: UseMutationResult<void, Error, void>;
   registerMutation: UseMutationResult<User, Error, RegisterData>;
@@ -47,6 +48,7 @@ type RegisterData = {
   role: string;
 };
 
+// Создаем значение по умолчанию для контекста с isAuthenticated
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -268,12 +270,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     dispatchAuthStatusChanged(isAuthenticated);
   }, [user]);
 
+  // Вычисляем значение isAuthenticated
+  const isAuthenticated = user !== null;
+
   return (
     <AuthContext.Provider
       value={{
         user: user ?? null,
         isLoading,
         error,
+        isAuthenticated,
         loginMutation,
         logoutMutation,
         registerMutation,

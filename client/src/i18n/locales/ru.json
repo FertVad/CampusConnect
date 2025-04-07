@@ -483,5 +483,32 @@
     "goBack": "Вернуться назад",
     "goHome": "На главную",
     "contactSupport": "Связаться с поддержкой"
+  },
+  "notifications": {
+    "title": "Уведомления",
+    "markAsRead": "Отметить как прочитанное",
+    "markAllAsRead": "Отметить все как прочитанные",
+    "clearAll": "Очистить все",
+    "empty": "Нет уведомлений",
+    "unread": "Непрочитанные",
+    "all": "Все",
+    "loadMore": "Загрузить еще",
+    "loading": "Загрузка...",
+    "types": {
+      "assignment": "Задание",
+      "grade": "Оценка",
+      "request": "Заявка",
+      "announcement": "Объявление",
+      "message": "Сообщение",
+      "document": "Документ",
+      "system": "Система"
+    },
+    "newAssignment": "Новое задание: {{title}}",
+    "assignmentDue": "Скоро дедлайн задания: {{title}}",
+    "newGrade": "Новая оценка по {{subject}}: {{score}}",
+    "requestUpdate": "Обновление заявки: {{status}}",
+    "newAnnouncement": "Новое объявление: {{title}}",
+    "newMessage": "Новое сообщение от {{sender}}",
+    "newDocument": "Новый документ: {{name}}"
   }
 }
