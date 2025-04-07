@@ -3,7 +3,7 @@ import { Link, useLocation } from 'wouter';
 import { useAuth } from '@/hooks/use-auth';
 import { Menu, Search, MessageSquare, Bell } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { NotificationBell } from '@/components/notifications/NotificationBell';
+import NotificationBell from '@/components/notifications/NotificationBell';
 
 const TopBar = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
