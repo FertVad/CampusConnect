@@ -81,43 +81,11 @@ const NotificationBell = () => {
     });
   };
 
-  // Отладочный лог для проверки рендера компонента
-  console.log("🔔 NotificationBell rendered", { 
-    isAuthenticated, 
-    user, 
-    hasUser: !!user,
-    userType: typeof user,
-    userKeys: user ? Object.keys(user) : null
-  });
-  
   // Если пользователь не авторизован, не показываем компонент
   if (!isAuthenticated || !user) {
-    console.log("🔔 NotificationBell не отображается: пользователь не авторизован", {
-      isAuthenticated,
-      userDefined: user !== undefined && user !== null
-    });
     return null;
   }
-  
-  // Дополнительное принудительное отображение иконки для отладки
-  console.log("🔔 NotificationBell БУДЕТ отображен!")
 
-  // Проверяем, работает ли альтернативная версия иконки уведомлений
-  if (true) { // Используем временное условие для тестирования
-    return (
-      <div className="relative inline-block cursor-pointer">
-        <div className="w-10 h-10 bg-slate-200 flex items-center justify-center rounded-full">
-          <BellIcon className="h-6 w-6 text-slate-700" />
-          {unreadCount > 0 && (
-            <span className="absolute top-0 right-0 -mt-1 -mr-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] text-white border-2 border-white">
-              {unreadCount > 9 ? '9+' : unreadCount}
-            </span>
-          )}
-        </div>
-      </div>
-    );
-  }
-  
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>

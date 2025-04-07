@@ -473,6 +473,7 @@
     "markAllAsRead": "Mark all as read",
     "clearAll": "Clear all",
     "empty": "No notifications",
+    "no_notifications": "You have no notifications",
     "unread": "Unread",
     "all": "All",
     "loadMore": "Load more",

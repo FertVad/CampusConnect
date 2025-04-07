@@ -1947,6 +1947,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // PATCH /api/notifications/read-all - отметить все уведомления пользователя как прочитанные
+  app.patch('/api/notifications/read-all', authenticateUser, async (req, res) => {
+    try {
+      const userId = req.user.id;
+      await getStorage().markAllNotificationsAsRead(userId);
+      res.json({ success: true, message: "All notifications marked as read" });
+    } catch (error) {
+      console.error('Error marking all notifications as read:', error);
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+  
   // Оставляем старые эндпоинты для обратной совместимости
   app.get('/api/notifications/user/:userId', authenticateUser, async (req, res) => {
     try {
