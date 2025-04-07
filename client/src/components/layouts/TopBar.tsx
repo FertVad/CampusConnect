@@ -29,20 +29,20 @@ const TopBar = () => {
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
   const { t } = useTranslation();
-  
+
   // Получаем уведомления через API
   const { data: notifications = [] } = useQuery<Notification[]>({
     queryKey: ['/api/notifications'],
     enabled: !!user && isAuthenticated,
     refetchInterval: 60000, // Обновляем каждую минуту
   });
-  
+
   // Вычисляем количество непрочитанных уведомлений
   const unreadCount = notifications.filter((notification: Notification) => !notification.isRead).length;
-  
+
   // Запасной вариант для тестирования, если API не возвращает данные
   const testUnreadCount = 3;
-  
+
   // Мутация для отметки одного уведомления как прочитанного
   const markAsReadMutation = useMutation({
     mutationFn: (notificationId: number) => 
@@ -60,17 +60,17 @@ const TopBar = () => {
       setIsNotificationsOpen(false);
     }
   });
-  
+
   // Обработчик для отметки одного уведомления как прочитанного
   const handleMarkAsRead = (notificationId: number) => {
     markAsReadMutation.mutate(notificationId);
   };
-  
+
   // Обработчик для отметки всех уведомлений как прочитанных
   const handleMarkAllAsRead = () => {
     markAllAsReadMutation.mutate();
   };
-  
+
   // Закрытие выпадающего списка при клике вне его
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -84,16 +84,16 @@ const TopBar = () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
-  
+
   const handleLogout = () => {
     logoutMutation.mutate();
   };
-  
+
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
     // This would control a mobile sidebar in a real implementation
   };
-  
+
   return (
     <header className="bg-white shadow-sm z-10">
       <div className="px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
@@ -106,7 +106,7 @@ const TopBar = () => {
             <Menu className="h-6 w-6" />
           </button>
         </div>
-        
+
         {/* Mobile Logo */}
         <div className="md:hidden flex items-center">
           <div className="bg-primary p-1.5 rounded-lg mr-2">
@@ -116,7 +116,7 @@ const TopBar = () => {
           </div>
           <h1 className="text-lg font-medium font-heading text-neutral-700">EduPortal</h1>
         </div>
-        
+
         {/* Search Bar (Hidden on mobile) */}
         <div className="flex-1 max-w-xl mx-8 hidden md:block">
           <div className="relative">
@@ -130,7 +130,7 @@ const TopBar = () => {
             />
           </div>
         </div>
-        
+
         {/* Action Icons */}
         <div className="flex items-center space-x-4">
           {user && isAuthenticated && (
@@ -150,7 +150,7 @@ const TopBar = () => {
                   <Bell className="h-6 w-6 text-primary" />
                 )}
               </div>
-              
+
               {/* Выпадающий список уведомлений */}
               {isNotificationsOpen && (
                 <div 
@@ -160,7 +160,7 @@ const TopBar = () => {
                   <div className="px-4 py-2 border-b border-gray-100">
                     <h3 className="text-sm font-medium text-gray-700">{t('notifications.title')}</h3>
                   </div>
-                  
+
                   <div className="max-h-80 overflow-y-auto">
                     {notifications.length === 0 ? (
                       <div className="px-4 py-3 text-sm text-gray-500 text-center">
@@ -193,7 +193,7 @@ const TopBar = () => {
                       ))
                     )}
                   </div>
-                  
+
                   {notifications.length > 0 && (
                     <div className="px-4 py-2 border-t border-gray-100">
                       <button 
@@ -208,7 +208,7 @@ const TopBar = () => {
               )}
             </div>
           )}
-          
+
           {/* Резервный вариант иконки уведомлений - обычная кнопка с яркими цветами */}
           {user && isAuthenticated && (
             <button className="relative p-2 bg-red-500 text-white rounded-full hidden">
@@ -220,15 +220,15 @@ const TopBar = () => {
               )}
             </button>
           )}
-          
+
           <Link href="/chat">
             <button className="text-neutral-500 hover:text-neutral-700 focus:outline-none">
               <MessageSquare className="h-6 w-6" />
             </button>
           </Link>
-          
+
           <div className="border-l border-neutral-200 h-6 mx-2"></div>
-          
+
           {/* User Profile */}
           <div className="hidden md:flex items-center">
             <img 
@@ -242,7 +242,7 @@ const TopBar = () => {
               </span>
             </div>
           </div>
-          
+
           {/* Logout Button */}
           <button 
             onClick={handleLogout}
