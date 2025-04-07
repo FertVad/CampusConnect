@@ -48,7 +48,8 @@ const NotificationBell = () => {
   // Определяем статус аутентификации из нескольких источников
   const storageAuthValue = localStorage.getItem('isAuthenticated');
   const authFromStorage = storageAuthValue === 'true';
-  const combinedAuthCheck = (isAuthenticated || authFromStorage) && !!user;
+  // ВАЖНО: Требуем наличия объекта пользователя в любом случае, чтобы избежать ошибок при запросах
+  const combinedAuthCheck = isAuthenticated && !!user;
   
   // Получаем уведомления текущего пользователя
   const { data: notifications = [], isLoading } = useQuery<Notification[]>({
@@ -98,12 +99,13 @@ const NotificationBell = () => {
     authFromHook: isAuthenticated,
     authFromStorage,
     userExists: !!user,
-    combinedCheck: combinedAuthCheck
+    combinedCheck: combinedAuthCheck,
+    userId: user?.id
   });
   
-  // Используем комбинированную проверку аутентификации: из хука и из localStorage
-  if (!combinedAuthCheck) {
-    console.log('NotificationBell: hiding because not authenticated');
+  // Требуем ОБЯЗАТЕЛЬНО наличие объекта пользователя для отображения уведомлений
+  if (!user || !user.id) {
+    console.log('NotificationBell: hiding because user object not available');
     return null;
   }
 

@@ -69,8 +69,12 @@ const TopBar = () => {
         
         {/* Action Icons */}
         <div className="flex items-center space-x-4">
-          {/* Notification Bell */}
-          <NotificationBell />
+          {/* Notification Bell - показываем только если пользователь точно аутентифицирован и объект пользователя существует */}
+          {user && user.id && isAuthenticated ? (
+            <NotificationBell />
+          ) : (
+            <div className="w-10 h-10"></div> // Пустой блок для сохранения разметки
+          )}
           
           <Link href="/chat">
             <button className="text-neutral-500 hover:text-neutral-700 focus:outline-none">
