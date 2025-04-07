@@ -17,12 +17,12 @@ app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
   // Allow these headers
   res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-  
+
   // Handle preflight requests
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
-  
+
   next();
 });
 
@@ -61,13 +61,13 @@ app.use((req, res, next) => {
     // Initialize the database before setting up routes
     log("Initializing database...");
     const dbInitialized = await initializeDatabase();
-    
+
     if (!dbInitialized) {
       log("Warning: Database initialization failed, falling back to in-memory storage");
     } else {
       log("Database initialized successfully");
     }
-    
+
     // Register API routes
     const server = await registerRoutes(app);
 
@@ -75,11 +75,11 @@ app.use((req, res, next) => {
     app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
       // Логирование ошибки для отладки
       console.error('Server error caught in global handler:', err);
-      
+
       // Определяем статус и сообщение в зависимости от типа ошибки
       let status = err.status || err.statusCode || 500;
       let message = err.message || "Internal Server Error";
-      
+
       // Проверка специальных случаев ошибок
       if (err.code === 'ENOENT') {
         // Ошибка при отсутствии файла
@@ -94,13 +94,13 @@ app.use((req, res, next) => {
         status = 400;
         message = err.message || "Ошибка загрузки файла";
       }
-      
+
       // Отправляем ответ с соответствующим статусом и сообщением об ошибке
       res.status(status).json({ 
         message,
         error: process.env.NODE_ENV === 'development' ? err.stack : undefined
       });
-      
+
       // В девелопмент-режиме пробрасываем ошибку дальше для логирования
       if (process.env.NODE_ENV === 'development') {
         console.error('Full error details:', err);
