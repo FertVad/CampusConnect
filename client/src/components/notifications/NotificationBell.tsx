@@ -61,8 +61,8 @@ const NotificationBell = () => {
   // Получаем уведомления текущего пользователя
   const { data: notifications = [], isLoading } = useQuery<Notification[]>({
     queryKey: ['/api/notifications'],
-    enabled: combinedAuthCheck, // Запрос только для аутентифицированных пользователей с учётом всех проверок
-    refetchInterval: 60000, // Обновляем каждую минуту
+    enabled: isAuthenticated, // Query still depends on auth, but component will show for all
+    refetchInterval: 60000,
   });
 
   // Получаем количество непрочитанных уведомлений

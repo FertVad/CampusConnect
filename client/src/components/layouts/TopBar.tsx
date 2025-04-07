@@ -71,19 +71,8 @@ const TopBar = () => {
         
         {/* Action Icons */}
         <div className="flex items-center space-x-4">
-          {/* Notification Bell with debug logging */}
-          {(() => {
-            console.log('[TopBar] NotificationBell render check:', { 
-              isAuthenticated, 
-              hasUser: !!user, 
-              userId: user?.id 
-            });
-            return isAuthenticated && user?.id ? (
-              <NotificationBell />
-            ) : (
-              <div className="w-10 h-10"></div> // Placeholder for layout stability
-            );
-          })()}
+          {/* Notification Bell always visible */}
+          <NotificationBell />
           
           <Link href="/chat">
             <button className="text-neutral-500 hover:text-neutral-700 focus:outline-none">
