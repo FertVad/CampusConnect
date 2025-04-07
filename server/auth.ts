@@ -77,13 +77,13 @@ export function setupAuth(app: Express) {
   // Safari-friendly cookie settings and MemoryStore optimization
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET || "dev-session-secret",
-    resave: false,
-    saveUninitialized: false,
+    resave: true, // Изменено на true для уверенного сохранения сессии
+    saveUninitialized: true, // Изменено на true для инициализации сессии
     store: getStorage().sessionStore,
     cookie: {
-      maxAge: 14 * 24 * 60 * 60 * 1000,
-      httpOnly: true,
-      secure: 'auto',
+      maxAge: 14 * 24 * 60 * 60 * 1000, // 14 дней
+      httpOnly: true, 
+      secure: false, // Изменено для тестирования
       sameSite: 'lax',
       path: '/'
     },

@@ -60,18 +60,38 @@ const upload = multer({
 
 // Auth middleware - Use passport.js authentication
 const authenticateUser = async (req: Request, res: Response, next: NextFunction) => {
-  // Подробное логирование сессии для отладки проблем аутентификации
-  console.log(`Auth check - Session ID: ${req.sessionID}`);
-  console.log(`Auth check - Is Authenticated: ${req.isAuthenticated ? req.isAuthenticated() : 'method undefined'}`);
-  
-  // Проверяем как метод isAuthenticated, так и наличие объекта пользователя
-  if (req.isAuthenticated && req.isAuthenticated() && req.user) {
-    console.log(`User authenticated: ${req.user.id} (${req.user.role})`);
-    return next();
+  try {
+    // Подробное логирование сессии для отладки проблем аутентификации
+    console.log(`Auth check - Session ID: ${req.sessionID}`);
+    console.log(`Auth check - Is Authenticated: ${req.isAuthenticated ? req.isAuthenticated() : 'method undefined'}`);
+    console.log(`Auth check - User: ${req.user ? JSON.stringify({ id: req.user.id, role: req.user.role }) : 'undefined'}`);
+    
+    // Проверяем как метод isAuthenticated, так и наличие объекта пользователя
+    if (req.isAuthenticated && req.isAuthenticated() && req.user) {
+      console.log(`User authenticated: ${req.user.id} (${req.user.role})`);
+      
+      // Принудительно сохраняем сессию при каждом запросе
+      if (req.session) {
+        req.session.touch();
+        req.session.save();
+      }
+      
+      return next();
+    }
+    
+    // Если нет сессии или пользователя, пробуем найти по session ID
+    if (req.sessionID) {
+      const storage = getStorage();
+      // Временное решение для отладки
+      return res.status(401).json({ message: "Unauthorized - Please log in" });
+    }
+    
+    // Если нет сессии или пользователя, возвращаем ошибку 401
+    return res.status(401).json({ message: "Unauthorized - Please log in" });
+  } catch (error) {
+    console.error("Auth middleware error:", error);
+    return res.status(500).json({ message: "Internal server error during authentication" });
   }
-  
-  // Если нет сессии или пользователя, возвращаем ошибку 401
-  return res.status(401).json({ message: "Unauthorized - Please log in" });
 };
 
 // Role check middleware
