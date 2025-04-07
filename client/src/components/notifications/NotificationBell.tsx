@@ -26,7 +26,7 @@ export interface Notification {
   relatedType?: string | null;
 }
 
-const NotificationBell = () => {
+export const NotificationBell = () => {
   const { t, i18n } = useTranslation();
   const { user, isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
@@ -101,31 +101,32 @@ const NotificationBell = () => {
     });
   };
 
-  // Проверяем финальное условие аутентификации
-  console.log('Authorization check in NotificationBell:', {
+  // Добавляем отладочный лог
+  console.log('🔔 NotificationBell mounted');
+  console.log('Authorization debug in NotificationBell:', {
     authFromHook: isAuthenticated,
     authFromStorage,
     userExists: !!user,
     combinedCheck: combinedAuthCheck,
     userId: user?.id
   });
-  
-  // Component will only be rendered when authenticated by TopBar
 
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
-        <div className="w-10 h-10 bg-primary/10 hover:bg-primary/20 transition-colors rounded-full flex items-center justify-center cursor-pointer relative">
-          {unreadCount > 0 ? (
-            <>
-              <BellRingIcon className="h-6 w-6 text-primary" />
-              <span className="absolute top-0 right-0 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] text-white">
-                {unreadCount > 9 ? '9+' : unreadCount}
-              </span>
-            </>
-          ) : (
-            <BellIcon className="h-6 w-6 text-primary" />
-          )}
+        <div className="border border-red-500 p-0.5"> {/* Добавлена красная рамка для отладки */}
+          <div className="w-10 h-10 bg-primary/10 hover:bg-primary/20 transition-colors rounded-full flex items-center justify-center cursor-pointer relative">
+            {unreadCount > 0 ? (
+              <>
+                <BellRingIcon className="h-6 w-6 text-primary" />
+                <span className="absolute top-0 right-0 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] text-white">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              </>
+            ) : (
+              <BellIcon className="h-6 w-6 text-primary" />
+            )}
+          </div>
         </div>
       </PopoverTrigger>
       <PopoverContent className="w-80 p-0" align="end">
@@ -190,4 +191,4 @@ const NotificationBell = () => {
   );
 };
 
-export default NotificationBell;
+// Именованный экспорт уже добавлен выше

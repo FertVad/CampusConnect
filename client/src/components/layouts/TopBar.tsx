@@ -4,7 +4,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { Menu, Search, MessageSquare } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslation } from 'react-i18next';
-import { default as NotificationBell } from '@/components/notifications/NotificationBell';
+import { NotificationBell } from '@/components/notifications/NotificationBell';
 
 const TopBar = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
