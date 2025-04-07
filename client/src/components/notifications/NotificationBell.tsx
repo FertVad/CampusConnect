@@ -90,20 +90,18 @@ const NotificationBell = () => {
     userKeys: user ? Object.keys(user) : null
   });
   
-  // Если пользователь не авторизован, не показываем компонент
+  // Если пользователь не авторизован, показываем базовую иконку
   if (!isAuthenticated || !user) {
-    console.log("🔔 NotificationBell не отображается: пользователь не авторизован", {
-      isAuthenticated,
-      userDefined: user !== undefined && user !== null
-    });
-    return null;
+    return (
+      <div className="relative inline-block cursor-pointer">
+        <div className="w-10 h-10 bg-slate-200 flex items-center justify-center rounded-full">
+          <BellIcon className="h-6 w-6 text-slate-700" />
+        </div>
+      </div>
+    );
   }
-  
-  // Дополнительное принудительное отображение иконки для отладки
-  console.log("🔔 NotificationBell БУДЕТ отображен!")
 
-  // Проверяем, работает ли альтернативная версия иконки уведомлений
-  if (true) { // Используем временное условие для тестирования
+  console.log("🔔 NotificationBell отображается с уведомлениями")
     return (
       <div className="relative inline-block cursor-pointer">
         <div className="w-10 h-10 bg-slate-200 flex items-center justify-center rounded-full">
