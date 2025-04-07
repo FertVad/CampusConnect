@@ -1,21 +1,17 @@
+
 // This file handles the auth header generation for API requests
 
 /**
  * Gets the headers needed for authenticated requests
- * Safari requires consistent headers to maintain cookies properly
  */
 export function getAuthHeaders(): HeadersInit {
-  // Additional headers needed for Safari compatibility
   return {
-    // Prevents browsers from automatically handling redirects
-    'X-Requested-With': 'XMLHttpRequest',
-    // Common browser compatibility header
-    'Accept': 'application/json, text/plain, */*',
-    // Improve cache handling with Safari
-    'Cache-Control': 'no-cache',
-    'Pragma': 'no-cache',
-    // Set content type for JSON by default
+    'Accept': 'application/json',
     'Content-Type': 'application/json',
+    'X-Requested-With': 'XMLHttpRequest',
+    'Cache-Control': 'no-cache, no-store, must-revalidate',
+    'Pragma': 'no-cache',
+    'Expires': '0'
   };
 }
 

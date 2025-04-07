@@ -103,9 +103,9 @@ const NotificationBell = () => {
     userId: user?.id
   });
   
-  // Требуем ОБЯЗАТЕЛЬНО наличие объекта пользователя для отображения уведомлений
-  if (!user || !user.id) {
-    console.log('NotificationBell: hiding because user object not available');
+  // Check auth status and user presence
+  if (!isAuthenticated || !user?.id) {
+    console.log('NotificationBell: hiding due to auth state:', { isAuthenticated, userId: user?.id });
     return null;
   }
 

@@ -5,11 +5,11 @@ async function throwIfResNotOk(res: Response) {
     try {
       // Try to get response text, but handle JSON parsing safely
       let text = res.statusText || 'Unknown error';
-      
+
       try {
         // First try to get response as text
         text = await res.text();
-        
+
         // Then try to parse as JSON if it looks like JSON
         if (text.startsWith('{') || text.startsWith('[')) {
           const jsonResponse = JSON.parse(text);
@@ -20,7 +20,7 @@ async function throwIfResNotOk(res: Response) {
       } catch (parseError) {
         console.warn('Error parsing response:', parseError);
       }
-      
+
       throw new Error(`${res.status}: ${text}`);
     } catch (error) {
       if (error instanceof Error) {
@@ -78,7 +78,7 @@ export async function apiRequest(
       console.error(`API request timeout (${method} ${url})`);
       throw new Error(`Request timeout: ${method} ${url}`);
     }
-    
+
     console.error(`API request error (${method} ${url}):`, error);
     throw error;
   }
@@ -115,7 +115,7 @@ export const getQueryFn: <T>(options: {
 
       // Проверяем ответ на ошибки
       await throwIfResNotOk(res);
-      
+
       // Безопасный парсинг JSON с логированием
       try {
         return await res.json();
