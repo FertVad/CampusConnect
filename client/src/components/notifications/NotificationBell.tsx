@@ -110,16 +110,12 @@ const NotificationBell = () => {
     userId: user?.id
   });
   
-  // Check auth status and user presence
-  if (!isAuthenticated || !user?.id) {
-    console.log('NotificationBell: hiding due to auth state:', { isAuthenticated, userId: user?.id });
-    return null;
-  }
+  // Component will only be rendered when authenticated by TopBar
 
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
-        <div style={{ backgroundColor: 'rgba(255,0,0,0.1)', padding: '8px' }} className="w-10 h-10 bg-primary/10 hover:bg-primary/20 transition-colors rounded-full flex items-center justify-center cursor-pointer">
+        <div className="w-10 h-10 bg-primary/10 hover:bg-primary/20 transition-colors rounded-full flex items-center justify-center cursor-pointer relative">
           {unreadCount > 0 ? (
             <>
               <BellRingIcon className="h-6 w-6 text-primary" />
