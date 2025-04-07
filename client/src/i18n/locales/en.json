@@ -489,7 +489,11 @@
     "requestUpdate": "Request update: {{status}}",
     "newAnnouncement": "New announcement: {{title}}",
     "newMessage": "New message from {{sender}}",
-    "newDocument": "New document: {{name}}"
+    "newDocument": "New document: {{name}}",
+    "newTask": "New task assigned: {{title}}",
+    "taskCompleted": "Task completed: {{title}}",
+    "taskStatusUpdate": "Task status updated: {{title}}",
+    "taskDeleted": "Task deleted: {{title}}"
   },
   "settings": {
     "title": "Settings",

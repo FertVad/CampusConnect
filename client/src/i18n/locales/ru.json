@@ -509,6 +509,10 @@
     "requestUpdate": "Обновление заявки: {{status}}",
     "newAnnouncement": "Новое объявление: {{title}}",
     "newMessage": "Новое сообщение от {{sender}}",
-    "newDocument": "Новый документ: {{name}}"
+    "newDocument": "Новый документ: {{name}}",
+    "newTask": "Новая задача назначена: {{title}}",
+    "taskCompleted": "Задача завершена: {{title}}",
+    "taskStatusUpdate": "Статус задачи обновлен: {{title}}",
+    "taskDeleted": "Задача удалена: {{title}}"
   }
 }
