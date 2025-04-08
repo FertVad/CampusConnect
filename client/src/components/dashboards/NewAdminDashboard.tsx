@@ -82,9 +82,10 @@ const AdminDashboard = () => {
     
     // Расчет просроченных задач (если дата выполнения прошла, а задача не выполнена)
     const overdueTasks = tasks.filter(t => {
-      if (!t.dueDate || t.status === 'completed') return false;
+      if (!t.dueDate) return false;
+      if (t.status === 'completed') return false;
       const dueDate = new Date(t.dueDate);
-      return dueDate < new Date() && t.status !== 'completed';
+      return dueDate < new Date();
     }).length;
     
     return {
@@ -141,17 +142,7 @@ const AdminDashboard = () => {
   
   return (
     <div className="space-y-6">
-      {/* Хардкод NotificationBell для тестирования */}
-      <div className="bg-red-500 p-4 rounded-lg shadow-lg z-[9999] mb-4 border-4 border-black">
-        <div className="flex items-center justify-between">
-          <h2 className="text-white font-bold text-xl">ВАЖНО! Топбар должен быть тут</h2>
-          <div className="flex items-center">
-            <div className="w-12 h-12 bg-white hover:bg-gray-100 transition-colors rounded-full flex items-center justify-center cursor-pointer relative border-2 border-black">
-              <div className="h-6 w-6 text-black">Notification Bell</div>
-            </div>
-          </div>
-        </div>
-      </div>
+      {/* Удаляем тестовый элемент, так как теперь есть глобальный топбар */}
       {/* User and Task Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatusCard
