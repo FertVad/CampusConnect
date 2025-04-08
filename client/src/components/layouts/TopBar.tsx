@@ -7,6 +7,8 @@ import { useTranslation } from 'react-i18next';
 import { NotificationBell } from '@/components/notifications/NotificationBell';
 
 const TopBar = () => {
+  console.log("✅ TopBar rendered");
+  
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user, logoutMutation, isAuthenticated } = useAuth();
   const { toast } = useToast();
@@ -33,7 +35,8 @@ const TopBar = () => {
   };
   
   return (
-    <header className="bg-white shadow-sm z-10">
+    <header className="bg-yellow-300 text-black p-4 z-50">
+      <div>TopBar DEBUG</div>
       <div className="px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
         {/* Mobile Menu Button */}
         <div className="flex items-center md:hidden">

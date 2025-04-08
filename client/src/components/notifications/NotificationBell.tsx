@@ -33,7 +33,7 @@ export const NotificationBell = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   // Отладочные логи
-  console.log('🔔 NotificationBell mounted');
+  console.log('🔔 NotificationBell mounted - ВИДИМЫЙ ВСЕГДА');
   console.log('NotificationBell auth state:', { 
     isAuthenticated, 
     userId: user?.id, 
@@ -45,10 +45,10 @@ export const NotificationBell = () => {
   // Определяем языковую локаль для форматирования дат
   const dateLocale = i18n.language === 'ru' ? ru : enUS;
   
-  // Получаем уведомления текущего пользователя
+  // Получаем уведомления текущего пользователя - но запрос все равно зависит от статуса аутентификации
   const { data: notifications = [], isLoading } = useQuery<Notification[]>({
     queryKey: ['/api/notifications'],
-    enabled: isAuthenticated,
+    enabled: isAuthenticated, // Запрос зависит от аутентификации, но компонент показываем всегда
     refetchInterval: 60000,
   });
 
