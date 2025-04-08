@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { BellIcon, BellRingIcon } from 'lucide-react';
+import { BellIcon, BellRingIcon, ExternalLinkIcon } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/use-auth';
@@ -147,16 +147,25 @@ export const NotificationBell = () => {
         </div>
       </PopoverTrigger>
       <PopoverContent 
-        className="w-80 p-0 glass-sidebar dark:bg-sidebar-background border-sidebar-border shadow-lg overflow-hidden animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95" 
+        className="w-96 p-0 glass-sidebar dark:bg-sidebar-background border-sidebar-border shadow-xl rounded-xl overflow-hidden animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95" 
         align="end"
+        sideOffset={8}
       >
-        <div className="flex items-center justify-end py-2 px-4 border-b border-sidebar-border/50">
+        <div className="flex items-center justify-between py-3 px-4 border-b border-sidebar-border/50">
+          <h3 className="font-medium text-sidebar-foreground">
+            {t('notifications.title')}
+            {unreadCount > 0 && (
+              <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-sidebar-accent/20 text-sidebar-foreground/90">
+                {unreadCount} {t('notifications.unread')}
+              </span>
+            )}
+          </h3>
           {unreadCount > 0 && (
             <Button
               variant="link"
               size="sm"
               onClick={markAllAsRead}
-              className="text-xs text-sidebar-foreground hover:text-sidebar-foreground/90 p-0 m-0 shadow-none border-none"
+              className="text-xs text-sidebar-foreground/80 hover:text-sidebar-foreground p-1 px-2 rounded-md hover:bg-sidebar-accent/10"
             >
               {t('notifications.markAllAsRead')}
             </Button>
@@ -177,7 +186,7 @@ export const NotificationBell = () => {
               {notifications.map((notification) => (
                 <div
                   key={notification.id}
-                  className={`p-4 border-b border-sidebar-border/40 hover:bg-sidebar-accent/10 transition-colors ${
+                  className={`p-5 border-b border-sidebar-border/30 hover:bg-sidebar-accent/10 transition-colors ${
                     !notification.isRead ? 'bg-sidebar-accent/20' : ''
                   } ${(notification.relatedType && notification.relatedId) ? 'cursor-pointer' : ''}`}
                   onClick={() => {
@@ -186,23 +195,28 @@ export const NotificationBell = () => {
                     }
                   }}
                 >
-                  <div className="flex items-start justify-between">
-                    <h4 className="font-medium text-sidebar-foreground">
+                  <div className="flex items-start justify-between gap-2">
+                    <h4 className="font-semibold text-sidebar-foreground text-base">
                       {notification.title}
-                      {notification.relatedType && notification.relatedId && 
-                        <span className="ml-1 text-xs text-primary-foreground/60">
-                          ({t(`notifications.relatedTypes.${notification.relatedType}`)})
+                      {notification.relatedType && notification.relatedId && (
+                        <span className="ml-2 text-xs px-2 py-1 rounded-full bg-sidebar-accent/20 text-sidebar-foreground/90 inline-block mt-1">
+                          {t(`notifications.relatedTypes.${notification.relatedType}`)}
                         </span>
-                      }
+                      )}
                     </h4>
-                    <small className="text-xs text-sidebar-foreground/70">
+                    <small className="text-xs whitespace-nowrap text-sidebar-foreground/70 mt-1">
                       {formatNotificationDate(notification.createdAt)}
                     </small>
                   </div>
-                  <p className="mt-1 text-sm text-sidebar-foreground/80">{notification.content}</p>
-                  <div className="mt-2 flex justify-between items-center">
+                  
+                  <p className="mt-3 mb-3 text-sm text-sidebar-foreground/80 leading-relaxed">
+                    {notification.content}
+                  </p>
+                  
+                  <div className="mt-3 pt-2 flex justify-between items-center border-t border-sidebar-border/20">
                     {(notification.relatedType && notification.relatedId) && (
-                      <small className="text-xs text-sidebar-foreground/50 italic">
+                      <small className="text-xs text-sidebar-foreground/70 flex items-center">
+                        <ExternalLinkIcon className="mr-1 h-3 w-3" />
                         {t('notifications.clickToNavigate')}
                       </small>
                     )}
@@ -214,7 +228,7 @@ export const NotificationBell = () => {
                           e.stopPropagation(); // Предотвращаем всплытие события клика
                           markAsRead(notification.id);
                         }}
-                        className="text-xs text-sidebar-foreground/90 hover:text-sidebar-foreground p-0 m-0 shadow-none border-none"
+                        className="text-xs text-sidebar-foreground/90 hover:text-sidebar-foreground hover:bg-sidebar-accent/10 rounded-md py-1 px-2"
                       >
                         {t('notifications.markAsRead')}
                       </Button>
