@@ -27,10 +27,10 @@ export function MainLayout({ children }: MainLayoutProps) {
       <Sidebar />
       
       {/* Верхняя панель навигации */}
-      <div className="fixed top-0 left-0 right-0 glass-sidebar dark:bg-sidebar-background p-2 shadow-md z-[90] ml-16 lg:ml-[4.5rem] border-b border-sidebar-border">
+      <div className="fixed top-0 left-0 right-0 glass-sidebar dark:bg-sidebar-background p-2 shadow-md z-50 ml-16 lg:ml-[4.5rem] border-b border-sidebar-border">
         <div className="flex items-center justify-between px-4">
-          <div className="flex items-center">
-            <h2 className="font-semibold text-lg text-sidebar-foreground pl-4">{getPageTitle()}</h2>
+          <div className="flex items-center h-14 pl-2">
+            <h2 className="font-semibold text-lg text-sidebar-foreground">{getPageTitle()}</h2>
           </div>
           <div className="flex items-center gap-4">
             <NotificationBell />
