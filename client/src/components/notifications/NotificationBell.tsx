@@ -147,19 +147,11 @@ export const NotificationBell = () => {
         </div>
       </PopoverTrigger>
       <PopoverContent 
-        className="w-96 p-0 glass-sidebar dark:bg-sidebar-background border-sidebar-border shadow-xl rounded-xl overflow-hidden animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95" 
+        className="w-96 p-0 glass-sidebar dark:bg-sidebar-background/95 bg-popover/95 border-sidebar-border shadow-xl rounded-xl overflow-hidden animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95" 
         align="end"
         sideOffset={8}
       >
-        <div className="flex items-center justify-between py-3 px-4 border-b border-sidebar-border/50">
-          <h3 className="font-medium text-sidebar-foreground">
-            {t('notifications.title')}
-            {unreadCount > 0 && (
-              <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-sidebar-accent/20 text-sidebar-foreground/90">
-                {unreadCount} {t('notifications.unread')}
-              </span>
-            )}
-          </h3>
+        <div className="flex items-center justify-end py-2 px-4 border-b border-sidebar-border/50">
           {unreadCount > 0 && (
             <Button
               variant="link"
@@ -186,8 +178,8 @@ export const NotificationBell = () => {
               {notifications.map((notification) => (
                 <div
                   key={notification.id}
-                  className={`p-5 border-b border-sidebar-border/30 hover:bg-sidebar-accent/10 transition-colors ${
-                    !notification.isRead ? 'bg-sidebar-accent/20' : ''
+                  className={`px-4 py-3 border-b border-sidebar-border/30 hover:bg-muted/50 transition-colors ${
+                    !notification.isRead ? 'bg-muted/40' : ''
                   } ${(notification.relatedType && notification.relatedId) ? 'cursor-pointer' : ''}`}
                   onClick={() => {
                     if (notification.relatedType && notification.relatedId) {
@@ -196,24 +188,27 @@ export const NotificationBell = () => {
                   }}
                 >
                   <div className="flex items-start justify-between gap-2">
-                    <h4 className="font-semibold text-sidebar-foreground text-base">
+                    <h4 className={`${!notification.isRead ? 'font-semibold' : 'font-medium'} text-sidebar-foreground text-base`}>
                       {notification.title}
-                      {notification.relatedType && notification.relatedId && (
-                        <span className="ml-2 text-xs px-2 py-1 rounded-full bg-sidebar-accent/20 text-sidebar-foreground/90 inline-block mt-1">
-                          {t(`notifications.relatedTypes.${notification.relatedType}`)}
-                        </span>
-                      )}
                     </h4>
                     <small className="text-xs whitespace-nowrap text-sidebar-foreground/70 mt-1">
                       {formatNotificationDate(notification.createdAt)}
                     </small>
                   </div>
                   
-                  <p className="mt-3 mb-3 text-sm text-sidebar-foreground/80 leading-relaxed">
+                  {notification.relatedType && notification.relatedId && (
+                    <div className="mt-1 mb-2">
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-sidebar-accent/20 text-sidebar-foreground/90 inline-block whitespace-nowrap">
+                        {t(`notifications.relatedTypes.${notification.relatedType}`)}
+                      </span>
+                    </div>
+                  )}
+                  
+                  <p className="mt-2 mb-2 text-sm text-sidebar-foreground/80 leading-relaxed">
                     {notification.content}
                   </p>
                   
-                  <div className="mt-3 pt-2 flex justify-between items-center border-t border-sidebar-border/20">
+                  <div className="mt-2 pt-2 flex justify-between items-center border-t border-sidebar-border/20">
                     {(notification.relatedType && notification.relatedId) && (
                       <small className="text-xs text-sidebar-foreground/70 flex items-center">
                         <ExternalLinkIcon className="mr-1 h-3 w-3" />
