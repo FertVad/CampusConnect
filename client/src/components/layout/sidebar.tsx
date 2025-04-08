@@ -140,7 +140,7 @@ export function Sidebar() {
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       className={cn(
-        "fixed left-0 top-0 bottom-0 z-[100] h-full flex flex-col glass-sidebar shadow-xl",
+        "fixed left-0 top-0 bottom-0 z-[110] h-full flex flex-col glass-sidebar shadow-xl",
         isCollapsed ? "w-16" : "w-64"
       )}
     >

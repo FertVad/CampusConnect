@@ -86,16 +86,16 @@ export const NotificationBell = () => {
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
-        <div className="w-10 h-10 bg-white hover:bg-gray-100 transition-colors rounded-full flex items-center justify-center cursor-pointer relative border-2 border-white">
+        <div className="w-10 h-10 bg-sidebar-accent hover:bg-sidebar-accent/90 transition-colors rounded-full flex items-center justify-center cursor-pointer relative">
           {unreadCount > 0 ? (
             <>
-              <BellRingIcon className="h-6 w-6 text-black" />
-              <span className="absolute top-0 right-0 flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-[10px] text-white border border-white">
+              <BellRingIcon className="h-6 w-6 text-sidebar-foreground" />
+              <span className="absolute top-0 right-0 flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-[10px] text-white border border-sidebar-background/20">
                 {unreadCount > 9 ? '9+' : unreadCount}
               </span>
             </>
           ) : (
-            <BellIcon className="h-6 w-6 text-black" />
+            <BellIcon className="h-6 w-6 text-sidebar-foreground" />
           )}
         </div>
       </PopoverTrigger>
