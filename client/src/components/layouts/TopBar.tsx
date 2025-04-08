@@ -35,8 +35,9 @@ const TopBar = () => {
   };
   
   return (
-    <header className="bg-red-500 text-white h-16 flex items-center px-4 z-50">
-      <div className="flex-1 flex justify-between items-center">
+    <header className="fixed top-0 left-0 right-0 bg-red-500 text-white h-20 flex items-center px-4 z-[9999] shadow-lg">
+      <div className="w-full flex justify-between items-center">
+        <div className="text-white font-bold">TOPBAR ВИДЕН</div>
         {/* Mobile Menu Button */}
         <div className="flex items-center">
           <button 
