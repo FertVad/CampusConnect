@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { BellIcon, BellRingIcon } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/use-auth';
+import { useLocation, useRoute } from 'wouter';
 import {
   Popover,
   PopoverContent,
@@ -31,6 +32,7 @@ export const NotificationBell = () => {
   const { user, isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
   const [isOpen, setIsOpen] = useState(false);
+  const [, setLocation] = useLocation();
 
   // Отладочные логи
   console.log('🔔 NotificationBell mounted - ВИДИМЫЙ ВСЕГДА');
@@ -49,7 +51,7 @@ export const NotificationBell = () => {
   const { data: notifications = [], isLoading } = useQuery<Notification[]>({
     queryKey: ['/api/notifications'],
     enabled: isAuthenticated, // Запрос зависит от аутентификации, но компонент показываем всегда
-    refetchInterval: 60000,
+    refetchInterval: 15000, // Сократили интервал до 15 секунд для более быстрого обновления
   });
 
   // Получаем количество непрочитанных уведомлений
@@ -82,6 +84,51 @@ export const NotificationBell = () => {
       locale: dateLocale
     });
   };
+  
+  // Функция для перехода к источнику уведомления
+  const navigateToNotificationSource = useCallback(async (notification: Notification) => {
+    try {
+      // Сначала помечаем уведомление как прочитанное
+      await markAsRead(notification.id);
+      
+      // Определяем маршрут на основе типа и идентификатора
+      if (notification.relatedType && notification.relatedId) {
+        let path = '/';
+        
+        switch (notification.relatedType) {
+          case 'task':
+            path = `/tasks?id=${notification.relatedId}`;
+            break;
+          case 'user':
+            path = `/users?id=${notification.relatedId}`;
+            break;
+          case 'subject':
+            path = `/subjects?id=${notification.relatedId}`;
+            break;
+          case 'assignment':
+            path = `/assignments/${notification.relatedId}`;
+            break;
+          case 'schedule':
+            path = `/schedule?id=${notification.relatedId}`;
+            break;
+          case 'grade':
+            path = `/grades?id=${notification.relatedId}`;
+            break;
+          default:
+            // Если тип не распознан, открываем дашборд
+            path = '/';
+        }
+        
+        // Закрываем меню уведомлений
+        setIsOpen(false);
+        
+        // Переходим по маршруту
+        setLocation(path);
+      }
+    } catch (error) {
+      console.error('Error navigating to notification source:', error);
+    }
+  }, [markAsRead, setLocation, setIsOpen]);
 
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
@@ -106,10 +153,10 @@ export const NotificationBell = () => {
         <div className="flex items-center justify-end py-2 px-4 border-b border-sidebar-border/50">
           {unreadCount > 0 && (
             <Button
-              variant="ghost"
+              variant="link"
               size="sm"
               onClick={markAllAsRead}
-              className="text-xs text-sidebar-foreground hover:text-sidebar-foreground/90 hover:bg-sidebar-accent/20"
+              className="text-xs text-sidebar-foreground hover:text-sidebar-foreground/90 p-0 m-0 shadow-none border-none"
             >
               {t('notifications.markAllAsRead')}
             </Button>
@@ -132,27 +179,47 @@ export const NotificationBell = () => {
                   key={notification.id}
                   className={`p-4 border-b border-sidebar-border/40 hover:bg-sidebar-accent/10 transition-colors ${
                     !notification.isRead ? 'bg-sidebar-accent/20' : ''
-                  }`}
+                  } ${(notification.relatedType && notification.relatedId) ? 'cursor-pointer' : ''}`}
+                  onClick={() => {
+                    if (notification.relatedType && notification.relatedId) {
+                      navigateToNotificationSource(notification);
+                    }
+                  }}
                 >
                   <div className="flex items-start justify-between">
-                    <h4 className="font-medium text-sidebar-foreground">{notification.title}</h4>
+                    <h4 className="font-medium text-sidebar-foreground">
+                      {notification.title}
+                      {notification.relatedType && notification.relatedId && 
+                        <span className="ml-1 text-xs text-primary-foreground/60">
+                          ({t(`notifications.relatedTypes.${notification.relatedType}`)})
+                        </span>
+                      }
+                    </h4>
                     <small className="text-xs text-sidebar-foreground/70">
                       {formatNotificationDate(notification.createdAt)}
                     </small>
                   </div>
                   <p className="mt-1 text-sm text-sidebar-foreground/80">{notification.content}</p>
-                  {!notification.isRead && (
-                    <div className="mt-2 flex justify-end">
+                  <div className="mt-2 flex justify-between items-center">
+                    {(notification.relatedType && notification.relatedId) && (
+                      <small className="text-xs text-sidebar-foreground/50 italic">
+                        {t('notifications.clickToNavigate')}
+                      </small>
+                    )}
+                    {!notification.isRead && (
                       <Button
-                        variant="ghost"
+                        variant="link"
                         size="sm"
-                        onClick={() => markAsRead(notification.id)}
-                        className="text-xs text-sidebar-foreground/90 hover:bg-sidebar-accent/20 hover:text-sidebar-foreground"
+                        onClick={(e) => {
+                          e.stopPropagation(); // Предотвращаем всплытие события клика
+                          markAsRead(notification.id);
+                        }}
+                        className="text-xs text-sidebar-foreground/90 hover:text-sidebar-foreground p-0 m-0 shadow-none border-none"
                       >
                         {t('notifications.markAsRead')}
                       </Button>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
               ))}
             </div>

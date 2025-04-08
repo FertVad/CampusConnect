@@ -494,6 +494,15 @@
     "clearAll": "Очистить все",
     "empty": "Нет уведомлений",
     "no_notifications": "У вас нет уведомлений",
+    "clickToNavigate": "Нажмите, чтобы открыть",
+    "relatedTypes": {
+      "task": "Задача",
+      "user": "Пользователь",
+      "subject": "Предмет",
+      "assignment": "Задание",
+      "schedule": "Расписание",
+      "grade": "Оценка"
+    },
     "unread": "Непрочитанные",
     "all": "Все",
     "loadMore": "Загрузить еще",

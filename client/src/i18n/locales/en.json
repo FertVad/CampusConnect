@@ -470,10 +470,19 @@
   "notifications": {
     "title": "Notifications",
     "markAsRead": "Mark as read",
-    "markAllAsRead": "Mark all as read",
+    "markAllAsRead": "Mark all as read", 
     "clearAll": "Clear all",
     "empty": "No notifications",
     "no_notifications": "You have no notifications",
+    "clickToNavigate": "Click to open",
+    "relatedTypes": {
+      "task": "Task",
+      "user": "User",
+      "subject": "Subject",
+      "assignment": "Assignment",
+      "schedule": "Schedule",
+      "grade": "Grade"
+    },
     "unread": "Unread",
     "all": "All",
     "loadMore": "Load more",
