@@ -26,12 +26,14 @@ const MainLayout = ({ children, title, subtitle }: MainLayoutProps) => {
       <Sidebar />
       
       {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Top Navigation Bar */}
-        <TopBar />
+      <div className="flex-1 flex flex-col overflow-hidden relative">
+        {/* Top Navigation Bar - fixed position с position:absolute */}
+        <div className="absolute top-0 left-0 right-0 z-50">
+          <TopBar />
+        </div>
         
-        {/* Main Content Area */}
-        <main className="flex-1 overflow-y-auto bg-neutral-50 pt-20 p-4 sm:p-6 lg:p-8">
+        {/* Main Content Area - увеличенный отступ сверху */}
+        <main className="flex-1 overflow-y-auto bg-neutral-50 pt-20 p-4 sm:p-6 lg:p-8 mt-16">
           {(title || subtitle) && (
             <div className="mb-6">
               {title && <h1 className="text-2xl font-bold font-heading text-neutral-700">{title}</h1>}

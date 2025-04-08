@@ -35,17 +35,21 @@ const TopBar = () => {
   };
   
   return (
-    <header className="bg-yellow-300 text-black p-4 z-50">
-      <div>TopBar DEBUG</div>
-      <div className="px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+    <header className="bg-red-500 text-white h-16 flex items-center px-4 z-50">
+      <div className="flex-1 flex justify-between items-center">
         {/* Mobile Menu Button */}
-        <div className="flex items-center md:hidden">
+        <div className="flex items-center">
           <button 
             onClick={toggleSidebar}
-            className="text-neutral-500 hover:text-neutral-700 focus:outline-none focus:text-neutral-700"
+            className="text-white hover:text-gray-100 focus:outline-none mr-4"
           >
             <Menu className="h-6 w-6" />
           </button>
+          
+          {/* Test NotificationBell прямо здесь для видимости */}
+          <div className="relative mr-4">
+            <NotificationBell />
+          </div>
         </div>
         
         {/* Mobile Logo */}
