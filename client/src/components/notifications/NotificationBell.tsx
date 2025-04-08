@@ -99,15 +99,17 @@ export const NotificationBell = () => {
           )}
         </div>
       </PopoverTrigger>
-      <PopoverContent className="w-80 p-0" align="end">
-        <div className="flex items-center justify-between p-4 border-b">
-          <h3 className="font-medium">{t('notifications.title')}</h3>
+      <PopoverContent 
+        className="w-80 p-0 glass-sidebar dark:bg-sidebar-background border-sidebar-border shadow-lg overflow-hidden animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95" 
+        align="end"
+      >
+        <div className="flex items-center justify-end py-2 px-4 border-b border-sidebar-border/50">
           {unreadCount > 0 && (
             <Button
               variant="ghost"
               size="sm"
               onClick={markAllAsRead}
-              className="text-xs"
+              className="text-xs text-sidebar-foreground hover:text-sidebar-foreground/90 hover:bg-sidebar-accent/20"
             >
               {t('notifications.markAllAsRead')}
             </Button>
@@ -116,11 +118,11 @@ export const NotificationBell = () => {
         
         <ScrollArea className="h-[300px]">
           {isLoading ? (
-            <div className="p-4 text-center text-muted-foreground">
+            <div className="p-4 text-center text-sidebar-foreground/70">
               {t('common.loading')}...
             </div>
           ) : notifications.length === 0 ? (
-            <div className="p-4 text-center text-muted-foreground">
+            <div className="p-4 text-center text-sidebar-foreground/70">
               {t('notifications.empty')}
             </div>
           ) : (
@@ -128,24 +130,24 @@ export const NotificationBell = () => {
               {notifications.map((notification) => (
                 <div
                   key={notification.id}
-                  className={`p-4 border-b hover:bg-accent/50 transition-colors ${
-                    !notification.isRead ? 'bg-accent/30' : ''
+                  className={`p-4 border-b border-sidebar-border/40 hover:bg-sidebar-accent/10 transition-colors ${
+                    !notification.isRead ? 'bg-sidebar-accent/20' : ''
                   }`}
                 >
                   <div className="flex items-start justify-between">
-                    <h4 className="font-medium">{notification.title}</h4>
-                    <small className="text-xs text-muted-foreground">
+                    <h4 className="font-medium text-sidebar-foreground">{notification.title}</h4>
+                    <small className="text-xs text-sidebar-foreground/70">
                       {formatNotificationDate(notification.createdAt)}
                     </small>
                   </div>
-                  <p className="mt-1 text-sm">{notification.content}</p>
+                  <p className="mt-1 text-sm text-sidebar-foreground/80">{notification.content}</p>
                   {!notification.isRead && (
                     <div className="mt-2 flex justify-end">
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => markAsRead(notification.id)}
-                        className="text-xs"
+                        className="text-xs text-sidebar-foreground/90 hover:bg-sidebar-accent/20 hover:text-sidebar-foreground"
                       >
                         {t('notifications.markAsRead')}
                       </Button>
