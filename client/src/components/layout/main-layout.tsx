@@ -5,20 +5,25 @@ import { NotificationBell } from "../notifications/NotificationBell";
 
 interface MainLayoutProps {
   children: ReactNode;
+  title?: string;
+  subtitle?: string;
 }
 
-export function MainLayout({ children }: MainLayoutProps) {
+export function MainLayout({ children, title, subtitle }: MainLayoutProps) {
   const [location] = useLocation();
   
   // Получаем заголовок страницы в зависимости от текущего пути
   const getPageTitle = () => {
-    // Преобразуем текущий путь в заголовок
+    // Если передан заголовок через параметр - используем его
+    if (title) return title;
+    
+    // Иначе генерируем из текущего пути
     const path = location === "/" ? "dashboard" : location.substring(1);
     
     // Капитализируем первую букву и заменяем дефисы пробелами
-    const title = path.charAt(0).toUpperCase() + path.slice(1).replace(/-/g, ' ');
+    const generatedTitle = path.charAt(0).toUpperCase() + path.slice(1).replace(/-/g, ' ');
     
-    return title;
+    return generatedTitle;
   };
   
   return (
@@ -26,10 +31,10 @@ export function MainLayout({ children }: MainLayoutProps) {
       {/* Sidebar - fixed position, will overlay content */}
       <Sidebar />
       
-      {/* Верхняя панель навигации */}
-      <div className="fixed top-0 left-0 right-0 glass-sidebar dark:bg-sidebar-background p-2 shadow-md z-50 ml-16 lg:ml-[4.5rem] border-b border-sidebar-border">
-        <div className="flex items-center justify-between px-4">
-          <div className="flex items-center h-14 pl-2">
+      {/* Верхняя панель навигации с минимальным z-index, чтобы сайдбар всегда был поверх */}
+      <div className="fixed top-0 left-0 right-0 glass-sidebar dark:bg-sidebar-background p-1 shadow-md z-10 ml-16 lg:ml-[4.5rem] border-b border-sidebar-border">
+        <div className="flex items-center justify-between px-2">
+          <div className="flex items-center h-14 pl-6">
             <h2 className="font-semibold text-lg text-sidebar-foreground">{getPageTitle()}</h2>
           </div>
           <div className="flex items-center gap-4">

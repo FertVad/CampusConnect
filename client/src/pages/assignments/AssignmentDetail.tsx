@@ -1,8 +1,9 @@
 import React, { useContext } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams } from 'wouter';
+import { useAuth } from '@/hooks/use-auth';
 
-import MainLayout from '@/components/layouts/MainLayout';
+import { MainLayout } from '@/components/layout/main-layout';
 import AssignmentDetails from '@/components/assignments/AssignmentDetails';
 import { Card, CardContent } from '@/components/ui/card';
 import { uploadFile, putData } from '@/lib/api';

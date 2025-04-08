@@ -1,7 +1,7 @@
 import React, { useContext, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
-import MainLayout from '@/components/layouts/MainLayout';
+import { MainLayout } from '@/components/layout/main-layout';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
