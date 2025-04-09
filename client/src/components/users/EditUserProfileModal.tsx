@@ -229,45 +229,46 @@ const EditUserProfileModal: React.FC<EditUserProfileModalProps> = ({
 
       console.log('🔄 Обновление данных после редактирования...');
 
-      // Шаг 1: Сначала инвалидируем все связанные запросы
-      // Это говорит react-query, что данные устарели и их нужно обновить
-      await queryClient.invalidateQueries({ 
-        queryKey: ['/api/users'],
-        refetchType: 'none' // Не делаем рефетч сразу, только помечаем данные как устаревшие
-      });
-      
-      // Шаг 2: Принудительно обновляем наиболее важные и конкретные запросы
-      // Это более точечный и быстрый подход, чем перезагрузка страницы
-      await queryClient.refetchQueries({ 
-        queryKey: ['/api/users', user.id],
-        exact: true // Обновляем только точное совпадение ключей
-      });
-      
-      // Шаг 3: Обновляем типоспецифичные данные
-      if (data.role === 'student') {
-        await queryClient.refetchQueries({ 
-          queryKey: ['/api/students', user.id],
-          exact: true
+      try {
+        // Шаг 1: Инвалидируем все запросы, связанные с пользователями
+        await queryClient.invalidateQueries({ 
+          queryKey: ['/api/users']
         });
-      } else if (data.role === 'teacher') {
+        
+        // Шаг 2: Принудительно обновляем конкретного пользователя
         await queryClient.refetchQueries({ 
-          queryKey: ['/api/teachers', user.id],
-          exact: true
+          queryKey: ['/api/users', user.id]
         });
-      } else if (data.role === 'admin' || data.role === 'director') {
+        
+        // Шаг 3: Важно - обновляем запрос с деталями пользователя в UserDetail
+        await queryClient.invalidateQueries({ 
+          queryKey: ['/api/users', user.id, 'details']
+        });
+        
+        // Шаг 4: Обновляем запросы, связанные с ролью пользователя
+        if (data.role === 'student') {
+          await queryClient.refetchQueries({ 
+            queryKey: ['/api/students', user.id]
+          });
+        } else if (data.role === 'teacher') {
+          await queryClient.refetchQueries({ 
+            queryKey: ['/api/teachers', user.id]
+          });
+        } else if (data.role === 'admin' || data.role === 'director') {
+          await queryClient.refetchQueries({ 
+            queryKey: ['/api/admins', user.id]
+          });
+        }
+        
+        // Шаг 5: Обновляем задачи пользователя, если они есть
         await queryClient.refetchQueries({ 
-          queryKey: ['/api/admins', user.id],
-          exact: true
+          queryKey: ['/api/users', user.id, 'tasks']
         });
+        
+        console.log('✅ Данные успешно обновлены');
+      } catch (cacheError) {
+        console.error('❌ Ошибка при обновлении кеша:', cacheError);
       }
-      
-      // Шаг 4: Обновляем связанные данные (задачи, и т.д.)
-      await queryClient.refetchQueries({ 
-        queryKey: ['/api/users', user.id, 'tasks'],
-        exact: true 
-      });
-      
-      console.log('✅ Данные успешно обновлены');
       
       // Показываем уведомление об успехе
       toast({
