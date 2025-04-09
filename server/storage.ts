@@ -268,7 +268,7 @@ export class MemStorage implements IStorage {
     this.requestIdCounter = 1;
     this.documentIdCounter = 1;
     this.messageIdCounter = 1;
-    this.notificationIdCounter = 1000; // Начинаем с большого числа, чтобы избежать конфликтов с существующими ID
+    this.notificationIdCounter = 2000; // Используем очень большое число для уникальности ID уведомлений
     
     // Инициализация счетчиков для новых моделей
     this.specialtyIdCounter = 1;

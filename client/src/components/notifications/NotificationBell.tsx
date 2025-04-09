@@ -120,11 +120,46 @@ export const NotificationBell = () => {
     }
     
     // Уведомления о пользователях
-    if (notification.title === "User Updated" && notification.content.includes("User information has been updated")) {
-      const userName = notification.content.match(/User information has been updated for: (.*?)$/)?.[1] || "";
-      return t('notifications.userUpdatedContent', {
-        name: userName
-      });
+    if (notification.title === "User Updated") {
+      // Обработка различных типов уведомлений об обновлении пользователя
+      
+      // 1. Пользователь получает уведомление, что его профиль был обновлен администратором
+      if (notification.content === "Ваш профиль был обновлён администратором." || 
+          notification.content === "Your profile has been updated by an administrator.") {
+        return t('notifications.userProfileUpdatedByAdmin');
+      }
+      
+      // 2. Администратор получает уведомление, что он обновил профиль пользователя
+      const adminUpdatedMatch = notification.content.match(/Вы обновили профиль пользователя (.*?)\./) || 
+                                notification.content.match(/You have updated user profile for (.*?)\./) ;
+      if (adminUpdatedMatch) {
+        const userName = adminUpdatedMatch[1] || "";
+        return t('notifications.adminUpdatedUserProfile', {
+          name: userName
+        });
+      }
+      
+      // 3. Другие администраторы получают уведомление, что профиль пользователя был обновлен
+      const adminNotificationMatch = notification.content.match(/Профиль пользователя (.*?) был обновлён\./) || 
+                                     notification.content.match(/User profile for (.*?) has been updated\./);
+      if (adminNotificationMatch) {
+        const userName = adminNotificationMatch[1] || "";
+        return t('notifications.adminNotificationUserUpdated', {
+          name: userName
+        });
+      }
+      
+      // 4. Старый формат для совместимости
+      const userInfoMatch = notification.content.match(/User information has been updated for: (.*?)$/);
+      if (userInfoMatch) {
+        const userName = userInfoMatch[1] || "";
+        return t('notifications.userUpdatedContent', {
+          name: userName
+        });
+      }
+      
+      // Если не подходит ни один из шаблонов, возвращаем исходное содержимое
+      return notification.content;
     }
     
     // Уведомления о расписании

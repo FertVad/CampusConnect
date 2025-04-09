@@ -519,7 +519,10 @@
     "taskDeletedContent": "Task \"{{title}}\" has been deleted",
     "newTaskAssignedContent": "You have been assigned a new task: {{title}}",
     "userUpdatedContent": "User information has been updated for: {{name}}",
-    "scheduleChangedContent": "Schedule has been changed: {{info}}"
+    "scheduleChangedContent": "Schedule has been changed: {{info}}",
+    "userProfileUpdatedByAdmin": "Your profile has been updated by an administrator.",
+    "adminUpdatedUserProfile": "You have updated user profile for {{name}}.",
+    "adminNotificationUserUpdated": "User profile for {{name}} has been updated."
   },
   "settings": {
     "title": "Settings",

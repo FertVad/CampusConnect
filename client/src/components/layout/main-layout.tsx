@@ -35,7 +35,7 @@ export function MainLayout({ children, title, subtitle }: MainLayoutProps) {
             <h2 className="font-semibold text-lg text-sidebar-foreground">{getPageTitle()}</h2>
             {subtitle && <p className="text-sm text-sidebar-foreground ml-2 opacity-70">{subtitle}</p>}
           </div>
-          <div className="flex items-center gap-4 border border-red-500 p-1">
+          <div className="flex items-center gap-4">
             <NotificationBell />
           </div>
         </div>

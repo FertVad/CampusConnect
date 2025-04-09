@@ -540,6 +540,9 @@
     "taskDeletedContent": "Задача \"{{title}}\" была удалена",
     "newTaskAssignedContent": "Вам назначена новая задача: {{title}}",
     "userUpdatedContent": "Обновлена информация о пользователе: {{name}}",
-    "scheduleChangedContent": "Изменения в расписании: {{info}}"
+    "scheduleChangedContent": "Изменения в расписании: {{info}}",
+    "userProfileUpdatedByAdmin": "Ваш профиль был обновлён администратором.",
+    "adminUpdatedUserProfile": "Вы обновили профиль пользователя {{name}}.",
+    "adminNotificationUserUpdated": "Профиль пользователя {{name}} был обновлён."
   }
 }

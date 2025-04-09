@@ -300,38 +300,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const storage = getStorage();
         const fullName = `${updatedUser.firstName} ${updatedUser.lastName}`;
         
-        console.log(`Creating user update notifications for ${fullName}`);
-        
         // Создаем уведомление для самого пользователя (если обновление сделал не он сам)
         if (req.user && req.user.id !== updatedUser.id) {
-          console.log(`Creating notification for updated user ${updatedUser.id}`);
-          const userNotification = await storage.createNotification({
+          await storage.createNotification({
             userId: updatedUser.id,
             title: "User Updated",
-            content: `User information has been updated for: ${fullName}`,
+            content: `Ваш профиль был обновлён администратором.`,
             relatedType: "user",
             relatedId: updatedUser.id
           });
-          console.log(`Created notification for user: ${JSON.stringify(userNotification)}`);
         }
         
-        // Если в системе есть другие администраторы, отправляем им тоже уведомление об изменении данных пользователя
+        // Если обновление сделал администратор, создаем уведомление для него
         if (req.user && req.user.role === 'admin') {
-          const admins = await storage.getAllAdminUsers();
-          console.log(`Found ${admins.length} admin users to notify`);
+          await storage.createNotification({
+            userId: req.user.id,
+            title: "User Updated",
+            content: `Вы обновили профиль пользователя ${fullName}.`,
+            relatedType: "user",
+            relatedId: updatedUser.id
+          });
           
+          // Получаем всех администраторов
+          const admins = await storage.getUsersByRole('admin');
+          
+          // Отправляем уведомления другим администраторам
           for (const admin of admins) {
             // Не отправляем уведомление админу, который сделал изменения
             if (admin.id !== req.user.id) {
-              console.log(`Creating notification for admin ${admin.id}`);
-              const adminNotification = await storage.createNotification({
+              await storage.createNotification({
                 userId: admin.id,
                 title: "User Updated",
-                content: `User information has been updated for: ${fullName}`,
+                content: `Профиль пользователя ${fullName} был обновлён.`,
                 relatedType: "user",
                 relatedId: updatedUser.id
               });
-              console.log(`Created notification for admin: ${JSON.stringify(adminNotification)}`);
             }
           }
         }
