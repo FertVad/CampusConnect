@@ -227,18 +227,26 @@ const EditUserProfileModal: React.FC<EditUserProfileModalProps> = ({
         }
       }
 
+      console.log('🔄 Invalidating caches...');
       // Инвалидируем кеш для обновления данных на всех страницах
-      queryClient.invalidateQueries({ queryKey: ['/api/users'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/users', user.id] });
-      queryClient.invalidateQueries({ queryKey: ['/api/users', user.id, 'details'] });
+      await queryClient.invalidateQueries({ queryKey: ['/api/users'] });
+      await queryClient.invalidateQueries({ queryKey: ['/api/users', user.id] });
+      await queryClient.invalidateQueries({ queryKey: ['/api/users', user.id, 'details'] });
+      
+      // Добавляем инвалидацию по user details, который используется напрямую
+      await queryClient.refetchQueries({ queryKey: ['/api/users', user.id] });
       
       if (data.role === 'student') {
-        queryClient.invalidateQueries({ queryKey: ['/api/students', user.id] });
+        await queryClient.invalidateQueries({ queryKey: ['/api/students', user.id] });
+        await queryClient.refetchQueries({ queryKey: ['/api/students', user.id] });
       } else if (data.role === 'teacher') {
-        queryClient.invalidateQueries({ queryKey: ['/api/teachers', user.id] });
+        await queryClient.invalidateQueries({ queryKey: ['/api/teachers', user.id] });
+        await queryClient.refetchQueries({ queryKey: ['/api/teachers', user.id] });
       } else if (data.role === 'admin' || data.role === 'director') {
-        queryClient.invalidateQueries({ queryKey: ['/api/admins', user.id] });
+        await queryClient.invalidateQueries({ queryKey: ['/api/admins', user.id] });
+        await queryClient.refetchQueries({ queryKey: ['/api/admins', user.id] });
       }
+      console.log('✅ Cache invalidated successfully');
       
       // Показываем уведомление об успехе
       toast({

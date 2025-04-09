@@ -89,30 +89,30 @@ const UserDetail: React.FC = () => {
         console.error('Error loading user details:', err);
       }
       
-      // В зависимости от роли, добавляем тестовые данные если нужно
+      // В зависимости от роли, добавляем значения по умолчанию только если нет данных с сервера
       if (user.role === 'teacher') {
         // Для учителя
         const teacherDefaults = {
           subjects: ['Математика', 'Информатика', 'Программирование'],
-          specialty: 'Компьютерные науки',
-          rating: 4.7,
+          specialty: roleDetails?.specialty || 'Компьютерные науки',
+          rating: roleDetails?.rating || 4.7,
           stats: {
-            students: 45,
-            courses: 3,
-            classes: 12,
-            averageGrade: 4.2
+            students: roleDetails?.stats?.students || 45,
+            courses: roleDetails?.stats?.courses || 3,
+            classes: roleDetails?.stats?.classes || 12,
+            averageGrade: roleDetails?.stats?.averageGrade || 4.2
           },
-          nextClass: {
+          nextClass: roleDetails?.nextClass || {
             name: 'Основы программирования',
             time: '14:30',
             room: '205'
           },
-          experience: 7,
-          tasksOpen: 3,
-          tasksDone: 25
+          experience: roleDetails?.experience || 7,
+          tasksOpen: roleDetails?.tasksOpen || 3,
+          tasksDone: roleDetails?.tasksDone || 25
         };
         
-        // Применяем значения по умолчанию только для отсутствующих полей
+        // Объединяем данные, приоритет отдаём реальным данным с сервера
         roleDetails = {
           ...teacherDefaults,
           ...roleDetails
@@ -120,15 +120,15 @@ const UserDetail: React.FC = () => {
       } else if (user.role === 'admin') {
         // Для администратора
         const adminDefaults = {
-          department: 'IT-отдел',
+          department: roleDetails?.department || 'IT-отдел',
           stats: {
-            users: 120,
-            teachers: 35,
-            students: 85,
-            courses: 15
+            users: roleDetails?.stats?.users || 120,
+            teachers: roleDetails?.stats?.teachers || 35,
+            students: roleDetails?.stats?.students || 85,
+            courses: roleDetails?.stats?.courses || 15
           },
-          tasksOpen: 7,
-          tasksDone: 32
+          tasksOpen: roleDetails?.tasksOpen || 7,
+          tasksDone: roleDetails?.tasksDone || 32
         };
         
         roleDetails = {
@@ -138,17 +138,17 @@ const UserDetail: React.FC = () => {
       } else if (user.role === 'director') {
         // Для директора
         const directorDefaults = {
-          title: 'Генеральный директор',
-          department: 'Руководство',
-          organization: 'Колледж им. Ломоносова',
+          title: roleDetails?.title || 'Генеральный директор',
+          department: roleDetails?.department || 'Руководство',
+          organization: roleDetails?.organization || 'Колледж им. Ломоносова',
           stats: {
-            teachers: 48,
-            students: 560,
-            courses: 25,
-            completionRate: 92
+            teachers: roleDetails?.stats?.teachers || 48,
+            students: roleDetails?.stats?.students || 560,
+            courses: roleDetails?.stats?.courses || 25,
+            completionRate: roleDetails?.stats?.completionRate || 92
           },
-          tasksOpen: 5,
-          tasksDone: 19
+          tasksOpen: roleDetails?.tasksOpen || 5,
+          tasksDone: roleDetails?.tasksDone || 19
         };
         
         roleDetails = {
