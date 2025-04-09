@@ -87,7 +87,7 @@ export const NotificationBell = () => {
   
   // Функция для перевода содержимого уведомлений
   const translateNotificationContent = (notification: Notification) => {
-    // Если содержимое содержит фразы связанные с задачами, переводим их
+    // Уведомления о задачах
     if (notification.title === "Task Status Updated" && notification.content.includes("has been updated to")) {
       const taskTitle = notification.content.match(/Task "(.*?)" has been updated to/)?.[1] || "";
       const status = notification.content.match(/updated to (.*?)$/)?.[1] || "";
@@ -116,6 +116,22 @@ export const NotificationBell = () => {
       const taskTitle = notification.content.match(/You have been assigned a new task: (.*?)$/)?.[1] || "";
       return t('notifications.newTaskAssignedContent', {
         title: taskTitle
+      });
+    }
+    
+    // Уведомления о пользователях
+    if (notification.title === "User Updated" && notification.content.includes("User information has been updated")) {
+      const userName = notification.content.match(/User information has been updated for: (.*?)$/)?.[1] || "";
+      return t('notifications.userUpdatedContent', {
+        name: userName
+      });
+    }
+    
+    // Уведомления о расписании
+    if (notification.title === "Schedule Changed" && notification.content.includes("Schedule has been changed")) {
+      const scheduleInfo = notification.content.match(/Schedule has been changed: (.*?)$/)?.[1] || "";
+      return t('notifications.scheduleChangedContent', {
+        info: scheduleInfo
       });
     }
     
@@ -192,10 +208,10 @@ export const NotificationBell = () => {
         <div className="flex items-center justify-end py-2 px-4 border-b border-sidebar-border/50">
           {unreadCount > 0 && (
             <Button
-              variant="link"
+              variant="ghost"
               size="sm"
               onClick={markAllAsRead}
-              className="text-xs text-sidebar-foreground/80 hover:text-sidebar-foreground p-1 px-2 rounded-md hover:bg-sidebar-accent/10"
+              className="text-xs text-sidebar-foreground/80 hover:text-sidebar-foreground p-1 px-2 rounded-md hover:bg-sidebar-accent/10 border-none outline-none"
             >
               {t('notifications.markAllAsRead')}
             </Button>
@@ -227,7 +243,7 @@ export const NotificationBell = () => {
                 >
                   <div className="flex items-start justify-between gap-2">
                     <h4 className={`${!notification.isRead ? 'font-semibold' : 'font-medium'} text-sidebar-foreground text-base`}>
-                      {t(`notifications.${notification.title}`, notification.title)}
+                      {t(`notifications.titles.${notification.title.replace(/\s+/g, '')}`, notification.title)}
                     </h4>
                     <small className="text-xs whitespace-nowrap text-sidebar-foreground/70 mt-1">
                       {formatNotificationDate(notification.createdAt)}
@@ -255,13 +271,13 @@ export const NotificationBell = () => {
                     )}
                     {!notification.isRead && (
                       <Button
-                        variant="link"
+                        variant="ghost"
                         size="sm"
                         onClick={(e) => {
                           e.stopPropagation(); // Предотвращаем всплытие события клика
                           markAsRead(notification.id);
                         }}
-                        className="text-xs text-sidebar-foreground/90 hover:text-sidebar-foreground hover:bg-sidebar-accent/10 rounded-md py-1 px-2"
+                        className="text-xs text-sidebar-foreground/90 hover:text-sidebar-foreground hover:bg-sidebar-accent/10 rounded-md py-1 px-2 border-none outline-none"
                       >
                         {t('notifications.markAsRead')}
                       </Button>

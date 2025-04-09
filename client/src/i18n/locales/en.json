@@ -506,14 +506,20 @@
     "taskCompleted": "Task completed: {{title}}",
     "taskStatusUpdate": "Task status updated: {{title}}",
     "taskDeleted": "Task deleted: {{title}}",
-    "Task Status Updated": "Task Status Updated",
-    "Task Completed": "Task Completed",
-    "Task Deleted": "Task Deleted",
-    "New Task Assigned": "New Task Assigned",
+    "titles": {
+      "TaskStatusUpdated": "Task Status Updated",
+      "TaskCompleted": "Task Completed",
+      "TaskDeleted": "Task Deleted",
+      "NewTaskAssigned": "New Task Assigned",
+      "UserUpdated": "User Data Updated",
+      "ScheduleChanged": "Schedule Changed"
+    },
     "taskStatusUpdateContent": "Status of task \"{{title}}\" has been updated to {{status}}",
     "taskCompletedContent": "Task \"{{title}}\" has been marked as completed",
     "taskDeletedContent": "Task \"{{title}}\" has been deleted",
-    "newTaskAssignedContent": "You have been assigned a new task: {{title}}"
+    "newTaskAssignedContent": "You have been assigned a new task: {{title}}",
+    "userUpdatedContent": "User information has been updated for: {{name}}",
+    "scheduleChangedContent": "Schedule has been changed: {{info}}"
   },
   "settings": {
     "title": "Settings",

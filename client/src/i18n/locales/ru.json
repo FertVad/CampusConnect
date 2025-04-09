@@ -527,13 +527,19 @@
     "taskCompleted": "Задача завершена: {{title}}",
     "taskStatusUpdate": "Статус задачи обновлен: {{title}}",
     "taskDeleted": "Задача удалена: {{title}}",
-    "Task Status Updated": "Статус задачи обновлен",
-    "Task Completed": "Задача завершена",
-    "Task Deleted": "Задача удалена",
-    "New Task Assigned": "Назначена новая задача",
+    "titles": {
+      "TaskStatusUpdated": "Статус задачи обновлен",
+      "TaskCompleted": "Задача завершена",
+      "TaskDeleted": "Задача удалена",
+      "NewTaskAssigned": "Назначена новая задача",
+      "UserUpdated": "Данные пользователя обновлены",
+      "ScheduleChanged": "Изменения в расписании"
+    },
     "taskStatusUpdateContent": "Статус задачи \"{{title}}\" изменен на {{status}}",
     "taskCompletedContent": "Задача \"{{title}}\" отмечена как завершенная",
     "taskDeletedContent": "Задача \"{{title}}\" была удалена",
-    "newTaskAssignedContent": "Вам назначена новая задача: {{title}}"
+    "newTaskAssignedContent": "Вам назначена новая задача: {{title}}",
+    "userUpdatedContent": "Обновлена информация о пользователе: {{name}}",
+    "scheduleChangedContent": "Изменения в расписании: {{info}}"
   }
 }
