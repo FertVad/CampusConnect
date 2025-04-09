@@ -141,42 +141,90 @@ const EditUserProfileModal: React.FC<EditUserProfileModalProps> = ({
       
       console.log('🔨 Подготовленные базовые данные для отправки:', formData);
 
+      // Добавим предотвращение кеширования
+      const cacheBuster = `?_t=${Date.now()}`;
+      const userUpdateUrlWithCache = `/api/users/${user.id}${cacheBuster}`;
+      
       // Отправляем запрос на обновление профиля
-      const response = await apiRequest('PUT', `/api/users/${user.id}`, formData);
+      console.log('📤 Отправка запроса на:', userUpdateUrlWithCache);
+      const response = await apiRequest('PUT', userUpdateUrlWithCache, formData);
       
       if (!response.ok) {
         let errorMessage = 'Ошибка при обновлении профиля';
         try {
-          const errorData = await response.json();
-          if (errorData && errorData.message) {
-            errorMessage = errorData.message;
+          // Проверяем тип содержимого ответа
+          const contentType = response.headers.get('content-type');
+          console.log(`📋 Error response content type: ${contentType}`);
+          
+          if (contentType && contentType.includes('application/json')) {
+            const errorData = await response.json();
+            if (errorData && errorData.message) {
+              errorMessage = errorData.message;
+            }
+          } else {
+            // Проверяем текст ответа для HTML-страниц и других форматов
+            const errorText = await response.text();
+            
+            if (errorText.includes('<!DOCTYPE html>')) {
+              console.error('⚠️ Получен HTML вместо JSON, возможно проблема с аутентификацией');
+              errorMessage = 'Ошибка авторизации. Пожалуйста, войдите снова';
+            } else {
+              errorMessage = response.statusText || errorMessage;
+              console.error('Error response:', response.status, errorText.substring(0, 100));
+            }
           }
         } catch (e) {
-          // Если не удалось распарсить JSON, используем statusText
+          // Если не удалось распарсить ответ, используем statusText
           errorMessage = response.statusText || errorMessage;
-          console.error('Error parsing error response:', response.status, response.statusText);
+          console.error('Error parsing error response:', response.status, response.statusText, e);
         }
         throw new Error(errorMessage);
+      } else {
+        console.log('✅ Базовые данные успешно обновлены - получен статус:', response.status);
       }
 
       // Если роль изменилась, отправляем дополнительный запрос для обновления роли
       if (canChangeRole && data.role !== user.role) {
-        const roleResponse = await apiRequest('PATCH', `/api/users/${user.id}/role`, {
+        console.log(`🔄 Обновление роли пользователя с ${user.role} на ${data.role}`);
+        
+        // Добавляем cache buster
+        const roleCacheBuster = `?_t=${Date.now()}`;
+        const roleUrl = `/api/users/${user.id}/role${roleCacheBuster}`;
+        
+        const roleResponse = await apiRequest('PATCH', roleUrl, {
           role: data.role
         });
         
         if (!roleResponse.ok) {
           let errorMessage = 'Ошибка при обновлении роли';
           try {
-            const errorData = await roleResponse.json();
-            if (errorData && errorData.message) {
-              errorMessage = errorData.message;
+            // Проверяем тип содержимого ответа
+            const contentType = roleResponse.headers.get('content-type');
+            console.log(`📋 Role update error response content type: ${contentType}`);
+            
+            if (contentType && contentType.includes('application/json')) {
+              const errorData = await roleResponse.json();
+              if (errorData && errorData.message) {
+                errorMessage = errorData.message;
+              }
+            } else {
+              // Для не-JSON ответов
+              const errorText = await roleResponse.text();
+              if (errorText.includes('<!DOCTYPE html>')) {
+                console.error('⚠️ Получен HTML вместо JSON при обновлении роли');
+                errorMessage = 'Ошибка авторизации при обновлении роли';
+              } else {
+                errorMessage = roleResponse.statusText || errorMessage;
+                console.error('Role update error response:', roleResponse.status, errorText.substring(0, 100));
+              }
             }
           } catch (e) {
             errorMessage = roleResponse.statusText || errorMessage;
-            console.error('Error parsing role update error:', roleResponse.status, roleResponse.statusText);
+            console.error('Error parsing role update error:', roleResponse.status, roleResponse.statusText, e);
           }
           throw new Error(errorMessage);
+        } else {
+          console.log('✅ Роль пользователя успешно обновлена');
         }
       }
 

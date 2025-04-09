@@ -81,25 +81,51 @@ const UserDetail: React.FC = () => {
         if (url) {
           console.log(`🔍 Fetching role details from ${url}`);
           try {
-            const response = await apiRequest('GET', url);
+            // Добавим параметр для предотвращения кеширования
+            const cacheBuster = `?_t=${Date.now()}`;
+            const response = await apiRequest('GET', `${url}${cacheBuster}`);
             
             if (response.ok) {
-              // Добавляем проверку - возможно, сервер не возвращает JSON или возвращает пустой ответ
-              const responseText = await response.text();
-              if (responseText && responseText.trim()) {
-                try {
-                  const detailData = JSON.parse(responseText);
-                  roleDetails = detailData;
-                  console.log('✅ Received role details:', roleDetails);
-                } catch (parseError) {
-                  console.error('❌ Error parsing response JSON:', parseError);
-                  console.log('📄 Response text:', responseText);
-                }
+              // Сначала проверяем тип содержимого ответа
+              const contentType = response.headers.get('content-type');
+              console.log(`📋 Response content type: ${contentType}`);
+              
+              // Проверка, что ответ - это JSON, а не HTML
+              if (contentType && contentType.includes('application/json')) {
+                const jsonData = await response.json();
+                roleDetails = jsonData;
+                console.log('✅ Received role details as JSON:', roleDetails);
               } else {
-                console.log('⚠️ Empty response from server');
+                // Если не JSON - попробуем прочитать как текст и преобразовать
+                const responseText = await response.text();
+                
+                // Проверяем, не является ли ответ HTML (часто при ошибке аутентификации)
+                if (responseText && responseText.trim() && !responseText.includes('<!DOCTYPE html>')) {
+                  try {
+                    // Попытка парсинга JSON из текста
+                    const detailData = JSON.parse(responseText);
+                    roleDetails = detailData;
+                    console.log('✅ Parsed JSON from text response:', roleDetails);
+                  } catch (parseError) {
+                    console.error('❌ Error parsing response as JSON:', parseError);
+                    console.log('📄 Response starts with:', responseText.substring(0, 100));
+                    
+                    // Добавим повторный запрос в случае ошибки сессии
+                    if (responseText.includes('<!DOCTYPE html>')) {
+                      console.log('🔄 Received HTML instead of JSON, trying to refresh authentication');
+                      // Не используем данные из этого ответа
+                    }
+                  }
+                } else {
+                  console.warn('⚠️ Response is not JSON or is empty HTML');
+                }
               }
             } else {
               console.warn(`⚠️ Failed to load detailed data from ${url}, status: ${response.status}`);
+              
+              if (response.status === 401) {
+                console.log('🔒 Authentication error, user might need to login again');
+              }
             }
           } catch (fetchError) {
             console.error('❌ Network error during fetch:', fetchError);
