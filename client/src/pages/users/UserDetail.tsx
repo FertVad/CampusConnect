@@ -51,150 +51,122 @@ const UserDetail: React.FC = () => {
   const { data: detailedUser, isLoading: isDetailLoading } = useQuery({
     queryKey: ['/api/users', id, 'details'],
     queryFn: async () => {
-      if (!user) return null;
-      
-      // В зависимости от роли пользователя загружаем дополнительные данные
-      let url = '';
-      switch (user.role) {
-        case 'student':
-          url = `/api/students/${id}`;
-          break;
-        case 'teacher':
-          url = `/api/teachers/${id}`;
-          break;
-        case 'admin':
-        case 'director':
-          // Используем тот же endpoint для админов и директоров
-          url = `/api/admins/${id}`;
-          break;
+      if (!user) {
+        console.error('User data not available for detailed query');
+        return null;
       }
       
-      if (!url) return user;
+      // Подготовим базовую информацию о пользователе
+      const baseUserData = { ...user };
       
-      const response = await apiRequest('GET', url);
-      if (!response.ok) {
-        // Если детальная информация недоступна, возвращаем базовую
-        return user;
+      // Готовим объект для хранения деталей в зависимости от роли
+      let roleDetails = {};
+      
+      try {
+        // Загружаем дополнительные данные в соответствии с ролью пользователя
+        let url = '';
+        switch (user.role) {
+          case 'student':
+            url = `/api/students/${id}`;
+            break;
+          case 'teacher':
+            url = `/api/teachers/${id}`;
+            break;
+          case 'admin':
+          case 'director':
+            url = `/api/admins/${id}`;
+            break;
+        }
+        
+        if (url) {
+          const response = await apiRequest('GET', url);
+          if (response.ok) {
+            const detailData = await response.json();
+            roleDetails = { ...detailData };
+          } else {
+            console.warn(`Failed to load detailed data from ${url}, status: ${response.status}`);
+          }
+        }
+      } catch (err) {
+        console.error('Error loading user details:', err);
       }
       
-      const detailData = await response.json();
-      
-      // Объединяем базовую информацию с детальной
-      const userData = { ...user, ...detailData };
-      
-      // Заполняем отсутствующие данные в зависимости от роли
+      // В зависимости от роли, добавляем тестовые данные если нужно
       if (user.role === 'teacher') {
-        // Если предметы не указаны, добавляем тестовый список
-        if (!userData.subjects || userData.subjects.length === 0) {
-          userData.subjects = ['Математика', 'Информатика', 'Программирование'];
-        }
-        
-        // Если специальность не указана
-        if (!userData.specialty) {
-          userData.specialty = 'Компьютерные науки';
-        }
-        
-        // Если рейтинг не указан
-        if (userData.rating === undefined) {
-          userData.rating = 4.7;
-        }
-        
-        // Если статистика не указана
-        if (!userData.stats) {
-          userData.stats = {
+        // Для учителя
+        const teacherDefaults = {
+          subjects: ['Математика', 'Информатика', 'Программирование'],
+          specialty: 'Компьютерные науки',
+          rating: 4.7,
+          stats: {
             students: 45,
             courses: 3,
             classes: 12,
             averageGrade: 4.2
-          };
-        }
-        
-        // Если следующее занятие не указано
-        if (!userData.nextClass) {
-          userData.nextClass = {
+          },
+          nextClass: {
             name: 'Основы программирования',
             time: '14:30',
             room: '205'
-          };
-        }
+          },
+          experience: 7,
+          tasksOpen: 3,
+          tasksDone: 25
+        };
         
-        // Если опыт не указан
-        if (userData.experience === undefined) {
-          userData.experience = 7;
-        }
-        
-        // Если задачи не указаны
-        if (userData.tasksOpen === undefined) {
-          userData.tasksOpen = 3;
-        }
-        if (userData.tasksDone === undefined) {
-          userData.tasksDone = 25;
-        }
-      }
-      // Для администратора
-      else if (user.role === 'admin') {
-        // Если департамент не указан
-        if (!userData.department) {
-          userData.department = 'IT-отдел';
-        }
-        
-        // Если статистика не указана
-        if (!userData.stats) {
-          userData.stats = {
+        // Применяем значения по умолчанию только для отсутствующих полей
+        roleDetails = {
+          ...teacherDefaults,
+          ...roleDetails
+        };
+      } else if (user.role === 'admin') {
+        // Для администратора
+        const adminDefaults = {
+          department: 'IT-отдел',
+          stats: {
             users: 120,
             teachers: 35,
             students: 85,
             courses: 15
-          };
-        }
+          },
+          tasksOpen: 7,
+          tasksDone: 32
+        };
         
-        // Если задачи не указаны
-        if (userData.tasksOpen === undefined) {
-          userData.tasksOpen = 7;
-        }
-        if (userData.tasksDone === undefined) {
-          userData.tasksDone = 32;
-        }
-      }
-      // Для директора
-      else if (user.role === 'director') {
-        // Если должность не указана
-        if (!userData.title) {
-          userData.title = 'Генеральный директор';
-        }
-        
-        // Если департамент не указан
-        if (!userData.department) {
-          userData.department = 'Руководство';
-        }
-        
-        // Если организация не указана
-        if (!userData.organization) {
-          userData.organization = 'Колледж им. Ломоносова';
-        }
-        
-        // Если статистика не указана
-        if (!userData.stats) {
-          userData.stats = {
+        roleDetails = {
+          ...adminDefaults,
+          ...roleDetails
+        };
+      } else if (user.role === 'director') {
+        // Для директора
+        const directorDefaults = {
+          title: 'Генеральный директор',
+          department: 'Руководство',
+          organization: 'Колледж им. Ломоносова',
+          stats: {
             teachers: 48,
             students: 560,
             courses: 25,
             completionRate: 92
-          };
-        }
+          },
+          tasksOpen: 5,
+          tasksDone: 19
+        };
         
-        // Если задачи не указаны
-        if (userData.tasksOpen === undefined) {
-          userData.tasksOpen = 5;
-        }
-        if (userData.tasksDone === undefined) {
-          userData.tasksDone = 19;
-        }
+        roleDetails = {
+          ...directorDefaults,
+          ...roleDetails
+        };
       }
       
-      // Выводим данные в консоль для отладки
-      console.log('User data before return:', userData);
-      return userData;
+      // Объединяем базовые данные с детальными
+      const combinedData = {
+        ...baseUserData,
+        ...roleDetails
+      };
+      
+      console.log('Complete user data:', combinedData);
+      return combinedData;
     },
     enabled: !!user, // Запрос выполняется только после получения базовой информации
   });
@@ -215,15 +187,22 @@ const UserDetail: React.FC = () => {
     
     if (!detailedUser) {
       console.error('No detailed user data available');
-      return null;
+      return (
+        <Card className="p-6 text-center">
+          <CardHeader>
+            <CardTitle>{t('errors.dataNotAvailable', 'Данные недоступны')}</CardTitle>
+            <CardDescription>{t('errors.tryAgain', 'Попробуйте обновить страницу')}</CardDescription>
+          </CardHeader>
+        </Card>
+      );
     }
     
     // Общий обработчик клика на карточке
     const handleCardClick = (userId: number) => {
-      // Дополнительная обработка, если нужна
       console.log('Card clicked for user:', userId);
     };
     
+    // Выбираем компонент карточки в зависимости от роли
     switch (detailedUser.role) {
       case 'student':
         return (
