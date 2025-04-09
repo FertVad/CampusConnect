@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
 import StudentTaskItem, { Task } from './StudentTaskItem';
 import { AlertCircle } from 'lucide-react';
@@ -11,12 +11,6 @@ interface StudentTasksProps {
 
 const StudentTasks: React.FC<StudentTasksProps> = ({ userId, tasks, isLoading }) => {
   const { t } = useTranslation();
-  const [expandedTaskId, setExpandedTaskId] = useState<number | null>(null);
-
-  // Обработчик открытия/закрытия задачи
-  const handleToggleTask = (taskId: number) => {
-    setExpandedTaskId(expandedTaskId === taskId ? null : taskId);
-  };
 
   // Состояние загрузки
   if (isLoading) {
@@ -57,8 +51,6 @@ const StudentTasks: React.FC<StudentTasksProps> = ({ userId, tasks, isLoading })
                 <StudentTaskItem
                   task={task}
                   userId={userId}
-                  isExpanded={expandedTaskId === task.id}
-                  onToggle={handleToggleTask}
                 />
               </li>
             ))}
@@ -78,8 +70,6 @@ const StudentTasks: React.FC<StudentTasksProps> = ({ userId, tasks, isLoading })
                 <StudentTaskItem
                   task={task}
                   userId={userId}
-                  isExpanded={expandedTaskId === task.id}
-                  onToggle={handleToggleTask}
                 />
               </li>
             ))}
