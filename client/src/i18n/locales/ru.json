@@ -252,7 +252,7 @@
     "settings": "Настройки",
     "help": "Помощь",
     "logout": "Выход",
-    
+
     "student": {
       "nextClass": "Ближайшее занятие",
       "classes": "Ваши ближайшие занятия",
@@ -268,7 +268,7 @@
       "completedTasks": "Выполненные задания",
       "balanceDue": "Задолженность"
     },
-    
+
     "teacher": {
       "schedule": "Расписание занятий",
       "timetable": "Ваше расписание преподавания",
@@ -284,7 +284,7 @@
       "assignNewTask": "Назначить задание",
       "totalStudents": "Всего студентов"
     },
-    
+
     "admin": {
       "systemStatus": "Состояние системы",
       "systemHealth": "Общее состояние системы",
@@ -530,6 +530,6 @@
     "Task Status Updated": "Статус задачи обновлен",
     "Task Completed": "Задача завершена",
     "Task Deleted": "Задача удалена",
-    "New Task Assigned": "Новая задача назначена"
+    "New Task Assigned": "Назначена новая задача"
   }
 }
