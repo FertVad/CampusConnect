@@ -124,12 +124,14 @@ const EditUserProfileModal: React.FC<EditUserProfileModalProps> = ({
   const onSubmit = async (data: FormData) => {
     try {
       // Формируем данные для отправки в зависимости от роли
+      // Удаляем проблемные или нерелевантные поля из данных, отправляемых на сервер
+      // Например, не отправляем 'role', 'password', и другие поля, которые не должны изменяться
       const formData: Record<string, any> = {
         firstName: data.firstName,
         lastName: data.lastName,
         email: data.email,
       };
-
+      
       // Добавляем только нужные поля в зависимости от роли
       if (data.phone) formData.phone = data.phone;
 
@@ -137,8 +139,18 @@ const EditUserProfileModal: React.FC<EditUserProfileModalProps> = ({
       const response = await apiRequest('PUT', `/api/users/${user.id}`, formData);
       
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Ошибка при обновлении профиля');
+        let errorMessage = 'Ошибка при обновлении профиля';
+        try {
+          const errorData = await response.json();
+          if (errorData && errorData.message) {
+            errorMessage = errorData.message;
+          }
+        } catch (e) {
+          // Если не удалось распарсить JSON, используем statusText
+          errorMessage = response.statusText || errorMessage;
+          console.error('Error parsing error response:', response.status, response.statusText);
+        }
+        throw new Error(errorMessage);
       }
 
       // Если роль изменилась, отправляем дополнительный запрос для обновления роли
@@ -148,8 +160,17 @@ const EditUserProfileModal: React.FC<EditUserProfileModalProps> = ({
         });
         
         if (!roleResponse.ok) {
-          const errorData = await roleResponse.json();
-          throw new Error(errorData.message || 'Ошибка при обновлении роли');
+          let errorMessage = 'Ошибка при обновлении роли';
+          try {
+            const errorData = await roleResponse.json();
+            if (errorData && errorData.message) {
+              errorMessage = errorData.message;
+            }
+          } catch (e) {
+            errorMessage = roleResponse.statusText || errorMessage;
+            console.error('Error parsing role update error:', roleResponse.status, roleResponse.statusText);
+          }
+          throw new Error(errorMessage);
         }
       }
 
@@ -163,7 +184,12 @@ const EditUserProfileModal: React.FC<EditUserProfileModalProps> = ({
 
         const studentResponse = await apiRequest('PUT', `/api/students/${user.id}`, studentData);
         if (!studentResponse.ok) {
-          console.warn('Failed to update student details, but user was updated');
+          try {
+            const errorText = await studentResponse.text();
+            console.warn('Failed to update student details:', studentResponse.status, errorText);
+          } catch (e) {
+            console.warn('Failed to update student details, but user was updated');
+          }
         }
       }
       // Для преподавателя
@@ -174,7 +200,12 @@ const EditUserProfileModal: React.FC<EditUserProfileModalProps> = ({
 
         const teacherResponse = await apiRequest('PUT', `/api/teachers/${user.id}`, teacherData);
         if (!teacherResponse.ok) {
-          console.warn('Failed to update teacher details, but user was updated');
+          try {
+            const errorText = await teacherResponse.text();
+            console.warn('Failed to update teacher details:', teacherResponse.status, errorText);
+          } catch (e) {
+            console.warn('Failed to update teacher details, but user was updated');
+          }
         }
       }
       // Для админа или директора
@@ -187,7 +218,12 @@ const EditUserProfileModal: React.FC<EditUserProfileModalProps> = ({
 
         const adminResponse = await apiRequest('PUT', `/api/admins/${user.id}`, adminData);
         if (!adminResponse.ok) {
-          console.warn('Failed to update admin details, but user was updated');
+          try {
+            const errorText = await adminResponse.text();
+            console.warn('Failed to update admin details:', adminResponse.status, errorText);
+          } catch (e) {
+            console.warn('Failed to update admin details, but user was updated');
+          }
         }
       }
 
