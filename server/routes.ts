@@ -300,30 +300,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const storage = getStorage();
         const fullName = `${updatedUser.firstName} ${updatedUser.lastName}`;
         
-        // Создаем уведомление для администраторов (если обновление сделал не сам пользователь)
+        console.log(`Creating user update notifications for ${fullName}`);
+        
+        // Создаем уведомление для самого пользователя (если обновление сделал не он сам)
         if (req.user && req.user.id !== updatedUser.id) {
-          await storage.createNotification({
+          console.log(`Creating notification for updated user ${updatedUser.id}`);
+          const userNotification = await storage.createNotification({
             userId: updatedUser.id,
             title: "User Updated",
             content: `User information has been updated for: ${fullName}`,
             relatedType: "user",
             relatedId: updatedUser.id
           });
+          console.log(`Created notification for user: ${JSON.stringify(userNotification)}`);
         }
         
         // Если в системе есть другие администраторы, отправляем им тоже уведомление об изменении данных пользователя
         if (req.user && req.user.role === 'admin') {
           const admins = await storage.getAllAdminUsers();
+          console.log(`Found ${admins.length} admin users to notify`);
+          
           for (const admin of admins) {
             // Не отправляем уведомление админу, который сделал изменения
             if (admin.id !== req.user.id) {
-              await storage.createNotification({
+              console.log(`Creating notification for admin ${admin.id}`);
+              const adminNotification = await storage.createNotification({
                 userId: admin.id,
                 title: "User Updated",
                 content: `User information has been updated for: ${fullName}`,
                 relatedType: "user",
                 relatedId: updatedUser.id
               });
+              console.log(`Created notification for admin: ${JSON.stringify(adminNotification)}`);
             }
           }
         }
