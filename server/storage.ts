@@ -182,6 +182,7 @@ export interface IStorage {
   // Tasks
   getTasks(): Promise<Task[]>;
   getTask(id: number): Promise<Task | undefined>;
+  getTaskById(id: number): Promise<Task | null>; // Добавляем другой формат возврата для совместимости
   getTasksByClient(clientId: number): Promise<Task[]>;
   getTasksByExecutor(executorId: number): Promise<Task[]>;
   getTasksByStatus(status: string): Promise<Task[]>;
@@ -1333,6 +1334,11 @@ export class MemStorage implements IStorage {
   
   async getTask(id: number): Promise<Task | undefined> {
     return this.tasks.get(id);
+  }
+  
+  async getTaskById(id: number): Promise<Task | null> {
+    const task = this.tasks.get(id);
+    return task || null;
   }
   
   async getTasksByClient(clientId: number): Promise<Task[]> {

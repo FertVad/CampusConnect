@@ -316,13 +316,18 @@ export default function StudentDetail() {
             <CardTitle>{t('student.documents', 'Документы')}</CardTitle>
           </CardHeader>
           <CardContent>
-            {/* Импортируем компонент документов */}
+            {/* Импортируем компонент документов напрямую */}
             <Suspense fallback={<div className="py-4 text-center text-muted-foreground">{t('common.loading', 'Загрузка...')}</div>}>
-              {React.lazy(() => import('@/components/students/StudentDocuments'))({
-                userId: userId,
-                documents: [], // В будущем будем получать из API
-                isLoading: false
-              })}
+              <div key="documents-container">
+                {(() => {
+                  const DocumentsComponent = React.lazy(() => import('@/components/students/StudentDocuments'));
+                  return <DocumentsComponent 
+                    userId={userId}
+                    documents={[]} // В будущем будем получать из API
+                    isLoading={false}
+                  />;
+                })()}
+              </div>
             </Suspense>
           </CardContent>
         </Card>
@@ -335,17 +340,22 @@ export default function StudentDetail() {
           <CardContent>
             {/* Улучшенный компонент задач */}
             <Suspense fallback={<div className="py-4 text-center text-muted-foreground">{t('common.loading', 'Загрузка...')}</div>}>
-              {React.lazy(() => import('@/components/students/StudentTasks'))({
-                userId: userId,
-                tasks: tasks.map(task => ({
-                  ...task,
-                  // Добавляем дополнительные поля, которые могут прийти из API
-                  creatorName: 'Администратор', // Временно, в будущем получать из API
-                  dueDate: task.createdAt, // Временно используем createdAt, в будущем будем получать dueDate из API
-                  priority: 'medium' as const // Временно, в будущем получать из API
-                })),
-                isLoading: tasksLoading
-              })}
+              <div key="tasks-container">
+                {(() => {
+                  const TasksComponent = React.lazy(() => import('@/components/students/StudentTasks'));
+                  return <TasksComponent 
+                    userId={userId}
+                    tasks={tasks.map(task => ({
+                      ...task,
+                      // Добавляем дополнительные поля, которые могут прийти из API
+                      creatorName: 'Администратор', // Временно, в будущем получать из API
+                      dueDate: task.createdAt, // Временно используем createdAt, в будущем будем получать dueDate из API
+                      priority: 'medium' as const // Временно, в будущем получать из API
+                    }))}
+                    isLoading={tasksLoading}
+                  />;
+                })()}
+              </div>
             </Suspense>
           </CardContent>
         </Card>

@@ -1,0 +1,61 @@
+[Error] TypeError: React.lazy(() => import("/src/components/students/StudentDocuments.tsx")) is not a function. (In 'React.lazy(() => import("/src/components/students/StudentDocuments.tsx"))({
+          userId,
+          documents: [],
+          // В будущем будем получать из API
+          isLoading: false
+        })', 'React.lazy(() => import("/src/components/students/StudentDocuments.tsx"))' is an instance of Object)
+	StudentDetail (StudentDetail.tsx:356:103)
+	renderWithHooks (chunk-RPCDYKBN.js:11548)
+	updateFunctionComponent (chunk-RPCDYKBN.js:14582)
+	callCallback2 (chunk-RPCDYKBN.js:3674)
+	dispatchEvent
+	invokeGuardedCallbackDev (chunk-RPCDYKBN.js:3699)
+	invokeGuardedCallback (chunk-RPCDYKBN.js:3733)
+	beginWork$1 (chunk-RPCDYKBN.js:19765)
+	performUnitOfWork (chunk-RPCDYKBN.js:19198)
+	workLoopSync (chunk-RPCDYKBN.js:19137)
+	renderRootSync (chunk-RPCDYKBN.js:19116)
+	recoverFromConcurrentError (chunk-RPCDYKBN.js:18736)
+	performSyncWorkOnRoot (chunk-RPCDYKBN.js:18879)
+	flushSyncCallbacks (chunk-RPCDYKBN.js:9119)
+	(анонимная функция) (chunk-RPCDYKBN.js:18627)
+[Error] The above error occurred in the <StudentDetail> component:
+
+StudentDetail@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/pages/students/StudentDetail.tsx:32:27
+main
+div
+div
+MainLayout@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/components/layout/main-layout.tsx:21:38
+ProtectedStudentDetail
+Route@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js:323:20
+ProtectedRoute@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/lib/protected-route.tsx:23:38
+Switch@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js:379:25
+App@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/App.tsx:180:38
+AuthProvider@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/hooks/use-auth.tsx:38:40
+QueryClientProvider@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js:2805:9
+ThemeProvider@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/components/theme/theme-provider.tsx:23:11
+AppWithErrorHandling@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/main.tsx:30:37
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+	logCapturedError (chunk-RPCDYKBN.js:14032)
+	(анонимная функция) (chunk-RPCDYKBN.js:14052)
+	callCallback (chunk-RPCDYKBN.js:11248)
+	commitUpdateQueue (chunk-RPCDYKBN.js:11265)
+	commitLayoutEffectOnFiber (chunk-RPCDYKBN.js:17093)
+	commitLayoutMountEffects_complete (chunk-RPCDYKBN.js:17980)
+	commitLayoutEffects_begin (chunk-RPCDYKBN.js:17969)
+	commitLayoutEffects (chunk-RPCDYKBN.js:17920)
+	commitRootImpl (chunk-RPCDYKBN.js:19353)
+	commitRoot (chunk-RPCDYKBN.js:19277)
+	performSyncWorkOnRoot (chunk-RPCDYKBN.js:18895)
+	flushSyncCallbacks (chunk-RPCDYKBN.js:9119)
+	(анонимная функция) (chunk-RPCDYKBN.js:18627)
+[Error] TypeError: React.lazy(() => import("/src/components/students/StudentDocuments.tsx")) is not a function. (In 'React.lazy(() => import("/src/components/students/StudentDocuments.tsx"))({
+          userId,
+          documents: [],
+          // В будущем будем получать из API
+          isLoading: false
+        })', 'React.lazy(() => import("/src/components/students/StudentDocuments.tsx"))' is an instance of Object)
+	flushSyncCallbacks (chunk-RPCDYKBN.js:9129)
+	(анонимная функция) (chunk-RPCDYKBN.js:18627)
