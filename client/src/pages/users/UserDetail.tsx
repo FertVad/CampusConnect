@@ -192,6 +192,8 @@ const UserDetail: React.FC = () => {
         }
       }
       
+      // Выводим данные в консоль для отладки
+      console.log('User data before return:', userData);
       return userData;
     },
     enabled: !!user, // Запрос выполняется только после получения базовой информации
@@ -209,11 +211,17 @@ const UserDetail: React.FC = () => {
   
   // Рендерим соответствующую карточку по роли
   const renderUserCard = () => {
-    if (!detailedUser) return null;
+    console.log('Rendering user card for:', detailedUser);
+    
+    if (!detailedUser) {
+      console.error('No detailed user data available');
+      return null;
+    }
     
     // Общий обработчик клика на карточке
     const handleCardClick = (userId: number) => {
       // Дополнительная обработка, если нужна
+      console.log('Card clicked for user:', userId);
     };
     
     switch (detailedUser.role) {
