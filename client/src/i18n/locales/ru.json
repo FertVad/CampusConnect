@@ -530,6 +530,10 @@
     "Task Status Updated": "Статус задачи обновлен",
     "Task Completed": "Задача завершена",
     "Task Deleted": "Задача удалена",
-    "New Task Assigned": "Назначена новая задача"
+    "New Task Assigned": "Назначена новая задача",
+    "taskStatusUpdateContent": "Статус задачи \"{{title}}\" изменен на {{status}}",
+    "taskCompletedContent": "Задача \"{{title}}\" отмечена как завершенная",
+    "taskDeletedContent": "Задача \"{{title}}\" была удалена",
+    "newTaskAssignedContent": "Вам назначена новая задача: {{title}}"
   }
 }

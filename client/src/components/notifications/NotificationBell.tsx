@@ -85,6 +85,44 @@ export const NotificationBell = () => {
     });
   };
   
+  // Функция для перевода содержимого уведомлений
+  const translateNotificationContent = (notification: Notification) => {
+    // Если содержимое содержит фразы связанные с задачами, переводим их
+    if (notification.title === "Task Status Updated" && notification.content.includes("has been updated to")) {
+      const taskTitle = notification.content.match(/Task "(.*?)" has been updated to/)?.[1] || "";
+      const status = notification.content.match(/updated to (.*?)$/)?.[1] || "";
+      const translatedStatus = t(`task.status.${status}`, status);
+      return t('notifications.taskStatusUpdateContent', {
+        title: taskTitle,
+        status: translatedStatus
+      });
+    } 
+    
+    if (notification.title === "Task Completed" && notification.content.includes("has been marked as completed")) {
+      const taskTitle = notification.content.match(/Task "(.*?)" has been marked as completed/)?.[1] || "";
+      return t('notifications.taskCompletedContent', {
+        title: taskTitle
+      });
+    }
+    
+    if (notification.title === "Task Deleted" && notification.content.includes("has been deleted")) {
+      const taskTitle = notification.content.match(/Task "(.*?)" has been deleted/)?.[1] || "";
+      return t('notifications.taskDeletedContent', {
+        title: taskTitle
+      });
+    }
+    
+    if (notification.title === "New Task Assigned" && notification.content.includes("You have been assigned a new task")) {
+      const taskTitle = notification.content.match(/You have been assigned a new task: (.*?)$/)?.[1] || "";
+      return t('notifications.newTaskAssignedContent', {
+        title: taskTitle
+      });
+    }
+    
+    // Если нет специального перевода, возвращаем исходное содержимое
+    return notification.content;
+  };
+  
   // Функция для перехода к источнику уведомления
   const navigateToNotificationSource = useCallback(async (notification: Notification) => {
     try {
@@ -205,7 +243,7 @@ export const NotificationBell = () => {
                   )}
                   
                   <p className="mt-2 mb-2 text-sm text-sidebar-foreground/80 leading-relaxed">
-                    {notification.content}
+                    {translateNotificationContent(notification)}
                   </p>
                   
                   <div className="mt-2 pt-2 flex justify-between items-center border-t border-sidebar-border/20">
