@@ -313,7 +313,6 @@ const UserDetail: React.FC = () => {
           <ArrowLeft className="h-4 w-4 mr-2" />
           {t('common.back', 'Назад')}
         </Button>
-        <h1 className="text-2xl font-bold">{getPageTitle()}</h1>
       </div>
       
       <div className="space-y-4">

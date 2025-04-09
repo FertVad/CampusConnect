@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import EditStudentProfileModal from '../students/EditStudentProfileModal';
+import EditUserProfileModal from './EditUserProfileModal';
 import TaskDetailsModal, { TaskDetail } from '../tasks/TaskDetailsModal';
 import { apiRequest } from '@/lib/queryClient';
 import { useAuth } from '@/hooks/use-auth';
@@ -440,10 +440,10 @@ const StudentCard: React.FC<StudentCardProps> = ({
       
       {/* Модальное окно редактирования профиля */}
       {isEditModalOpen && (
-        <EditStudentProfileModal 
+        <EditUserProfileModal 
           isOpen={isEditModalOpen} 
           onClose={() => setIsEditModalOpen(false)} 
-          student={student} 
+          user={student} 
         />
       )}
       
