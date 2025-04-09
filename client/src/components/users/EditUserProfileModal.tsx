@@ -227,42 +227,57 @@ const EditUserProfileModal: React.FC<EditUserProfileModalProps> = ({
         }
       }
 
-      console.log('🔄 Invalidating caches...');
-      // Инвалидируем кеш для обновления данных на всех страницах
-      await queryClient.invalidateQueries({ queryKey: ['/api/users'] });
-      await queryClient.invalidateQueries({ queryKey: ['/api/users', user.id] });
-      await queryClient.invalidateQueries({ queryKey: ['/api/users', user.id, 'details'] });
+      console.log('🔄 Обновление данных после редактирования...');
+
+      // Шаг 1: Сначала инвалидируем все связанные запросы
+      // Это говорит react-query, что данные устарели и их нужно обновить
+      await queryClient.invalidateQueries({ 
+        queryKey: ['/api/users'],
+        refetchType: 'none' // Не делаем рефетч сразу, только помечаем данные как устаревшие
+      });
       
-      // Добавляем инвалидацию по user details, который используется напрямую
-      await queryClient.refetchQueries({ queryKey: ['/api/users', user.id] });
+      // Шаг 2: Принудительно обновляем наиболее важные и конкретные запросы
+      // Это более точечный и быстрый подход, чем перезагрузка страницы
+      await queryClient.refetchQueries({ 
+        queryKey: ['/api/users', user.id],
+        exact: true // Обновляем только точное совпадение ключей
+      });
       
+      // Шаг 3: Обновляем типоспецифичные данные
       if (data.role === 'student') {
-        await queryClient.invalidateQueries({ queryKey: ['/api/students', user.id] });
-        await queryClient.refetchQueries({ queryKey: ['/api/students', user.id] });
+        await queryClient.refetchQueries({ 
+          queryKey: ['/api/students', user.id],
+          exact: true
+        });
       } else if (data.role === 'teacher') {
-        await queryClient.invalidateQueries({ queryKey: ['/api/teachers', user.id] });
-        await queryClient.refetchQueries({ queryKey: ['/api/teachers', user.id] });
+        await queryClient.refetchQueries({ 
+          queryKey: ['/api/teachers', user.id],
+          exact: true
+        });
       } else if (data.role === 'admin' || data.role === 'director') {
-        await queryClient.invalidateQueries({ queryKey: ['/api/admins', user.id] });
-        await queryClient.refetchQueries({ queryKey: ['/api/admins', user.id] });
+        await queryClient.refetchQueries({ 
+          queryKey: ['/api/admins', user.id],
+          exact: true
+        });
       }
-      console.log('✅ Cache invalidated successfully');
+      
+      // Шаг 4: Обновляем связанные данные (задачи, и т.д.)
+      await queryClient.refetchQueries({ 
+        queryKey: ['/api/users', user.id, 'tasks'],
+        exact: true 
+      });
+      
+      console.log('✅ Данные успешно обновлены');
       
       // Показываем уведомление об успехе
       toast({
         title: t('user.profileUpdated', 'Профиль обновлен'),
         description: t('user.profileSaved', 'Данные профиля успешно сохранены'),
-        variant: 'default',
+        variant: 'default', // Используем стандартный вариант для уведомления об успехе
       });
       
       // Закрываем модальное окно
       onClose();
-      
-      // Принудительно перезагружаем страницу через небольшую задержку,
-      // чтобы обновить все данные с сервера
-      setTimeout(() => {
-        window.location.reload();
-      }, 500);
     } catch (error) {
       console.error('Error updating profile:', error);
       // Показываем уведомление об ошибке

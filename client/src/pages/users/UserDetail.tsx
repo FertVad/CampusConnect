@@ -54,14 +54,15 @@ const UserDetail: React.FC = () => {
         return null;
       }
       
-      // Подготовим базовую информацию о пользователе
+      // Данные пользователя из основного API
       const baseUserData = { ...user };
+      console.log('📊 Base user data:', baseUserData);
       
-      // Готовим объект для хранения деталей в зависимости от роли
-      let roleDetails = {};
+      // Объект для реальных данных о пользователе с сервера по роли
+      let roleDetails: Record<string, any> = {};
       
       try {
-        // Загружаем дополнительные данные в соответствии с ролью пользователя
+        // Получаем URL в зависимости от роли для загрузки дополнительных данных
         let url = '';
         switch (user.role) {
           case 'student':
@@ -76,107 +77,73 @@ const UserDetail: React.FC = () => {
             break;
         }
         
+        // Загружаем дополнительные данные с сервера
         if (url) {
+          console.log(`🔍 Fetching role details from ${url}`);
           const response = await apiRequest('GET', url);
+          
           if (response.ok) {
             const detailData = await response.json();
-            roleDetails = { ...detailData };
+            roleDetails = detailData;
+            console.log('✅ Received role details:', roleDetails);
           } else {
-            console.warn(`Failed to load detailed data from ${url}, status: ${response.status}`);
+            console.warn(`⚠️ Failed to load detailed data from ${url}, status: ${response.status}`);
           }
         }
       } catch (err) {
-        console.error('Error loading user details:', err);
+        console.error('❌ Error loading user details:', err);
       }
       
-      // В зависимости от роли, добавляем значения по умолчанию только если нет данных с сервера
+      // Дополняем минимальные тестовые данные ТОЛЬКО при их отсутствии
+      // Используя дефолтные UI элементы для лучшего отображения
+      const enrichedDetails: Record<string, any> = { ...roleDetails };
+      
       if (user.role === 'teacher') {
-        // Для учителя
-        const roleDetailsObj = roleDetails || {};
-        const roleStats = (roleDetailsObj as any).stats || {};
-        const roleNextClass = (roleDetailsObj as any).nextClass || {};
+        // Для преподавателя
+        if (!enrichedDetails.subjects || enrichedDetails.subjects.length === 0) {
+          enrichedDetails.subjects = ['Математика', 'Информатика', 'Программирование'];
+        }
         
-        const teacherDefaults = {
-          subjects: ['Математика', 'Информатика', 'Программирование'],
-          specialty: (roleDetailsObj as any).specialty || 'Компьютерные науки',
-          rating: (roleDetailsObj as any).rating || 4.7,
-          stats: {
-            students: roleStats.students || 45,
-            courses: roleStats.courses || 3, 
-            classes: roleStats.classes || 12,
-            averageGrade: roleStats.averageGrade || 4.2
-          },
-          nextClass: {
-            name: roleNextClass.name || 'Основы программирования',
-            time: roleNextClass.time || '14:30',
-            room: roleNextClass.room || '205'
-          },
-          experience: (roleDetailsObj as any).experience || 7,
-          tasksOpen: (roleDetailsObj as any).tasksOpen || 3,
-          tasksDone: (roleDetailsObj as any).tasksDone || 25
-        };
+        // Обеспечиваем корректное отображение stats объекта
+        if (!enrichedDetails.stats) {
+          enrichedDetails.stats = {
+            students: 45,
+            courses: 3,
+            classes: 12,
+            averageGrade: 4.2
+          };
+        }
         
-        // Объединяем данные, приоритет отдаём реальным данным с сервера
-        roleDetails = {
-          ...teacherDefaults,
-          ...roleDetails
-        };
-      } else if (user.role === 'admin') {
-        // Для администратора
-        const roleDetailsObj = roleDetails || {};
-        const roleStats = (roleDetailsObj as any).stats || {};
-        
-        const adminDefaults = {
-          department: (roleDetailsObj as any).department || 'IT-отдел',
-          stats: {
-            users: roleStats.users || 120,
-            teachers: roleStats.teachers || 35,
-            students: roleStats.students || 85,
-            courses: roleStats.courses || 15
-          },
-          tasksOpen: (roleDetailsObj as any).tasksOpen || 7,
-          tasksDone: (roleDetailsObj as any).tasksDone || 32
-        };
-        
-        roleDetails = {
-          ...adminDefaults,
-          ...roleDetails
-        };
-      } else if (user.role === 'director') {
-        // Для директора
-        const roleDetailsObj = roleDetails || {};
-        const roleStats = (roleDetailsObj as any).stats || {};
-        
-        const directorDefaults = {
-          title: (roleDetailsObj as any).title || 'Генеральный директор',
-          department: (roleDetailsObj as any).department || 'Руководство',
-          organization: (roleDetailsObj as any).organization || 'Колледж им. Ломоносова',
-          stats: {
-            teachers: roleStats.teachers || 48,
-            students: roleStats.students || 560,
-            courses: roleStats.courses || 25,
-            completionRate: roleStats.completionRate || 92
-          },
-          tasksOpen: (roleDetailsObj as any).tasksOpen || 5,
-          tasksDone: (roleDetailsObj as any).tasksDone || 19
-        };
-        
-        roleDetails = {
-          ...directorDefaults,
-          ...roleDetails
-        };
+        // Добавляем только отсутствующие поля
+        if (!enrichedDetails.nextClass) {
+          enrichedDetails.nextClass = {
+            name: 'Основы программирования',
+            time: '14:30',
+            room: '205'
+          };
+        }
+      } else if (user.role === 'admin' || user.role === 'director') {
+        // Для админа и директора
+        if (!enrichedDetails.stats) {
+          enrichedDetails.stats = user.role === 'admin' 
+            ? { users: 120, teachers: 35, students: 85, courses: 15 }
+            : { teachers: 48, students: 560, courses: 25, completionRate: 92 };
+        }
       }
       
-      // Объединяем базовые данные с детальными
+      // Объединяем базовые данные с реальными серверными данными
+      // Приоритет отдаём реальным данным из roleDetails
       const combinedData = {
         ...baseUserData,
-        ...roleDetails
+        ...enrichedDetails
       };
       
-      console.log('Complete user data:', combinedData);
+      console.log('🔄 Final user data:', combinedData);
       return combinedData;
     },
     enabled: !!user, // Запрос выполняется только после получения базовой информации
+    staleTime: 0, // Всегда считаем данные устаревшими, чтобы гарантировать свежие данные
+    refetchOnWindowFocus: true, // Обновляем при фокусе на окне
   });
   
   useEffect(() => {
