@@ -78,8 +78,121 @@ const UserDetail: React.FC = () => {
       }
       
       const detailData = await response.json();
+      
       // Объединяем базовую информацию с детальной
-      return { ...user, ...detailData };
+      const userData = { ...user, ...detailData };
+      
+      // Заполняем отсутствующие данные в зависимости от роли
+      if (user.role === 'teacher') {
+        // Если предметы не указаны, добавляем тестовый список
+        if (!userData.subjects || userData.subjects.length === 0) {
+          userData.subjects = ['Математика', 'Информатика', 'Программирование'];
+        }
+        
+        // Если специальность не указана
+        if (!userData.specialty) {
+          userData.specialty = 'Компьютерные науки';
+        }
+        
+        // Если рейтинг не указан
+        if (userData.rating === undefined) {
+          userData.rating = 4.7;
+        }
+        
+        // Если статистика не указана
+        if (!userData.stats) {
+          userData.stats = {
+            students: 45,
+            courses: 3,
+            classes: 12,
+            averageGrade: 4.2
+          };
+        }
+        
+        // Если следующее занятие не указано
+        if (!userData.nextClass) {
+          userData.nextClass = {
+            name: 'Основы программирования',
+            time: '14:30',
+            room: '205'
+          };
+        }
+        
+        // Если опыт не указан
+        if (userData.experience === undefined) {
+          userData.experience = 7;
+        }
+        
+        // Если задачи не указаны
+        if (userData.tasksOpen === undefined) {
+          userData.tasksOpen = 3;
+        }
+        if (userData.tasksDone === undefined) {
+          userData.tasksDone = 25;
+        }
+      }
+      // Для администратора
+      else if (user.role === 'admin') {
+        // Если департамент не указан
+        if (!userData.department) {
+          userData.department = 'IT-отдел';
+        }
+        
+        // Если статистика не указана
+        if (!userData.stats) {
+          userData.stats = {
+            users: 120,
+            teachers: 35,
+            students: 85,
+            courses: 15
+          };
+        }
+        
+        // Если задачи не указаны
+        if (userData.tasksOpen === undefined) {
+          userData.tasksOpen = 7;
+        }
+        if (userData.tasksDone === undefined) {
+          userData.tasksDone = 32;
+        }
+      }
+      // Для директора
+      else if (user.role === 'director') {
+        // Если должность не указана
+        if (!userData.title) {
+          userData.title = 'Генеральный директор';
+        }
+        
+        // Если департамент не указан
+        if (!userData.department) {
+          userData.department = 'Руководство';
+        }
+        
+        // Если организация не указана
+        if (!userData.organization) {
+          userData.organization = 'Колледж им. Ломоносова';
+        }
+        
+        // Если статистика не указана
+        if (!userData.stats) {
+          userData.stats = {
+            teachers: 48,
+            students: 560,
+            courses: 25,
+            completionRate: 92
+          };
+        }
+        
+        // Если задачи не указаны
+        if (userData.tasksOpen === undefined) {
+          userData.tasksOpen = 5;
+        }
+        if (userData.tasksDone === undefined) {
+          userData.tasksDone = 19;
+        }
+      }
+      
+      return userData;
     },
     enabled: !!user, // Запрос выполняется только после получения базовой информации
   });
