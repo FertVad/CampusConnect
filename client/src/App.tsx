@@ -103,6 +103,14 @@ const ProtectedStudentDetail = () => (
   </MainLayout>
 );
 
+// User detail page
+import UserDetail from "@/pages/users/UserDetail";
+const ProtectedUserDetail = () => (
+  <MainLayout>
+    <UserDetail />
+  </MainLayout>
+);
+
 // Student Example component for testing
 const ProtectedStudentExample = () => (
   <MainLayout>
@@ -137,8 +145,9 @@ function App() {
       {/* Grades route */}
       <ProtectedRoute path="/grades" component={ProtectedGrades} />
       
-      {/* User management route (admin only) */}
+      {/* User management routes (admin only) */}
       <ProtectedRoute path="/users" component={ProtectedUsers} adminOnly={true} />
+      <ProtectedRoute path="/users/:id" component={ProtectedUserDetail} adminOnly={true} />
       
       {/* Requests route */}
       <ProtectedRoute path="/requests" component={ProtectedRequests} />

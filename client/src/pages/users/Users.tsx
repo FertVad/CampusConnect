@@ -24,7 +24,7 @@ interface User {
   firstName: string;
   lastName: string;
   email: string;
-  role: 'admin' | 'teacher' | 'student';
+  role: 'admin' | 'teacher' | 'student' | 'director';
   createdAt: string;
 }
 
@@ -34,7 +34,7 @@ interface UserFormData {
   lastName: string;
   email: string;
   password?: string;
-  role: 'admin' | 'teacher' | 'student';
+  role: 'admin' | 'teacher' | 'student' | 'director';
 }
 
 export default function Users() {
@@ -168,7 +168,7 @@ export default function Users() {
 
   // Handler for role selection change
   const handleRoleChange = (value: string) => {
-    setFormData(prev => ({ ...prev, role: value as 'admin' | 'teacher' | 'student' }));
+    setFormData(prev => ({ ...prev, role: value as 'admin' | 'teacher' | 'student' | 'director' }));
   };
 
   // Filter users based on search query and role filter
@@ -410,6 +410,7 @@ export default function Users() {
                         <SelectValue placeholder="Select a role" />
                       </SelectTrigger>
                       <SelectContent>
+                        <SelectItem value="director">Director</SelectItem>
                         <SelectItem value="admin">Admin</SelectItem>
                         <SelectItem value="teacher">Teacher</SelectItem>
                         <SelectItem value="student">Student</SelectItem>
@@ -468,6 +469,7 @@ export default function Users() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Roles</SelectItem>
+                  <SelectItem value="director">Director</SelectItem>
                   <SelectItem value="admin">Admin</SelectItem>
                   <SelectItem value="teacher">Teacher</SelectItem>
                   <SelectItem value="student">Student</SelectItem>
@@ -505,12 +507,10 @@ export default function Users() {
                   {currentUsers.map((user) => (
                     <TableRow 
                       key={user.id} 
-                      className={`${user.role === 'student' ? 'cursor-pointer hover:bg-secondary/50' : ''}`}
+                      className="cursor-pointer hover:bg-secondary/50"
                       onClick={() => {
-                        // Переходим на страницу студента только для пользователей с ролью student
-                        if (user.role === 'student') {
-                          setLocation(`/students/${user.id}`);
-                        }
+                        // Переходим на обобщенную страницу деталей пользователя
+                        setLocation(`/users/${user.id}`);
                       }}
                     >
                       <TableCell className="font-medium">
@@ -519,11 +519,13 @@ export default function Users() {
                       <TableCell>{user.email}</TableCell>
                       <TableCell>
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          user.role === 'admin' 
-                            ? 'bg-purple-100 text-purple-800' 
+                          user.role === 'director'
+                            ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300'
+                            : user.role === 'admin' 
+                            ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300' 
                             : user.role === 'teacher' 
-                            ? 'bg-blue-100 text-blue-800' 
-                            : 'bg-green-100 text-green-800'
+                            ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' 
+                            : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
                         }`}>
                           {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
                         </span>
@@ -636,6 +638,7 @@ export default function Users() {
                     <SelectValue placeholder="Select a role" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="director">Director</SelectItem>
                     <SelectItem value="admin">Admin</SelectItem>
                     <SelectItem value="teacher">Teacher</SelectItem>
                     <SelectItem value="student">Student</SelectItem>
