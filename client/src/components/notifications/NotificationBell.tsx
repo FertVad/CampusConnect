@@ -189,7 +189,7 @@ export const NotificationBell = () => {
                 >
                   <div className="flex items-start justify-between gap-2">
                     <h4 className={`${!notification.isRead ? 'font-semibold' : 'font-medium'} text-sidebar-foreground text-base`}>
-                      {notification.title}
+                      {t(`notifications.${notification.title}`, notification.title)}
                     </h4>
                     <small className="text-xs whitespace-nowrap text-sidebar-foreground/70 mt-1">
                       {formatNotificationDate(notification.createdAt)}
