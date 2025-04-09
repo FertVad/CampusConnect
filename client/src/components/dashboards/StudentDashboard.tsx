@@ -48,7 +48,13 @@ const StudentDashboard = () => {
   
   // Get notifications
   const { data: notifications = [] } = useQuery<Notification[]>({
-    queryKey: ['/api/notifications/user/' + user?.id],
+    queryKey: ['/api/notifications'],
+    enabled: !!user?.id,
+    staleTime: 2 * 60 * 1000, // Данные считаются свежими в течение 2 минут
+    gcTime: 10 * 60 * 1000, // Храним в кэше 10 минут
+    refetchOnMount: false,
+    refetchOnWindowFocus: true,
+    refetchInterval: false // Не обновляем автоматически
   });
   
   // Calculate GPA

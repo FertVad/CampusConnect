@@ -63,7 +63,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     queryKey: ["/api/user"],
     queryFn: async () => {
       try {
-        console.log("Fetching user data...");
+        // Проверяем, есть ли в localStorage признак аутентификации
+        const isAuth = localStorage.getItem('isAuthenticated') === 'true';
+        if (!isAuth) {
+          return null; // Не делаем запрос, если пользователь наверняка не аутентифицирован
+        }
+        
         const res = await fetch("/api/user", {
           method: 'GET',
           credentials: "include", // Include cookies with the request
@@ -78,29 +83,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
         
         if (res.status === 401) {
-          console.log("Authentication required, user not logged in");
+          // Если получили 401, очищаем localStorage
+          localStorage.removeItem('isAuthenticated');
           return null;
         }
         
         if (!res.ok) {
-          console.error("API error:", res.status, res.statusText);
           throw new Error("Failed to fetch user data");
         }
         
         const userData = await res.json();
-        console.log("User data fetched successfully:", userData);
         return userData;
       } catch (error) {
-        console.error("User fetch error:", error);
         return null;
       }
     },
-    refetchOnMount: true, // Включаем перезагрузку при монтировании
-    refetchOnWindowFocus: true, // Включаем перезагрузку при фокусе окна
+    refetchOnMount: false, // Отключаем перезагрузку при каждом монтировании
+    refetchOnWindowFocus: false, // Отключаем перезагрузку при фокусе окна
     refetchOnReconnect: true, // Включаем перезагрузку при восстановлении соединения
-    staleTime: 5 * 60 * 1000, // Считаем данные свежими 5 минут
-    gcTime: 10 * 60 * 1000, // Храним в кэше 10 минут (раньше cacheTime)
-    retry: 1, // Пробуем повторить запрос один раз при ошибке
+    staleTime: 30 * 60 * 1000, // Считаем данные свежими 30 минут
+    gcTime: 60 * 60 * 1000, // Храним в кэше 60 минут
+    retry: 0, // Не повторяем запрос при ошибке (большинство ошибок будут связаны с отсутствием аутентификации)
     refetchInterval: false // Не делаем периодические запросы
   });
 
