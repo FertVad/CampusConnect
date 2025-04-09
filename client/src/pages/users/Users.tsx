@@ -116,7 +116,9 @@ export default function Users() {
       return response.json() as Promise<User>;
     },
     onSuccess: () => {
+      // Инвалидируем запросы пользователей и уведомлений для немедленного обновления UI
       queryClient.invalidateQueries({ queryKey: ['/api/users'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/notifications'] });
       setIsEditDialogOpen(false);
       setEditingUser(null);
       resetForm();
