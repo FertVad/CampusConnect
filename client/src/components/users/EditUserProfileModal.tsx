@@ -257,6 +257,12 @@ const EditUserProfileModal: React.FC<EditUserProfileModalProps> = ({
       
       // Закрываем модальное окно
       onClose();
+      
+      // Принудительно перезагружаем страницу через небольшую задержку,
+      // чтобы обновить все данные с сервера
+      setTimeout(() => {
+        window.location.reload();
+      }, 500);
     } catch (error) {
       console.error('Error updating profile:', error);
       // Показываем уведомление об ошибке

@@ -92,24 +92,28 @@ const UserDetail: React.FC = () => {
       // В зависимости от роли, добавляем значения по умолчанию только если нет данных с сервера
       if (user.role === 'teacher') {
         // Для учителя
+        const roleDetailsObj = roleDetails || {};
+        const roleStats = (roleDetailsObj as any).stats || {};
+        const roleNextClass = (roleDetailsObj as any).nextClass || {};
+        
         const teacherDefaults = {
           subjects: ['Математика', 'Информатика', 'Программирование'],
-          specialty: roleDetails?.specialty || 'Компьютерные науки',
-          rating: roleDetails?.rating || 4.7,
+          specialty: (roleDetailsObj as any).specialty || 'Компьютерные науки',
+          rating: (roleDetailsObj as any).rating || 4.7,
           stats: {
-            students: roleDetails?.stats?.students || 45,
-            courses: roleDetails?.stats?.courses || 3,
-            classes: roleDetails?.stats?.classes || 12,
-            averageGrade: roleDetails?.stats?.averageGrade || 4.2
+            students: roleStats.students || 45,
+            courses: roleStats.courses || 3, 
+            classes: roleStats.classes || 12,
+            averageGrade: roleStats.averageGrade || 4.2
           },
-          nextClass: roleDetails?.nextClass || {
-            name: 'Основы программирования',
-            time: '14:30',
-            room: '205'
+          nextClass: {
+            name: roleNextClass.name || 'Основы программирования',
+            time: roleNextClass.time || '14:30',
+            room: roleNextClass.room || '205'
           },
-          experience: roleDetails?.experience || 7,
-          tasksOpen: roleDetails?.tasksOpen || 3,
-          tasksDone: roleDetails?.tasksDone || 25
+          experience: (roleDetailsObj as any).experience || 7,
+          tasksOpen: (roleDetailsObj as any).tasksOpen || 3,
+          tasksDone: (roleDetailsObj as any).tasksDone || 25
         };
         
         // Объединяем данные, приоритет отдаём реальным данным с сервера
@@ -119,16 +123,19 @@ const UserDetail: React.FC = () => {
         };
       } else if (user.role === 'admin') {
         // Для администратора
+        const roleDetailsObj = roleDetails || {};
+        const roleStats = (roleDetailsObj as any).stats || {};
+        
         const adminDefaults = {
-          department: roleDetails?.department || 'IT-отдел',
+          department: (roleDetailsObj as any).department || 'IT-отдел',
           stats: {
-            users: roleDetails?.stats?.users || 120,
-            teachers: roleDetails?.stats?.teachers || 35,
-            students: roleDetails?.stats?.students || 85,
-            courses: roleDetails?.stats?.courses || 15
+            users: roleStats.users || 120,
+            teachers: roleStats.teachers || 35,
+            students: roleStats.students || 85,
+            courses: roleStats.courses || 15
           },
-          tasksOpen: roleDetails?.tasksOpen || 7,
-          tasksDone: roleDetails?.tasksDone || 32
+          tasksOpen: (roleDetailsObj as any).tasksOpen || 7,
+          tasksDone: (roleDetailsObj as any).tasksDone || 32
         };
         
         roleDetails = {
@@ -137,18 +144,21 @@ const UserDetail: React.FC = () => {
         };
       } else if (user.role === 'director') {
         // Для директора
+        const roleDetailsObj = roleDetails || {};
+        const roleStats = (roleDetailsObj as any).stats || {};
+        
         const directorDefaults = {
-          title: roleDetails?.title || 'Генеральный директор',
-          department: roleDetails?.department || 'Руководство',
-          organization: roleDetails?.organization || 'Колледж им. Ломоносова',
+          title: (roleDetailsObj as any).title || 'Генеральный директор',
+          department: (roleDetailsObj as any).department || 'Руководство',
+          organization: (roleDetailsObj as any).organization || 'Колледж им. Ломоносова',
           stats: {
-            teachers: roleDetails?.stats?.teachers || 48,
-            students: roleDetails?.stats?.students || 560,
-            courses: roleDetails?.stats?.courses || 25,
-            completionRate: roleDetails?.stats?.completionRate || 92
+            teachers: roleStats.teachers || 48,
+            students: roleStats.students || 560,
+            courses: roleStats.courses || 25,
+            completionRate: roleStats.completionRate || 92
           },
-          tasksOpen: roleDetails?.tasksOpen || 5,
-          tasksDone: roleDetails?.tasksDone || 19
+          tasksOpen: (roleDetailsObj as any).tasksOpen || 5,
+          tasksDone: (roleDetailsObj as any).tasksDone || 19
         };
         
         roleDetails = {
