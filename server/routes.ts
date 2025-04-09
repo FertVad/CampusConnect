@@ -2576,6 +2576,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
+
+  // GET /api/users/:id/tasks - получить все задачи пользователя (как клиента, так и исполнителя)
+  app.get('/api/users/:id/tasks', authenticateUser, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      
+      // Админ может видеть задачи любых пользователей
+      // Другие пользователи - только свои
+      if (req.user?.role !== 'admin' && req.user?.id !== userId) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+      
+      // Получаем задачи, где пользователь является клиентом или исполнителем
+      const clientTasks = await getStorage().getTasksByClient(userId);
+      const executorTasks = await getStorage().getTasksByExecutor(userId);
+      
+      // Объединяем все задачи в один массив
+      const allTasks = [...clientTasks, ...executorTasks];
+      
+      // Удаляем дубликаты (если пользователь одновременно является и клиентом, и исполнителем)
+      const uniqueTasks = allTasks.filter((task, index, self) => 
+        index === self.findIndex((t) => t.id === task.id)
+      );
+      
+      res.json(uniqueTasks);
+    } catch (error) {
+      console.error('Error getting tasks for user:', error);
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+  
+  // GET /api/users/:id/notifications - получить все уведомления пользователя
+  app.get('/api/users/:id/notifications', authenticateUser, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      
+      // Админ может видеть уведомления любых пользователей
+      // Другие пользователи - только свои
+      if (req.user?.role !== 'admin' && req.user?.id !== userId) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+      
+      const notifications = await getStorage().getNotificationsByUser(userId);
+      res.json(notifications);
+    } catch (error) {
+      console.error('Error getting notifications for user:', error);
+      res.status(500).json({ message: "Server error" });
+    }
+  });
   
   return httpServer;
 }

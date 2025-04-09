@@ -503,7 +503,16 @@ export default function Users() {
                 </TableHeader>
                 <TableBody>
                   {currentUsers.map((user) => (
-                    <TableRow key={user.id}>
+                    <TableRow 
+                      key={user.id} 
+                      className={`${user.role === 'student' ? 'cursor-pointer hover:bg-secondary/50' : ''}`}
+                      onClick={() => {
+                        // Переходим на страницу студента только для пользователей с ролью student
+                        if (user.role === 'student') {
+                          setLocation(`/students/${user.id}`);
+                        }
+                      }}
+                    >
                       <TableCell className="font-medium">
                         {user.firstName} {user.lastName}
                       </TableCell>
@@ -524,14 +533,18 @@ export default function Users() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => openEditDialog(user)}
+                          onClick={(e) => {
+                            e.stopPropagation(); // Предотвращаем всплытие клика на строку
+                            openEditDialog(user);
+                          }}
                         >
                           <Pencil className="h-4 w-4" />
                         </Button>
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.stopPropagation(); // Предотвращаем всплытие клика на строку
                             setUserToDelete(user);
                             setIsDeleteDialogOpen(true);
                           }}

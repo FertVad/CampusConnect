@@ -95,6 +95,14 @@ const ProtectedImportedFiles = () => (
   </MainLayout>
 );
 
+// Student profile page
+import StudentDetail from "@/pages/students/StudentDetail";
+const ProtectedStudentDetail = () => (
+  <MainLayout>
+    <StudentDetail />
+  </MainLayout>
+);
+
 // Student Example component for testing
 const ProtectedStudentExample = () => (
   <MainLayout>
@@ -148,6 +156,9 @@ function App() {
       
       {/* Admin routes с проверкой на роль admin */}
       <ProtectedRoute path="/admin/imported-files" component={ProtectedImportedFiles} adminOnly={true} />
+      
+      {/* Маршруты студентов */}
+      <ProtectedRoute path="/students/:id" component={ProtectedStudentDetail} />
       
       {/* Example routes для тестирования компонентов */}
       <ProtectedRoute path="/examples/students" component={ProtectedStudentExample} />
