@@ -505,7 +505,11 @@
     "newTask": "New task assigned: {{title}}",
     "taskCompleted": "Task completed: {{title}}",
     "taskStatusUpdate": "Task status updated: {{title}}",
-    "taskDeleted": "Task deleted: {{title}}"
+    "taskDeleted": "Task deleted: {{title}}",
+    "Task Status Updated": "Task Status Updated",
+    "Task Completed": "Task Completed",
+    "Task Deleted": "Task Deleted",
+    "New Task Assigned": "New Task Assigned"
   },
   "settings": {
     "title": "Settings",

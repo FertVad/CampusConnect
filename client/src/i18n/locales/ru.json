@@ -526,6 +526,10 @@
     "newTask": "Новая задача назначена: {{title}}",
     "taskCompleted": "Задача завершена: {{title}}",
     "taskStatusUpdate": "Статус задачи обновлен: {{title}}",
-    "taskDeleted": "Задача удалена: {{title}}"
+    "taskDeleted": "Задача удалена: {{title}}",
+    "Task Status Updated": "Статус задачи обновлен",
+    "Task Completed": "Задача завершена",
+    "Task Deleted": "Задача удалена",
+    "New Task Assigned": "Новая задача назначена"
   }
 }
