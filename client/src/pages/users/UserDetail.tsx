@@ -80,14 +80,29 @@ const UserDetail: React.FC = () => {
         // Загружаем дополнительные данные с сервера
         if (url) {
           console.log(`🔍 Fetching role details from ${url}`);
-          const response = await apiRequest('GET', url);
-          
-          if (response.ok) {
-            const detailData = await response.json();
-            roleDetails = detailData;
-            console.log('✅ Received role details:', roleDetails);
-          } else {
-            console.warn(`⚠️ Failed to load detailed data from ${url}, status: ${response.status}`);
+          try {
+            const response = await apiRequest('GET', url);
+            
+            if (response.ok) {
+              // Добавляем проверку - возможно, сервер не возвращает JSON или возвращает пустой ответ
+              const responseText = await response.text();
+              if (responseText && responseText.trim()) {
+                try {
+                  const detailData = JSON.parse(responseText);
+                  roleDetails = detailData;
+                  console.log('✅ Received role details:', roleDetails);
+                } catch (parseError) {
+                  console.error('❌ Error parsing response JSON:', parseError);
+                  console.log('📄 Response text:', responseText);
+                }
+              } else {
+                console.log('⚠️ Empty response from server');
+              }
+            } else {
+              console.warn(`⚠️ Failed to load detailed data from ${url}, status: ${response.status}`);
+            }
+          } catch (fetchError) {
+            console.error('❌ Network error during fetch:', fetchError);
           }
         }
       } catch (err) {
