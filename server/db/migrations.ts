@@ -62,9 +62,11 @@ export async function migrateDatabase() {
       CREATE TABLE IF NOT EXISTS subjects (
         id SERIAL PRIMARY KEY,
         name TEXT NOT NULL,
+        short_name TEXT,
         description TEXT,
         teacher_id INTEGER REFERENCES users(id),
-        room_number TEXT
+        room_number TEXT,
+        color TEXT
       );
     `);
 
@@ -374,37 +376,47 @@ export async function seedDatabase() {
     // Create subjects
     const [math] = await db.insert(schema.subjects).values({
       name: 'Calculus II',
+      shortName: 'Calc II',
       description: 'Advanced calculus concepts including integration techniques and applications.',
       teacherId: teacher1.id,
       roomNumber: '302',
+      color: '#4285F4' // Google Blue
     }).returning();
     
     const [chemistry] = await db.insert(schema.subjects).values({
       name: 'Chemistry',
+      shortName: 'Chem',
       description: 'Introduction to chemical principles and laboratory techniques.',
       teacherId: teacher2.id,
       roomNumber: 'Lab 201',
+      color: '#34A853' // Google Green
     }).returning();
     
     const [physics] = await db.insert(schema.subjects).values({
       name: 'Physics 101',
+      shortName: 'Phys 101',
       description: 'Fundamentals of mechanics, energy, and wave phenomena.',
       teacherId: teacher3.id,
       roomNumber: '105',
+      color: '#FBBC05' // Google Yellow
     }).returning();
     
     const [literature] = await db.insert(schema.subjects).values({
       name: 'English Literature',
+      shortName: 'Eng Lit',
       description: 'Critical analysis of classic and contemporary literature.',
       teacherId: teacher1.id,
       roomNumber: '201',
+      color: '#EA4335' // Google Red
     }).returning();
     
     const [history] = await db.insert(schema.subjects).values({
       name: 'World History',
+      shortName: 'W. History',
       description: 'Survey of major historical developments across civilizations.',
       teacherId: teacher2.id,
       roomNumber: '103',
+      color: '#8E44AD' // Purple
     }).returning();
     
     // Create enrollments

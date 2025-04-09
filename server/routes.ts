@@ -401,8 +401,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/subjects', authenticateUser, async (req, res) => {
     try {
       const subjects = await getStorage().getSubjects();
+      console.log('Retrieved subjects:', JSON.stringify(subjects, null, 2));
       res.json(subjects);
     } catch (error) {
+      console.error('Error fetching subjects:', error);
       res.status(500).json({ message: "Server error" });
     }
   });
