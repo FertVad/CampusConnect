@@ -2626,6 +2626,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // PATCH /api/tasks/:id/status - обновить статус задачи
+  app.patch('/api/tasks/:id/status', authenticateUser, async (req, res) => {
+    try {
+      const taskId = parseInt(req.params.id);
+      const { status } = req.body;
+      
+      if (!status || !['new', 'in_progress', 'completed', 'on_hold'].includes(status)) {
+        return res.status(400).json({ message: "Invalid status" });
+      }
+      
+      // Получаем текущую задачу
+      const task = await getStorage().getTaskById(taskId);
+      
+      if (!task) {
+        return res.status(404).json({ message: "Task not found" });
+      }
+      
+      // Проверяем права доступа: только админ, клиент или исполнитель задачи могут менять статус
+      if (req.user?.role !== 'admin' && req.user?.id !== task.clientId && req.user?.id !== task.executorId) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+      
+      // Обновляем статус задачи
+      const updatedTask = await getStorage().updateTask(taskId, { status });
+      
+      // Создаем уведомление о смене статуса задачи
+      if (status === 'completed' && task.clientId) {
+        // Уведомление для клиента о выполнении задачи
+        await getStorage().createNotification({
+          userId: task.clientId,
+          title: "Задача выполнена",
+          content: `Задача "${task.title}" отмечена как выполненная.`,
+          isRead: false,
+          relatedId: taskId,
+          relatedType: 'task'
+        });
+        
+        console.log(`DB: Created notification for user ${task.clientId}`);
+      }
+      
+      res.json(updatedTask);
+    } catch (error) {
+      console.error('Error updating task status:', error);
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+  
+  // GET /api/documents - получить документы (заглушка для будущей функциональности)
+  app.get('/api/documents', authenticateUser, async (req, res) => {
+    try {
+      const userId = req.query.userId ? parseInt(req.query.userId as string) : undefined;
+      
+      // Временно возвращаем пустой массив, т.к. функциональность документов еще не реализована
+      res.json([]);
+    } catch (error) {
+      console.error('Error getting documents:', error);
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+  
   return httpServer;
 }
 

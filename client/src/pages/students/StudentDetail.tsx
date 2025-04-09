@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { useParams, Link } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
@@ -310,31 +310,20 @@ export default function StudentDetail() {
 
       {/* Дополнительные карточки с информацией */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-        {/* Последние уведомления */}
+        {/* Документы студента */}
         <Card>
           <CardHeader>
-            <CardTitle>{t('student.recentNotifications', 'Последние уведомления')}</CardTitle>
+            <CardTitle>{t('student.documents', 'Документы')}</CardTitle>
           </CardHeader>
           <CardContent>
-            {notifications.length === 0 ? (
-              <p className="text-muted-foreground">{t('notifications.empty', 'Нет уведомлений')}</p>
-            ) : (
-              <ul className="space-y-3">
-                {notifications.slice(0, 5).map(notification => (
-                  <li key={notification.id} className={`p-3 rounded-md ${notification.isRead ? 'bg-secondary/30' : 'bg-primary/10'}`}>
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h4 className="font-medium">{notification.title}</h4>
-                        <p className="text-sm text-muted-foreground">{notification.content}</p>
-                      </div>
-                      <span className="text-xs text-muted-foreground">
-                        {formatDateString(notification.createdAt)}
-                      </span>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
+            {/* Импортируем компонент документов */}
+            <Suspense fallback={<div className="py-4 text-center text-muted-foreground">{t('common.loading', 'Загрузка...')}</div>}>
+              {React.lazy(() => import('@/components/students/StudentDocuments'))({
+                userId: userId,
+                documents: [], // В будущем будем получать из API
+                isLoading: false
+              })}
+            </Suspense>
           </CardContent>
         </Card>
 
@@ -344,38 +333,20 @@ export default function StudentDetail() {
             <CardTitle>{t('student.tasks', 'Задачи')}</CardTitle>
           </CardHeader>
           <CardContent>
-            {tasks.length === 0 ? (
-              <p className="text-muted-foreground">{t('tasks.empty', 'Нет активных задач')}</p>
-            ) : (
-              <ul className="space-y-3">
-                {tasks.slice(0, 5).map(task => (
-                  <li key={task.id} className="p-3 rounded-md bg-secondary/30">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h4 className="font-medium">{task.title}</h4>
-                        {task.description && (
-                          <p className="text-sm text-muted-foreground line-clamp-2">{task.description}</p>
-                        )}
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium mt-1 ${
-                          task.status === 'completed' ? 'bg-green-100 text-green-800 dark:bg-green-800/30 dark:text-green-300' :
-                          task.status === 'in_progress' ? 'bg-blue-100 text-blue-800 dark:bg-blue-800/30 dark:text-blue-300' :
-                          task.status === 'on_hold' ? 'bg-amber-100 text-amber-800 dark:bg-amber-800/30 dark:text-amber-300' :
-                          'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
-                        }`}>
-                          {task.status === 'in_progress' ? t('task.status.inProgress', 'В процессе') :
-                           task.status === 'completed' ? t('task.status.completed', 'Выполнено') :
-                           task.status === 'on_hold' ? t('task.status.onHold', 'На паузе') : 
-                           t('task.status.new', 'Новая')}
-                        </span>
-                      </div>
-                      <span className="text-xs text-muted-foreground">
-                        {formatDateString(task.createdAt)}
-                      </span>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
+            {/* Улучшенный компонент задач */}
+            <Suspense fallback={<div className="py-4 text-center text-muted-foreground">{t('common.loading', 'Загрузка...')}</div>}>
+              {React.lazy(() => import('@/components/students/StudentTasks'))({
+                userId: userId,
+                tasks: tasks.map(task => ({
+                  ...task,
+                  // Добавляем дополнительные поля, которые могут прийти из API
+                  creatorName: 'Администратор', // Временно, в будущем получать из API
+                  dueDate: task.createdAt, // Временно используем createdAt, в будущем будем получать dueDate из API
+                  priority: 'medium' as const // Временно, в будущем получать из API
+                })),
+                isLoading: tasksLoading
+              })}
+            </Suspense>
           </CardContent>
         </Card>
       </div>
