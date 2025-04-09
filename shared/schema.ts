@@ -131,7 +131,7 @@ export const notifications = pgTable("notifications", {
   userId: integer("user_id").references(() => users.id).notNull(),
   title: text("title").notNull(),
   content: text("content").notNull(),
-  isRead: boolean("is_read").default(false),
+  isRead: boolean("is_read").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   relatedId: integer("related_id"),
   relatedType: text("related_type"),
@@ -277,8 +277,7 @@ export const insertMessageSchema = createInsertSchema(messages).omit({
 
 export const insertNotificationSchema = createInsertSchema(notifications).omit({
   id: true,
-  createdAt: true,
-  isRead: true
+  createdAt: true
 });
 
 // Insert схемы для новых моделей

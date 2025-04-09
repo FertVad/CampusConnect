@@ -25,6 +25,7 @@ export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
   getUsersByRole(role: string): Promise<User[]>;
+  getAllAdminUsers(): Promise<User[]>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: number, userData: Partial<InsertUser>): Promise<User | undefined>;
   deleteUser(id: number): Promise<boolean>;
@@ -335,6 +336,10 @@ export class MemStorage implements IStorage {
   
   async getUsersByRole(role: string): Promise<User[]> {
     return Array.from(this.users.values()).filter(user => user.role === role);
+  }
+  
+  async getAllAdminUsers(): Promise<User[]> {
+    return Array.from(this.users.values()).filter(user => user.role === 'admin');
   }
   
   // Subjects
@@ -838,11 +843,17 @@ export class MemStorage implements IStorage {
     const id = this.notificationIdCounter++;
     const createdAt = new Date();
     
+    // Convert undefined to null for optional fields
+    const relatedId = notificationData.relatedId !== undefined ? notificationData.relatedId : null;
+    const relatedType = notificationData.relatedType !== undefined ? notificationData.relatedType : null;
+    
     const notification: Notification = { 
       ...notificationData, 
       id,
       createdAt,
-      isRead: false
+      isRead: false,
+      relatedId,
+      relatedType
     };
     
     this.notifications.set(id, notification);

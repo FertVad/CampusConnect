@@ -295,6 +295,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "User not found" });
       }
       
+      // Создаем уведомление для пользователя об обновлении его данных
+      try {
+        const storage = getStorage();
+        const fullName = `${updatedUser.firstName} ${updatedUser.lastName}`;
+        
+        // Создаем уведомление для администраторов (если обновление сделал не сам пользователь)
+        if (req.user && req.user.id !== updatedUser.id) {
+          await storage.createNotification({
+            userId: updatedUser.id,
+            title: "User Updated",
+            content: `User information has been updated for: ${fullName}`,
+            relatedType: "user",
+            relatedId: updatedUser.id
+          });
+        }
+        
+        // Если в системе есть другие администраторы, отправляем им тоже уведомление об изменении данных пользователя
+        if (req.user && req.user.role === 'admin') {
+          const admins = await storage.getAllAdminUsers();
+          for (const admin of admins) {
+            // Не отправляем уведомление админу, который сделал изменения
+            if (admin.id !== req.user.id) {
+              await storage.createNotification({
+                userId: admin.id,
+                title: "User Updated",
+                content: `User information has been updated for: ${fullName}`,
+                relatedType: "user",
+                relatedId: updatedUser.id
+              });
+            }
+          }
+        }
+      } catch (notificationError) {
+        console.error("Error creating user update notification:", notificationError);
+        // Продолжаем, даже если не удалось создать уведомление
+      }
+      
       res.json(updatedUser);
     } catch (error) {
       if (error instanceof z.ZodError) {
