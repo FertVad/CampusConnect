@@ -6,11 +6,10 @@ import { useToast } from '@/hooks/use-toast';
 import { useTranslation } from 'react-i18next';
 
 // UI компоненты
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, User as UserIcon, Loader2 } from 'lucide-react';
+import { ArrowLeft, Loader2 } from 'lucide-react';
 
 // Компоненты карточек пользователей
 import StudentCard, { Student } from '@/components/users/StudentCard';
@@ -32,7 +31,6 @@ const UserDetail: React.FC = () => {
   const { t } = useTranslation();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
-  const [activeTab, setActiveTab] = useState('profile');
   
   // Запрос данных пользователя
   const { data: user, isLoading, error } = useQuery({
@@ -318,25 +316,15 @@ const UserDetail: React.FC = () => {
         <h1 className="text-2xl font-bold">{getPageTitle()}</h1>
       </div>
       
-      <Tabs defaultValue="profile" value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="profile" className="flex items-center">
-            <UserIcon className="h-4 w-4 mr-2" />
-            {t('user.profile', 'Профиль')}
-          </TabsTrigger>
-          {/* Здесь можно добавить дополнительные вкладки в будущем */}
-        </TabsList>
-        
-        <TabsContent value="profile" className="space-y-4">
-          {isDetailLoading ? (
-            <div className="flex justify-center items-center min-h-[200px]">
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-            </div>
-          ) : (
-            renderUserCard()
-          )}
-        </TabsContent>
-      </Tabs>
+      <div className="space-y-4">
+        {isDetailLoading ? (
+          <div className="flex justify-center items-center min-h-[200px]">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </div>
+        ) : (
+          renderUserCard()
+        )}
+      </div>
     </div>
   );
 };
