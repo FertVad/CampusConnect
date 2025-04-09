@@ -313,11 +313,20 @@ export class MemStorage implements IStorage {
   }
   
   async updateUser(id: number, userData: Partial<InsertUser>): Promise<User | undefined> {
+    console.log(`🔄 updateUser called for ID ${id} with data:`, JSON.stringify(userData));
+    
     const user = this.users.get(id);
-    if (!user) return undefined;
+    if (!user) {
+      console.log(`⚠️ User with ID ${id} not found`);
+      return undefined;
+    }
+    
+    console.log(`🔍 Original user data:`, JSON.stringify(user));
     
     const updatedUser = { ...user, ...userData };
     this.users.set(id, updatedUser);
+    
+    console.log(`✅ User updated successfully:`, JSON.stringify(updatedUser));
     return updatedUser;
   }
   
@@ -840,24 +849,37 @@ export class MemStorage implements IStorage {
   }
   
   async createNotification(notificationData: InsertNotification): Promise<Notification> {
-    const id = this.notificationIdCounter++;
-    const createdAt = new Date();
-    
-    // Convert undefined to null for optional fields
-    const relatedId = notificationData.relatedId !== undefined ? notificationData.relatedId : null;
-    const relatedType = notificationData.relatedType !== undefined ? notificationData.relatedType : null;
-    
-    const notification: Notification = { 
-      ...notificationData, 
-      id,
-      createdAt,
-      isRead: false,
-      relatedId,
-      relatedType
-    };
-    
-    this.notifications.set(id, notification);
-    return notification;
+    try {
+      console.log('📣 Creating notification:', JSON.stringify(notificationData));
+      
+      const id = this.notificationIdCounter++;
+      const createdAt = new Date();
+      
+      // Convert undefined to null for optional fields
+      const relatedId = notificationData.relatedId !== undefined ? notificationData.relatedId : null;
+      const relatedType = notificationData.relatedType !== undefined ? notificationData.relatedType : null;
+      
+      const notification: Notification = { 
+        ...notificationData, 
+        id,
+        createdAt,
+        isRead: false,
+        relatedId,
+        relatedType
+      };
+      
+      this.notifications.set(id, notification);
+      console.log(`✅ NOTIFICATION CREATED - ID: ${id}, Title: ${notification.title}, For User: ${notification.userId}`);
+      
+      // Получим текущее количество уведомлений
+      const totalCount = this.notifications.size;
+      console.log(`📊 Total notifications in storage: ${totalCount}`);
+      
+      return notification;
+    } catch (error) {
+      console.error('❌ ERROR CREATING NOTIFICATION:', error);
+      throw error;
+    }
   }
   
   async markNotificationAsRead(id: number): Promise<Notification | undefined> {
