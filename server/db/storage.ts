@@ -1630,6 +1630,66 @@ export class PostgresStorage implements IStorage {
     
     return result.rowCount > 0;
   }
+
+  // Методы для работы с учебными планами
+  async getCurriculumPlans(): Promise<schema.CurriculumPlan[]> {
+    const plans = await db.select().from(schema.curriculumPlans)
+      .orderBy(desc(schema.curriculumPlans.createdAt));
+    return plans;
+  }
+
+  async getCurriculumPlan(id: number): Promise<schema.CurriculumPlan | undefined> {
+    console.log(`PostgresStorage: Getting curriculum plan with ID: ${id}`);
+    const plans = await db.select().from(schema.curriculumPlans)
+      .where(eq(schema.curriculumPlans.id, id));
+    
+    return plans.length > 0 ? plans[0] : undefined;
+  }
+
+  async getCurriculumPlansByEducationLevel(level: string): Promise<schema.CurriculumPlan[]> {
+    const plans = await db.select().from(schema.curriculumPlans)
+      .where(eq(schema.curriculumPlans.educationLevel, level))
+      .orderBy(desc(schema.curriculumPlans.createdAt));
+    
+    return plans;
+  }
+
+  async createCurriculumPlan(planData: schema.InsertCurriculumPlan): Promise<schema.CurriculumPlan> {
+    const now = new Date();
+    const plan = {
+      ...planData,
+      createdAt: now,
+      updatedAt: now
+    };
+    
+    const result = await db.insert(schema.curriculumPlans)
+      .values(plan)
+      .returning();
+    
+    return result[0];
+  }
+
+  async updateCurriculumPlan(id: number, planData: Partial<schema.InsertCurriculumPlan>): Promise<schema.CurriculumPlan | undefined> {
+    const now = new Date();
+    const updateData = {
+      ...planData,
+      updatedAt: now
+    };
+    
+    const result = await db.update(schema.curriculumPlans)
+      .set(updateData)
+      .where(eq(schema.curriculumPlans.id, id))
+      .returning();
+    
+    return result.length > 0 ? result[0] : undefined;
+  }
+
+  async deleteCurriculumPlan(id: number): Promise<boolean> {
+    const result = await db.delete(schema.curriculumPlans)
+      .where(eq(schema.curriculumPlans.id, id));
+    
+    return result.rowCount > 0;
+  }
 }
 
 // Factory function to create a database-backed storage

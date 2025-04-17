@@ -14,7 +14,7 @@ async function login() {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        email: 'admin@example.com',
+        email: 'admin@eduportal.com',
         password: 'admin123',
       }),
     });
