@@ -11,7 +11,7 @@ export async function migrateDatabase() {
     // Create the role enum type
     await db.execute(sql`
       DO $$ BEGIN
-        CREATE TYPE role AS ENUM ('student', 'teacher', 'admin');
+        CREATE TYPE role AS ENUM ('student', 'teacher', 'admin', 'director');
       EXCEPTION
         WHEN duplicate_object THEN null;
       END $$;
@@ -185,6 +185,34 @@ export async function migrateDatabase() {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         related_id INTEGER,
         related_type TEXT
+      );
+    `);
+    
+    // Create education_level enum type
+    await db.execute(sql`
+      DO $$ BEGIN
+        CREATE TYPE education_level AS ENUM ('СПО', 'ВО', 'Магистратура', 'Аспирантура');
+      EXCEPTION
+        WHEN duplicate_object THEN null;
+      END $$;
+    `);
+
+    // Create curriculum_plans table
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS curriculum_plans (
+        id SERIAL PRIMARY KEY,
+        specialty_name TEXT NOT NULL,
+        specialty_code VARCHAR(50) NOT NULL,
+        years_of_study INTEGER NOT NULL,
+        months_of_study INTEGER DEFAULT 0,
+        start_year INTEGER,
+        end_year INTEGER,
+        education_form VARCHAR(50),
+        education_level education_level NOT NULL,
+        description TEXT,
+        created_by INTEGER REFERENCES users(id),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
 
@@ -454,6 +482,54 @@ export async function seedDatabase() {
       dueDate: new Date(tomorrow.getTime()),
       createdBy: teacher1.id
     }).returning();
+    
+    // Create curriculum plans
+    const curriculumPlans = await db.select().from(schema.curriculumPlans);
+    
+    if (curriculumPlans.length === 0) {
+      console.log('Adding example curriculum plans...');
+      
+      // Insert some sample curriculum plans
+      await db.insert(schema.curriculumPlans).values([
+        {
+          specialtyName: "Информатика и вычислительная техника",
+          specialtyCode: "09.03.01",
+          yearsOfStudy: 4,
+          educationLevel: "ВО",
+          description: "Бакалавриат по информатике и вычислительной технике",
+          createdBy: adminUserRecord.id,
+          startYear: 2023,
+          endYear: 2027,
+          educationForm: "Очная"
+        },
+        {
+          specialtyName: "Экономика",
+          specialtyCode: "38.03.01",
+          yearsOfStudy: 4,
+          educationLevel: "ВО",
+          description: "Бакалавриат по экономике",
+          createdBy: adminUserRecord.id,
+          startYear: 2023,
+          endYear: 2027,
+          educationForm: "Очная"
+        },
+        {
+          specialtyName: "Прикладная информатика",
+          specialtyCode: "09.04.03",
+          yearsOfStudy: 2,
+          educationLevel: "Магистратура",
+          description: "Магистратура по прикладной информатике",
+          createdBy: adminUserRecord.id,
+          startYear: 2023,
+          endYear: 2025,
+          educationForm: "Очная"
+        }
+      ]);
+      
+      console.log('Added sample curriculum plans');
+    } else {
+      console.log('Curriculum plans already exist, skipping seed');
+    }
     
     console.log('Database seeding completed successfully');
     return true;
