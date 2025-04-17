@@ -2199,6 +2199,255 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  app.get('/api/curriculum-plans/education-level/:level', authenticateUser, async (req, res) => {
+    try {
+      const level = req.params.level;
+      
+      // Проверяем, что уровень образования валидный
+      const validLevels = ['СПО', 'ВО', 'Магистратура', 'Аспирантура'];
+      if (!validLevels.includes(level)) {
+        return res.status(400).json({ 
+          message: "Invalid education level value", 
+          details: `Education level must be one of: ${validLevels.join(', ')}`
+        });
+      }
+      
+      const plans = await getStorage().getCurriculumPlansByEducationLevel(level);
+      res.json(plans);
+    } catch (error) {
+      console.error('Error fetching curriculum plans by education level:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      res.status(500).json({ 
+        message: "Error fetching curriculum plans by education level", 
+        details: errorMessage,
+        timestamp: new Date().toISOString()
+      });
+    }
+  });
+  
+  app.get('/api/curriculum-plans/:id', authenticateUser, async (req, res) => {
+    try {
+      const planId = parseInt(req.params.id);
+      
+      if (isNaN(planId)) {
+        return res.status(400).json({
+          message: "Invalid curriculum plan ID",
+          details: "Curriculum plan ID must be a valid number"
+        });
+      }
+      
+      const plan = await getStorage().getCurriculumPlan(planId);
+      
+      if (!plan) {
+        return res.status(404).json({ 
+          message: "Curriculum plan not found",
+          details: `No curriculum plan exists with ID ${planId}`
+        });
+      }
+      
+      res.json(plan);
+    } catch (error) {
+      console.error('Error fetching curriculum plan:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      res.status(500).json({ 
+        message: "Error fetching curriculum plan", 
+        details: errorMessage,
+        timestamp: new Date().toISOString()
+      });
+    }
+  });
+  
+  app.post('/api/curriculum-plans', authenticateUser, requireRole(['admin', 'director']), async (req, res) => {
+    try {
+      // Валидируем данные с помощью схемы
+      const { insertCurriculumPlanSchema } = await import('@shared/schema');
+      
+      // Модифицируем схему для добавления даты создания и обновления
+      const modifiedSchema = insertCurriculumPlanSchema.extend({
+        createdBy: z.number().optional()
+      });
+      
+      console.log('Received curriculum plan data:', req.body);
+      const planData = modifiedSchema.parse(req.body);
+      console.log('Parsed curriculum plan data:', planData);
+      
+      // Добавляем id текущего пользователя как создателя
+      if (!planData.createdBy) {
+        planData.createdBy = req.user.id;
+      }
+      
+      const plan = await getStorage().createCurriculumPlan(planData);
+      
+      // Создаем уведомление для всех администраторов
+      const storage = getStorage();
+      const admins = await storage.getUsersByRole('admin');
+      const directors = await storage.getUsersByRole('director');
+      const allAdmins = [...admins, ...directors];
+      
+      // Отправляем уведомления всем администраторам, кроме текущего пользователя
+      for (const admin of allAdmins) {
+        if (admin.id !== req.user?.id) {
+          await storage.createNotification({
+            userId: admin.id,
+            title: "Новый учебный план",
+            content: `Добавлен новый учебный план "${planData.specialtyName}" (${planData.specialtyCode})`,
+            relatedId: plan.id,
+            relatedType: "curriculum_plan"
+          });
+        }
+      }
+      
+      res.status(201).json(plan);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: "Validation error", 
+          errors: error.errors,
+          timestamp: new Date().toISOString()
+        });
+      }
+      console.error('Error creating curriculum plan:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      res.status(500).json({ 
+        message: "Error creating curriculum plan", 
+        details: errorMessage,
+        timestamp: new Date().toISOString()
+      });
+    }
+  });
+  
+  app.put('/api/curriculum-plans/:id', authenticateUser, requireRole(['admin', 'director']), async (req, res) => {
+    try {
+      const planId = parseInt(req.params.id);
+      
+      if (isNaN(planId)) {
+        return res.status(400).json({
+          message: "Invalid curriculum plan ID",
+          details: "Curriculum plan ID must be a valid number"
+        });
+      }
+      
+      const plan = await getStorage().getCurriculumPlan(planId);
+      
+      if (!plan) {
+        return res.status(404).json({ 
+          message: "Curriculum plan not found",
+          details: `No curriculum plan exists with ID ${planId}`
+        });
+      }
+      
+      // Валидируем данные с помощью схемы
+      const { insertCurriculumPlanSchema } = await import('@shared/schema');
+      
+      // Модифицируем схему для частичного обновления
+      const modifiedSchema = insertCurriculumPlanSchema.partial();
+      
+      const planData = modifiedSchema.parse(req.body);
+      console.log('Updating curriculum plan with data:', planData);
+      
+      const updatedPlan = await getStorage().updateCurriculumPlan(planId, planData);
+      
+      // Создаем уведомление для всех администраторов
+      const storage = getStorage();
+      const admins = await storage.getUsersByRole('admin');
+      const directors = await storage.getUsersByRole('director');
+      const allAdmins = [...admins, ...directors];
+      
+      // Отправляем уведомления всем администраторам, кроме текущего пользователя
+      for (const admin of allAdmins) {
+        if (admin.id !== req.user?.id) {
+          await storage.createNotification({
+            userId: admin.id,
+            title: "Обновлен учебный план",
+            content: `Учебный план "${plan.specialtyName}" (${plan.specialtyCode}) был обновлен`,
+            relatedId: plan.id,
+            relatedType: "curriculum_plan"
+          });
+        }
+      }
+      
+      res.json(updatedPlan);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: "Validation error", 
+          errors: error.errors,
+          timestamp: new Date().toISOString()
+        });
+      }
+      console.error('Error updating curriculum plan:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      res.status(500).json({ 
+        message: "Error updating curriculum plan", 
+        details: errorMessage,
+        timestamp: new Date().toISOString()
+      });
+    }
+  });
+  
+  app.delete('/api/curriculum-plans/:id', authenticateUser, requireRole(['admin', 'director']), async (req, res) => {
+    try {
+      const planId = parseInt(req.params.id);
+      
+      if (isNaN(planId)) {
+        return res.status(400).json({
+          message: "Invalid curriculum plan ID",
+          details: "Curriculum plan ID must be a valid number"
+        });
+      }
+      
+      const plan = await getStorage().getCurriculumPlan(planId);
+      
+      if (!plan) {
+        return res.status(404).json({ 
+          message: "Curriculum plan not found",
+          details: `No curriculum plan exists with ID ${planId}`
+        });
+      }
+      
+      // Удаляем учебный план
+      const success = await getStorage().deleteCurriculumPlan(planId);
+      
+      if (!success) {
+        return res.status(500).json({ 
+          message: "Failed to delete curriculum plan",
+          details: "An error occurred while attempting to delete the curriculum plan"
+        });
+      }
+      
+      // Создаем уведомление для всех администраторов
+      const storage = getStorage();
+      const admins = await storage.getUsersByRole('admin');
+      const directors = await storage.getUsersByRole('director');
+      const allAdmins = [...admins, ...directors];
+      
+      // Отправляем уведомления всем администраторам, кроме текущего пользователя
+      for (const admin of allAdmins) {
+        if (admin.id !== req.user?.id) {
+          await storage.createNotification({
+            userId: admin.id,
+            title: "Удален учебный план",
+            content: `Учебный план "${plan.specialtyName}" (${plan.specialtyCode}) был удален`,
+            relatedType: "curriculum_plan"
+          });
+        }
+      }
+      
+      res.status(200).json({ 
+        message: "Curriculum plan deleted successfully",
+        planId: planId
+      });
+    } catch (error) {
+      console.error('Error deleting curriculum plan:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      res.status(500).json({ 
+        message: "Error deleting curriculum plan", 
+        details: errorMessage,
+        timestamp: new Date().toISOString()
+      });
+    }
+  });
+  
   app.get('/api/tasks/client/:clientId', authenticateUser, async (req, res) => {
     try {
       const clientId = parseInt(req.params.clientId);
