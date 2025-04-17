@@ -47,7 +47,7 @@ export default function CurriculumPlans() {
   const [activeTab, setActiveTab] = useState<string>("all");
 
   // Получаем данные о учебных планах
-  const { data: curriculumPlans = [], isLoading, error } = useQuery({
+  const { data: curriculumPlans = [], isLoading, error } = useQuery<CurriculumPlan[]>({
     queryKey: ['/api/curriculum-plans'],
     refetchOnWindowFocus: false,
   });
@@ -55,18 +55,12 @@ export default function CurriculumPlans() {
   // Фильтрация учебных планов по уровню образования
   const filteredPlans = activeTab === "all" 
     ? curriculumPlans 
-    : curriculumPlans.filter((plan: CurriculumPlan) => plan.educationLevel === activeTab);
+    : curriculumPlans.filter((plan) => plan.educationLevel === activeTab);
 
   // Мутация для создания нового учебного плана
   const createMutation = useMutation({
     mutationFn: (newPlan: CurriculumFormValues) =>
-      apiRequest('/api/curriculum-plans', {
-        method: 'POST',
-        body: JSON.stringify(newPlan),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }),
+      apiRequest('/api/curriculum-plans', 'POST', JSON.stringify(newPlan)),
     onSuccess: () => {
       toast({
         title: "Учебный план создан",
@@ -90,13 +84,7 @@ export default function CurriculumPlans() {
   const updateMutation = useMutation({
     mutationFn: (updatedPlan: Partial<CurriculumFormValues> & { id: number }) => {
       const { id, ...planData } = updatedPlan;
-      return apiRequest(`/api/curriculum-plans/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify(planData),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      return apiRequest(`/api/curriculum-plans/${id}`, 'PUT', JSON.stringify(planData));
     },
     onSuccess: () => {
       toast({
@@ -120,9 +108,7 @@ export default function CurriculumPlans() {
   // Мутация для удаления учебного плана
   const deleteMutation = useMutation({
     mutationFn: (id: number) =>
-      apiRequest(`/api/curriculum-plans/${id}`, {
-        method: 'DELETE',
-      }),
+      apiRequest(`/api/curriculum-plans/${id}`, 'DELETE'),
     onSuccess: () => {
       toast({
         title: "Учебный план удален",
@@ -287,7 +273,7 @@ export default function CurriculumPlans() {
                                plan.yearsOfStudy < 5 ? "года" : "лет"}</span>
                       </div>
                       <div>
-                        Создан: {new Date(plan.createdAt).toLocaleDateString()}
+                        Создан: {plan.createdAt ? new Date(plan.createdAt).toLocaleDateString() : '-'}
                       </div>
                     </div>
                   </CardContent>

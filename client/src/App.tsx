@@ -96,6 +96,13 @@ const ProtectedImportedFiles = () => (
   </MainLayout>
 );
 
+// Curriculum plans page
+const ProtectedCurriculumPlans = () => (
+  <MainLayout>
+    <CurriculumPlans />
+  </MainLayout>
+);
+
 // Student profile page
 import StudentDetail from "@/pages/students/StudentDetail";
 const ProtectedStudentDetail = () => (
@@ -166,6 +173,7 @@ function App() {
       
       {/* Admin routes с проверкой на роль admin */}
       <ProtectedRoute path="/admin/imported-files" component={ProtectedImportedFiles} adminOnly={true} />
+      <ProtectedRoute path="/curriculum-plans" component={ProtectedCurriculumPlans} adminOnly={true} />
       
       {/* Маршруты студентов */}
       <ProtectedRoute path="/students/:id" component={ProtectedStudentDetail} />
