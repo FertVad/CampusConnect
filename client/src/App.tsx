@@ -12,6 +12,7 @@ import Invoices from "@/pages/documents/Invoices";
 import Certificates from "@/pages/documents/Certificates";
 import ImportedFiles from "@/pages/admin/ImportedFiles";
 import TasksPage from "@/pages/tasks/Tasks";
+import CurriculumPlans from "@/pages/curriculum/CurriculumPlans";
 import NotFound from "@/pages/not-found";
 import AuthPage from "@/pages/auth-page";
 import { ProtectedRoute } from "@/lib/protected-route";
