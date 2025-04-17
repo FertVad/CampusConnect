@@ -279,19 +279,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     dispatchAuthStatusChanged(isAuthenticated);
   }, [user]);
 
-  // Вычисляем значение isAuthenticated, также проверяя localStorage
-  const authFromStorage = localStorage.getItem('isAuthenticated') === 'true';
-  // Считаем пользователя аутентифицированным, если есть данные пользователя ИЛИ в localStorage установлен флаг
-  const isAuthenticated = user !== null || authFromStorage;
+  // Вычисляем значение isAuthenticated
+  // Если у нас есть данные пользователя, то пользователь определенно аутентифицирован
+  // Используем localStorage только для определения, нужно ли делать запрос, а не для окончательного состояния
+  const isAuthenticated = user !== null;
   
   // Добавляем дополнительный лог для отслеживания возвращаемого статуса аутентификации
   console.log('Auth context final state:', { 
     isAuthenticatedByUser: user !== null,
-    isAuthenticatedFromStorage: authFromStorage,
+    isAuthenticatedFromStorage: localStorage.getItem('isAuthenticated') === 'true',
     combinedAuthStatus: isAuthenticated, 
     userPresent: user !== null, 
     user
   });
+  
+  // Если пользователь не аутентифицирован, убедимся, что флаг в localStorage также сброшен
+  useEffect(() => {
+    if (!isAuthenticated && localStorage.getItem('isAuthenticated') === 'true') {
+      console.log('Clearing localStorage authentication flag because user is not authenticated');
+      localStorage.removeItem('isAuthenticated');
+    }
+  }, [isAuthenticated]);
 
   return (
     <AuthContext.Provider
