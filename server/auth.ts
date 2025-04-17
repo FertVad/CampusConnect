@@ -46,6 +46,111 @@ export async function initializeDatabase(): Promise<boolean> {
     const migrationSuccess = await migrateDatabase();
     if (!migrationSuccess) {
       console.error("Database migration failed, using memory getStorage().");
+      
+      // Добавляем начальные данные в хранилище в памяти, если это необходимо
+      const memStorage = getStorage();
+      
+      // Создаем учебные планы для in-memory хранилища
+      if (typeof (memStorage as any).curriculumPlans === 'undefined') {
+        console.log("Initializing curriculum plans map in memory storage");
+        (memStorage as any).curriculumPlans = new Map();
+        
+        // Добавляем базовые учебные планы
+        const defaultPlans = [
+          {
+            id: 1,
+            specialtyName: "Информатика и вычислительная техника",
+            specialtyCode: "09.03.01",
+            yearsOfStudy: 4,
+            educationLevel: "ВО",
+            description: "Бакалавриат по информатике и вычислительной технике",
+            createdBy: 1,
+            createdAt: new Date(),
+            updatedAt: new Date()
+          },
+          {
+            id: 2,
+            specialtyName: "Экономика и управление",
+            specialtyCode: "38.03.01",
+            yearsOfStudy: 4,
+            educationLevel: "ВО",
+            description: "Бакалавриат по экономике и управлению",
+            createdBy: 1,
+            createdAt: new Date(),
+            updatedAt: new Date()
+          },
+          {
+            id: 3,
+            specialtyName: "Программирование в компьютерных системах",
+            specialtyCode: "09.02.03",
+            yearsOfStudy: 3,
+            educationLevel: "СПО",
+            description: "Программирование в компьютерных системах (СПО)",
+            createdBy: 1,
+            createdAt: new Date(),
+            updatedAt: new Date()
+          }
+        ];
+        
+        for (const plan of defaultPlans) {
+          (memStorage as any).curriculumPlans.set(plan.id, plan);
+        }
+        
+        // Добавляем методы для работы с учебными планами
+        if (typeof (memStorage as any).getCurriculumPlans !== 'function') {
+          (memStorage as any).getCurriculumPlans = function() {
+            return Array.from(this.curriculumPlans.values());
+          };
+          
+          (memStorage as any).getCurriculumPlansByEducationLevel = function(level: string) {
+            return Array.from(this.curriculumPlans.values()).filter(
+              (plan: any) => plan.educationLevel === level
+            );
+          };
+          
+          (memStorage as any).getCurriculumPlan = function(id: number) {
+            return this.curriculumPlans.get(id) || null;
+          };
+          
+          (memStorage as any).createCurriculumPlan = function(data: any) {
+            const id = this.curriculumPlans.size > 0 
+              ? Math.max(...Array.from(this.curriculumPlans.keys())) + 1 
+              : 1;
+            
+            const plan = {
+              id,
+              ...data,
+              createdAt: new Date(),
+              updatedAt: new Date()
+            };
+            
+            this.curriculumPlans.set(id, plan);
+            return plan;
+          };
+          
+          (memStorage as any).updateCurriculumPlan = function(id: number, data: any) {
+            const plan = this.curriculumPlans.get(id);
+            if (!plan) return null;
+            
+            const updatedPlan = {
+              ...plan,
+              ...data,
+              id, // Сохраняем оригинальный ID
+              updatedAt: new Date()
+            };
+            
+            this.curriculumPlans.set(id, updatedPlan);
+            return updatedPlan;
+          };
+          
+          (memStorage as any).deleteCurriculumPlan = function(id: number) {
+            return this.curriculumPlans.delete(id);
+          };
+        }
+        
+        console.log("Memory storage initialized with curriculum plans functionality");
+      }
+      
       return false;
     }
 
