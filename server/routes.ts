@@ -65,28 +65,46 @@ const authenticateUser = async (req: Request, res: Response, next: NextFunction)
     console.log(`Auth check - Session ID: ${req.sessionID}`);
     console.log(`Auth check - Is Authenticated: ${req.isAuthenticated ? req.isAuthenticated() : 'method undefined'}`);
     console.log(`Auth check - User: ${req.user ? JSON.stringify({ id: req.user.id, role: req.user.role }) : 'undefined'}`);
+    console.log(`Auth check - Cookies: ${req.headers.cookie}`);
+    console.log(`Auth check - Session data:`, req.session);
     
-    // Проверяем как метод isAuthenticated, так и наличие объекта пользователя
+    // Если пользователь аутентифицирован через passport, пропускаем
     if (req.isAuthenticated && req.isAuthenticated() && req.user) {
-      console.log(`User authenticated: ${req.user.id} (${req.user.role})`);
+      console.log(`User authenticated normally: ${req.user.id} (${req.user.role})`);
       
       // Принудительно сохраняем сессию при каждом запросе
       if (req.session) {
         req.session.touch();
-        req.session.save();
       }
       
       return next();
     }
     
-    // Если нет сессии или пользователя, пробуем найти по session ID
-    if (req.sessionID) {
-      const storage = getStorage();
-      // Временное решение для отладки
-      return res.status(401).json({ message: "Unauthorized - Please log in" });
+    // Проверяем данные в сессии напрямую
+    if (req.session && req.session.passport && req.session.passport.user) {
+      console.log(`Auth check - Session contains user ID: ${req.session.passport.user}`);
+      
+      try {
+        // Попытка восстановить пользователя из ID в сессии
+        const userId = req.session.passport.user;
+        const user = await getStorage().getUser(userId);
+        
+        if (user) {
+          console.log(`Auth check - Recovered user from session: ${user.id} (${user.role})`);
+          (req as any).user = user; // Восстанавливаем пользователя
+          return next();
+        }
+      } catch (err) {
+        console.error("Error recovering user from session:", err);
+      }
     }
     
-    // Если нет сессии или пользователя, возвращаем ошибку 401
+    // Делаем финальную проверку cookie для отладки
+    if (!req.headers.cookie || !req.headers.cookie.includes('eduportal.sid')) {
+      console.warn(`Auth failed - No session cookie found in request`);
+    }
+    
+    // Если все способы восстановления сессии не удались, возвращаем 401
     return res.status(401).json({ message: "Unauthorized - Please log in" });
   } catch (error) {
     console.error("Auth middleware error:", error);
@@ -2186,11 +2204,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Curriculum Plans (Учебные планы) Routes
   app.get('/api/curriculum-plans', authenticateUser, async (req, res) => {
     try {
-      const curriculumPlans = await getStorage().getCurriculumPlans();
+      console.log("GET /api/curriculum-plans - Request received");
+      console.log(`GET /api/curriculum-plans - Authenticated user: ${req.user ? JSON.stringify({id: req.user.id, role: req.user.role}) : 'undefined'}`);
+      
+      const storage = getStorage();
+      console.log("GET /api/curriculum-plans - Storage retrieved");
+      
+      // Проверим, проинициализировано ли хранилище учебных планов
+      const store = storage as any;
+      console.log(`GET /api/curriculum-plans - curriculumPlans in storage: ${store.curriculumPlans ? 'exists' : 'null'}`);
+      if (store.curriculumPlans) {
+        console.log(`GET /api/curriculum-plans - curriculumPlans size: ${store.curriculumPlans.size}`);
+      }
+      
+      // Получаем данные из хранилища
+      const curriculumPlans = await storage.getCurriculumPlans();
+      console.log(`GET /api/curriculum-plans - Retrieved ${curriculumPlans.length} plans`);
+      
+      // Отправляем ответ
       res.json(curriculumPlans);
     } catch (error) {
       console.error('Error fetching curriculum plans:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorStack = error instanceof Error ? error.stack : 'No stack trace available';
+      console.error('Error stack:', errorStack);
+      
       res.status(500).json({ 
         message: "Error fetching curriculum plans", 
         details: errorMessage,

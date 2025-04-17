@@ -77,16 +77,19 @@ export function setupAuth(app: Express) {
   // Safari-friendly cookie settings and MemoryStore optimization
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET || "dev-session-secret",
-    resave: true, // Изменено на true для уверенного сохранения сессии
-    saveUninitialized: true, // Изменено на true для инициализации сессии
+    resave: true, // Сохранять сессию даже если она не изменилась
+    saveUninitialized: true, // Сохранять новые сессии
     store: getStorage().sessionStore,
+    name: 'eduportal.sid', // Используем уникальное имя куки
     cookie: {
       maxAge: 14 * 24 * 60 * 60 * 1000, // 14 дней
       httpOnly: true, 
-      secure: false, // Изменено для тестирования
+      secure: false, // Отключаем secure для разработки
       sameSite: 'lax',
-      path: '/'
+      path: '/',
+      domain: undefined // Использовать домен запроса
     },
+    proxy: true // Доверяем proxy заголовкам
   };
 
   app.set("trust proxy", 1);
