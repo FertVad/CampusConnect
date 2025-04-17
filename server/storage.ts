@@ -9,7 +9,9 @@ import {
   ScheduleEntry, InsertScheduleEntry, ImportedFile, InsertImportedFile,
   ActivityLog, InsertActivityLog,
   // Task Manager
-  Task, InsertTask
+  Task, InsertTask,
+  // Curriculum Plans
+  CurriculumPlan, InsertCurriculumPlan
 } from "@shared/schema";
 import session from "express-session";
 import * as expressSession from 'express-session';
@@ -190,6 +192,14 @@ export interface IStorage {
   createTask(taskData: InsertTask): Promise<Task>;
   updateTask(id: number, taskData: Partial<InsertTask>): Promise<Task | undefined>;
   deleteTask(id: number): Promise<boolean>;
+  
+  // Curriculum Plans (Учебные планы)
+  getCurriculumPlans(): Promise<CurriculumPlan[]>;
+  getCurriculumPlan(id: number): Promise<CurriculumPlan | undefined>;
+  getCurriculumPlansByEducationLevel(level: string): Promise<CurriculumPlan[]>;
+  createCurriculumPlan(planData: InsertCurriculumPlan): Promise<CurriculumPlan>;
+  updateCurriculumPlan(id: number, planData: Partial<InsertCurriculumPlan>): Promise<CurriculumPlan | undefined>;
+  deleteCurriculumPlan(id: number): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
@@ -213,6 +223,7 @@ export class MemStorage implements IStorage {
   private importedFiles: Map<number, ImportedFile>;
   private activityLogs: Map<number, ActivityLog>;
   private tasks: Map<number, Task>;
+  private curriculumPlans: Map<number, CurriculumPlan>;
   
   private userIdCounter: number;
   private subjectIdCounter: number;

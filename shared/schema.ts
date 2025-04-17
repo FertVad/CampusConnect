@@ -12,6 +12,7 @@ export const importStatusEnum = pgEnum('import_status', ['success', 'partial', '
 export const activityTypeEnum = pgEnum('activity_type', ['file_upload', 'file_delete', 'teacher_assign', 'user_create', 'user_delete', 'subject_create', 'schedule_change', 'other']);
 export const taskPriorityEnum = pgEnum('task_priority', ['high', 'medium', 'low']);
 export const taskStatusEnum = pgEnum('task_status', ['new', 'in_progress', 'completed', 'on_hold']);
+export const educationLevelEnum = pgEnum('education_level', ['СПО', 'ВО', 'Магистратура', 'Аспирантура']);
 
 // Users Table
 export const users = pgTable("users", {
@@ -222,6 +223,19 @@ export const tasks = pgTable("tasks", {
   executorId: integer("executor_id").references(() => users.id).notNull(), // кто исполняет задачу
 });
 
+// Учебные планы (Curriculum Plans)
+export const curriculumPlans = pgTable("curriculum_plans", {
+  id: serial("id").primaryKey(),
+  specialtyName: text("specialty_name").notNull(), // Название специальности
+  specialtyCode: varchar("specialty_code", { length: 50 }).notNull(), // Код специальности
+  yearsOfStudy: integer("years_of_study").notNull(), // Количество лет обучения
+  educationLevel: educationLevelEnum("education_level").notNull(), // Уровень образования (СПО, ВО и т.д.)
+  description: text("description"), // Описание учебного плана
+  createdBy: integer("created_by").references(() => users.id), // Кто создал план
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Insert Schemas
 export const insertUserSchema = createInsertSchema(users).omit({ 
   id: true,
@@ -317,6 +331,12 @@ export const insertTaskSchema = createInsertSchema(tasks).omit({
   updatedAt: true
 });
 
+export const insertCurriculumPlanSchema = createInsertSchema(curriculumPlans).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -372,6 +392,9 @@ export type InsertActivityLog = z.infer<typeof insertActivityLogSchema>;
 
 export type Task = typeof tasks.$inferSelect;
 export type InsertTask = z.infer<typeof insertTaskSchema>;
+
+export type CurriculumPlan = typeof curriculumPlans.$inferSelect;
+export type InsertCurriculumPlan = z.infer<typeof insertCurriculumPlanSchema>;
 
 // Login schema
 export const loginSchema = z.object({
