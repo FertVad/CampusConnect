@@ -39,6 +39,7 @@ type CurriculumFormValues = z.infer<typeof curriculumFormSchema>;
 
 export default function CurriculumPlans() {
   const { t } = useI18n();
+  const [, navigate] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
