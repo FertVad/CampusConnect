@@ -84,8 +84,8 @@ export function setupAuth(app: Express) {
     cookie: {
       maxAge: 14 * 24 * 60 * 60 * 1000, // 14 дней
       httpOnly: true, 
-      secure: false, // Отключаем secure для разработки
-      sameSite: 'lax',
+      secure: true, // Установлено в true, т.к. Replit использует HTTPS
+      sameSite: 'none', // 'none' требует secure: true для работы в современных браузерах
       path: '/',
       domain: undefined // Использовать домен запроса
     },
