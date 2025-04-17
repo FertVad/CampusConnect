@@ -279,7 +279,16 @@ export default function CurriculumPlans() {
                   </CardContent>
                   <Separator />
                   <CardFooter className="pt-4 flex justify-between">
-                    <Button variant="outline" size="sm" onClick={() => handleEdit(plan)}>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      as="a" 
+                      href={`/curriculum-plans/${plan.id}/edit`}
+                      onClick={(e) => { 
+                        e.preventDefault(); 
+                        navigate(`/curriculum-plans/${plan.id}/edit`); 
+                      }}
+                    >
                       <Edit className="h-4 w-4 mr-2" />
                       Редактировать
                     </Button>

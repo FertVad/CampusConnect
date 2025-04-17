@@ -229,6 +229,10 @@ export const curriculumPlans = pgTable("curriculum_plans", {
   specialtyName: text("specialty_name").notNull(), // Название специальности
   specialtyCode: varchar("specialty_code", { length: 50 }).notNull(), // Код специальности
   yearsOfStudy: integer("years_of_study").notNull(), // Количество лет обучения
+  monthsOfStudy: integer("months_of_study").default(0), // Дополнительные месяцы обучения
+  startYear: integer("start_year"), // Год начала подготовки
+  endYear: integer("end_year"), // Год окончания подготовки
+  educationForm: varchar("education_form", { length: 50 }), // Форма обучения (очная, заочная и т.д.)
   educationLevel: educationLevelEnum("education_level").notNull(), // Уровень образования (СПО, ВО и т.д.)
   description: text("description"), // Описание учебного плана
   createdBy: integer("created_by").references(() => users.id), // Кто создал план
