@@ -32,6 +32,7 @@ const navigationItems = [
   { key: "common.taskManager", href: "/tasks", icon: ClipboardList },
   { key: "users.title", href: "/users", icon: Users, adminOnly: true },
   { key: "schedule.import.fileManager", href: "/admin/imported-files", icon: FileManagerIcon, adminOnly: true },
+  { key: "curriculum.title", href: "/curriculum-plans", icon: FileText, adminOnly: true },
   { key: "settings.title", href: "/settings", icon: Settings },
 ];
 
