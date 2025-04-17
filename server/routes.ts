@@ -2352,7 +2352,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      const plan = await getStorage().getCurriculumPlan(planId);
+      console.log(`GET /api/curriculum-plans/${planId} - Fetching curriculum plan`);
+      
+      // Получение плана напрямую из Map в хранилище (временное решение)
+      const memStorage = getStorage();
+      let plan = null;
+      
+      // Проверка наличия метода getCurriculumPlan
+      if (typeof memStorage.getCurriculumPlan === 'function') {
+        console.log(`GET /api/curriculum-plans/${planId} - Using getCurriculumPlan method`);
+        plan = await memStorage.getCurriculumPlan(planId);
+      } else {
+        // Альтернативный доступ, если метод отсутствует
+        console.log(`GET /api/curriculum-plans/${planId} - Method not found, using direct access`);
+        const allPlans = await memStorage.getCurriculumPlans();
+        plan = allPlans.find(p => p.id === planId);
+      }
+      
+      console.log(`GET /api/curriculum-plans/${planId} - Plan found:`, Boolean(plan));
       
       if (!plan) {
         return res.status(404).json({ 
@@ -2365,6 +2382,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error fetching curriculum plan:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorStack = error instanceof Error ? error.stack : 'No stack trace available';
+      console.error('Error stack:', errorStack);
+      
       res.status(500).json({ 
         message: "Error fetching curriculum plan", 
         details: errorMessage,

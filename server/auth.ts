@@ -109,7 +109,9 @@ export async function initializeDatabase(): Promise<boolean> {
           };
           
           (memStorage as any).getCurriculumPlan = function(id: number) {
-            return this.curriculumPlans.get(id) || null;
+            console.log(`Getting curriculum plan with ID: ${id}`);
+            const numId = Number(id);
+            return this.curriculumPlans.get(numId) || null;
           };
           
           (memStorage as any).createCurriculumPlan = function(data: any) {
