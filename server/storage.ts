@@ -245,6 +245,7 @@ export class MemStorage implements IStorage {
   private importedFileIdCounter: number;
   private activityLogIdCounter: number;
   private taskIdCounter: number;
+  private curriculumPlanIdCounter: number;
   
   sessionStore: expressSession.Store;
   
@@ -269,6 +270,7 @@ export class MemStorage implements IStorage {
     this.importedFiles = new Map();
     this.activityLogs = new Map();
     this.tasks = new Map();
+    this.curriculumPlans = new Map();
     
     this.userIdCounter = 1;
     this.subjectIdCounter = 1;
@@ -290,6 +292,7 @@ export class MemStorage implements IStorage {
     this.importedFileIdCounter = 1;
     this.activityLogIdCounter = 1;
     this.taskIdCounter = 1;
+    this.curriculumPlanIdCounter = 1;
     
     // Настройка MemoryStore для длительного хранения сессий
     this.sessionStore = new MemoryStore({
@@ -1418,6 +1421,50 @@ export class MemStorage implements IStorage {
     return this.tasks.delete(id);
   }
   
+  // Curriculum Plans
+  async getCurriculumPlans(): Promise<CurriculumPlan[]> {
+    return Array.from(this.curriculumPlans.values());
+  }
+
+  async getCurriculumPlan(id: number): Promise<CurriculumPlan | undefined> {
+    return this.curriculumPlans.get(id);
+  }
+
+  async getCurriculumPlansByEducationLevel(level: string): Promise<CurriculumPlan[]> {
+    return Array.from(this.curriculumPlans.values())
+      .filter(plan => plan.educationLevel === level);
+  }
+
+  async createCurriculumPlan(planData: InsertCurriculumPlan): Promise<CurriculumPlan> {
+    const id = this.curriculumPlanIdCounter++;
+    const now = new Date();
+    const plan: CurriculumPlan = {
+      ...planData,
+      id,
+      createdAt: now,
+      updatedAt: now
+    };
+    this.curriculumPlans.set(id, plan);
+    return plan;
+  }
+
+  async updateCurriculumPlan(id: number, planData: Partial<InsertCurriculumPlan>): Promise<CurriculumPlan | undefined> {
+    const plan = this.curriculumPlans.get(id);
+    if (!plan) return undefined;
+
+    const updatedPlan = {
+      ...plan,
+      ...planData,
+      updatedAt: new Date()
+    };
+    this.curriculumPlans.set(id, updatedPlan);
+    return updatedPlan;
+  }
+
+  async deleteCurriculumPlan(id: number): Promise<boolean> {
+    return this.curriculumPlans.delete(id);
+  }
+  
   private seedData() {
     // Create admin user
     const adminUser = this.createUser({
@@ -1496,6 +1543,52 @@ export class MemStorage implements IStorage {
     const sweGroup1 = this.createGroup({
       name: "ПИ-101",
       courseId: 4 // Программная инженерия, 1-й курс
+    });
+    
+    // Создаем тестовые учебные планы
+    this.createCurriculumPlan({
+      specialtyName: "Информатика и вычислительная техника",
+      specialtyCode: "09.03.01",
+      yearsOfStudy: 4,
+      educationLevel: "ВО",
+      description: "Бакалавриат по информатике и вычислительной технике",
+      createdBy: 1
+    });
+    
+    this.createCurriculumPlan({
+      specialtyName: "Экономика и управление",
+      specialtyCode: "38.03.01",
+      yearsOfStudy: 4,
+      educationLevel: "ВО",
+      description: "Бакалавриат по экономике и управлению",
+      createdBy: 1
+    });
+    
+    this.createCurriculumPlan({
+      specialtyName: "Программирование в компьютерных системах",
+      specialtyCode: "09.02.03",
+      yearsOfStudy: 3,
+      educationLevel: "СПО",
+      description: "Программирование в компьютерных системах (СПО)",
+      createdBy: 1
+    });
+    
+    this.createCurriculumPlan({
+      specialtyName: "Информационные системы и программирование",
+      specialtyCode: "09.02.07",
+      yearsOfStudy: 3,
+      educationLevel: "СПО",
+      description: "Информационные системы и программирование (СПО)",
+      createdBy: 1
+    });
+    
+    this.createCurriculumPlan({
+      specialtyName: "Прикладная информатика",
+      specialtyCode: "09.04.03",
+      yearsOfStudy: 2,
+      educationLevel: "Магистратура",
+      description: "Магистратура по прикладной информатике",
+      createdBy: 1
     });
   }
 }
