@@ -60,7 +60,7 @@ function formatStudyDuration(years: number, months: number = 0): string {
 // Компонент редактирования учебного плана
 function EditCurriculumPlanContent() {
   const { id } = useParams();
-  const planId = parseInt(id);
+  const planId = id ? parseInt(id) : NaN;
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -492,11 +492,11 @@ function EditCurriculumPlanContent() {
   );
 }
 
-// Обернутый компонент с защитой маршрута
+// Обернутый компонент с защитой контента
 export default function EditCurriculumPlan() {
   return (
-    <ProtectedRoute roles={['admin', 'director']}>
+    <ProtectedContent roles={['admin', 'director']}>
       <EditCurriculumPlanContent />
-    </ProtectedRoute>
+    </ProtectedContent>
   );
 }

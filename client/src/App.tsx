@@ -13,6 +13,7 @@ import Certificates from "@/pages/documents/Certificates";
 import ImportedFiles from "@/pages/admin/ImportedFiles";
 import TasksPage from "@/pages/tasks/Tasks";
 import CurriculumPlans from "@/pages/curriculum/CurriculumPlans";
+import EditCurriculumPlan from "@/pages/curriculum/EditCurriculumPlan";
 import NotFound from "@/pages/not-found";
 import AuthPage from "@/pages/auth-page";
 import { ProtectedRoute } from "@/lib/protected-route";
@@ -96,10 +97,16 @@ const ProtectedImportedFiles = () => (
   </MainLayout>
 );
 
-// Curriculum plans page
+// Curriculum plans pages
 const ProtectedCurriculumPlans = () => (
   <MainLayout>
     <CurriculumPlans />
+  </MainLayout>
+);
+
+const ProtectedEditCurriculumPlan = () => (
+  <MainLayout>
+    <EditCurriculumPlan />
   </MainLayout>
 );
 
@@ -174,6 +181,7 @@ function App() {
       {/* Admin routes с проверкой на роль admin */}
       <ProtectedRoute path="/admin/imported-files" component={ProtectedImportedFiles} adminOnly={true} />
       <ProtectedRoute path="/curriculum-plans" component={ProtectedCurriculumPlans} adminOnly={true} />
+      <ProtectedRoute path="/curriculum-plans/:id/edit" component={ProtectedEditCurriculumPlan} adminOnly={true} />
       
       {/* Маршруты студентов */}
       <ProtectedRoute path="/students/:id" component={ProtectedStudentDetail} />
