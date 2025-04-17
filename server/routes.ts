@@ -2183,6 +2183,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Curriculum Plans (Учебные планы) Routes
+  app.get('/api/curriculum-plans', authenticateUser, async (req, res) => {
+    try {
+      const curriculumPlans = await getStorage().getCurriculumPlans();
+      res.json(curriculumPlans);
+    } catch (error) {
+      console.error('Error fetching curriculum plans:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      res.status(500).json({ 
+        message: "Error fetching curriculum plans", 
+        details: errorMessage,
+        timestamp: new Date().toISOString()
+      });
+    }
+  });
+  
   app.get('/api/tasks/client/:clientId', authenticateUser, async (req, res) => {
     try {
       const clientId = parseInt(req.params.clientId);
