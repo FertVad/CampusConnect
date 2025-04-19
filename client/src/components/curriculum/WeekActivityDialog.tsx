@@ -93,12 +93,12 @@ export function WeekActivityDialog({
       // Разбиваем текущую активность на символы для определения активности по дням
       // Например, если currentActivity === "УУУККПЭ", то:
       // Пн-Ср: "У", Чт-Пт: "К", Сб: "П", Вс: "Э"
-      // Это временное решение, в будущем нужно будет хранить полноценную структуру данных
       let dailyActivities: ActivityType[] = [];
       
       // Инициализируем массив пустыми значениями
       dailyActivities = Array(7).fill('') as ActivityType[];
       
+      // Определяем активности по дням
       if (currentActivity) {
         if (currentActivity.length === 1) {
           // Если активность установлена и это один символ - применяем его ко всем дням
@@ -109,11 +109,14 @@ export function WeekActivityDialog({
           // Если символов больше 7, используем только первые 7
           const chars = currentActivity.split('');
           for (let i = 0; i < Math.min(chars.length, 7); i++) {
-            dailyActivities[i] = chars[i] as ActivityType;
+            if (chars[i] && chars[i].trim() !== '') {
+              dailyActivities[i] = chars[i] as ActivityType;
+            }
           }
         }
       }
 
+      // Создаем дни недели с календарными датами и активностями
       for (let i = 0; i < 7; i++) {
         const date = new Date(weekStart);
         date.setDate(weekStart.getDate() + i);
@@ -121,8 +124,8 @@ export function WeekActivityDialog({
         days.push({
           name: daysOfWeek[i],
           date: date.getDate(),
-          // При открытии диалога выбраны только те дни, которые уже имеют активность
-          selected: dailyActivities[i] !== "", 
+          // При открытии диалога дни НЕ выбраны, в отличие от предыдущей реализации
+          selected: false,
           // Устанавливаем активность из разобранной строки или пустую
           activity: dailyActivities[i] || ""
         });
@@ -149,8 +152,10 @@ export function WeekActivityDialog({
         }
       });
       
+      // Устанавливаем преобладающую активность как выбранную
       setSelectedActivity(predominantActivity);
-      setHasSelectedDays(days.some(day => day.selected));
+      // При открытии диалога дни не выбраны
+      setHasSelectedDays(false);
     }
   }, [weekInfo, currentActivity]);
   
@@ -183,11 +188,16 @@ export function WeekActivityDialog({
     } else {
       // Одинарный клик - инвертируем выбор дня
       const newDays = [...weekDays];
-      newDays[index].selected = !newDays[index].selected;
       
-      // Если выбрана активность, сразу применяем её к дню
-      if (selectedActivity && newDays[index].selected) {
-        newDays[index].activity = selectedActivity;
+      // Если день уже выбран, снимаем выбор
+      if (newDays[index].selected) {
+        newDays[index].selected = false;
+      } else {
+        // Если день не выбран, выбираем его
+        newDays[index].selected = true;
+        
+        // Если выбрана какая-то активность, применяем её к дню ТОЛЬКО когда пользователь нажмет "Сохранить"
+        // НЕ меняем activity здесь, а только показываем предпросмотр через selected и getDayStyle
       }
       
       setWeekDays(newDays);
@@ -202,18 +212,8 @@ export function WeekActivityDialog({
     const activityValue = value as ActivityType;
     setSelectedActivity(activityValue);
     
-    // Немедленно применяем выбранную активность к выбранным дням
-    if (hasSelectedDays) {
-      const updatedDays = weekDays.map(day => ({
-        ...day,
-        // Если день выбран, устанавливаем новую активность
-        activity: day.selected ? activityValue : day.activity,
-        // Снимаем выделение с дней после применения активности
-        selected: false
-      }));
-      setWeekDays(updatedDays);
-      setHasSelectedDays(false); // Сбрасываем флаг наличия выбранных дней
-    }
+    // НЕ применяем активность автоматически, только сохраняем выбранное значение
+    // Активность будет применена только при явном клике на день или при сохранении
   };
 
   // Стиль для дня недели в зависимости от активности и выбранности

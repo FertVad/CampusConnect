@@ -106,8 +106,16 @@ export function AcademicCalendarTable({
   const handleActivityChange = (activity: ActivityType) => {
     if (!selectedWeek) return;
     
+    // Создаем ключ для ячейки (например: "course1_week5")
     const cellKey = getCellKey(selectedWeek.courseId, selectedWeek.weekNumber);
-    handleCellChange(cellKey, activity);
+    
+    // Проверяем, действительно ли есть что сохранять (непустая активность)
+    if (activity || activity === "") {
+      // Сохраняем активность
+      handleCellChange(cellKey, activity);
+      // Обновляем визуальное выделение выбранной ячейки
+      setSelectedCellKey(cellKey); 
+    }
   };
   
   // Функция для получения стиля ячейки в зависимости от активности
