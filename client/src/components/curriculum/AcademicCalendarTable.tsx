@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { WeekActivityDialog, WeekInfo, ActivityType, ACTIVITY_TYPES } from "./WeekActivityDialog";
+import { WeekActivityDialog, WeekInfo, ActivityType, ACTIVITY_TYPES, ACTIVITY_COLORS } from "./WeekActivityDialog";
 
 // Перечисление месяцев учебного года (с сентября по август)
 const MONTHS = [
@@ -7,9 +7,6 @@ const MONTHS = [
   "Январь", "Февраль", "Март", "Апрель", 
   "Май", "Июнь", "Июль", "Август"
 ];
-
-// Общее количество недель в учебном году (с сентября по август)
-const WEEKS_IN_YEAR = 52;
 
 // Количество курсов
 const NUMBER_OF_COURSES = 4;
@@ -78,11 +75,18 @@ export function AcademicCalendarTable({
   
   // Обработчик клика по ячейке
   const handleCellClick = (info: CellInfo) => {
-    // Создаем примерные даты начала и окончания недели
-    // В реальном приложении эти данные нужно рассчитывать точнее
+    // Вычисляем даты начала и окончания недели для учебного года (с сентября)
+    // Предполагаем, что учебный год начинается 1 сентября текущего календарного года
     const currentYear = new Date().getFullYear();
-    const startDate = new Date(currentYear, 0, 1 + (info.weekNumber - 1) * 7);
-    const endDate = new Date(currentYear, 0, 7 + (info.weekNumber - 1) * 7);
+    const academicYearStart = new Date(currentYear, 8, 1); // 1 сентября (месяцы с 0)
+    
+    // Рассчитываем начало недели с учетом смещения от начала учебного года
+    const startDate = new Date(academicYearStart);
+    startDate.setDate(academicYearStart.getDate() + (info.weekNumber - 1) * 7);
+    
+    // Конец недели - это начало + 6 дней
+    const endDate = new Date(startDate);
+    endDate.setDate(startDate.getDate() + 6);
     
     const cellKey = getCellKey(info.courseId, info.weekNumber);
     setSelectedCellKey(cellKey);
@@ -108,14 +112,13 @@ export function AcademicCalendarTable({
   
   // Функция для получения стиля ячейки в зависимости от активности
   const getActivityStyle = (activity: ActivityType): { bg: string, text: string } => {
-    switch (activity) {
-      case "У": return { bg: "bg-blue-200", text: "text-blue-800" };
-      case "К": return { bg: "bg-gray-200", text: "text-gray-800" };
-      case "П": return { bg: "bg-yellow-200", text: "text-yellow-800" };
-      case "Э": return { bg: "bg-red-200", text: "text-red-800" };
-      case "Д": return { bg: "bg-purple-200", text: "text-purple-800" };
-      default: return { bg: "bg-white", text: "text-gray-800" };
+    if (activity && activity in ACTIVITY_COLORS) {
+      return {
+        bg: ACTIVITY_COLORS[activity as Exclude<ActivityType, "">].bg,
+        text: ACTIVITY_COLORS[activity as Exclude<ActivityType, "">].text
+      };
     }
+    return { bg: "bg-white dark:bg-slate-900", text: "text-gray-800 dark:text-gray-300" };
   };
   
   // Создание заголовков месяцев и недель
@@ -224,7 +227,7 @@ export function AcademicCalendarTable({
               weekCells.push(
                 <td 
                   key={cellKey}
-                  className={`px-0 py-0 border text-center ${baseClassName} cursor-pointer transition-colors
+                  className={`px-0 py-0 border text-center cursor-pointer transition-colors
                     ${isSelected ? 'ring-2 ring-offset-1 ring-blue-500 shadow-lg' : ''}`}
                   onClick={() => handleCellClick({
                     courseId,
@@ -233,8 +236,9 @@ export function AcademicCalendarTable({
                     value: activity
                   })}
                 >
-                  <div className={`h-8 w-full flex items-center justify-center font-semibold text-sm ${activity ? bg : ''} ${activity ? text : ''}`}>
-                    {activity}
+                  <div className={`h-8 w-full flex items-center justify-center ${activity ? bg : baseClassName}`}>
+                    {/* Не отображаем буквенное обозначение активности */}
+                    <span className="w-full h-full"></span>
                   </div>
                 </td>
               );

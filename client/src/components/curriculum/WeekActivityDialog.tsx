@@ -23,15 +23,16 @@ export const ACTIVITY_TYPES: { [key in Exclude<ActivityType, "">]: string } = {
   "Д": "Дипломное проектирование"
 };
 
-// Цвета для активностей
+// Цвета для активностей (пастельные оттенки)
 export const ACTIVITY_COLORS: { [key in Exclude<ActivityType, "">]: { bg: string, text: string, hoverBg: string } } = {
-  "У": { bg: "bg-blue-200", text: "text-blue-800", hoverBg: "hover:bg-blue-300" },
-  "К": { bg: "bg-gray-200", text: "text-gray-800", hoverBg: "hover:bg-gray-300" },
-  "П": { bg: "bg-yellow-200", text: "text-yellow-800", hoverBg: "hover:bg-yellow-300" },
-  "Э": { bg: "bg-red-200", text: "text-red-800", hoverBg: "hover:bg-red-300" },
-  "Д": { bg: "bg-purple-200", text: "text-purple-800", hoverBg: "hover:bg-purple-300" },
+  "У": { bg: "bg-blue-100", text: "text-blue-800", hoverBg: "hover:bg-blue-200" },
+  "К": { bg: "bg-gray-100", text: "text-gray-800", hoverBg: "hover:bg-gray-200" },
+  "П": { bg: "bg-yellow-100", text: "text-yellow-800", hoverBg: "hover:bg-yellow-200" },
+  "Э": { bg: "bg-red-100", text: "text-red-800", hoverBg: "hover:bg-red-200" },
+  "Д": { bg: "bg-purple-100", text: "text-purple-800", hoverBg: "hover:bg-purple-200" },
 };
 
+// Интерфейс для дня недели
 interface WeekDay {
   name: string;     // Пн, Вт, и т.д.
   date: number;     // Число месяца
@@ -67,7 +68,7 @@ export function WeekActivityDialog({
   // Дни недели с числами календаря
   const [weekDays, setWeekDays] = useState<WeekDay[]>([]);
   // Выбранная активность
-  const [selectedActivity, setSelectedActivity] = useState<ActivityType>(currentActivity);
+  const [selectedActivity, setSelectedActivity] = useState<ActivityType>(currentActivity || "");
   // Отслеживаем клики для определения двойного клика
   const [lastClickTime, setLastClickTime] = useState<number>(0);
   // Отслеживаем, есть ли выбранные дни
@@ -96,12 +97,13 @@ export function WeekActivityDialog({
           name: daysOfWeek[i],
           date: date.getDate(),
           selected: false,
+          // Инициализируем начальную активность как пустую
           activity: ""
         });
       }
 
       setWeekDays(days);
-      setSelectedActivity(currentActivity);
+      setSelectedActivity(currentActivity || "");
       setHasSelectedDays(false);
     }
   }, [weekInfo, currentActivity]);
@@ -136,16 +138,6 @@ export function WeekActivityDialog({
     setLastClickTime(now);
   };
 
-  // Применение активности к выбранным дням
-  const applyActivityToSelected = () => {
-    const updatedDays = weekDays.map(day => ({
-      ...day,
-      activity: day.selected ? selectedActivity : day.activity
-    }));
-    
-    setWeekDays(updatedDays);
-  };
-
   // Обработчик выбора активности
   const handleActivitySelect = (value: string) => {
     setSelectedActivity(value as ActivityType);
@@ -153,31 +145,42 @@ export function WeekActivityDialog({
     if (hasSelectedDays) {
       const updatedDays = weekDays.map(day => ({
         ...day,
-        activity: day.selected ? (value as ActivityType) : day.activity
+        activity: day.selected ? (value as ActivityType) : day.activity,
+        // Снимаем выделение с дней после применения активности
+        selected: false
       }));
       setWeekDays(updatedDays);
+      setHasSelectedDays(false); // Сбрасываем флаг наличия выбранных дней
     }
-  };
-
-  // Обработчик сохранения
-  const handleSave = () => {
-    // Здесь будет логика сохранения состояния дней для всей недели
-    onActivityChange(selectedActivity);
-    onOpenChange(false);
   };
 
   // Стиль для дня недели в зависимости от активности и выбранности
   const getDayStyle = (day: WeekDay) => {
-    if (day.selected) {
-      return "bg-blue-100 dark:bg-blue-800 border-blue-500 dark:border-blue-400 border-2";
-    }
+    let baseStyle = "text-slate-800 dark:text-slate-800";
     
+    // Если у дня уже есть активность
     if (day.activity) {
       const colorStyle = ACTIVITY_COLORS[day.activity as Exclude<ActivityType, "">];
-      return `${colorStyle.bg}`;
+      baseStyle = `${colorStyle.bg} ${baseStyle}`;
+    } else {
+      // Если у дня нет активности, используем стандартный фон
+      baseStyle += " bg-slate-100 dark:bg-slate-700 dark:text-white";
     }
     
-    return "bg-slate-100 dark:bg-slate-800";
+    // Если день выбран, добавляем тонкую рамку, но не меняем фон
+    if (day.selected) {
+      baseStyle += " ring-2 ring-blue-500 dark:ring-blue-400";
+    }
+    
+    return baseStyle;
+  };
+
+  // Обработчик сохранения
+  const handleSave = () => {
+    // В реальном приложении здесь будет логика для сохранения
+    // разных активностей для разных дней одной недели
+    onActivityChange(selectedActivity);
+    onOpenChange(false);
   };
 
   return (
@@ -193,8 +196,10 @@ export function WeekActivityDialog({
         <div className="space-y-4">
           <div 
             className="p-4 bg-slate-50 dark:bg-slate-900 rounded-md border border-slate-200 dark:border-slate-700"
-            onDoubleClick={() => {
+            onDoubleClick={(e) => {
               // Обработка двойного клика по всей области
+              e.preventDefault(); // Предотвращаем выделение текста
+              
               const newDays = [...weekDays];
               const allWorkdaysSelected = newDays.slice(0, 5).every(day => day.selected);
               
@@ -236,7 +241,7 @@ export function WeekActivityDialog({
                   >
                     <RadioGroupItem value={code} id={`activity-${code}`} />
                     <Label htmlFor={`activity-${code}`} className="flex items-center cursor-pointer">
-                      <span className={`font-semibold text-lg mr-2 w-8 h-8 flex items-center justify-center rounded ${colorStyle.bg} ${colorStyle.text}`}>
+                      <span className={`font-semibold text-sm mr-2 w-8 h-8 flex items-center justify-center rounded ${colorStyle.bg} ${colorStyle.text}`}>
                         {code}
                       </span>
                       <span>{description}</span>
@@ -249,7 +254,7 @@ export function WeekActivityDialog({
               >
                 <RadioGroupItem value="" id="activity-none" />
                 <Label htmlFor="activity-none" className="flex items-center cursor-pointer">
-                  <span className="font-semibold text-lg mr-2 w-8 h-8 flex items-center justify-center rounded bg-white dark:bg-slate-950 border">
+                  <span className="font-semibold text-sm mr-2 w-8 h-8 flex items-center justify-center rounded bg-white dark:bg-slate-600 dark:text-white border">
                     —
                   </span>
                   <span>Нет активности</span>
@@ -266,7 +271,7 @@ export function WeekActivityDialog({
           <Button 
             onClick={handleSave} 
             className="bg-blue-600 hover:bg-blue-700"
-            disabled={!hasSelectedDays || selectedActivity === ""}
+            disabled={!hasSelectedDays && selectedActivity === ""}
           >
             Сохранить
           </Button>
