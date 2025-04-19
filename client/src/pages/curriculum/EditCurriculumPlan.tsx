@@ -21,7 +21,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { apiRequest } from "@/lib/queryClient";
 import type { CurriculumPlan } from "@shared/schema";
-import { ProtectedContent } from "@/lib/protected-content";
 import { useI18n } from "@/hooks/use-i18n";
 
 // Расширенная схема формы для титульного листа учебного плана
@@ -524,11 +523,7 @@ function EditCurriculumPlanContent() {
   );
 }
 
-// Обернутый компонент с защитой контента
+// Экспортируем непосредственно компонент, так как маршрутизация уже защищена через ProtectedRoute
 export default function EditCurriculumPlan() {
-  return (
-    <ProtectedContent roles={['admin', 'director']}>
-      <EditCurriculumPlanContent />
-    </ProtectedContent>
-  );
+  return <EditCurriculumPlanContent />;
 }
