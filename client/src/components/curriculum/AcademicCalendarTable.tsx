@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Input } from "@/components/ui/input";
+import { WeekActivityDialog, WeekInfo, ActivityType, ACTIVITY_TYPES } from "./WeekActivityDialog";
 
 // Перечисление месяцев
 const MONTHS = [
@@ -8,23 +8,38 @@ const MONTHS = [
   "Май", "Июнь", "Июль", "Август"
 ];
 
-// Константа для количества недель в месяце (для упрощения)
-const WEEKS_PER_MONTH = 4;
+// Общее количество недель в учебном году (с сентября по август)
+const WEEKS_IN_YEAR = 52;
 
 // Количество курсов
 const NUMBER_OF_COURSES = 4;
 
-// Интерфейс для ячейки данных
-interface CellData {
-  courseId: number;   // Номер курса (1-4)
-  year: number;       // Год обучения (1-4)
-  month: string;      // Название месяца
-  week: number;       // Номер недели в месяце (1-4)
-  value: string;      // Значение в ячейке ("У", "К", "П", и т.д.)
-}
+// Изначальное количество недель в каждом месяце (упрощенно)
+const WEEKS_PER_MONTH: { [key: string]: number } = {
+  "Сентябрь": 4,
+  "Октябрь": 4,
+  "Ноябрь": 4,
+  "Декабрь": 4,
+  "Январь": 4,
+  "Февраль": 4,
+  "Март": 5,
+  "Апрель": 4,
+  "Май": 4,
+  "Июнь": 4,
+  "Июль": 4,
+  "Август": 5,
+};
 
 // Тип для всех данных таблицы
-type CalendarData = Record<string, string>;
+type CalendarData = Record<string, ActivityType>;
+
+// Интерфейс для ячейки данных
+interface CellInfo {
+  courseId: number;
+  weekNumber: number;
+  monthName: string;
+  value: ActivityType;
+}
 
 interface AcademicCalendarTableProps {
   yearsOfStudy: number;
@@ -40,13 +55,17 @@ export function AcademicCalendarTable({
   // Состояние для хранения данных таблицы
   const [tableData, setTableData] = useState<CalendarData>(initialData);
   
+  // Состояние для модального окна
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedWeek, setSelectedWeek] = useState<WeekInfo | null>(null);
+  
   // Функция для генерации ключа ячейки
-  const getCellKey = (courseId: number, monthIndex: number, weekIndex: number): string => {
-    return `course${courseId}_month${monthIndex}_week${weekIndex}`;
+  const getCellKey = (courseId: number, weekNumber: number): string => {
+    return `course${courseId}_week${weekNumber}`;
   };
   
   // Обработчик изменения значения ячейки
-  const handleCellChange = (key: string, value: string) => {
+  const handleCellChange = (key: string, value: ActivityType) => {
     const newData = { ...tableData, [key]: value };
     setTableData(newData);
     
@@ -56,44 +75,104 @@ export function AcademicCalendarTable({
     }
   };
   
+  // Обработчик клика по ячейке
+  const handleCellClick = (info: CellInfo) => {
+    // Создаем примерные даты начала и окончания недели
+    // В реальном приложении эти данные нужно рассчитывать точнее
+    const currentYear = new Date().getFullYear();
+    const startDate = new Date(currentYear, 0, 1 + (info.weekNumber - 1) * 7);
+    const endDate = new Date(currentYear, 0, 7 + (info.weekNumber - 1) * 7);
+    
+    setSelectedWeek({
+      courseId: info.courseId,
+      weekNumber: info.weekNumber,
+      startDate,
+      endDate,
+      monthName: info.monthName
+    });
+    
+    setDialogOpen(true);
+  };
+  
+  // Обработчик изменения активности в диалоге
+  const handleActivityChange = (activity: ActivityType) => {
+    if (!selectedWeek) return;
+    
+    const cellKey = getCellKey(selectedWeek.courseId, selectedWeek.weekNumber);
+    handleCellChange(cellKey, activity);
+  };
+  
+  // Функция для получения цвета ячейки в зависимости от активности
+  const getActivityColor = (activity: ActivityType): string => {
+    switch (activity) {
+      case "У": return "bg-blue-100 hover:bg-blue-200";
+      case "К": return "bg-green-100 hover:bg-green-200";
+      case "П": return "bg-yellow-100 hover:bg-yellow-200";
+      case "Э": return "bg-red-100 hover:bg-red-200";
+      case "Д": return "bg-purple-100 hover:bg-purple-200";
+      default: return "bg-white hover:bg-gray-100";
+    }
+  };
+  
   // Создание заголовков месяцев и недель
-  const renderMonthHeaders = () => {
+  const renderHeaders = () => {
     const headers = [];
     
     // Заголовки месяцев
     headers.push(
-      <tr key="month-headers" className="bg-muted/40">
-        <th className="sticky left-0 z-20 bg-muted/40 px-4 py-2 font-semibold text-left">Курс</th>
-        {Array.from({ length: yearsOfStudy }).flatMap((_, yearIndex) => 
-          MONTHS.map((month, monthIndex) => (
-            <th 
-              key={`year${yearIndex+1}_${month}`} 
-              colSpan={WEEKS_PER_MONTH}
-              className="px-2 py-1 text-center font-medium border-x"
-            >
-              {month}
-            </th>
-          ))
+      <tr key="month-headers" className="bg-muted/40 whitespace-nowrap">
+        <th 
+          className="sticky left-0 z-30 bg-gray-800 text-white px-4 py-2 text-center font-medium border-r-2 border-r-gray-600 min-w-[100px]"
+          rowSpan={2}
+        >
+          Курс
+        </th>
+        {Array.from({ length: yearsOfStudy }).map((_, yearIndex) => 
+          MONTHS.map((month, monthIndex) => {
+            // Вычисляем количество недель в этом месяце
+            const weeksInMonth = WEEKS_PER_MONTH[month];
+            
+            return (
+              <th 
+                key={`year${yearIndex+1}_${month}`} 
+                colSpan={weeksInMonth}
+                className="px-2 py-1 text-center font-medium border-x"
+              >
+                {month}
+              </th>
+            );
+          })
         )}
       </tr>
     );
     
     // Заголовки недель
     headers.push(
-      <tr key="week-headers" className="bg-muted/30">
-        <th className="sticky left-0 z-20 bg-muted/30 px-4 py-2 font-semibold"></th>
-        {Array.from({ length: yearsOfStudy }).flatMap((_, yearIndex) => 
-          MONTHS.map((_, monthIndex) => 
-            Array.from({ length: WEEKS_PER_MONTH }).map((_, weekIndex) => (
-              <th 
-                key={`year${yearIndex+1}_month${monthIndex}_week${weekIndex+1}`}
-                className="px-0 py-1 text-xs font-normal border-x w-10"
-              >
-                {weekIndex + 1}
-              </th>
-            ))
-          )
-        )}
+      <tr key="week-headers" className="bg-muted/30 whitespace-nowrap">
+        {Array.from({ length: yearsOfStudy }).flatMap((_, yearIndex) => {
+          let weekOffset = yearIndex * WEEKS_IN_YEAR;
+          
+          return MONTHS.flatMap((month) => {
+            const weeksInMonth = WEEKS_PER_MONTH[month];
+            const weekHeaders = [];
+            
+            for (let i = 0; i < weeksInMonth; i++) {
+              const weekNumber = weekOffset + i + 1;
+              
+              weekHeaders.push(
+                <th 
+                  key={`year${yearIndex+1}_month_${month}_week${weekNumber}`}
+                  className="px-1 py-1 text-xs font-normal border-x w-8 text-center"
+                >
+                  {weekNumber}
+                </th>
+              );
+            }
+            
+            weekOffset += weeksInMonth;
+            return weekHeaders;
+          });
+        })}
       </tr>
     );
     
@@ -106,31 +185,45 @@ export function AcademicCalendarTable({
       const courseId = courseIndex + 1;
       
       return (
-        <tr key={`course${courseId}`} className="border-t hover:bg-muted/20">
-          <td className="sticky left-0 z-10 bg-white px-4 py-2 font-medium border-r">
+        <tr key={`course${courseId}`} className="border-t hover:bg-muted/10">
+          <td className="sticky left-0 z-20 bg-gray-800 text-white px-4 py-2 font-medium border-r-2 border-r-gray-600 text-center">
             Курс {courseId}
           </td>
-          {Array.from({ length: yearsOfStudy }).flatMap((_, yearIndex) => 
-            MONTHS.map((_, monthIndex) => 
-              Array.from({ length: WEEKS_PER_MONTH }).map((_, weekIndex) => {
-                const cellKey = getCellKey(courseId, monthIndex + yearIndex * MONTHS.length, weekIndex);
+          {Array.from({ length: yearsOfStudy }).flatMap((_, yearIndex) => {
+            let weekOffset = yearIndex * WEEKS_IN_YEAR;
+            
+            return MONTHS.flatMap((month) => {
+              const weeksInMonth = WEEKS_PER_MONTH[month];
+              const weekCells = [];
+              
+              for (let i = 0; i < weeksInMonth; i++) {
+                const weekNumber = weekOffset + i + 1;
+                const cellKey = getCellKey(courseId, weekNumber);
+                const activity = tableData[cellKey] || "";
+                const cellColorClass = getActivityColor(activity);
                 
-                return (
+                weekCells.push(
                   <td 
                     key={cellKey}
-                    className="px-0 py-0 border text-center"
+                    className={`px-0 py-0 border text-center ${cellColorClass} cursor-pointer transition-colors`}
+                    onClick={() => handleCellClick({
+                      courseId,
+                      weekNumber,
+                      monthName: month,
+                      value: activity
+                    })}
                   >
-                    <Input
-                      className="h-8 w-10 text-center border-0 focus:ring-1 focus:ring-primary"
-                      value={tableData[cellKey] || ""}
-                      onChange={(e) => handleCellChange(cellKey, e.target.value)}
-                      maxLength={1}
-                    />
+                    <div className="h-8 w-8 flex items-center justify-center font-medium">
+                      {activity}
+                    </div>
                   </td>
                 );
-              })
-            )
-          )}
+              }
+              
+              weekOffset += weeksInMonth;
+              return weekCells;
+            });
+          })}
         </tr>
       );
     });
@@ -138,35 +231,42 @@ export function AcademicCalendarTable({
   
   return (
     <div className="w-full">
-      <div className="w-full border rounded-md overflow-auto">
-        <div className="min-w-max">
-          <table className="w-full border-collapse">
-            <thead>
-              {renderMonthHeaders()}
-            </thead>
-            <tbody>
-              {renderCourseRows()}
-            </tbody>
-          </table>
+      <div className="rounded-md overflow-hidden border shadow-sm">
+        <div className="overflow-auto max-h-[500px]">
+          <div className="min-w-max">
+            <table className="w-full border-collapse">
+              <thead>
+                {renderHeaders()}
+              </thead>
+              <tbody>
+                {renderCourseRows()}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
-      <div className="mt-4 flex flex-wrap gap-2">
-        <div className="text-xs bg-muted px-2 py-1 rounded-md flex items-center">
-          <span className="font-semibold mr-1">У</span> — Учебный процесс
-        </div>
-        <div className="text-xs bg-muted px-2 py-1 rounded-md flex items-center">
-          <span className="font-semibold mr-1">К</span> — Каникулы
-        </div>
-        <div className="text-xs bg-muted px-2 py-1 rounded-md flex items-center">
-          <span className="font-semibold mr-1">П</span> — Практика
-        </div>
-        <div className="text-xs bg-muted px-2 py-1 rounded-md flex items-center">
-          <span className="font-semibold mr-1">Э</span> — Экзаменационная сессия
-        </div>
-        <div className="text-xs bg-muted px-2 py-1 rounded-md flex items-center">
-          <span className="font-semibold mr-1">Д</span> — Дипломное проектирование
+      
+      <div className="mt-4">
+        <h4 className="text-sm font-medium mb-2">Обозначения:</h4>
+        <div className="flex flex-wrap gap-2">
+          {Object.entries(ACTIVITY_TYPES).map(([code, description]) => (
+            <div key={code} className="text-xs bg-muted px-2 py-1 rounded-md flex items-center">
+              <span className={`font-semibold mr-1 ${getActivityColor(code as ActivityType)} px-1 rounded`}>
+                {code}
+              </span> 
+              — {description}
+            </div>
+          ))}
         </div>
       </div>
+      
+      <WeekActivityDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        weekInfo={selectedWeek}
+        currentActivity={selectedWeek ? tableData[getCellKey(selectedWeek.courseId, selectedWeek.weekNumber)] || "" : ""}
+        onActivityChange={handleActivityChange}
+      />
     </div>
   );
 }
