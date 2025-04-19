@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useLayoutEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { 
   Dialog, 
@@ -76,7 +76,7 @@ export function WeekActivityDialog({
   const [hasSelectedDays, setHasSelectedDays] = useState<boolean>(false);
 
   // Инициализируем дни недели при открытии модального окна
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (weekInfo) {
       // Создаем неделю, начиная с понедельника
       const { startDate } = weekInfo;
@@ -283,13 +283,17 @@ export function WeekActivityDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md calendar-dialog-content">
-        <DialogHeader>
-          <DialogTitle>Активность для недели {weekInfo.weekNumber}</DialogTitle>
-          <DialogDescription>
-            {weekInfo.monthName}, курс {weekInfo.courseId}
-          </DialogDescription>
-        </DialogHeader>
+      {open && weekInfo && (
+        <DialogContent 
+          key={`dialog-week-${weekInfo.courseId}-${weekInfo.weekNumber}`}
+          className="sm:max-w-md calendar-dialog-content"
+        >
+          <DialogHeader>
+            <DialogTitle>Активность для недели {weekInfo.weekNumber}</DialogTitle>
+            <DialogDescription>
+              {weekInfo.monthName}, курс {weekInfo.courseId}
+            </DialogDescription>
+          </DialogHeader>
 
         <div className="space-y-4" onClick={handleContainerClick}>
           <div 
@@ -389,6 +393,7 @@ export function WeekActivityDialog({
           </Button>
         </DialogFooter>
       </DialogContent>
+      )}
     </Dialog>
   );
 }
