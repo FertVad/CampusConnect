@@ -64,7 +64,8 @@ export function WeekActivityDialog({
   currentActivity,
   onActivityChange
 }: WeekActivityDialogProps) {
-  if (!weekInfo) return null;
+  // Не используем раннее возвращение null, так как это вызывает проблемы с состоянием
+  // вместо этого используем условный рендеринг в JSX
 
   // Дни недели с числами календаря
   const [weekDays, setWeekDays] = useState<WeekDay[]>([]);
@@ -196,8 +197,10 @@ export function WeekActivityDialog({
         // Если день не выбран, выбираем его
         newDays[index].selected = true;
         
-        // Если выбрана какая-то активность, применяем её к дню ТОЛЬКО когда пользователь нажмет "Сохранить"
-        // НЕ меняем activity здесь, а только показываем предпросмотр через selected и getDayStyle
+        // Если выбрана активность, сразу же применяем её к выбранному дню
+        if (selectedActivity) {
+          newDays[index].activity = selectedActivity;
+        }
       }
       
       setWeekDays(newDays);
@@ -212,8 +215,15 @@ export function WeekActivityDialog({
     const activityValue = value as ActivityType;
     setSelectedActivity(activityValue);
     
-    // НЕ применяем активность автоматически, только сохраняем выбранное значение
-    // Активность будет применена только при явном клике на день или при сохранении
+    // Если есть выбранные дни, сразу применяем к ним выбранную активность
+    if (hasSelectedDays) {
+      const updatedDays = weekDays.map(day => ({
+        ...day,
+        // Если день выбран, устанавливаем новую активность
+        activity: day.selected ? activityValue : day.activity
+      }));
+      setWeekDays(updatedDays);
+    }
   };
 
   // Стиль для дня недели в зависимости от активности и выбранности
@@ -314,11 +324,34 @@ export function WeekActivityDialog({
                 setWeekDays(updatedDays);
                 setHasSelectedDays(false);
               } else {
-                // Если выделенных дней нет - выбираем рабочие дни (Пн-Пт)
+                // Если выделенных дней нет - проверяем состояние рабочих дней
                 const newDays = [...weekDays];
-                for (let i = 0; i < 5; i++) { // Пн-Пт (индексы 0-4)
-                  newDays[i].selected = true;
+                
+                // Проверяем, все ли рабочие дни (Пн-Пт) имеют одинаковую активность
+                const workdays = newDays.slice(0, 5);
+                const firstActivity = workdays[0].activity;
+                const allHaveSameActivity = firstActivity && 
+                  workdays.every(day => day.activity === firstActivity);
+                
+                // Если все рабочие дни имеют одинаковую непустую активность,
+                // то при двойном клике очищаем их активность
+                if (allHaveSameActivity) {
+                  for (let i = 0; i < 5; i++) { // Пн-Пт (индексы 0-4)
+                    newDays[i].selected = true;
+                    newDays[i].activity = ""; // Очищаем активность
+                  }
+                } else {
+                  // Иначе выбираем все рабочие дни и устанавливаем им текущую активность
+                  for (let i = 0; i < 5; i++) { // Пн-Пт (индексы 0-4)
+                    newDays[i].selected = true;
+                    
+                    // Если выбрана активность, применяем её
+                    if (selectedActivity) {
+                      newDays[i].activity = selectedActivity;
+                    }
+                  }
                 }
+                
                 setWeekDays(newDays);
                 setHasSelectedDays(true);
               }

@@ -109,13 +109,20 @@ export function AcademicCalendarTable({
     // Создаем ключ для ячейки (например: "course1_week5")
     const cellKey = getCellKey(selectedWeek.courseId, selectedWeek.weekNumber);
     
-    // Проверяем, действительно ли есть что сохранять (непустая активность)
-    if (activity || activity === "") {
-      // Сохраняем активность
-      handleCellChange(cellKey, activity);
-      // Обновляем визуальное выделение выбранной ячейки
-      setSelectedCellKey(cellKey); 
+    console.log("Saving activity for cell:", cellKey, "Activity:", activity);
+    
+    // Обновляем данные в таблице
+    const newTableData = { ...tableData };
+    newTableData[cellKey] = activity;
+    setTableData(newTableData);
+    
+    // Сохраняем через родительскую функцию
+    if (onChange) {
+      onChange(newTableData);
     }
+    
+    // Обновляем визуальное выделение выбранной ячейки
+    setSelectedCellKey(cellKey);
   };
   
   // Функция для получения стиля ячейки в зависимости от активности
@@ -268,11 +275,16 @@ export function AcademicCalendarTable({
                     value: activity
                   })}
                 >
-                  <div className={`h-8 w-full flex items-center justify-center ${activity ? bg : baseClassName}`}>
+                  <div className={`h-8 w-full flex items-center justify-center ${activity ? bg : baseClassName} transition-all hover:brightness-95 dark:hover:brightness-125`}>
                     {/* Отображаем буквенное обозначение активности */}
-                    <span className={`font-semibold text-sm ${activity ? text : ''}`}>
-                      {activity && activity.length > 1 ? activity[0] : activity}
+                    <span className={`font-bold text-sm ${activity ? text : ''}`}>
+                      {activity ? (activity.length > 1 ? activity[0] + "+" : activity) : ""}
                     </span>
+                    {activity && activity.length > 1 && (
+                      <span className="ml-0.5 text-[10px] text-slate-600 dark:text-slate-300 opacity-75">
+                        {activity.length}
+                      </span>
+                    )}
                   </div>
                 </td>
               );
