@@ -23,6 +23,15 @@ export const ACTIVITY_TYPES: { [key in Exclude<ActivityType, "">]: string } = {
   "Д": "Дипломное проектирование"
 };
 
+// Цвета для активностей
+const ACTIVITY_COLORS: { [key in Exclude<ActivityType, "">]: { bg: string, text: string, hoverBg: string } } = {
+  "У": { bg: "bg-blue-200", text: "text-blue-800", hoverBg: "hover:bg-blue-300" },
+  "К": { bg: "bg-gray-200", text: "text-gray-800", hoverBg: "hover:bg-gray-300" },
+  "П": { bg: "bg-yellow-200", text: "text-yellow-800", hoverBg: "hover:bg-yellow-300" },
+  "Э": { bg: "bg-red-200", text: "text-red-800", hoverBg: "hover:bg-red-300" },
+  "Д": { bg: "bg-purple-200", text: "text-purple-800", hoverBg: "hover:bg-purple-300" },
+};
+
 export interface WeekInfo {
   courseId: number;
   weekNumber: number;
@@ -76,16 +85,16 @@ export function WeekActivityDialog({
         </DialogHeader>
 
         <div className="space-y-4">
-          <div className="p-3 bg-muted/30 rounded-md">
-            <div className="flex justify-between text-sm text-muted-foreground mb-2">
-              <span>Начало: {formatDate(weekInfo.startDate)}</span>
-              <span>Конец: {formatDate(weekInfo.endDate)}</span>
+          <div className="p-4 bg-slate-100 dark:bg-slate-800 rounded-md">
+            <div className="flex justify-between text-sm mb-3">
+              <span className="font-medium">Начало: <span className="text-slate-700 dark:text-slate-300">{formatDate(weekInfo.startDate)}</span></span>
+              <span className="font-medium">Конец: <span className="text-slate-700 dark:text-slate-300">{formatDate(weekInfo.endDate)}</span></span>
             </div>
             <div className="grid grid-cols-7 gap-1">
               {weekdays.map((day, i) => (
                 <div 
                   key={i} 
-                  className="flex flex-col items-center justify-center h-8 text-xs bg-muted rounded"
+                  className="flex flex-col items-center justify-center h-8 text-xs font-semibold bg-slate-200 dark:bg-slate-700 rounded"
                 >
                   {day}
                 </div>
@@ -94,30 +103,37 @@ export function WeekActivityDialog({
           </div>
 
           <div className="space-y-3">
-            <h4 className="text-sm font-medium">Выберите тип активности:</h4>
+            <h4 className="text-sm font-medium mb-1">Выберите тип активности:</h4>
             <RadioGroup 
               value={currentActivity} 
               onValueChange={handleActivitySelect}
               className="grid grid-cols-1 gap-2"
             >
-              {Object.entries(ACTIVITY_TYPES).map(([code, description]) => (
-                <div 
-                  key={code} 
-                  className="flex items-center space-x-2 p-2 rounded-md hover:bg-muted/50"
-                >
-                  <RadioGroupItem value={code} id={`activity-${code}`} />
-                  <Label htmlFor={`activity-${code}`} className="flex items-center">
-                    <span className="font-semibold text-lg mr-2">{code}</span>
-                    <span>{description}</span>
-                  </Label>
-                </div>
-              ))}
+              {Object.entries(ACTIVITY_TYPES).map(([code, description]) => {
+                const colorStyle = ACTIVITY_COLORS[code as Exclude<ActivityType, "">];
+                return (
+                  <div 
+                    key={code} 
+                    className={`flex items-center space-x-2 p-2 rounded-md ${colorStyle.hoverBg} transition-colors`}
+                  >
+                    <RadioGroupItem value={code} id={`activity-${code}`} />
+                    <Label htmlFor={`activity-${code}`} className="flex items-center cursor-pointer">
+                      <span className={`font-semibold text-lg mr-2 w-8 h-8 flex items-center justify-center rounded ${colorStyle.bg} ${colorStyle.text}`}>
+                        {code}
+                      </span>
+                      <span>{description}</span>
+                    </Label>
+                  </div>
+                );
+              })}
               <div 
-                className="flex items-center space-x-2 p-2 rounded-md hover:bg-muted/50"
+                className="flex items-center space-x-2 p-2 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
               >
                 <RadioGroupItem value="" id="activity-none" />
-                <Label htmlFor="activity-none" className="flex items-center">
-                  <span className="font-semibold text-lg mr-2">—</span>
+                <Label htmlFor="activity-none" className="flex items-center cursor-pointer">
+                  <span className="font-semibold text-lg mr-2 w-8 h-8 flex items-center justify-center rounded bg-white dark:bg-slate-950 border">
+                    —
+                  </span>
                   <span>Нет активности</span>
                 </Label>
               </div>
@@ -129,7 +145,7 @@ export function WeekActivityDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Отмена
           </Button>
-          <Button onClick={() => onOpenChange(false)}>
+          <Button onClick={() => onOpenChange(false)} className="bg-blue-600 hover:bg-blue-700">
             Сохранить
           </Button>
         </DialogFooter>
