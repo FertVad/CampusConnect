@@ -102,15 +102,15 @@ export function AcademicCalendarTable({
     handleCellChange(cellKey, activity);
   };
   
-  // Функция для получения цвета ячейки в зависимости от активности
-  const getActivityColor = (activity: ActivityType): string => {
+  // Функция для получения стиля ячейки в зависимости от активности
+  const getActivityStyle = (activity: ActivityType): { bg: string, text: string } => {
     switch (activity) {
-      case "У": return "bg-blue-100 hover:bg-blue-200";
-      case "К": return "bg-green-100 hover:bg-green-200";
-      case "П": return "bg-yellow-100 hover:bg-yellow-200";
-      case "Э": return "bg-red-100 hover:bg-red-200";
-      case "Д": return "bg-purple-100 hover:bg-purple-200";
-      default: return "bg-white hover:bg-gray-100";
+      case "У": return { bg: "bg-blue-600", text: "text-white" };
+      case "К": return { bg: "bg-gray-500", text: "text-white" };
+      case "П": return { bg: "bg-yellow-500", text: "text-white" };
+      case "Э": return { bg: "bg-red-700", text: "text-white" };
+      case "Д": return { bg: "bg-purple-600", text: "text-white" };
+      default: return { bg: "bg-white", text: "text-gray-800" };
     }
   };
   
@@ -118,25 +118,26 @@ export function AcademicCalendarTable({
   const renderHeaders = () => {
     const headers = [];
     
-    // Заголовки месяцев
+    // Заголовок "Месяцы"
     headers.push(
-      <tr key="month-headers" className="bg-muted/40 whitespace-nowrap">
+      <tr key="month-row" className="bg-muted/40 whitespace-nowrap">
         <th 
-          className="sticky left-0 z-30 bg-gray-800 text-white px-4 py-2 text-center font-medium border-r-2 border-r-gray-600 min-w-[100px]"
-          rowSpan={2}
+          className="sticky left-0 z-30 bg-gray-800 text-white px-4 py-2 text-center font-medium border-r-2 border-r-gray-600"
+          rowSpan={1}
         >
-          Курс
+          Месяцы
         </th>
         {Array.from({ length: yearsOfStudy }).map((_, yearIndex) => 
           MONTHS.map((month, monthIndex) => {
             // Вычисляем количество недель в этом месяце
             const weeksInMonth = WEEKS_PER_MONTH[month];
+            const isEvenMonth = monthIndex % 2 === 0;
             
             return (
               <th 
                 key={`year${yearIndex+1}_${month}`} 
                 colSpan={weeksInMonth}
-                className="px-2 py-1 text-center font-medium border-x"
+                className={`px-2 py-1 text-center font-medium border-x ${isEvenMonth ? 'bg-gray-100' : 'bg-white'}`}
               >
                 {month}
               </th>
@@ -146,15 +147,21 @@ export function AcademicCalendarTable({
       </tr>
     );
     
-    // Заголовки недель
+    // Заголовок "Недели"
     headers.push(
-      <tr key="week-headers" className="bg-muted/30 whitespace-nowrap">
+      <tr key="week-row" className="bg-muted/30 whitespace-nowrap">
+        <th 
+          className="sticky left-0 z-30 bg-gray-700 text-white px-4 py-2 text-center font-medium border-r-2 border-r-gray-600"
+        >
+          Недели
+        </th>
         {Array.from({ length: yearsOfStudy }).flatMap((_, yearIndex) => {
           let weekOffset = yearIndex * WEEKS_IN_YEAR;
           
-          return MONTHS.flatMap((month) => {
+          return MONTHS.flatMap((month, monthIndex) => {
             const weeksInMonth = WEEKS_PER_MONTH[month];
             const weekHeaders = [];
+            const isEvenMonth = monthIndex % 2 === 0;
             
             for (let i = 0; i < weeksInMonth; i++) {
               const weekNumber = weekOffset + i + 1;
@@ -162,7 +169,7 @@ export function AcademicCalendarTable({
               weekHeaders.push(
                 <th 
                   key={`year${yearIndex+1}_month_${month}_week${weekNumber}`}
-                  className="px-1 py-1 text-xs font-normal border-x w-8 text-center"
+                  className={`px-1 py-1 text-xs font-normal border-x w-8 text-center ${isEvenMonth ? 'bg-gray-100' : 'bg-white'}`}
                 >
                   {weekNumber}
                 </th>
@@ -192,20 +199,22 @@ export function AcademicCalendarTable({
           {Array.from({ length: yearsOfStudy }).flatMap((_, yearIndex) => {
             let weekOffset = yearIndex * WEEKS_IN_YEAR;
             
-            return MONTHS.flatMap((month) => {
+            return MONTHS.flatMap((month, monthIndex) => {
               const weeksInMonth = WEEKS_PER_MONTH[month];
               const weekCells = [];
+              const isEvenMonth = monthIndex % 2 === 0;
+              const baseClassName = isEvenMonth ? 'bg-gray-50' : 'bg-white';
               
               for (let i = 0; i < weeksInMonth; i++) {
                 const weekNumber = weekOffset + i + 1;
                 const cellKey = getCellKey(courseId, weekNumber);
                 const activity = tableData[cellKey] || "";
-                const cellColorClass = getActivityColor(activity);
+                const { bg, text } = getActivityStyle(activity);
                 
                 weekCells.push(
                   <td 
                     key={cellKey}
-                    className={`px-0 py-0 border text-center ${cellColorClass} cursor-pointer transition-colors`}
+                    className={`px-0 py-0 border text-center ${baseClassName} cursor-pointer transition-colors`}
                     onClick={() => handleCellClick({
                       courseId,
                       weekNumber,
@@ -213,7 +222,7 @@ export function AcademicCalendarTable({
                       value: activity
                     })}
                   >
-                    <div className="h-8 w-8 flex items-center justify-center font-medium">
+                    <div className={`h-8 w-8 flex items-center justify-center font-medium ${activity ? bg : ''} ${activity ? text : ''}`}>
                       {activity}
                     </div>
                   </td>
@@ -249,14 +258,17 @@ export function AcademicCalendarTable({
       <div className="mt-4">
         <h4 className="text-sm font-medium mb-2">Обозначения:</h4>
         <div className="flex flex-wrap gap-2">
-          {Object.entries(ACTIVITY_TYPES).map(([code, description]) => (
-            <div key={code} className="text-xs bg-muted px-2 py-1 rounded-md flex items-center">
-              <span className={`font-semibold mr-1 ${getActivityColor(code as ActivityType)} px-1 rounded`}>
-                {code}
-              </span> 
-              — {description}
-            </div>
-          ))}
+          {Object.entries(ACTIVITY_TYPES).map(([code, description]) => {
+            const { bg, text } = getActivityStyle(code as ActivityType);
+            return (
+              <div key={code} className="text-xs bg-muted px-2 py-1 rounded-md flex items-center">
+                <span className={`mr-1 ${bg} ${text} w-6 h-6 flex items-center justify-center rounded font-medium`}>
+                  {code}
+                </span> 
+                — {description}
+              </div>
+            );
+          })}
         </div>
       </div>
       
