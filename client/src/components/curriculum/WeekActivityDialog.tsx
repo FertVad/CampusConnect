@@ -113,8 +113,8 @@ export function WeekActivityDialog({
         days.push({
           name: daysOfWeek[i],
           date: date.getDate(),
-          // По умолчанию выбраны дни, имеющие активность
-          selected: dailyActivities[i] !== "", 
+          // При открытии диалога ни один день не выбран
+          selected: false, 
           // Устанавливаем активность из разобранной строки или пустую
           activity: dailyActivities[i] || ""
         });
@@ -142,9 +142,25 @@ export function WeekActivityDialog({
       });
       
       setSelectedActivity(predominantActivity);
-      setHasSelectedDays(days.some(day => day.selected));
+      setHasSelectedDays(false); // При открытии нет выбранных дней
     }
   }, [weekInfo, currentActivity]);
+  
+  // Добавляем обработчик для сброса выделения через контекст компонента
+  // вместо прямого доступа к DOM
+  const handleContainerClick = (e: React.MouseEvent) => {
+    // Проверяем, что клик был не по элементу с днями недели
+    const target = e.target as HTMLElement;
+    if (!target.closest('.week-days-grid') && hasSelectedDays) {
+      // Сбрасываем выделение со всех дней
+      const newDays = weekDays.map(day => ({
+        ...day,
+        selected: false
+      }));
+      setWeekDays(newDays);
+      setHasSelectedDays(false);
+    }
+  };
 
   // Обработчик клика по дню недели
   const handleDayClick = (index: number) => {
@@ -187,10 +203,11 @@ export function WeekActivityDialog({
         ...day,
         // Если день выбран, устанавливаем новую активность
         activity: day.selected ? activityValue : day.activity,
-        // Оставляем дни выбранными, чтобы можно было менять активность
-        selected: day.selected
+        // Снимаем выделение с дней после применения активности
+        selected: false
       }));
       setWeekDays(updatedDays);
+      setHasSelectedDays(false); // Сбрасываем флаг наличия выбранных дней
     }
   };
 
@@ -269,7 +286,7 @@ export function WeekActivityDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md calendar-dialog-content">
         <DialogHeader>
           <DialogTitle>Активность для недели {weekInfo.weekNumber}</DialogTitle>
           <DialogDescription>
@@ -277,7 +294,7 @@ export function WeekActivityDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="space-y-4" onClick={handleContainerClick}>
           <div 
             className="p-4 bg-slate-50 dark:bg-slate-900 rounded-md border border-slate-200 dark:border-slate-700"
             onDoubleClick={(e) => {
@@ -295,12 +312,15 @@ export function WeekActivityDialog({
               setHasSelectedDays(newDays.some(day => day.selected));
             }}
           >
-            <div className="grid grid-cols-7 gap-2">
+            <div className="grid grid-cols-7 gap-2 week-days-grid">
               {weekDays.map((day, i) => (
                 <div 
                   key={i} 
                   className={`flex flex-col items-center justify-center p-2 rounded cursor-pointer transition-all ${getDayStyle(day)}`}
-                  onClick={() => handleDayClick(i)}
+                  onClick={(e) => {
+                    e.stopPropagation(); // Останавливаем всплытие события
+                    handleDayClick(i);
+                  }}
                 >
                   <div className="text-xs font-semibold">{day.name}</div>
                   <div className="text-sm font-bold">{day.date}</div>

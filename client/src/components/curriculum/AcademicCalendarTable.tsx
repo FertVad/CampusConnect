@@ -129,7 +129,7 @@ export function AcademicCalendarTable({
     headers.push(
       <tr key="month-row" className="bg-slate-100 whitespace-nowrap dark:bg-slate-800">
         <th 
-          className="sticky left-0 z-30 bg-blue-900 text-white px-4 py-2 text-center font-semibold border-r-2 border-r-slate-600"
+          className="sticky left-0 z-30 bg-slate-800 dark:bg-slate-900 text-white px-4 py-2 text-center font-semibold border-r-2 border-r-slate-600 shadow-md"
           rowSpan={1}
         >
           Месяцы
@@ -156,7 +156,7 @@ export function AcademicCalendarTable({
     headers.push(
       <tr key="week-row" className="whitespace-nowrap">
         <th 
-          className="sticky left-0 z-30 bg-blue-800 text-white px-4 py-2 text-center font-semibold border-r-2 border-r-slate-600"
+          className="sticky left-0 z-30 bg-slate-700 dark:bg-slate-800 text-white px-4 py-2 text-center font-semibold border-r-2 border-r-slate-600 shadow-md"
         >
           Недели
         </th>
@@ -201,7 +201,7 @@ export function AcademicCalendarTable({
       
       return (
         <tr key={`course${courseId}`} className="border-t hover:bg-slate-50 dark:hover:bg-slate-800/70">
-          <td className="sticky left-0 z-20 bg-blue-900 text-white px-4 py-2 font-medium border-r-2 border-r-slate-600 text-center">
+          <td className="sticky left-0 z-20 bg-slate-800 dark:bg-slate-900 text-white px-4 py-2 font-medium border-r-2 border-r-slate-600 text-center shadow-md">
             Курс {courseId}
           </td>
           {MONTHS.flatMap((month, monthIndex) => {
@@ -237,8 +237,10 @@ export function AcademicCalendarTable({
                   })}
                 >
                   <div className={`h-8 w-full flex items-center justify-center ${activity ? bg : baseClassName}`}>
-                    {/* Не отображаем буквенное обозначение активности */}
-                    <span className="w-full h-full"></span>
+                    {/* Отображаем буквенное обозначение активности */}
+                    <span className={`font-semibold text-sm ${activity ? text : ''}`}>
+                      {activity}
+                    </span>
                   </div>
                 </td>
               );
