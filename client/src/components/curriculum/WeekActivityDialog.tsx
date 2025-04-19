@@ -89,6 +89,23 @@ export function WeekActivityDialog({
       const days: WeekDay[] = [];
       const daysOfWeek = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
 
+      // Разбиваем текущую активность на символы для определения активности по дням
+      // Например, если currentActivity === "УУУККПЭ", то:
+      // Пн-Ср: "У", Чт-Пт: "К", Сб: "П", Вс: "Э"
+      // Это временное решение, в будущем нужно будет хранить полноценную структуру данных
+      let dailyActivities: ActivityType[] = [];
+      
+      // Если активность установлена и состоит ровно из 7 символов, используем их для дней недели
+      if (currentActivity && currentActivity.length === 7) {
+        dailyActivities = currentActivity.split('') as ActivityType[];
+      } else if (currentActivity) {
+        // Если активность установлена, но это один символ - применяем его ко всем дням
+        dailyActivities = Array(7).fill(currentActivity) as ActivityType[];
+      } else {
+        // Если активность не установлена, используем пустые значения
+        dailyActivities = Array(7).fill('') as ActivityType[];
+      }
+
       for (let i = 0; i < 7; i++) {
         const date = new Date(weekStart);
         date.setDate(weekStart.getDate() + i);
@@ -96,15 +113,36 @@ export function WeekActivityDialog({
         days.push({
           name: daysOfWeek[i],
           date: date.getDate(),
-          selected: false,
-          // Инициализируем начальную активность как пустую
-          activity: ""
+          // По умолчанию выбраны дни, имеющие активность
+          selected: dailyActivities[i] !== "", 
+          // Устанавливаем активность из разобранной строки или пустую
+          activity: dailyActivities[i] || ""
         });
       }
 
       setWeekDays(days);
-      setSelectedActivity(currentActivity || "");
-      setHasSelectedDays(false);
+      
+      // Определяем преобладающую активность для выбора в RadioGroup
+      const activityCounts = new Map<ActivityType, number>();
+      days.forEach(day => {
+        if (day.activity) {
+          activityCounts.set(day.activity, (activityCounts.get(day.activity) || 0) + 1);
+        }
+      });
+      
+      // Находим активность с максимальным количеством дней
+      let predominantActivity: ActivityType = "";
+      let maxCount = 0;
+      
+      activityCounts.forEach((count, activity) => {
+        if (count > maxCount) {
+          maxCount = count;
+          predominantActivity = activity;
+        }
+      });
+      
+      setSelectedActivity(predominantActivity);
+      setHasSelectedDays(days.some(day => day.selected));
     }
   }, [weekInfo, currentActivity]);
 
@@ -140,36 +178,46 @@ export function WeekActivityDialog({
 
   // Обработчик выбора активности
   const handleActivitySelect = (value: string) => {
-    setSelectedActivity(value as ActivityType);
+    const activityValue = value as ActivityType;
+    setSelectedActivity(activityValue);
+    
     // Немедленно применяем выбранную активность к выбранным дням
     if (hasSelectedDays) {
       const updatedDays = weekDays.map(day => ({
         ...day,
-        activity: day.selected ? (value as ActivityType) : day.activity,
-        // Снимаем выделение с дней после применения активности
-        selected: false
+        // Если день выбран, устанавливаем новую активность
+        activity: day.selected ? activityValue : day.activity,
+        // Оставляем дни выбранными, чтобы можно было менять активность
+        selected: day.selected
       }));
       setWeekDays(updatedDays);
-      setHasSelectedDays(false); // Сбрасываем флаг наличия выбранных дней
     }
   };
 
   // Стиль для дня недели в зависимости от активности и выбранности
   const getDayStyle = (day: WeekDay) => {
-    let baseStyle = "text-slate-800 dark:text-slate-800";
+    let baseStyle = "";
     
-    // Если у дня уже есть активность
+    // Если у дня есть активность, используем соответствующий цвет
     if (day.activity) {
       const colorStyle = ACTIVITY_COLORS[day.activity as Exclude<ActivityType, "">];
-      baseStyle = `${colorStyle.bg} ${baseStyle}`;
+      baseStyle = `${colorStyle.bg} text-slate-800 dark:text-slate-800`;
     } else {
-      // Если у дня нет активности, используем стандартный фон
-      baseStyle += " bg-slate-100 dark:bg-slate-700 dark:text-white";
+      // Если у дня нет активности или активность выбирается, используем стандартный фон
+      baseStyle = "bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-white";
     }
     
-    // Если день выбран, добавляем тонкую рамку, но не меняем фон
+    // Если день выбран, показываем это через рамку
+    // В темной теме используем светлую рамку для контраста
     if (day.selected) {
-      baseStyle += " ring-2 ring-blue-500 dark:ring-blue-400";
+      // Проверяем, есть ли у выбранного дня активность, чтобы правильно стилизовать
+      if (selectedActivity && day.selected) {
+        // Если выбрана активность, предпросмотр цвета для выбранных дней
+        const previewColorStyle = ACTIVITY_COLORS[selectedActivity as Exclude<ActivityType, "">];
+        baseStyle = `${previewColorStyle.bg} text-slate-800 dark:text-slate-800 ring-2 ring-blue-600 dark:ring-blue-400`;
+      } else {
+        baseStyle += " ring-2 ring-blue-600 dark:ring-blue-400";
+      }
     }
     
     return baseStyle;
@@ -177,9 +225,45 @@ export function WeekActivityDialog({
 
   // Обработчик сохранения
   const handleSave = () => {
-    // В реальном приложении здесь будет логика для сохранения
-    // разных активностей для разных дней одной недели
-    onActivityChange(selectedActivity);
+    // Собираем активности для всех дней недели
+    // и передаем их в виде строки символов
+    
+    // Если есть выбранные дни, сначала применяем к ним текущую активность
+    if (hasSelectedDays && selectedActivity) {
+      const updatedDays = weekDays.map(day => ({
+        ...day,
+        activity: day.selected ? selectedActivity : day.activity,
+        selected: false
+      }));
+      setWeekDays(updatedDays);
+    }
+    
+    // Собираем все активности в строку для передачи наверх
+    // Для простоты и совместимости со старым кодом, просто берем
+    // активность, которая встречается чаще всего
+    
+    let activities = weekDays.map(day => day.activity);
+    let mostCommonActivity: ActivityType = "";
+    let maxCount = 0;
+    
+    // Находим наиболее часто встречающуюся активность
+    const activityCounts = new Map<ActivityType, number>();
+    activities.forEach(activity => {
+      if (activity) {
+        activityCounts.set(activity, (activityCounts.get(activity) || 0) + 1);
+      }
+    });
+    
+    activityCounts.forEach((count, activity) => {
+      if (count > maxCount) {
+        maxCount = count;
+        mostCommonActivity = activity;
+      }
+    });
+    
+    // Передаем наиболее часто встречающуюся активность
+    // TODO: В дальнейшем, перейти на передачу полноценного объекта с активностями по дням
+    onActivityChange(mostCommonActivity);
     onOpenChange(false);
   };
 
