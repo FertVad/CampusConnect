@@ -13,7 +13,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AlertCircle, Save, ArrowLeft, FileText, CalendarClock, BookOpen } from "lucide-react";
+import { AlertCircle, Save, ArrowLeft, FileText, CalendarClock, BookOpen, BarChart, Table } from "lucide-react";
 
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -461,15 +461,46 @@ function EditCurriculumPlanContent() {
             </TabsContent>
             
             <TabsContent value="schedule">
-              <div className="bg-muted/30 rounded-lg p-8 text-center">
-                <CalendarClock className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                <h3 className="text-xl font-medium mb-2">График реализации</h3>
-                <p className="text-muted-foreground max-w-md mx-auto mb-4">
-                  Здесь будет располагаться редактор графика реализации учебного плана по семестрам и месяцам.
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  Функционал в разработке
-                </p>
+              <div className="space-y-6">
+                {/* Вложенные табы для раздела "График учебного процесса" */}
+                <Tabs defaultValue="chart" className="w-full">
+                  <div className="border-b mb-4">
+                    <TabsList className="w-full justify-start h-10 bg-transparent p-0">
+                      <TabsTrigger 
+                        value="chart" 
+                        className="data-[state=active]:bg-background rounded-none border-b-2 border-b-transparent data-[state=active]:border-b-primary py-2 px-4"
+                      >
+                        <Table className="h-4 w-4 mr-2" />
+                        График
+                      </TabsTrigger>
+                      <TabsTrigger 
+                        value="summary" 
+                        className="data-[state=active]:bg-background rounded-none border-b-2 border-b-transparent data-[state=active]:border-b-primary py-2 px-4"
+                      >
+                        <BarChart className="h-4 w-4 mr-2" />
+                        Итоги
+                      </TabsTrigger>
+                    </TabsList>
+                  </div>
+                  
+                  <TabsContent value="chart" className="mt-4">
+                    <div className="bg-muted/20 p-6 rounded-lg">
+                      <h3 className="text-lg font-medium mb-4">График учебного процесса по неделям</h3>
+                      <div className="border p-4 rounded-md bg-card">
+                        <p className="text-center text-muted-foreground">// table will be here</p>
+                      </div>
+                    </div>
+                  </TabsContent>
+                  
+                  <TabsContent value="summary" className="mt-4">
+                    <div className="bg-muted/20 p-6 rounded-lg">
+                      <h3 className="text-lg font-medium mb-4">Сводная таблица нагрузки</h3>
+                      <div className="border p-4 rounded-md bg-card">
+                        <p className="text-center text-muted-foreground">// summary coming soon</p>
+                      </div>
+                    </div>
+                  </TabsContent>
+                </Tabs>
               </div>
             </TabsContent>
             
