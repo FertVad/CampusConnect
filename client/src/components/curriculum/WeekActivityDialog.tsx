@@ -12,7 +12,8 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 
 // Тип активности
-export type ActivityType = "У" | "К" | "П" | "Э" | "Д" | "";
+// Может быть одиночным символом или строкой символов (для комбинации активностей по дням)
+export type ActivityType = "У" | "К" | "П" | "Э" | "Д" | "" | string;
 
 // Типы активностей с описаниями
 export const ACTIVITY_TYPES: { [key in Exclude<ActivityType, "">]: string } = {
@@ -176,6 +177,12 @@ export function WeekActivityDialog({
       // Одинарный клик - инвертируем выбор дня
       const newDays = [...weekDays];
       newDays[index].selected = !newDays[index].selected;
+      
+      // Если выбрана активность, сразу применяем её к дню
+      if (selectedActivity && newDays[index].selected) {
+        newDays[index].activity = selectedActivity;
+      }
+      
       setWeekDays(newDays);
       setHasSelectedDays(newDays.some(day => day.selected));
     }
@@ -194,11 +201,11 @@ export function WeekActivityDialog({
         ...day,
         // Если день выбран, устанавливаем новую активность
         activity: day.selected ? activityValue : day.activity,
-        // Оставляем выделение после применения активности
-        selected: day.selected
+        // Снимаем выделение с дней после применения активности
+        selected: false
       }));
       setWeekDays(updatedDays);
-      // Оставляем флаг наличия выбранных дней без изменений
+      setHasSelectedDays(false); // Сбрасываем флаг наличия выбранных дней
     }
   };
 
@@ -244,32 +251,23 @@ export function WeekActivityDialog({
       setWeekDays(updatedDays);
     }
     
-    // Собираем все активности в строку для передачи наверх
-    // Для простоты и совместимости со старым кодом, просто берем
-    // активность, которая встречается чаще всего
+    // Собираем активности каждого дня в строку из 7 символов
+    // для передачи наверх и сохранения
+    // Например: "УУУККПЭ" - где каждый символ соответствует дню недели
     
-    let activities = weekDays.map(day => day.activity);
-    let mostCommonActivity: ActivityType = "";
-    let maxCount = 0;
+    const activitiesString = weekDays.map(day => day.activity || '').join('');
     
-    // Находим наиболее часто встречающуюся активность
-    const activityCounts = new Map<ActivityType, number>();
-    activities.forEach(activity => {
-      if (activity) {
-        activityCounts.set(activity, (activityCounts.get(activity) || 0) + 1);
-      }
-    });
+    // Проверяем, что у нас есть хотя бы одна активность в неделе
+    const hasAnyActivity = activitiesString.trim() !== '';
     
-    activityCounts.forEach((count, activity) => {
-      if (count > maxCount) {
-        maxCount = count;
-        mostCommonActivity = activity;
-      }
-    });
+    if (hasAnyActivity) {
+      // Если в строке есть хотя бы один символ, передаем эту строку
+      onActivityChange(activitiesString as ActivityType);
+    } else {
+      // Если нет ни одной активности, передаем пустую строку
+      onActivityChange('');
+    }
     
-    // Передаем наиболее часто встречающуюся активность
-    // TODO: В дальнейшем, перейти на передачу полноценного объекта с активностями по дням
-    onActivityChange(mostCommonActivity);
     onOpenChange(false);
   };
 
@@ -375,7 +373,7 @@ export function WeekActivityDialog({
           <Button 
             onClick={handleSave} 
             className="bg-blue-600 hover:bg-blue-700"
-            disabled={!hasSelectedDays && selectedActivity === ""}
+            disabled={weekDays.every(day => !day.activity) && !hasSelectedDays}
           >
             Сохранить
           </Button>

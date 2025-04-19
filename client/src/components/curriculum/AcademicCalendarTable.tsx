@@ -112,12 +112,33 @@ export function AcademicCalendarTable({
   
   // Функция для получения стиля ячейки в зависимости от активности
   const getActivityStyle = (activity: ActivityType): { bg: string, text: string } => {
-    if (activity && activity in ACTIVITY_COLORS) {
+    if (!activity) {
+      return { bg: "bg-white dark:bg-slate-900", text: "text-gray-800 dark:text-gray-300" };
+    }
+    
+    // Проверяем, является ли активность строкой из нескольких символов
+    if (activity.length > 1) {
+      // Если это строка активностей, берем первую букву как представителя всей недели
+      // В будущем, здесь можно реализовать более сложную логику отображения
+      const primaryActivity = activity[0] as ActivityType;
+      
+      if (primaryActivity && primaryActivity in ACTIVITY_COLORS) {
+        return {
+          bg: ACTIVITY_COLORS[primaryActivity as Exclude<ActivityType, "">].bg,
+          text: ACTIVITY_COLORS[primaryActivity as Exclude<ActivityType, "">].text
+        };
+      }
+      return { bg: "bg-white dark:bg-slate-900", text: "text-gray-800 dark:text-gray-300" };
+    }
+    
+    // Для одиночной буквы
+    if (activity in ACTIVITY_COLORS) {
       return {
         bg: ACTIVITY_COLORS[activity as Exclude<ActivityType, "">].bg,
         text: ACTIVITY_COLORS[activity as Exclude<ActivityType, "">].text
       };
     }
+    
     return { bg: "bg-white dark:bg-slate-900", text: "text-gray-800 dark:text-gray-300" };
   };
   
@@ -239,7 +260,7 @@ export function AcademicCalendarTable({
                   <div className={`h-8 w-full flex items-center justify-center ${activity ? bg : baseClassName}`}>
                     {/* Отображаем буквенное обозначение активности */}
                     <span className={`font-semibold text-sm ${activity ? text : ''}`}>
-                      {activity}
+                      {activity && activity.length > 1 ? activity[0] : activity}
                     </span>
                   </div>
                 </td>
