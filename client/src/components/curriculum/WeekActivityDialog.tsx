@@ -113,8 +113,8 @@ export function WeekActivityDialog({
         days.push({
           name: daysOfWeek[i],
           date: date.getDate(),
-          // При открытии диалога ни один день не выбран
-          selected: false, 
+          // При открытии диалога выбраны только те дни, которые уже имеют активность
+          selected: dailyActivities[i] !== "", 
           // Устанавливаем активность из разобранной строки или пустую
           activity: dailyActivities[i] || ""
         });
@@ -142,24 +142,15 @@ export function WeekActivityDialog({
       });
       
       setSelectedActivity(predominantActivity);
-      setHasSelectedDays(false); // При открытии нет выбранных дней
+      setHasSelectedDays(days.some(day => day.selected));
     }
   }, [weekInfo, currentActivity]);
   
-  // Добавляем обработчик для сброса выделения через контекст компонента
-  // вместо прямого доступа к DOM
+  // Удаляем обработчик клика вне области - используем только двойной клик
+  // для сброса выделения
   const handleContainerClick = (e: React.MouseEvent) => {
-    // Проверяем, что клик был не по элементу с днями недели
-    const target = e.target as HTMLElement;
-    if (!target.closest('.week-days-grid') && hasSelectedDays) {
-      // Сбрасываем выделение со всех дней
-      const newDays = weekDays.map(day => ({
-        ...day,
-        selected: false
-      }));
-      setWeekDays(newDays);
-      setHasSelectedDays(false);
-    }
+    // Оставляем пустую функцию, чтобы не было ошибок
+    // Сброс делаем только по двойному клику
   };
 
   // Обработчик клика по дню недели
@@ -203,11 +194,11 @@ export function WeekActivityDialog({
         ...day,
         // Если день выбран, устанавливаем новую активность
         activity: day.selected ? activityValue : day.activity,
-        // Снимаем выделение с дней после применения активности
-        selected: false
+        // Оставляем выделение после применения активности
+        selected: day.selected
       }));
       setWeekDays(updatedDays);
-      setHasSelectedDays(false); // Сбрасываем флаг наличия выбранных дней
+      // Оставляем флаг наличия выбранных дней без изменений
     }
   };
 
@@ -215,26 +206,24 @@ export function WeekActivityDialog({
   const getDayStyle = (day: WeekDay) => {
     let baseStyle = "";
     
-    // Если у дня есть активность, используем соответствующий цвет
-    if (day.activity) {
-      const colorStyle = ACTIVITY_COLORS[day.activity as Exclude<ActivityType, "">];
-      baseStyle = `${colorStyle.bg} text-slate-800 dark:text-slate-800`;
-    } else {
-      // Если у дня нет активности или активность выбирается, используем стандартный фон
-      baseStyle = "bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-white";
-    }
-    
-    // Если день выбран, показываем это через рамку
-    // В темной теме используем светлую рамку для контраста
-    if (day.selected) {
-      // Проверяем, есть ли у выбранного дня активность, чтобы правильно стилизовать
-      if (selectedActivity && day.selected) {
-        // Если выбрана активность, предпросмотр цвета для выбранных дней
+    // Установка базового стиля для дня
+    if (!day.activity && !day.selected) {
+      // Если нет активности и день не выбран - стандартный фон
+      baseStyle = "bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-white";
+    } else if (day.selected) {
+      // Если день выбран - показываем прозрачным цветом активности или предварительный выбор
+      if (selectedActivity) {
+        // Используем цвет выбранной активности для предпросмотра
         const previewColorStyle = ACTIVITY_COLORS[selectedActivity as Exclude<ActivityType, "">];
-        baseStyle = `${previewColorStyle.bg} text-slate-800 dark:text-slate-800 ring-2 ring-blue-600 dark:ring-blue-400`;
+        baseStyle = `${previewColorStyle.bg} text-slate-800 ring-2 ring-blue-600 dark:ring-blue-400`;
       } else {
-        baseStyle += " ring-2 ring-blue-600 dark:ring-blue-400";
+        // Если активность не выбрана, но день выделен
+        baseStyle = "bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-white ring-2 ring-blue-600 dark:ring-blue-400";
       }
+    } else if (day.activity) {
+      // Если у дня есть активность и он не выбран
+      const colorStyle = ACTIVITY_COLORS[day.activity as Exclude<ActivityType, "">];
+      baseStyle = `${colorStyle.bg} text-slate-800`;
     }
     
     return baseStyle;
@@ -301,15 +290,26 @@ export function WeekActivityDialog({
               // Обработка двойного клика по всей области
               e.preventDefault(); // Предотвращаем выделение текста
               
-              const newDays = [...weekDays];
-              const allWorkdaysSelected = newDays.slice(0, 5).every(day => day.selected);
+              // Проверяем наличие выбранных дней
+              const hasSelected = weekDays.some(day => day.selected);
               
-              for (let i = 0; i < 5; i++) {
-                newDays[i].selected = !allWorkdaysSelected;
+              if (hasSelected) {
+                // Если есть выбранные дни - сбрасываем все выделения
+                const updatedDays = weekDays.map(day => ({
+                  ...day,
+                  selected: false
+                }));
+                setWeekDays(updatedDays);
+                setHasSelectedDays(false);
+              } else {
+                // Если выделенных дней нет - выбираем рабочие дни (Пн-Пт)
+                const newDays = [...weekDays];
+                for (let i = 0; i < 5; i++) { // Пн-Пт (индексы 0-4)
+                  newDays[i].selected = true;
+                }
+                setWeekDays(newDays);
+                setHasSelectedDays(true);
               }
-              
-              setWeekDays(newDays);
-              setHasSelectedDays(newDays.some(day => day.selected));
             }}
           >
             <div className="grid grid-cols-7 gap-2 week-days-grid">

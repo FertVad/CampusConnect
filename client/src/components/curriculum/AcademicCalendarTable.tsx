@@ -215,7 +215,7 @@ export function AcademicCalendarTable({
             }
             
             const isEvenMonth = monthIndex % 2 === 0;
-            const baseClassName = isEvenMonth ? 'bg-slate-50 dark:bg-slate-900/70' : 'bg-white dark:bg-slate-950/70';
+            const baseClassName = isEvenMonth ? 'bg-slate-50/50 dark:bg-slate-900/50' : 'bg-white dark:bg-slate-950/40';
             
             for (let i = 0; i < weeksInMonth; i++) {
               const weekNumber = weekOffset + i + 1;
@@ -227,7 +227,7 @@ export function AcademicCalendarTable({
               weekCells.push(
                 <td 
                   key={cellKey}
-                  className={`px-0 py-0 border text-center cursor-pointer transition-colors
+                  className={`p-0 border-0 text-center cursor-pointer transition-colors
                     ${isSelected ? 'ring-2 ring-offset-1 ring-blue-500 shadow-lg' : ''}`}
                   onClick={() => handleCellClick({
                     courseId,
