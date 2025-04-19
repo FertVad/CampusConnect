@@ -96,15 +96,22 @@ export function WeekActivityDialog({
       // Это временное решение, в будущем нужно будет хранить полноценную структуру данных
       let dailyActivities: ActivityType[] = [];
       
-      // Если активность установлена и состоит ровно из 7 символов, используем их для дней недели
-      if (currentActivity && currentActivity.length === 7) {
-        dailyActivities = currentActivity.split('') as ActivityType[];
-      } else if (currentActivity) {
-        // Если активность установлена, но это один символ - применяем его ко всем дням
-        dailyActivities = Array(7).fill(currentActivity) as ActivityType[];
-      } else {
-        // Если активность не установлена, используем пустые значения
-        dailyActivities = Array(7).fill('') as ActivityType[];
+      // Инициализируем массив пустыми значениями
+      dailyActivities = Array(7).fill('') as ActivityType[];
+      
+      if (currentActivity) {
+        if (currentActivity.length === 1) {
+          // Если активность установлена и это один символ - применяем его ко всем дням
+          dailyActivities = Array(7).fill(currentActivity) as ActivityType[];
+        } else {
+          // Если активность - строка символов, распределяем их по дням
+          // Если символов меньше 7, оставшиеся дни будут пустыми
+          // Если символов больше 7, используем только первые 7
+          const chars = currentActivity.split('');
+          for (let i = 0; i < Math.min(chars.length, 7); i++) {
+            dailyActivities[i] = chars[i] as ActivityType;
+          }
+        }
       }
 
       for (let i = 0; i < 7; i++) {
@@ -219,7 +226,7 @@ export function WeekActivityDialog({
       baseStyle = "bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-white";
     } else if (day.selected) {
       // Если день выбран - показываем прозрачным цветом активности или предварительный выбор
-      if (selectedActivity) {
+      if (selectedActivity && selectedActivity in ACTIVITY_COLORS) {
         // Используем цвет выбранной активности для предпросмотра
         const previewColorStyle = ACTIVITY_COLORS[selectedActivity as Exclude<ActivityType, "">];
         baseStyle = `${previewColorStyle.bg} text-slate-800 ring-2 ring-blue-600 dark:ring-blue-400`;
@@ -227,10 +234,13 @@ export function WeekActivityDialog({
         // Если активность не выбрана, но день выделен
         baseStyle = "bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-white ring-2 ring-blue-600 dark:ring-blue-400";
       }
-    } else if (day.activity) {
+    } else if (day.activity && day.activity in ACTIVITY_COLORS) {
       // Если у дня есть активность и он не выбран
       const colorStyle = ACTIVITY_COLORS[day.activity as Exclude<ActivityType, "">];
       baseStyle = `${colorStyle.bg} text-slate-800`;
+    } else if (day.activity) {
+      // Если у дня активность не из предопределенных - используем нейтральный цвет
+      baseStyle = "bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-white";
     }
     
     return baseStyle;

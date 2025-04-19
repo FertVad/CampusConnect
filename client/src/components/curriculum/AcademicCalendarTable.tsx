@@ -112,8 +112,10 @@ export function AcademicCalendarTable({
   
   // Функция для получения стиля ячейки в зависимости от активности
   const getActivityStyle = (activity: ActivityType): { bg: string, text: string } => {
+    const defaultStyle = { bg: "bg-white dark:bg-slate-900", text: "text-gray-800 dark:text-gray-300" };
+    
     if (!activity) {
-      return { bg: "bg-white dark:bg-slate-900", text: "text-gray-800 dark:text-gray-300" };
+      return defaultStyle;
     }
     
     // Проверяем, является ли активность строкой из нескольких символов
@@ -128,7 +130,7 @@ export function AcademicCalendarTable({
           text: ACTIVITY_COLORS[primaryActivity as Exclude<ActivityType, "">].text
         };
       }
-      return { bg: "bg-white dark:bg-slate-900", text: "text-gray-800 dark:text-gray-300" };
+      return { bg: "bg-slate-200 dark:bg-slate-600", text: "text-slate-800 dark:text-white" };
     }
     
     // Для одиночной буквы
@@ -139,7 +141,8 @@ export function AcademicCalendarTable({
       };
     }
     
-    return { bg: "bg-white dark:bg-slate-900", text: "text-gray-800 dark:text-gray-300" };
+    // Для нестандартного символа активности
+    return { bg: "bg-slate-200 dark:bg-slate-600", text: "text-slate-800 dark:text-white" };
   };
   
   // Создание заголовков месяцев и недель
