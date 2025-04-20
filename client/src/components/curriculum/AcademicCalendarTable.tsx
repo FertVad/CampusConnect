@@ -198,10 +198,14 @@ export function AcademicCalendarTable({
     return headers;
   };
   
-  // Создание строк для курсов
+  // Создание строк для курсов с учетом сдвига по годам
   const renderCourseRows = () => {
+    // Функция для расчета смещения недель в зависимости от курса (примерно 52 недели в году)
+    const courseOffsetWeeks = (courseId: number) => (courseId - 1) * 52;
+    
     return Array.from({ length: NUMBER_OF_COURSES }).map((_, courseIndex) => {
       const courseId = courseIndex + 1;
+      const courseOffset = courseOffsetWeeks(courseId);
       
       return (
         <tr key={`course${courseId}`} className="border-t hover:bg-slate-50 dark:hover:bg-slate-800/70">
@@ -209,7 +213,19 @@ export function AcademicCalendarTable({
             Курс {courseId}
           </td>
           {weeks.map((w, idx) => {
-            const cellKey = getCellKey(courseId, w.index);
+            // Если индекс меньше смещения для данного курса - отображаем затененную ячейку
+            if (idx < courseOffset) {
+              return (
+                <td 
+                  key={`inactive_${courseId}_${idx}`} 
+                  className="p-0 h-8 bg-slate-900/10 dark:bg-slate-900/30 border-0"
+                />
+              );
+            }
+            
+            // Номер недели в рамках текущего курса
+            const adjustedWeekNumber = idx - courseOffset + 1;
+            const cellKey = getCellKey(courseId, adjustedWeekNumber);
             const activity = tableData[cellKey] || "";
             const { bg, text } = getActivityStyle(activity);
             const isSelected = cellKey === selectedCellKey;
@@ -219,14 +235,20 @@ export function AcademicCalendarTable({
             
             // Базовый стиль ячейки в зависимости от чётности группы
             const isEvenGroup = idx % 8 < 4;
+            
+            // Градиенты для четных и нечетных столбцов
+            const baseLeft = isEvenGroup ? 'from-slate-50' : 'from-white';
+            const baseRight = isEvenGroup ? 'to-slate-100' : 'to-slate-50';
+            const darkLeft = isEvenGroup ? 'dark:from-slate-900' : 'dark:from-slate-950';
+            const darkRight = isEvenGroup ? 'dark:to-slate-800' : 'dark:to-slate-900';
+            
+            // Шахматный фон для обычных ячеек
             const chessBg = isEvenGroup
               ? 'bg-slate-50/50 dark:bg-slate-900/50'
               : 'bg-white dark:bg-slate-950/40';
             
             // Градиентный фон для недель на стыке месяцев
-            const gradientBg = isEvenGroup
-              ? 'bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800'
-              : 'bg-gradient-to-r from-white to-slate-50 dark:from-slate-950 dark:to-slate-900';
+            const gradientBg = `bg-gradient-to-r ${baseLeft} ${baseRight} ${darkLeft} ${darkRight}`;
             
             // Граница правее, если следующая неделя от другого месяца
             const isMonthBoundary = idx === weeks.length - 1 || 
@@ -234,14 +256,14 @@ export function AcademicCalendarTable({
             
             return (
               <td 
-                key={cellKey}
+                key={`active_${cellKey}`}
                 title={`${format(w.startDate, 'd MMM', {locale: ru})} – ${format(w.endDate, 'd MMM', {locale: ru})}`}
                 className={`p-0 border-0 text-center cursor-pointer transition-colors
                   ${isMonthBoundary ? 'border-r-2 border-slate-300 dark:border-slate-600' : ''}
                   ${isSelected ? 'ring-2 ring-blue-500 shadow-lg' : ''}`}
                 onClick={() => handleCellClick({
                   courseId,
-                  weekNumber: w.index,
+                  weekNumber: adjustedWeekNumber,
                   monthName: w.month,
                   value: activity
                 })}
