@@ -1,35 +1,37 @@
-import { startOfWeek, addWeeks, isBefore, format, addDays } from "date-fns";
+import { addWeeks, isBefore, format, addDays } from "date-fns";
 import { ru } from "date-fns/locale/ru";
 
 export interface WeekCell {
-  startDate: Date;   // понедельник
-  endDate: Date;     // воскресенье
-  month: string;     // «Сентябрь» и т.д.
-  index: number;     // порядковый номер недели с 1
+  startDate: Date;        // фактический день-старта недели
+  endDate: Date;          // +6 дней
+  month: string;          // «Сентябрь» и т.д.
+  index: number;          // 1…N по порядку
 }
 
 /**
  * Строит массив недель учебного года.
- * @param year       Год начала обучения (например, 2025)
- * @returns Массив объектов WeekCell, представляющих недели учебного года
+ * @param startDate Дата начала обучения (без автосдвига на понедельник)
+ * @param totalYears Длительность обучения в годах
+ * @returns Массив объектов WeekCell, представляющих недели учебного периода
  */
-export const buildAcademicWeeks = (year = 2025): WeekCell[] => {
-  const sept1 = new Date(year, 8, 1);                      // 1 сентября (месяцы с 0)
-  let curr = startOfWeek(sept1, { weekStartsOn: 1 });      // ближайший понедельник
-  const lastDay = new Date(year + 1, 7, 31);               // 31 августа следующего года
-  
+export const buildAcademicWeeks = (
+  startDate: Date,
+  totalYears = 4
+): WeekCell[] => {
   const weeks: WeekCell[] = [];
+  let curr = new Date(startDate);          // неделя №1: старт ≡ выбранная дата
+  const studyEnd = new Date(startDate.getFullYear() + totalYears, 7, 31); // 31 августа через N лет
   let n = 1;
-  while (isBefore(curr, addWeeks(lastDay, 1))) {
-    const start = curr;
-    const end = addDays(curr, 6);                         // воскресенье (старт + 6 дней)
+
+  while (isBefore(curr, addDays(studyEnd, 1))) {
+    const end = addDays(curr, 6);
     weeks.push({
-      startDate: start,
+      startDate: curr,
       endDate: end,
-      month: format(start, "LLLL", { locale: ru }),
+      month: format(curr, "LLLL", { locale: ru }),
       index: n++,
     });
-    curr = addWeeks(curr, 1);                             // следующий понедельник
+    curr = addWeeks(curr, 1);
   }
   return weeks;
 };

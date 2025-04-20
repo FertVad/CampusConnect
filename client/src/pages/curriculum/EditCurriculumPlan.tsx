@@ -14,7 +14,7 @@ import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertCircle, Save, ArrowLeft, FileText, CalendarClock, BookOpen, BarChart, Table } from "lucide-react";
-import { AcademicCalendarTable } from "@/components/curriculum/AcademicCalendarTable";
+import GraphTab from "@/components/curriculum/GraphTab";
 
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -486,8 +486,15 @@ function EditCurriculumPlanContent() {
                   <TabsContent value="chart" className="mt-4">
                     <div className="bg-muted/20 p-6 rounded-lg">
                       <h3 className="text-lg font-medium mb-4">График учебного процесса по неделям</h3>
-                      <div className="bg-card rounded-md">
-                        <AcademicCalendarTable yearsOfStudy={plan.yearsOfStudy} />
+                      <div className="bg-card rounded-md p-4">
+                        <GraphTab 
+                          planYear={plan.startYear || new Date().getFullYear()} 
+                          yearsOfStudy={plan.yearsOfStudy} 
+                          onChange={(data) => {
+                            console.log("Calendar data updated:", data);
+                            // Здесь будет код для сохранения данных графика
+                          }}
+                        />
                       </div>
                     </div>
                   </TabsContent>

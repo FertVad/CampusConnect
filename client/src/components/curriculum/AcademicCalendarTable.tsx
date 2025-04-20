@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { WeekActivityDialog, WeekInfo, ActivityType, ACTIVITY_TYPES, ACTIVITY_COLORS } from "./WeekActivityDialog";
-import { buildAcademicWeeks, WeekCell } from "@/utils/calendar";
+import { WeekCell } from "@/utils/calendar";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale/ru";
 
@@ -19,21 +19,20 @@ interface CellInfo {
 }
 
 interface AcademicCalendarTableProps {
+  weeks: WeekCell[];            // Массив недель для отображения
   yearsOfStudy: number;
   onChange?: (data: CalendarData) => void;
   initialData?: CalendarData;
 }
 
 export function AcademicCalendarTable({ 
+  weeks,
   yearsOfStudy = 4, 
   onChange,
   initialData = {} 
 }: AcademicCalendarTableProps) {
   // Состояние для хранения данных таблицы
   const [tableData, setTableData] = useState<CalendarData>(initialData);
-  
-  // Генерируем недели учебного года
-  const weeks: WeekCell[] = useMemo(() => buildAcademicWeeks(2025), []);
   
   // Группируем недели по месяцам
   const monthGroups = useMemo(() => {

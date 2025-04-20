@@ -1,0 +1,148 @@
+📅 Academic Calendar — динамические недели + выбор даты старта
+
+Этот гайд заменяет старый фиксированный «4 недели в месяце» подход.
+
+1. Утилита buildAcademicWeeks
+
+src/utils/calendar.ts
+
+import { addDays, addWeeks, isBefore, format } from "date-fns";
+import ru from "date-fns/locale/ru";
+
+export interface WeekCell {
+  startDate: Date;        // фактический день‑старта недели
+  endDate: Date;          // +6 дней
+  month: string;          // «Сентябрь» и т.д.
+  index: number;          // 1…N по порядку
+}
+
+export const buildAcademicWeeks = (
+  startDate: Date,        // ТУТ всё начинается, без автосдвига на понедельник
+  totalYears = 4          // длительность обучения
+): WeekCell[] => {
+  const weeks: WeekCell[] = [];
+  let curr = new Date(startDate);          // неделя №1: старт ≡ выбранная дата
+  const studyEnd = new Date(startDate.getFullYear() + totalYears, 7, 31); // 31 авг
+  let n = 1;
+
+  while (isBefore(curr, addDays(studyEnd, 1))) {
+    const end = addDays(curr, 6);
+    weeks.push({
+      startDate: curr,
+      endDate: end,
+      month: format(curr, "LLLL", { locale: ru }),
+      index: n++,
+    });
+    curr = addWeeks(curr, 1);
+  }
+  return weeks;
+};
+
+2. Компонент выбора даты
+
+src/components/ui/StartDatePicker.tsx
+
+import { useState } from "react";
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { Button } from "@/components/ui/button";
+import { format } from "date-fns";
+import ru from "date-fns/locale/ru";
+
+export function StartDatePicker({ value, onChange }: { value: Date; onChange: (d: Date)=>void }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button variant="outline" className="w-[200px] justify-start">
+          {format(value, "d MMMM yyyy", { locale: ru })}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-auto p-0">
+        <Calendar
+          initialFocus
+          mode="single"
+          selected={value}
+          onSelect={(d)=> d && (onChange(d), setOpen(false))}
+          weekStartsOn={1}
+          locale={ru}
+        />
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+3. Вкладка «График» (пример GraphTab.tsx)
+
+import { useState, useMemo } from "react";
+import { StartDatePicker } from "@/components/ui/StartDatePicker";
+import { buildAcademicWeeks } from "@/utils/calendar";
+import { AcademicCalendarTable } from "@/components/curriculum/AcademicCalendarTable";
+
+export default function GraphTab({ planYear, yearsOfStudy }) {
+  const defaultStart = new Date(planYear, 8, 1); // 1 сент
+  const [startDate, setStartDate] = useState<Date>(defaultStart);
+
+  const weeks = useMemo(() => buildAcademicWeeks(startDate, yearsOfStudy), [startDate, yearsOfStudy]);
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-2">
+        <span className="text-sm font-medium">Дата начала обучения:</span>
+        <StartDatePicker value={startDate} onChange={setStartDate} />
+      </div>
+
+      <AcademicCalendarTable weeks={weeks} yearsOfStudy={yearsOfStudy} />
+    </div>
+  );
+}
+
+4. Правки AcademicCalendarTable
+
+Пропсы
+
+interface AcademicCalendarTableProps {
+  weeks: WeekCell[];              // ← новый
+  yearsOfStudy: number;
+  /* initialData, onChange — без изменений */
+}
+
+Построение шапок
+
+// группируем по месяцу
+const monthGroups = useMemo(() => {
+  return weeks.reduce((acc, w) => ((acc[w.month] ||= []).push(w), acc), {} as Record<string, WeekCell[]>);
+}, [weeks]);
+
+// Месяцы
+<tr>
+  <th className="sticky left-0 ...">Месяцы</th>
+  {Object.entries(monthGroups).map(([m, list], i) => (
+    <th key={m} colSpan={list.length} className={`px-2 py-1 text-center border-x ${i%2?'bg-slate-200':'bg-slate-100'} dark:bg-slate-800`}>{m}</th>
+  ))}
+</tr>
+
+// Недели
+<tr>
+  <th className="sticky left-0 ...">Недели</th>
+  {weeks.map((w, i) => (
+    <th key={w.index} className={`w-8 text-xs font-semibold border-x text-center ${i%2?'bg-slate-200':'bg-slate-100'} dark:bg-slate-700`}>{w.index}</th>
+  ))}
+</tr>
+
+Рендер ячеек курса
+
+{weeks.map(w => {
+  const cellKey = getCellKey(courseId, w.index);
+  const activity = tableData[cellKey] || "";
+  ...
+  return (
+    <td key={cellKey}
+        title={`${format(w.startDate,'d MMM',{locale:ru})} – ${format(w.endDate,'d MMM',{locale:ru})}`}
+        className={`p-0 border-0 text-center cursor-pointer ${isSelected?'ring-2 ring-blue-500':''}`}
+        onClick={() => handleCellClick({ courseId, weekNumber: w.index, monthName: w.month, value: activity })}>
+      ...
+    </td>
+  );
+})}
+
