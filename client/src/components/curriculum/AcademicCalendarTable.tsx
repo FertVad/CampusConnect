@@ -34,10 +34,11 @@ export function AcademicCalendarTable({
   // Состояние для хранения данных таблицы
   const [tableData, setTableData] = useState<CalendarData>(initialData);
   
-  // Группируем недели по месяцам
+  // Группируем недели по месяцам и годам
   const monthGroups = useMemo(() => {
     return weeks.reduce((acc, w) => {
-      (acc[w.month] ||= []).push(w);
+      const key = format(w.startDate, "LLLL yyyy", { locale: ru }); // «сентябрь 2023»
+      (acc[key] ||= []).push(w);
       return acc;
     }, {} as Record<string, WeekCell[]>);
   }, [weeks]);
@@ -158,15 +159,19 @@ export function AcademicCalendarTable({
         >
           Месяцы
         </th>
-        {Object.entries(monthGroups).map(([month, list], i) => (
-          <th 
-            key={month} 
-            colSpan={list.length}
-            className={`px-2 py-1 text-center font-medium border-x ${i % 2 === 0 ? 'bg-slate-200 dark:bg-slate-700' : 'bg-slate-100 dark:bg-slate-800'}`}
-          >
-            {month}
-          </th>
-        ))}
+        {Object.entries(monthGroups).map(([key, list], i) => {
+          const [month, yr] = key.split(" ");
+          return (
+            <th 
+              key={key} 
+              colSpan={list.length}
+              className={`px-2 py-1 text-center font-medium border-x ${i % 2 === 0 ? 'bg-slate-200 dark:bg-slate-700' : 'bg-slate-100 dark:bg-slate-800'}`}
+            >
+              {month}
+              <span className="block text-[10px] opacity-70">{yr}</span>
+            </th>
+          );
+        })}
       </tr>
     );
     
@@ -208,15 +213,32 @@ export function AcademicCalendarTable({
             const activity = tableData[cellKey] || "";
             const { bg, text } = getActivityStyle(activity);
             const isSelected = cellKey === selectedCellKey;
+            
+            // Неделя пересекает границу месяца?
+            const crossMonth = w.startDate.getMonth() !== w.endDate.getMonth();
+            
+            // Базовый стиль ячейки в зависимости от чётности группы
             const isEvenGroup = idx % 8 < 4;
-            const baseClassName = isEvenGroup ? 'bg-slate-50/50 dark:bg-slate-900/50' : 'bg-white dark:bg-slate-950/40';
+            const chessBg = isEvenGroup
+              ? 'bg-slate-50/50 dark:bg-slate-900/50'
+              : 'bg-white dark:bg-slate-950/40';
+            
+            // Градиентный фон для недель на стыке месяцев
+            const gradientBg = isEvenGroup
+              ? 'bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800'
+              : 'bg-gradient-to-r from-white to-slate-50 dark:from-slate-950 dark:to-slate-900';
+            
+            // Граница правее, если следующая неделя от другого месяца
+            const isMonthBoundary = idx === weeks.length - 1 || 
+              (idx + 1 < weeks.length && w.endDate.getMonth() !== weeks[idx + 1].startDate.getMonth());
             
             return (
               <td 
                 key={cellKey}
                 title={`${format(w.startDate, 'd MMM', {locale: ru})} – ${format(w.endDate, 'd MMM', {locale: ru})}`}
                 className={`p-0 border-0 text-center cursor-pointer transition-colors
-                  ${isSelected ? 'ring-2 ring-offset-1 ring-blue-500 shadow-lg' : ''}`}
+                  ${isMonthBoundary ? 'border-r-2 border-slate-300 dark:border-slate-600' : ''}
+                  ${isSelected ? 'ring-2 ring-blue-500 shadow-lg' : ''}`}
                 onClick={() => handleCellClick({
                   courseId,
                   weekNumber: w.index,
@@ -224,7 +246,10 @@ export function AcademicCalendarTable({
                   value: activity
                 })}
               >
-                <div className={`h-8 w-full flex items-center justify-center ${activity ? bg : baseClassName} transition-all hover:brightness-95 dark:hover:brightness-125`}>
+                <div className={`h-8 w-full flex items-center justify-center 
+                  ${activity ? bg : (crossMonth ? gradientBg : chessBg)} 
+                  transition-all hover:brightness-95 dark:hover:brightness-125`}
+                >
                   {/* Отображаем буквенное обозначение активности */}
                   <span className={`font-bold text-sm ${activity ? text : ''}`}>
                     {activity ? (activity.length > 1 ? activity[0] + "+" : activity) : ""}

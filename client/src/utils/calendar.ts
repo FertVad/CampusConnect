@@ -26,8 +26,8 @@ export const buildAcademicWeeks = (
   while (isBefore(curr, addDays(studyEnd, 1))) {
     const end = addDays(curr, 6);
     weeks.push({
-      startDate: curr,
-      endDate: end,
+      startDate: new Date(curr),
+      endDate: new Date(end),
       month: format(curr, "LLLL", { locale: ru }),
       index: n++,
     });
