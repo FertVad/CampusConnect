@@ -1,31 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { WeekActivityDialog, WeekInfo, ActivityType, ACTIVITY_TYPES, ACTIVITY_COLORS } from "./WeekActivityDialog";
-
-// Перечисление месяцев учебного года (с сентября по август)
-const MONTHS = [
-  "Сентябрь", "Октябрь", "Ноябрь", "Декабрь", 
-  "Январь", "Февраль", "Март", "Апрель", 
-  "Май", "Июнь", "Июль", "Август"
-];
+import { buildAcademicWeeks, WeekCell } from "@/utils/calendar";
 
 // Количество курсов
 const NUMBER_OF_COURSES = 4;
-
-// Количество недель в каждом месяце
-const WEEKS_PER_MONTH: { [key: string]: number } = {
-  "Сентябрь": 4,
-  "Октябрь": 4,
-  "Ноябрь": 4,
-  "Декабрь": 4,
-  "Январь": 4,
-  "Февраль": 4,
-  "Март": 5,
-  "Апрель": 4,
-  "Май": 4,
-  "Июнь": 4,
-  "Июль": 4,
-  "Август": 5,
-};
 
 // Тип для всех данных таблицы
 type CalendarData = Record<string, ActivityType>;
@@ -52,6 +30,20 @@ export function AcademicCalendarTable({
   // Состояние для хранения данных таблицы
   const [tableData, setTableData] = useState<CalendarData>(initialData);
   
+  // Генерируем недели учебного года
+  const weeks: WeekCell[] = useMemo(() => buildAcademicWeeks(2025), []);
+  
+  // Группируем недели по месяцам
+  const monthGroups = useMemo(() => {
+    return weeks.reduce((acc, week) => {
+      if (!acc[week.month]) {
+        acc[week.month] = [];
+      }
+      acc[week.month].push(week);
+      return acc;
+    }, {} as Record<string, WeekCell[]>);
+  }, [weeks]);
+  
   // Состояние для модального окна и выбранной ячейки
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedWeek, setSelectedWeek] = useState<WeekInfo | null>(null);
@@ -75,18 +67,13 @@ export function AcademicCalendarTable({
   
   // Обработчик клика по ячейке
   const handleCellClick = (info: CellInfo) => {
-    // Вычисляем даты начала и окончания недели для учебного года (с сентября)
-    // Предполагаем, что учебный год начинается 1 сентября текущего календарного года
-    const currentYear = new Date().getFullYear();
-    const academicYearStart = new Date(currentYear, 8, 1); // 1 сентября (месяцы с 0)
+    // Находим данные о неделе по её номеру
+    const weekData = weeks.find(w => w.index === info.weekNumber);
     
-    // Рассчитываем начало недели с учетом смещения от начала учебного года
-    const startDate = new Date(academicYearStart);
-    startDate.setDate(academicYearStart.getDate() + (info.weekNumber - 1) * 7);
-    
-    // Конец недели - это начало + 6 дней
-    const endDate = new Date(startDate);
-    endDate.setDate(startDate.getDate() + 6);
+    if (!weekData) {
+      console.error(`Неделя с номером ${info.weekNumber} не найдена`);
+      return;
+    }
     
     const cellKey = getCellKey(info.courseId, info.weekNumber);
     setSelectedCellKey(cellKey);
@@ -94,9 +81,9 @@ export function AcademicCalendarTable({
     setSelectedWeek({
       courseId: info.courseId,
       weekNumber: info.weekNumber,
-      startDate,
-      endDate,
-      monthName: info.monthName
+      startDate: weekData.startDate,
+      endDate: weekData.endDate,
+      monthName: weekData.month
     });
     
     setDialogOpen(true);
@@ -173,21 +160,15 @@ export function AcademicCalendarTable({
         >
           Месяцы
         </th>
-        {MONTHS.map((month, monthIndex) => {
-          // Вычисляем количество недель в этом месяце
-          const weeksInMonth = WEEKS_PER_MONTH[month];
-          const isEvenMonth = monthIndex % 2 === 0;
-          
-          return (
-            <th 
-              key={`${month}`} 
-              colSpan={weeksInMonth}
-              className={`px-2 py-1 text-center font-medium border-x ${isEvenMonth ? 'bg-slate-200 dark:bg-slate-700' : 'bg-slate-100 dark:bg-slate-800'}`}
-            >
-              {month}
-            </th>
-          );
-        })}
+        {Object.entries(monthGroups).map(([month, list], i) => (
+          <th 
+            key={month} 
+            colSpan={list.length}
+            className={`px-2 py-1 text-center font-medium border-x ${i % 2 === 0 ? 'bg-slate-200 dark:bg-slate-700' : 'bg-slate-100 dark:bg-slate-800'}`}
+          >
+            {month}
+          </th>
+        ))}
       </tr>
     );
     
@@ -199,34 +180,15 @@ export function AcademicCalendarTable({
         >
           Недели
         </th>
-        {MONTHS.flatMap((month, monthIndex) => {
-          const weeksInMonth = WEEKS_PER_MONTH[month];
-          const weekHeaders = [];
-          let weekOffset = 0;
-          
-          // Вычисляем смещение недель для этого месяца
-          for (let i = 0; i < monthIndex; i++) {
-            weekOffset += WEEKS_PER_MONTH[MONTHS[i]];
-          }
-          
-          const isEvenMonth = monthIndex % 2 === 0;
-          
-          for (let i = 0; i < weeksInMonth; i++) {
-            const weekNumber = weekOffset + i + 1;
-            
-            weekHeaders.push(
-              <th 
-                key={`month_${month}_week${weekNumber}`}
-                className={`px-1 py-1 text-xs font-semibold border-x w-8 text-center 
-                  ${isEvenMonth ? 'bg-slate-200 dark:bg-slate-700' : 'bg-slate-100 dark:bg-slate-800'}`}
-              >
-                {weekNumber}
-              </th>
-            );
-          }
-          
-          return weekHeaders;
-        })}
+        {weeks.map((w, idx) => (
+          <th 
+            key={`week_${w.index}`}
+            className={`px-1 py-1 text-xs font-semibold border-x w-8 text-center 
+              ${(idx % 8 < 4) ? 'bg-slate-200 dark:bg-slate-700' : 'bg-slate-100 dark:bg-slate-800'}`}
+          >
+            {w.index}
+          </th>
+        ))}
       </tr>
     );
     
@@ -243,54 +205,39 @@ export function AcademicCalendarTable({
           <td className="sticky left-0 z-20 bg-slate-800 dark:bg-slate-900 text-white px-4 py-2 font-medium border-r-2 border-r-slate-600 text-center shadow-md">
             Курс {courseId}
           </td>
-          {MONTHS.flatMap((month, monthIndex) => {
-            const weeksInMonth = WEEKS_PER_MONTH[month];
-            const weekCells = [];
-            let weekOffset = 0;
+          {weeks.map((w, idx) => {
+            const cellKey = getCellKey(courseId, w.index);
+            const activity = tableData[cellKey] || "";
+            const { bg, text } = getActivityStyle(activity);
+            const isSelected = cellKey === selectedCellKey;
+            const isEvenGroup = idx % 8 < 4;
+            const baseClassName = isEvenGroup ? 'bg-slate-50/50 dark:bg-slate-900/50' : 'bg-white dark:bg-slate-950/40';
             
-            // Вычисляем смещение недель для этого месяца
-            for (let i = 0; i < monthIndex; i++) {
-              weekOffset += WEEKS_PER_MONTH[MONTHS[i]];
-            }
-            
-            const isEvenMonth = monthIndex % 2 === 0;
-            const baseClassName = isEvenMonth ? 'bg-slate-50/50 dark:bg-slate-900/50' : 'bg-white dark:bg-slate-950/40';
-            
-            for (let i = 0; i < weeksInMonth; i++) {
-              const weekNumber = weekOffset + i + 1;
-              const cellKey = getCellKey(courseId, weekNumber);
-              const activity = tableData[cellKey] || "";
-              const { bg, text } = getActivityStyle(activity);
-              const isSelected = cellKey === selectedCellKey;
-              
-              weekCells.push(
-                <td 
-                  key={cellKey}
-                  className={`p-0 border-0 text-center cursor-pointer transition-colors
-                    ${isSelected ? 'ring-2 ring-offset-1 ring-blue-500 shadow-lg' : ''}`}
-                  onClick={() => handleCellClick({
-                    courseId,
-                    weekNumber,
-                    monthName: month,
-                    value: activity
-                  })}
-                >
-                  <div className={`h-8 w-full flex items-center justify-center ${activity ? bg : baseClassName} transition-all hover:brightness-95 dark:hover:brightness-125`}>
-                    {/* Отображаем буквенное обозначение активности */}
-                    <span className={`font-bold text-sm ${activity ? text : ''}`}>
-                      {activity ? (activity.length > 1 ? activity[0] + "+" : activity) : ""}
+            return (
+              <td 
+                key={cellKey}
+                className={`p-0 border-0 text-center cursor-pointer transition-colors
+                  ${isSelected ? 'ring-2 ring-offset-1 ring-blue-500 shadow-lg' : ''}`}
+                onClick={() => handleCellClick({
+                  courseId,
+                  weekNumber: w.index,
+                  monthName: w.month,
+                  value: activity
+                })}
+              >
+                <div className={`h-8 w-full flex items-center justify-center ${activity ? bg : baseClassName} transition-all hover:brightness-95 dark:hover:brightness-125`}>
+                  {/* Отображаем буквенное обозначение активности */}
+                  <span className={`font-bold text-sm ${activity ? text : ''}`}>
+                    {activity ? (activity.length > 1 ? activity[0] + "+" : activity) : ""}
+                  </span>
+                  {activity && activity.length > 1 && (
+                    <span className="ml-0.5 text-[10px] text-slate-600 dark:text-slate-300 opacity-75">
+                      {activity.length}
                     </span>
-                    {activity && activity.length > 1 && (
-                      <span className="ml-0.5 text-[10px] text-slate-600 dark:text-slate-300 opacity-75">
-                        {activity.length}
-                      </span>
-                    )}
-                  </div>
-                </td>
-              );
-            }
-            
-            return weekCells;
+                  )}
+                </div>
+              </td>
+            );
           })}
         </tr>
       );
