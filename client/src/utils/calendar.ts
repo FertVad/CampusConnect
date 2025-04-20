@@ -1,4 +1,4 @@
-import { startOfWeek, addWeeks, isBefore, format } from "date-fns";
+import { startOfWeek, addWeeks, isBefore, format, addDays } from "date-fns";
 import { ru } from "date-fns/locale/ru";
 
 export interface WeekCell {
@@ -8,24 +8,28 @@ export interface WeekCell {
   index: number;     // порядковый номер недели с 1
 }
 
-export const buildAcademicWeeks = (startYear: number = 2025): WeekCell[] => {
-  // Учебный год считается с 1 сентября startYear до 31 августа (startYear+1)
-  const sept1 = new Date(startYear, 8, 1);                  // 8 = сентябрь (отсчет с 0)
-  let curr = startOfWeek(sept1, { weekStartsOn: 1 });       // ближайший понедельник
-  const lastDay = new Date(startYear + 1, 7, 31);           // 31 августа следующего года
-
+/**
+ * Строит массив недель учебного года.
+ * @param year       Год начала обучения (например, 2025)
+ * @returns Массив объектов WeekCell, представляющих недели учебного года
+ */
+export const buildAcademicWeeks = (year = 2025): WeekCell[] => {
+  const sept1 = new Date(year, 8, 1);                      // 1 сентября (месяцы с 0)
+  let curr = startOfWeek(sept1, { weekStartsOn: 1 });      // ближайший понедельник
+  const lastDay = new Date(year + 1, 7, 31);               // 31 августа следующего года
+  
   const weeks: WeekCell[] = [];
   let n = 1;
   while (isBefore(curr, addWeeks(lastDay, 1))) {
     const start = curr;
-    const end = addWeeks(curr, 1);
+    const end = addDays(curr, 6);                         // воскресенье (старт + 6 дней)
     weeks.push({
       startDate: start,
-      endDate: new Date(end.getTime() - 1),  // конец - это воскресенье (день до следующего понедельника)
+      endDate: end,
       month: format(start, "LLLL", { locale: ru }),
       index: n++,
     });
-    curr = end;
+    curr = addWeeks(curr, 1);                             // следующий понедельник
   }
   return weeks;
 };

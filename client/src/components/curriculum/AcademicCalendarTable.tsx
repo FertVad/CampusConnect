@@ -1,6 +1,8 @@
 import React, { useState, useMemo } from "react";
 import { WeekActivityDialog, WeekInfo, ActivityType, ACTIVITY_TYPES, ACTIVITY_COLORS } from "./WeekActivityDialog";
 import { buildAcademicWeeks, WeekCell } from "@/utils/calendar";
+import { format } from "date-fns";
+import { ru } from "date-fns/locale/ru";
 
 // Количество курсов
 const NUMBER_OF_COURSES = 4;
@@ -35,11 +37,8 @@ export function AcademicCalendarTable({
   
   // Группируем недели по месяцам
   const monthGroups = useMemo(() => {
-    return weeks.reduce((acc, week) => {
-      if (!acc[week.month]) {
-        acc[week.month] = [];
-      }
-      acc[week.month].push(week);
+    return weeks.reduce((acc, w) => {
+      (acc[w.month] ||= []).push(w);
       return acc;
     }, {} as Record<string, WeekCell[]>);
   }, [weeks]);
@@ -216,6 +215,7 @@ export function AcademicCalendarTable({
             return (
               <td 
                 key={cellKey}
+                title={`${format(w.startDate, 'd MMM', {locale: ru})} – ${format(w.endDate, 'd MMM', {locale: ru})}`}
                 className={`p-0 border-0 text-center cursor-pointer transition-colors
                   ${isSelected ? 'ring-2 ring-offset-1 ring-blue-500 shadow-lg' : ''}`}
                 onClick={() => handleCellClick({
