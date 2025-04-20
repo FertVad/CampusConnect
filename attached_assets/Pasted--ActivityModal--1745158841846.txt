@@ -1,0 +1,83 @@
+Цель
+
+Исправить ActivityModal, чтобы сохранялись и подгружались именно выбранные дни недели, а не их количество.
+
+1. Тип данных
+
+export interface WeekActivity {
+  type: ActivityType | "";  // 'У' | 'К' | … | ''
+  days: number[];            // индексы выбранных дней 0‑6 (0 = Пн)
+}
+
+schedule[weekIdx][courseIdx] -> WeekActivity
+
+2. utils/plan.ts
+
+export const daysToMask = (days: number[]) =>
+  days.reduce((m, d) => m | (1 << d), 0);          // [1,3] -> 0b001010
+
+export const maskToDays = (mask: number) =>
+  [...Array(7).keys()].filter(d => mask & (1 << d));
+
+3. ScheduleTable.tsx
+
+openModal({
+  weekIdx,
+  courseIdx,
+  value: data[weekIdx][courseIdx] // WeekActivity | undefined
+});
+
+4. ActivityModal.tsx
+
+type Props = {
+  value?: WeekActivity;
+  onSave: (v: WeekActivity) => void;
+};
+
+const [selectedDays, setDays] = useState<number[]>(value?.days ?? []);
+const [activity, setActivity] = useState<ActivityType | "">(value?.type ?? "");
+
+const toggleDay = (d: number) =>
+  setDays(prev => prev.includes(d) ? prev.filter(x => x !== d) : [...prev, d]);
+
+<Button onClick={() => {
+  onSave({ type: activity, days: selectedDays.sort() });
+  close();
+}} disabled={!activity || !selectedDays.length}>
+  Сохранить
+</Button>
+
+5. handleUpdate (родитель)
+
+const handleUpdate = (week: number, course: number, val: WeekActivity) => {
+  const copy = [...data];
+  copy[week][course] = val;
+  setData(copy);
+};
+
+6. Отображение в ячейке
+
+const cell = data[w][c];
+{cell && cell.days.length ? `${ACTIVITY_SHORT[cell.type]}${cell.days.length}` : ""}
+
+7. Миграция старых данных
+
+При загрузке:
+
+if (typeof cell === "string") {
+  data[w][c] = {
+    type: cell[0] as ActivityType,
+    days: [...Array(+cell.slice(1) || 7).keys()] // первые N дней, дефолт 7
+  };
+}
+
+8. Проверка
+
+Выбрать произвольные дни (например, ср + пт) → Сохранить.
+
+Открыть модалку снова – подсветятся именно ср и пт.
+
+Кнопка «Сохранить» неактивна, если нет выбранных дней или типа.
+
+Очистить кэш – убедиться, что миграция старых строковых значений работает.
+
