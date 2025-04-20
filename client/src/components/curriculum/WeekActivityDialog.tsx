@@ -258,36 +258,23 @@ export function WeekActivityDialog({
 
   // Обработчик сохранения
   const handleSave = () => {
-    // Собираем активности для всех дней недели
-    // и передаем их в виде строки символов
-    
-    // Если есть выбранные дни, сначала применяем к ним текущую активность
+    // 1. Формируем массив с учётом выбранных дней/активности
+    let finalDays = weekDays;
     if (hasSelectedDays && selectedActivity) {
-      const updatedDays = weekDays.map(day => ({
+      finalDays = weekDays.map(day => ({
         ...day,
         activity: day.selected ? selectedActivity : day.activity,
-        selected: false
+        selected: false,
       }));
-      setWeekDays(updatedDays);
+      // сразу сохраняем в state, чтобы при следующем открытии всё было корректно
+      setWeekDays(finalDays);
     }
-    
-    // Собираем активности каждого дня в строку из 7 символов
-    // для передачи наверх и сохранения
-    // Например: "УУУККПЭ" - где каждый символ соответствует дню недели
-    
-    const activitiesString = weekDays.map(day => day.activity || '').join('');
-    
-    // Проверяем, что у нас есть хотя бы одна активность в неделе
-    const hasAnyActivity = activitiesString.trim() !== '';
-    
-    if (hasAnyActivity) {
-      // Если в строке есть хотя бы один символ, передаем эту строку
-      onActivityChange(activitiesString as ActivityType);
-    } else {
-      // Если нет ни одной активности, передаем пустую строку
-      onActivityChange('');
-    }
-    
+
+    // 2. Собираем строку из 7 символов ("УУУККПЭ" и т.д.)
+    const activitiesString = finalDays.map(day => day.activity || "").join("");
+
+    // 3. Передаём наверх: либо строку из 7 символов, либо "" (нет активностей)
+    onActivityChange(activitiesString.trim() ? (activitiesString as ActivityType) : "");
     onOpenChange(false);
   };
 
