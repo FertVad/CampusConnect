@@ -30,21 +30,59 @@ export const ACTIVITY_COLORS: {
     bg: string;
     text: string;
     hoverBg: string;
+    color: string;
   };
 } = {
-  У: { bg: "bg-blue-100", text: "text-blue-800", hoverBg: "hover:bg-blue-200" },
-  К: { bg: "bg-gray-100", text: "text-gray-800", hoverBg: "hover:bg-gray-200" },
+  У: { bg: "bg-blue-100", text: "text-blue-800", hoverBg: "hover:bg-blue-200", color: "#dbeafe" },
+  К: { bg: "bg-gray-100", text: "text-gray-800", hoverBg: "hover:bg-gray-200", color: "#f3f4f6" },
   П: {
     bg: "bg-yellow-100",
     text: "text-yellow-800",
     hoverBg: "hover:bg-yellow-200",
+    color: "#fef9c3"
   },
-  Э: { bg: "bg-red-100", text: "text-red-800", hoverBg: "hover:bg-red-200" },
+  Э: { bg: "bg-red-100", text: "text-red-800", hoverBg: "hover:bg-red-200", color: "#fee2e2" },
   Д: {
     bg: "bg-purple-100",
     text: "text-purple-800",
     hoverBg: "hover:bg-purple-200",
+    color: "#f3e8ff"
   },
+};
+
+// Функция для создания градиента из активностей дней недели
+export const weekGradient = (days: string): string => {
+  if (!days || days.length === 0) return 'white';
+  
+  // Если только один тип активности - используем сплошной цвет
+  if (days.length === 1 || new Set(days.split('')).size === 1) {
+    const activity = days[0] as Exclude<ActivityType, "">;
+    return ACTIVITY_COLORS[activity]?.color || '#f3f4f6';
+  }
+  
+  // Если разные активности - создаем градиент
+  const dayActivities = days.padEnd(7, days[days.length - 1]).split('');
+  const percentStep = 100 / 7;
+  
+  let gradient = 'linear-gradient(to right';
+  
+  dayActivities.forEach((activity, index) => {
+    if (!activity || activity === ' ') {
+      activity = 'К'; // Используем цвет каникул для пустых дней
+    }
+    
+    const color = (activity && activity in ACTIVITY_COLORS) 
+      ? ACTIVITY_COLORS[activity as Exclude<ActivityType, "">].color 
+      : '#f3f4f6';
+    
+    const start = index * percentStep;
+    const end = (index + 1) * percentStep;
+    
+    gradient += `, ${color} ${start}%, ${color} ${end}%`;
+  });
+  
+  gradient += ')';
+  return gradient;
 };
 
 // Интерфейс для дня недели
@@ -461,6 +499,75 @@ export function WeekActivityDialog({
             </div>
           </div>
 
+          <div className="pt-3 border-t">
+            <h4 className="text-sm font-medium mb-2">Отдельные дни недели:</h4>
+            <div className="grid grid-cols-7 gap-1 mb-4">
+              {weekDays.map((day, idx) => {
+                const colorStyle = day.activity && day.activity in ACTIVITY_COLORS
+                  ? ACTIVITY_COLORS[day.activity as Exclude<ActivityType, "">]
+                  : { bg: "bg-slate-100", text: "text-slate-700", hoverBg: "hover:bg-slate-200" };
+                
+                return (
+                  <div key={`day-selector-${idx}`} className="flex flex-col items-center">
+                    <RadioGroup 
+                      value={day.activity} 
+                      onValueChange={(value) => {
+                        const newDays = [...weekDays];
+                        newDays[idx].activity = value as ActivityType;
+                        setWeekDays(newDays);
+                      }}
+                      className="flex flex-col gap-1 items-center"
+                    >
+                      <div 
+                        className={`flex flex-col items-center cursor-pointer p-2 rounded ${day.activity ? colorStyle.bg : 'bg-slate-100'} ${colorStyle.hoverBg}`}
+                      >
+                        <div className="text-[10px] font-medium mb-1">{day.name}</div>
+                        <div className="text-sm font-bold">{day.date}</div>
+                      </div>
+                      
+                      {Object.keys(ACTIVITY_TYPES).map((code) => (
+                        <RadioGroupItem 
+                          key={`day-${idx}-${code}`} 
+                          value={code} 
+                          id={`day-${idx}-${code}`} 
+                          className="sr-only" 
+                        />
+                      ))}
+                    </RadioGroup>
+                    <div className="text-center mt-1 text-sm font-bold">
+                      {day.activity || "–"}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+            
+            <div className="flex justify-center mb-4">
+              <Button 
+                variant="secondary" 
+                onClick={() => {
+                  // Находим наиболее часто встречающуюся активность
+                  if (!selectedActivity || selectedActivity === "") {
+                    // Если активность не выбрана, ничего не делаем
+                    return;
+                  }
+                  
+                  // Применяем выбранную активность ко всем дням недели
+                  const newDays = weekDays.map(day => ({
+                    ...day,
+                    activity: selectedActivity
+                  }));
+                  
+                  setWeekDays(newDays);
+                }}
+                className="w-full"
+                disabled={!selectedActivity}
+              >
+                Применить "{selectedActivity}" ко всей неделе
+              </Button>
+            </div>
+          </div>
+          
           <DialogFooter className="sm:justify-between">
             <Button variant="outline" onClick={() => onOpenChange(false)}>
               Отмена

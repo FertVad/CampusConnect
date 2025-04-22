@@ -1,8 +1,9 @@
 import React, { useState, useMemo } from "react";
-import { WeekActivityDialog, WeekInfo, ActivityType, ACTIVITY_TYPES, ACTIVITY_COLORS } from "./WeekActivityDialog";
+import { WeekActivityDialog, WeekInfo, ActivityType, ACTIVITY_TYPES, ACTIVITY_COLORS, weekGradient } from "./WeekActivityDialog";
 import { WeekCell } from "@/utils/calendar";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale/ru";
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
 
 // Количество курсов
 const NUMBER_OF_COURSES = 4;
@@ -255,34 +256,75 @@ export function AcademicCalendarTable({
               (idx + 1 < weeks.length && w.endDate.getMonth() !== weeks[idx + 1].startDate.getMonth());
             
             return (
-              <td 
-                key={`active_${cellKey}`}
-                title={`${format(w.startDate, 'd MMM', {locale: ru})} – ${format(w.endDate, 'd MMM', {locale: ru})}`}
-                className={`p-0 border-0 text-center cursor-pointer transition-colors
-                  ${isMonthBoundary ? 'border-r-2 border-slate-300 dark:border-slate-600' : ''}
-                  ${isSelected ? 'ring-2 ring-blue-500 shadow-lg' : ''}`}
-                onClick={() => handleCellClick({
-                  courseId,
-                  weekNumber: adjustedWeekNumber,
-                  monthName: w.month,
-                  value: activity
-                })}
-              >
-                <div className={`h-8 w-full flex items-center justify-center 
-                  ${activity ? bg : (crossMonth ? gradientBg : chessBg)} 
-                  transition-all hover:brightness-95 dark:hover:brightness-125`}
-                >
-                  {/* Отображаем буквенное обозначение активности */}
-                  <span className={`font-bold text-sm ${activity ? text : ''}`}>
-                    {activity ? (activity.length > 1 ? activity[0] + "+" : activity) : ""}
-                  </span>
-                  {activity && activity.length > 1 && (
-                    <span className="ml-0.5 text-[10px] text-slate-600 dark:text-slate-300 opacity-75">
-                      {activity.length}
-                    </span>
-                  )}
-                </div>
-              </td>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <td 
+                      key={`active_${cellKey}`}
+                      className={`p-0 border-0 text-center cursor-pointer transition-colors
+                        ${isMonthBoundary ? 'border-r-2 border-slate-300 dark:border-slate-600' : ''}
+                        ${isSelected ? 'ring-2 ring-blue-500 shadow-lg' : ''}`}
+                      onClick={() => handleCellClick({
+                        courseId,
+                        weekNumber: adjustedWeekNumber,
+                        monthName: w.month,
+                        value: activity
+                      })}
+                    >
+                      {/* Используем градиент вместо цветовых классов */}
+                      <div 
+                        className={`h-8 w-full flex items-center justify-center transition-all hover:brightness-95 ${!activity ? (crossMonth ? gradientBg : chessBg) : ''}`}
+                        style={activity ? { background: weekGradient(activity) } : {}}
+                      >
+                        {/* Для краткости отображаем только количество разных активностей */}
+                        {activity && activity.length > 1 ? (
+                          <span className="font-bold text-xs text-slate-700 dark:text-slate-200">
+                            {activity[0]}
+                            <span className="text-[10px] ml-0.5">+{activity.length-1}</span>
+                          </span>
+                        ) : (
+                          <span className={`font-bold text-sm ${activity ? 'text-slate-700 dark:text-slate-200' : ''}`}>
+                            {activity || ""}
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" className="p-2 text-xs">
+                    <div className="space-y-1">
+                      <div className="font-bold">
+                        Кал. неделя {w.index} / Уч. неделя {adjustedWeekNumber}
+                      </div>
+                      <div>
+                        {format(w.startDate, 'd MMM', {locale: ru})} – {format(w.endDate, 'd MMM', {locale: ru})}
+                      </div>
+                      {activity && (
+                        <div className="mt-1 pt-1 border-t border-slate-200 dark:border-slate-700">
+                          <div className="font-semibold mb-1">Активности по дням:</div>
+                          <div className="grid grid-cols-7 gap-1">
+                            {["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"].map((day, i) => {
+                              const dayActivity = activity.length > i ? activity[i] : (activity.length === 1 ? activity : "");
+                              const colorStyle = dayActivity && dayActivity in ACTIVITY_COLORS
+                                ? ACTIVITY_COLORS[dayActivity as Exclude<ActivityType, "">]
+                                : { bg: "bg-slate-100", text: "text-slate-700" };
+                              
+                              return (
+                                <div 
+                                  key={day} 
+                                  className={`text-center p-1 rounded ${colorStyle.bg} ${colorStyle.text}`}
+                                >
+                                  <div className="text-[10px] opacity-70">{day}</div>
+                                  <div className="font-bold">{dayActivity || "—"}</div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             );
           })}
         </tr>
