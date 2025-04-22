@@ -4,6 +4,8 @@ import { WeekCell } from "@/utils/calendar";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale/ru";
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
+import { useAutoSave } from "@/hooks/useAutoSave";
+import { SaveButton } from "@/components/ui/save-button";
 
 // Количество курсов
 const NUMBER_OF_COURSES = 4;
@@ -34,6 +36,15 @@ export function AcademicCalendarTable({
 }: AcademicCalendarTableProps) {
   // Состояние для хранения данных таблицы
   const [tableData, setTableData] = useState<CalendarData>(initialData);
+  
+  // Используем хук автосохранения
+  const { isSaving, forceSave } = useAutoSave(tableData, {
+    url: '/api/curriculum/weeks',
+    debounceMs: 1000,
+    onSuccess: (data) => {
+      console.log('Данные автоматически сохранены', data);
+    }
+  });
   
   // Группируем недели по месяцам и годам
   const monthGroups = useMemo(() => {
@@ -147,6 +158,15 @@ export function AcademicCalendarTable({
     return { bg: "bg-slate-200 dark:bg-slate-600", text: "text-slate-800 dark:text-white" };
   };
   
+  // Проверка на семестровые даты (31 января и 30 июня)
+  const isSemesterBoundary = (date: Date): boolean => {
+    // 31 января - конец первого семестра
+    if (date.getMonth() === 0 && date.getDate() === 31) return true;
+    // 30 июня - конец второго семестра
+    if (date.getMonth() === 5 && date.getDate() === 30) return true;
+    return false;
+  };
+  
   // Создание заголовков месяцев и недель
   const renderHeaders = () => {
     const headers = [];
@@ -184,15 +204,27 @@ export function AcademicCalendarTable({
         >
           Недели
         </th>
-        {weeks.map((w, idx) => (
-          <th 
-            key={`week_${w.index}`}
-            className={`px-1 py-1 text-xs font-semibold border-x w-8 text-center 
-              ${(idx % 8 < 4) ? 'bg-slate-200 dark:bg-slate-700' : 'bg-slate-100 dark:bg-slate-800'}`}
-          >
-            {w.index}
-          </th>
-        ))}
+        {weeks.map((w, idx) => {
+          // Проверяем, попадает ли конец семестра в эту неделю
+          const isSemesterEnd = (
+            isSemesterBoundary(w.startDate) || 
+            isSemesterBoundary(w.endDate) ||
+            // Проверка, если 31 января или 30 июня находятся внутри недели
+            (w.startDate.getMonth() === 0 && w.endDate.getMonth() === 1 && w.endDate.getDate() >= 1) ||
+            (w.startDate.getMonth() === 5 && w.endDate.getMonth() === 6 && w.endDate.getDate() >= 1)
+          );
+          
+          return (
+            <th 
+              key={`week_${w.index}`}
+              className={`px-1 py-1 text-xs font-semibold w-8 text-center 
+                ${isSemesterEnd ? 'border-r-4 border-indigo-600 dark:border-indigo-400' : 'border-x'}
+                ${(idx % 8 < 4) ? 'bg-slate-200 dark:bg-slate-700' : 'bg-slate-100 dark:bg-slate-800'}`}
+            >
+              {w.index}
+            </th>
+          );
+        })}
       </tr>
     );
     
@@ -263,6 +295,8 @@ export function AcademicCalendarTable({
                       key={`active_${cellKey}`}
                       className={`p-0 border-0 text-center cursor-pointer transition-colors
                         ${isMonthBoundary ? 'border-r-2 border-slate-300 dark:border-slate-600' : ''}
+                        ${isSemesterBoundary(w.startDate) || isSemesterBoundary(w.endDate) ? 
+                          'border-r-4 border-indigo-600 dark:border-indigo-400' : ''}
                         ${isSelected ? 'ring-2 ring-blue-500 shadow-lg' : ''}`}
                       onClick={() => handleCellClick({
                         courseId,
@@ -349,20 +383,35 @@ export function AcademicCalendarTable({
         </div>
       </div>
       
-      <div className="mt-4">
-        <h4 className="text-sm font-medium mb-2">Обозначения:</h4>
-        <div className="flex flex-wrap gap-2">
-          {Object.entries(ACTIVITY_TYPES).map(([code, description]) => {
-            const { bg, text } = getActivityStyle(code as ActivityType);
-            return (
-              <div key={code} className="text-xs bg-muted px-2 py-1 rounded-md flex items-center">
-                <span className={`mr-1 ${bg} ${text} w-6 h-6 flex items-center justify-center rounded font-semibold`}>
-                  {code}
-                </span> 
-                — {description}
-              </div>
-            );
-          })}
+      <div className="mt-4 flex justify-between items-center">
+        <div className="space-y-2">
+          <h4 className="text-sm font-medium">Обозначения:</h4>
+          <div className="flex flex-wrap gap-2">
+            {Object.entries(ACTIVITY_TYPES).map(([code, description]) => {
+              const { bg, text } = getActivityStyle(code as ActivityType);
+              return (
+                <div key={code} className="text-xs bg-muted px-2 py-1 rounded-md flex items-center">
+                  <span className={`mr-1 ${bg} ${text} w-6 h-6 flex items-center justify-center rounded font-semibold`}>
+                    {code}
+                  </span> 
+                  — {description}
+                </div>
+              );
+            })}
+          </div>
+          
+          {/* TODO drag-select / Ctrl-click для заливки нескольких недель */}
+          <div className="text-xs text-slate-500 mt-2">
+            * В будущей версии будет добавлено выделение нескольких недель для массового изменения
+          </div>
+        </div>
+        
+        <div>
+          <SaveButton 
+            onClick={forceSave}
+            isSaving={isSaving}
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+          />
         </div>
       </div>
       
