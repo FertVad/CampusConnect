@@ -20,10 +20,10 @@ export default function GraphTab({
   const defaultStart = new Date(planYear, 8, 1); // 1 сентября (месяцы с 0)
   const [startDate, setStartDate] = useState<Date>(defaultStart);
 
-  // Генерируем недели на основе выбранной даты старта
+  // Генерируем недели на основе выбранной даты старта (только на 1 год)
   const weeks = useMemo(() => 
-    buildAcademicWeeks(startDate, yearsOfStudy), 
-    [startDate, yearsOfStudy]
+    buildAcademicWeeks(startDate, 1), 
+    [startDate]
   );
 
   return (
