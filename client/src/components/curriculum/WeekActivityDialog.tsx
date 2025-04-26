@@ -133,24 +133,20 @@ export function WeekActivityDialog({
   // Инициализируем дни недели при открытии модального окна
   useLayoutEffect(() => {
     if (weekInfo) {
-      // Создаем неделю, начиная с понедельника
-      const { startDate } = weekInfo;
-      const weekStart = new Date(startDate);
-
-      // Расчитываем дату понедельника для этой недели
-      const day = weekStart.getDay();
-      const diff = weekStart.getDate() - day + (day === 0 ? -6 : 1); // корректируем для воскресенья
-      weekStart.setDate(diff);
-
+      // Используем даты начала и конца недели из параметра weekInfo
+      // Неделя может начинаться с любого дня недели (не обязательно с понедельника)
+      const { startDate, endDate } = weekInfo;
+      
+      // Создаем массив дней между startDate и endDate (включительно)
       const days: WeekDay[] = [];
-      const daysOfWeek = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
-
+      
+      // Русское название дней недели
+      const daysOfWeekNames = ["Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"];
+      
       // Разбиваем текущую активность на символы для определения активности по дням
-      // Например, если currentActivity === "УУУККПЭ", то:
-      // Пн-Ср: "У", Чт-Пт: "К", Сб: "П", Вс: "Э"
       let dailyActivities: ActivityType[] = [];
 
-      // Инициализируем массив пустыми значениями
+      // Инициализируем массив пустыми значениями (для 7 дней)
       dailyActivities = Array(7).fill("") as ActivityType[];
 
       // Определяем активности по дням
@@ -172,18 +168,27 @@ export function WeekActivityDialog({
       }
 
       // Создаем дни недели с календарными датами и активностями
+      const currentDate = new Date(startDate);
+      
       for (let i = 0; i < 7; i++) {
-        const date = new Date(weekStart);
-        date.setDate(weekStart.getDate() + i);
-
+        // Создаем копию текущей даты
+        const date = new Date(currentDate);
+        
+        // Определяем название дня недели
+        const dayOfWeek = date.getDay(); // 0 = воскресенье, 1 = понедельник, ..., 6 = суббота
+        const dayName = daysOfWeekNames[dayOfWeek];
+        
         days.push({
-          name: daysOfWeek[i],
-          date: date.getDate(),
-          // При открытии диалога дни НЕ выбраны, в отличие от предыдущей реализации
+          name: dayName,
+          date: date.getDate(), // число месяца
+          // При открытии диалога дни НЕ выбраны
           selected: false,
           // Устанавливаем активность из разобранной строки или пустую
           activity: dailyActivities[i] || "",
         });
+        
+        // Переходим к следующему дню
+        currentDate.setDate(currentDate.getDate() + 1);
       }
 
       setWeekDays(days);
