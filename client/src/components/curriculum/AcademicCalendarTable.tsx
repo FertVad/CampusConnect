@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { WeekActivityDialog, WeekInfo, ActivityType, ACTIVITY_TYPES } from "./WeekActivityDialog";
-import { WeekCell } from "@/utils/calendar";
-import { format, addYears } from "date-fns";
+import { WeekCell, getFirstWorkdayOfSeptember } from "@/utils/calendar";
+import { format } from "date-fns";
 import { ru } from "date-fns/locale/ru";
 import { useAutoSave } from "@/hooks/useAutoSave";
 import { SaveButton } from "@/components/ui/save-button";
@@ -253,14 +253,21 @@ export function AcademicCalendarTable({
     const courses: Course[] = Array.from({ length: NUMBER_OF_COURSES }).map((_, idx) => {
       const courseId = idx + 1;
       
-      // Первый курс начинается в первый рабочий день сентября текущего года (недели[0])
-      // Последующие курсы начинаются в +1, +2, +3 и т.д. года от первого курса
-      // Это означает, что для корректного отображения графика, второй курс должен начинаться на год ПОЗЖЕ
-      // от начала первого курса (в отличие от предыдущей реализации, где было наоборот)
-      const courseStartDate = idx === 0 
-        ? weeks[0].startDate 
-        : addYears(weeks[0].startDate, idx);
-        
+      // Вычисляем правильные даты для каждого курса
+      // Первый курс начинается с первого рабочего дня сентября текущего года
+      // Последующие курсы начинаются с первого рабочего дня сентября для года + N лет
+      let courseStartDate;
+      if (idx === 0) {
+        // Первый курс начинается в день, указанный пользователем (первая неделя)
+        courseStartDate = weeks[0].startDate;
+      } else {
+        // Для курсов 2-4 определяем первый рабочий день сентября соответствующего года
+        // Берём первый день из weeks[0] и к его году добавляем idx лет
+        const baseYear = weeks[0].startDate.getFullYear();
+        const courseYear = baseYear + idx;
+        courseStartDate = getFirstWorkdayOfSeptember(courseYear);
+      }
+      
       return {
         id: courseId,
         name: `Курс ${courseId}`,

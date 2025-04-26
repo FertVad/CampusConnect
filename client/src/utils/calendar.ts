@@ -35,19 +35,24 @@ export const getFirstWorkdayOfSeptember = (year: number): Date => {
 /**
  * Строит массив недель учебного года.
  * @param startDate Дата начала обучения (без автосдвига на понедельник)
- * @param totalYears Длительность обучения в годах
- * @returns Массив объектов WeekCell, представляющих недели учебного периода
+ * @param totalYears Длительность обучения в годах (не используется более для генерации всех недель)
+ * @returns Массив объектов WeekCell, представляющих недели учебного периода (только один год)
  */
 export const buildAcademicWeeks = (
   startDate: Date,
-  totalYears = 4
+  totalYears = 4 // параметр сохранен для совместимости
 ): WeekCell[] => {
   const weeks: WeekCell[] = [];
   let curr = new Date(startDate);          // неделя №1: старт ≡ выбранная дата
-  const studyEnd = new Date(startDate.getFullYear() + totalYears, 7, 31); // 31 августа через N лет
+  
+  // Теперь генерируем недели только для одного учебного года (52 недели)
+  // Учебный год: с 1 сентября по 31 августа следующего года
+  const studyYearEnd = new Date(startDate.getFullYear() + 1, 7, 31); // 31 августа следующего года
+  
   let n = 1;
 
-  while (isBefore(curr, addDays(studyEnd, 1))) {
+  // Только один учебный год - около 52 недель
+  while (isBefore(curr, addDays(studyYearEnd, 1))) {
     const end = addDays(curr, 6);
     weeks.push({
       startDate: new Date(curr),
@@ -57,5 +62,6 @@ export const buildAcademicWeeks = (
     });
     curr = addWeeks(curr, 1);
   }
+  
   return weeks;
 };
