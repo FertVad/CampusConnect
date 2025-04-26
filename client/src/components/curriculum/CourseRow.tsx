@@ -9,6 +9,7 @@ interface Course {
   id: number;
   name: string;
   startDate: Date;
+  weeks?: WeekCell[]; // Массив недель для этого курса
 }
 
 // Интерфейс для ячейки данных
@@ -17,6 +18,8 @@ interface CellInfo {
   weekNumber: number;
   monthName: string;
   value: ActivityType;
+  startDate: Date; // Дата начала недели
+  endDate: Date;   // Дата конца недели
 }
 
 interface CourseRowProps {
@@ -97,7 +100,9 @@ export function CourseRow({
               courseId: course.id,
               weekNumber,
               monthName: w.month,
-              value: activity
+              value: activity,
+              startDate: w.startDate,
+              endDate: w.endDate
             })}
             title={`Неделя ${weekNumber}: ${format(w.startDate, 'd MMM', {locale: ru})} – ${format(w.endDate, 'd MMM', {locale: ru})}\n${activity ? `Активности: ${activity}` : 'Нет активностей'}`}
           >

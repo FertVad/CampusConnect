@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { WeekActivityDialog, WeekInfo, ActivityType, ACTIVITY_TYPES } from "./WeekActivityDialog";
-import { WeekCell, getFirstWorkdayOfSeptember } from "@/utils/calendar";
+import { WeekCell, getFirstWorkdayOfSeptember, buildAcademicWeeks } from "@/utils/calendar";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale/ru";
 import { useAutoSave } from "@/hooks/useAutoSave";
@@ -19,6 +19,8 @@ interface CellInfo {
   weekNumber: number;
   monthName: string;
   value: ActivityType;
+  startDate: Date; // Дата начала недели
+  endDate: Date;   // Дата конца недели
 }
 
 // Интерфейс для курса
@@ -26,6 +28,7 @@ interface Course {
   id: number;
   name: string;
   startDate: Date;
+  weeks: WeekCell[]; // Массив недель, специфичных для этого курса
 }
 
 interface AcademicCalendarTableProps {
@@ -86,23 +89,18 @@ export function AcademicCalendarTable({
   
   // Обработчик клика по ячейке
   const handleCellClick = (info: CellInfo) => {
-    // Находим данные о неделе по её номеру
-    const weekData = weeks.find(w => w.index === info.weekNumber);
-    
-    if (!weekData) {
-      console.error(`Неделя с номером ${info.weekNumber} не найдена`);
-      return;
-    }
-    
+    // В info теперь приходит вся необходимая информация о неделе,
+    // так как каждый курс имеет свой набор недель
     const cellKey = getCellKey(info.courseId, info.weekNumber);
     setSelectedCellKey(cellKey);
     
+    // Создаем объект с информацией о выбранной неделе
     setSelectedWeek({
       courseId: info.courseId,
       weekNumber: info.weekNumber,
-      startDate: weekData.startDate,
-      endDate: weekData.endDate,
-      monthName: weekData.month
+      startDate: info.startDate,
+      endDate: info.endDate,
+      monthName: info.monthName
     });
     
     setDialogOpen(true);
@@ -189,6 +187,20 @@ export function AcademicCalendarTable({
   const renderHeaders = () => {
     const headers = [];
     
+    // Создаем объединенный массив всех недель из первого курса для заголовков
+    // Используем недели первого учебного года в качестве шаблона
+    const firstCourseWeeks = buildAcademicWeeks(weeks[0].startDate);
+    
+    // Группируем недели только по месяцам
+    const monthGroups = useMemo(() => {
+      return firstCourseWeeks.reduce((acc, w) => {
+        // Используем только название месяца без года
+        const key = format(w.startDate, "LLLL", { locale: ru }); // «сентябрь»
+        (acc[key] ||= []).push(w);
+        return acc;
+      }, {} as Record<string, WeekCell[]>);
+    }, [firstCourseWeeks]);
+    
     // Заголовок "Месяцы"
     headers.push(
       <tr key="month-row" className="bg-slate-100 whitespace-nowrap dark:bg-slate-800">
@@ -220,7 +232,7 @@ export function AcademicCalendarTable({
         >
           Недели
         </th>
-        {weeks.map((w, idx) => {
+        {firstCourseWeeks.map((w, idx) => {
           // Проверяем, попадает ли конец семестра в эту неделю
           const isSemesterEnd = (
             isSemesterBoundary(w.startDate) || 
@@ -249,38 +261,41 @@ export function AcademicCalendarTable({
   
   // Создание строк для курсов с учетом сдвига по годам
   const renderCourseRows = () => {
+    // Базовый год - год начала обучения
+    const baseYear = weeks[0].startDate.getFullYear();
+    
     // Создаем данные курсов для каждого года обучения
-    const courses: Course[] = Array.from({ length: NUMBER_OF_COURSES }).map((_, idx) => {
-      const courseId = idx + 1;
+    const courses: Course[] = [];
+    
+    // Для каждого курса генерируем отдельный набор недель
+    for (let courseIdx = 0; courseIdx < NUMBER_OF_COURSES; courseIdx++) {
+      const courseId = courseIdx + 1;
       
-      // Вычисляем правильные даты для каждого курса
-      // Первый курс начинается с первого рабочего дня сентября текущего года
-      // Последующие курсы начинаются с первого рабочего дня сентября для года + N лет
-      let courseStartDate;
-      if (idx === 0) {
-        // Первый курс начинается в день, указанный пользователем (первая неделя)
-        courseStartDate = weeks[0].startDate;
-      } else {
-        // Для курсов 2-4 определяем первый рабочий день сентября соответствующего года
-        // Берём первый день из weeks[0] и к его году добавляем idx лет
-        const baseYear = weeks[0].startDate.getFullYear();
-        const courseYear = baseYear + idx;
-        courseStartDate = getFirstWorkdayOfSeptember(courseYear);
-      }
+      // Определяем год начала данного курса
+      const courseYear = baseYear + courseIdx;
       
-      return {
+      // Получаем первый рабочий день сентября для года начала этого курса
+      const courseStartDate = courseIdx === 0 
+        ? weeks[0].startDate // Для первого курса используем начальную дату из входных данных
+        : getFirstWorkdayOfSeptember(courseYear); // Для других курсов вычисляем дату
+      
+      // Генерируем массив недель для этого курса, начиная с его даты начала
+      const courseWeeks = buildAcademicWeeks(courseStartDate);
+      
+      courses.push({
         id: courseId,
         name: `Курс ${courseId}`,
-        startDate: courseStartDate
-      };
-    });
+        startDate: courseStartDate,
+        weeks: courseWeeks, // Сохраняем недели, специфичные для этого курса
+      });
+    }
     
     // Рендерим компонент CourseRow для каждого курса
     return courses.map(course => (
       <CourseRow
         key={`course-row-${course.id}`}
         course={course}
-        weeks={weeks}
+        weeks={course.weeks} // Передаем недели специфичные для этого курса
         tableData={tableData}
         selectedCellKey={selectedCellKey}
         onCellClick={handleCellClick}
