@@ -1,6 +1,6 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { StartDatePicker } from "@/components/ui/StartDatePicker";
-import { buildAcademicWeeks } from "@/utils/calendar";
+import { buildAcademicWeeks, getFirstWorkdayOfSeptember } from "@/utils/calendar";
 import { AcademicCalendarTable } from "@/components/curriculum/AcademicCalendarTable";
 
 interface GraphTabProps {
@@ -16,14 +16,24 @@ export default function GraphTab({
   initialData = {},
   onChange
 }: GraphTabProps) {
-  // Дата начала по умолчанию - 1 сентября года начала плана
-  const defaultStart = new Date(planYear, 8, 1); // 1 сентября (месяцы с 0)
-  const [startDate, setStartDate] = useState<Date>(defaultStart);
+  // Получаем первый рабочий день сентября в году начала обучения
+  const firstWorkdayInSeptember = useMemo(() => 
+    getFirstWorkdayOfSeptember(planYear),
+    [planYear]
+  );
+  
+  // Используем этот день как дату начала по умолчанию
+  const [startDate, setStartDate] = useState<Date>(firstWorkdayInSeptember);
+  
+  // Обновляем дату начала при изменении planYear
+  useEffect(() => {
+    setStartDate(getFirstWorkdayOfSeptember(planYear));
+  }, [planYear]);
 
-  // Генерируем недели на основе выбранной даты старта (только на 1 год)
+  // Генерируем недели на основе выбранной даты старта
   const weeks = useMemo(() => 
-    buildAcademicWeeks(startDate, 1), 
-    [startDate]
+    buildAcademicWeeks(startDate, yearsOfStudy), 
+    [startDate, yearsOfStudy]
   );
 
   return (
@@ -31,6 +41,9 @@ export default function GraphTab({
       <div className="flex items-center gap-2">
         <span className="text-sm font-medium">Дата начала обучения:</span>
         <StartDatePicker value={startDate} onChange={setStartDate} />
+        <div className="text-xs text-slate-500 ml-2">
+          (По умолчанию - первый рабочий день сентября {planYear} года)
+        </div>
       </div>
 
       <AcademicCalendarTable 

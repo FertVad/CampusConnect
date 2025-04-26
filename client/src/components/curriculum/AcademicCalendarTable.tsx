@@ -253,11 +253,14 @@ export function AcademicCalendarTable({
     // Создаем данные курсов для каждого года обучения
     const courses: Course[] = Array.from({ length: NUMBER_OF_COURSES }).map((_, idx) => {
       const courseId = idx + 1;
-      // Первый курс начинается в дату startDate текущего учебного года
-      // Второй курс начинался годом ранее и т.д.
+      
+      // Первый курс начинается в первый рабочий день сентября текущего года (недели[0])
+      // Последующие курсы начинаются в +1, +2, +3 и т.д. года от первого курса
+      // Это означает, что для корректного отображения графика, второй курс должен начинаться на год ПОЗЖЕ
+      // от начала первого курса (в отличие от предыдущей реализации, где было наоборот)
       const courseStartDate = idx === 0 
-        ? weeks[0].startDate
-        : addYears(weeks[0].startDate, -idx);
+        ? weeks[0].startDate 
+        : addYears(weeks[0].startDate, idx);
         
       return {
         id: courseId,
@@ -317,6 +320,10 @@ export function AcademicCalendarTable({
           {/* TODO drag-select / Ctrl-click для заливки нескольких недель */}
           <div className="text-xs text-slate-500 mt-2">
             * В будущей версии будет добавлено выделение нескольких недель для массового изменения
+          </div>
+          
+          <div className="text-xs text-slate-500 mt-1">
+            * Курс 2, 3, 4 начинаются с первого рабочего дня сентября (+1, +2, +3 года от начала обучения)
           </div>
         </div>
         

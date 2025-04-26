@@ -1,4 +1,4 @@
-import { addWeeks, isBefore, format, addDays } from "date-fns";
+import { addWeeks, isBefore, format, addDays, addYears, getDay, setDate } from "date-fns";
 import { ru } from "date-fns/locale/ru";
 
 export interface WeekCell {
@@ -7,6 +7,30 @@ export interface WeekCell {
   month: string;          // «Сентябрь» и т.д.
   index: number;          // 1…N по порядку
 }
+
+/**
+ * Определяет первый рабочий день (понедельник-пятница) сентября в указанном году
+ * @param year Год для которого нужно определить первый рабочий день сентября
+ * @returns Дата первого рабочего дня сентября
+ */
+export const getFirstWorkdayOfSeptember = (year: number): Date => {
+  // Создаем дату 1 сентября указанного года
+  const september1st = new Date(year, 8, 1); // Месяцы начинаются с 0, поэтому сентябрь - 8
+  
+  // Получаем день недели (0 - воскресенье, 1 - понедельник, ..., 6 - суббота)
+  const dayOfWeek = getDay(september1st);
+  
+  // Если 1 сентября выпадает на субботу (6) или воскресенье (0), 
+  // то первый рабочий день - следующий понедельник
+  if (dayOfWeek === 0) { // Воскресенье
+    return addDays(september1st, 1); // Понедельник
+  } else if (dayOfWeek === 6) { // Суббота
+    return addDays(september1st, 2); // Понедельник
+  }
+  
+  // Если 1 сентября - рабочий день (пн-пт), возвращаем эту дату
+  return september1st;
+};
 
 /**
  * Строит массив недель учебного года.
