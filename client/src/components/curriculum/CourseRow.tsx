@@ -1,6 +1,6 @@
 import React from "react";
 import { WeekCell } from "@/utils/calendar";
-import { format, differenceInWeeks } from "date-fns";
+import { format } from "date-fns";
 import { ru } from "date-fns/locale/ru";
 import { ActivityType, ACTIVITY_COLORS, weekGradient } from "./WeekActivityDialog";
 
@@ -41,8 +41,8 @@ export function CourseRow({
     return `course${courseId}_week${weekNumber}`;
   };
   
-  // Рассчитываем смещение недель для этого курса
-  const blank = Math.max(0, differenceInWeeks(course.startDate, weeks[0].startDate));
+  // Каждый курс начинается с первой ячейки в таблице
+  // Для этого мы не применяем смещение (убран расчет blank)
   
   return (
     <tr key={`course-${course.id}`} className="border-t hover:bg-slate-50 dark:hover:bg-slate-800/70">
@@ -50,18 +50,8 @@ export function CourseRow({
         {course.name || `Курс ${course.id}`}
       </td>
       
-      {/* Если есть смещение, добавляем затененные ячейки */}
-      {blank > 0 && (
-        <td 
-          key={`blank-${course.id}`}
-          colSpan={blank}
-          className="p-0 h-8 bg-slate-900/10 dark:bg-slate-900/30 border-0"
-        />
-      )}
-      
-      {/* Отображаем только недели после начала курса */}
-      {weeks.slice(blank).map((w, relativeIdx) => {
-        const idx = relativeIdx + blank; // Абсолютный индекс недели
+      {/* Отображаем все недели для каждого курса */}
+      {weeks.map((w, idx) => {
         const weekNumber = w.index;
         const cellKey = getCellKey(course.id, weekNumber);
         const activity = tableData[cellKey] || "";

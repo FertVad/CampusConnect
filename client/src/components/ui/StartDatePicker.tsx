@@ -22,6 +22,10 @@ export function StartDatePicker({ value, onChange }: { value: Date; onChange: (d
           onSelect={(d)=> d && (onChange(d), setOpen(false))}
           weekStartsOn={1}
           locale={ru}
+          // Устанавливаем календарь на выбранную дату вместо текущей
+          defaultMonth={value}
+          fromDate={new Date(2000, 0, 1)} // Минимальная дата - 1 января 2000 года
+          toDate={new Date(2100, 11, 31)} // Максимальная дата - 31 декабря 2100 года
         />
       </PopoverContent>
     </Popover>

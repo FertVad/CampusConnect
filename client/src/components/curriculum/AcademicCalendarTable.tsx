@@ -53,10 +53,11 @@ export function AcademicCalendarTable({
     }
   });
   
-  // Группируем недели по месяцам и годам
+  // Группируем недели только по месяцам (без учета года)
   const monthGroups = useMemo(() => {
     return weeks.reduce((acc, w) => {
-      const key = format(w.startDate, "LLLL yyyy", { locale: ru }); // «сентябрь 2023»
+      // Используем только название месяца без года
+      const key = format(w.startDate, "LLLL", { locale: ru }); // «сентябрь»
       (acc[key] ||= []).push(w);
       return acc;
     }, {} as Record<string, WeekCell[]>);
@@ -198,15 +199,13 @@ export function AcademicCalendarTable({
           Месяцы
         </th>
         {Object.entries(monthGroups).map(([key, list], i) => {
-          const [month, yr] = key.split(" ");
           return (
             <th 
               key={key} 
               colSpan={list.length}
               className={`px-2 py-1 text-center font-medium border-x ${i % 2 === 0 ? 'bg-slate-200 dark:bg-slate-700' : 'bg-slate-100 dark:bg-slate-800'}`}
             >
-              {month}
-              <span className="block text-[10px] opacity-70">{yr}</span>
+              {key}
             </th>
           );
         })}
