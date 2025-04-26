@@ -1,0 +1,50 @@
+import React, { useState, useLayoutEffect } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+
+// Тип активности
+// Может быть одиночным символом или строкой символов (для комбинации активностей по дням)
+export type ActivityType = "У" | "К" | "П" | "Э" | "Д" | "" | string;
+
+// Типы активностей с описаниями
+export const ACTIVITY_TYPES: { [key in Exclude<ActivityType, "">]: string } = {
+  У: "Учебный процесс",
+  К: "Каникулы",
+  П: "Практика",
+  Э: "Экзаменационная сессия",
+  Д: "Дипломное проектирование",
+};
+
+// Цвета для активностей (пастельные оттенки)
+export const ACTIVITY_COLORS: {
+  [key in Exclude<ActivityType, "">]: {
+    bg: string;
+    text: string;
+    hoverBg: string;
+    color: string;
+  };
+} = {
+  У: { bg: "bg-blue-100", text: "text-blue-800", hoverBg: "hover:bg-blue-200", color: "#dbeafe" },
+  К: { bg: "bg-gray-100", text: "text-gray-800", hoverBg: "hover:bg-gray-200", color: "#f3f4f6" },
+  П: {
+    bg: "bg-yellow-100",
+    text: "text-yellow-800",
+    hoverBg: "hover:bg-yellow-200",
+    color: "#fef9c3"
+  },
+  Э: { bg: "bg-red-100", text: "text-red-800", hoverBg: "hover:bg-red-200", color: "#fee2e2" },
+  Д: {
+    bg: "bg-purple-100",
+    text: "text-purple-800",
+    hoverBg: "hover:bg-purple-200",
+    color: "#f3e8ff"
+  },

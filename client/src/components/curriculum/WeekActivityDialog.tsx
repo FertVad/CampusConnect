@@ -379,208 +379,102 @@ export function WeekActivityDialog({
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4" onClick={handleContainerClick}>
-            <div
-              className="p-4 bg-slate-50 dark:bg-slate-900 rounded-md border border-slate-200 dark:border-slate-700"
-              onDoubleClick={(e) => {
-                // Обработка двойного клика по всей области
-                e.preventDefault(); // Предотвращаем выделение текста
-
-                // Проверяем наличие выбранных дней
-                const hasSelected = weekDays.some((day) => day.selected);
-
-                if (hasSelected) {
-                  // Если есть выбранные дни - сбрасываем все выделения
-                  const updatedDays = weekDays.map((day) => ({
-                    ...day,
-                    selected: false,
-                  }));
-                  setWeekDays(updatedDays);
-                  setHasSelectedDays(false);
-                } else {
-                  // Если выделенных дней нет - проверяем состояние рабочих дней
-                  const newDays = [...weekDays];
-
-                  // Проверяем, все ли рабочие дни (Пн-Пт) имеют одинаковую активность
-                  const workdays = newDays.slice(0, 5);
-                  const firstActivity = workdays[0].activity;
-                  const allHaveSameActivity =
-                    firstActivity &&
-                    workdays.every((day) => day.activity === firstActivity);
-
-                  // Если все рабочие дни имеют одинаковую непустую активность,
-                  // то при двойном клике очищаем их активность
-                  if (allHaveSameActivity) {
-                    for (let i = 0; i < 5; i++) {
-                      // Пн-Пт (индексы 0-4)
-                      newDays[i].selected = true;
-                      newDays[i].activity = ""; // Очищаем активность
-                    }
-                  } else {
-                    // Иначе выбираем все рабочие дни и устанавливаем им текущую активность
-                    for (let i = 0; i < 5; i++) {
-                      // Пн-Пт (индексы 0-4)
-                      newDays[i].selected = true;
-
-                      // Если выбрана активность, применяем её
-                      if (selectedActivity) {
-                        newDays[i].activity = selectedActivity;
-                      }
-                    }
-                  }
-
-                  setWeekDays(newDays);
-                  setHasSelectedDays(true);
-                }
-              }}
-            >
-              <div className="grid grid-cols-7 gap-2 week-days-grid">
-                {weekDays.map((day, i) => (
-                  <div
-                    key={i}
-                    className={`flex flex-col items-center justify-center p-2 rounded cursor-pointer transition-all ${getDayStyle(day)}`}
-                    onClick={(e) => {
-                      e.stopPropagation(); // Останавливаем всплытие события
-                      handleDayClick(i);
-                    }}
-                  >
-                    <div className="text-xs font-semibold">{day.name}</div>
-                    <div className="text-sm font-bold">{day.date}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
+          <div className="space-y-4">
             <div className="space-y-3">
               <h4 className="text-sm font-medium mb-1">
                 Выберите тип активности:
               </h4>
-              <RadioGroup
-                value={selectedActivity}
+              <RadioGroup 
+                className="grid grid-cols-5 gap-2" 
+                value={selectedActivity} 
                 onValueChange={handleActivitySelect}
-                className="grid grid-cols-1 gap-2"
               >
+                {/* Создаем радиокнопки для всех типов активностей */}
                 {Object.entries(ACTIVITY_TYPES).map(([code, description]) => {
-                  const colorStyle =
-                    ACTIVITY_COLORS[code as Exclude<ActivityType, "">];
+                  // Получаем стиль для кнопки
+                  const colorStyle = {
+                    bg: ACTIVITY_COLORS[code as Exclude<ActivityType, "">].bg,
+                    text: ACTIVITY_COLORS[code as Exclude<ActivityType, "">].text,
+                    hoverBg: ACTIVITY_COLORS[code as Exclude<ActivityType, "">].hoverBg,
+                  };
+                  
                   return (
-                    <div
-                      key={code}
-                      className={`flex items-center space-x-2 p-2 rounded-md ${colorStyle.hoverBg} transition-colors`}
-                    >
-                      <RadioGroupItem value={code} id={`activity-${code}`} />
+                    <div key={code} className="flex items-center space-x-2">
+                      <RadioGroupItem 
+                        value={code} 
+                        id={`activity-${code}`} 
+                        className={`peer sr-only`} 
+                      />
                       <Label
                         htmlFor={`activity-${code}`}
-                        className="flex items-center cursor-pointer"
+                        className={`flex flex-col items-center justify-center p-2 rounded-md cursor-pointer border ${colorStyle.bg} ${colorStyle.text} ${colorStyle.hoverBg} peer-data-[state=checked]:ring-2 peer-data-[state=checked]:ring-blue-600 dark:peer-data-[state=checked]:ring-blue-400 transition-all flex-1 text-center h-full`}
                       >
-                        <span
-                          className={`font-semibold text-sm mr-2 w-8 h-8 flex items-center justify-center rounded ${colorStyle.bg} ${colorStyle.text}`}
-                        >
-                          {code}
-                        </span>
-                        <span>{description}</span>
+                        <span className="text-sm font-semibold">{code}</span>
+                        <span className="text-xs truncate max-w-full">{description}</span>
                       </Label>
                     </div>
                   );
                 })}
-                <div className="flex items-center space-x-2 p-2 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-                  <RadioGroupItem value="" id="activity-none" />
+                
+                {/* Опция для очистки активности */}
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem 
+                    value="" 
+                    id="activity-none" 
+                    className="peer sr-only" 
+                  />
                   <Label
                     htmlFor="activity-none"
-                    className="flex items-center cursor-pointer"
+                    className="flex flex-col items-center justify-center p-2 rounded-md cursor-pointer border bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600 peer-data-[state=checked]:ring-2 peer-data-[state=checked]:ring-blue-600 dark:peer-data-[state=checked]:ring-blue-400 transition-all flex-1 text-center h-full"
                   >
-                    <span className="font-semibold text-sm mr-2 w-8 h-8 flex items-center justify-center rounded bg-white dark:bg-slate-600 dark:text-white border">
-                      —
-                    </span>
-                    <span>Нет активности</span>
+                    <span className="text-sm font-semibold">-</span>
+                    <span className="text-xs">Нет</span>
                   </Label>
                 </div>
               </RadioGroup>
+              
+              {/* Текущая активность */}
+              <div className="text-sm text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-800 p-3 rounded-md">
+                <strong>Текущая активность:</strong> {currentActivity ? 
+                  <span className="font-bold">{currentActivity}</span> : 
+                  <span className="italic text-slate-500">не установлена</span>}
+              </div>
             </div>
           </div>
 
-          <div className="pt-3 border-t">
-            <h4 className="text-sm font-medium mb-2">Отдельные дни недели:</h4>
-            <div className="grid grid-cols-7 gap-1 mb-4">
-              {weekDays.map((day, idx) => {
-                const colorStyle = day.activity && day.activity in ACTIVITY_COLORS
-                  ? ACTIVITY_COLORS[day.activity as Exclude<ActivityType, "">]
-                  : { bg: "bg-slate-100", text: "text-slate-700", hoverBg: "hover:bg-slate-200" };
-                
-                return (
-                  <div key={`day-selector-${idx}`} className="flex flex-col items-center">
-                    <RadioGroup 
-                      value={day.activity} 
-                      onValueChange={(value) => {
-                        const newDays = [...weekDays];
-                        newDays[idx].activity = value as ActivityType;
-                        setWeekDays(newDays);
-                      }}
-                      className="flex flex-col gap-1 items-center"
-                    >
-                      <div 
-                        className={`flex flex-col items-center cursor-pointer p-2 rounded ${day.activity ? colorStyle.bg : 'bg-slate-100'} ${colorStyle.hoverBg}`}
-                      >
-                        <div className="text-[10px] font-medium mb-1">{day.name}</div>
-                        <div className="text-sm font-bold">{day.date}</div>
-                      </div>
-                      
-                      {Object.keys(ACTIVITY_TYPES).map((code) => (
-                        <RadioGroupItem 
-                          key={`day-${idx}-${code}`} 
-                          value={code} 
-                          id={`day-${idx}-${code}`} 
-                          className="sr-only" 
-                        />
-                      ))}
-                    </RadioGroup>
-                    <div className="text-center mt-1 text-sm font-bold">
-                      {day.activity || "–"}
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
+          <DialogFooter className="flex flex-col space-y-2">
+            {/* Кнопка "Применить ко всей неделе" */}
+            <Button
+              disabled={!selectedActivity}
+              onClick={() => {
+                if (selectedActivity) {
+                  // Создаем строку из 7 одинаковых символов выбранной активности
+                  const fullWeekActivity = selectedActivity.repeat(7);
+                  // Сохраняем и закрываем диалог
+                  onActivityChange(fullWeekActivity as ActivityType);
+                  onOpenChange(false);
+                }
+              }}
+              className="w-full bg-green-600 hover:bg-green-700 text-white"
+            >
+              Применить ко всей неделе
+            </Button>
             
-            <div className="flex justify-center mb-4">
-              <Button 
-                variant="secondary" 
-                onClick={() => {
-                  // Находим наиболее часто встречающуюся активность
-                  if (!selectedActivity || selectedActivity === "") {
-                    // Если активность не выбрана, ничего не делаем
-                    return;
-                  }
-                  
-                  // Применяем выбранную активность ко всем дням недели
-                  const newDays = weekDays.map(day => ({
-                    ...day,
-                    activity: selectedActivity
-                  }));
-                  
-                  setWeekDays(newDays);
-                }}
-                className="w-full"
-                disabled={!selectedActivity}
+            <div className="flex w-full space-x-2">
+              <Button
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                className="flex-1"
               >
-                Применить "{selectedActivity}" ко всей неделе
+                Отмена
+              </Button>
+              <Button
+                onClick={handleSave}
+                className="flex-1"
+              >
+                Сохранить
               </Button>
             </div>
-          </div>
-          
-          <DialogFooter className="sm:justify-between">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
-              Отмена
-            </Button>
-            <Button
-              onClick={handleSave}
-              className="bg-blue-600 hover:bg-blue-700"
-              disabled={
-                weekDays.every((day) => !day.activity) && !hasSelectedDays
-              }
-            >
-              Сохранить
-            </Button>
           </DialogFooter>
         </DialogContent>
       )}
