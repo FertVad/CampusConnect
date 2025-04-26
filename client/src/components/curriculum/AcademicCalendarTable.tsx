@@ -141,24 +141,34 @@ export function AcademicCalendarTable({
     // Проверяем, является ли активность строкой из нескольких символов
     if (activity.length > 1) {
       // Если это строка активностей, берем первую букву как представителя всей недели
-      // В будущем, здесь можно реализовать более сложную логику отображения
       const primaryActivity = activity[0] as ActivityType;
       
-      if (primaryActivity && primaryActivity in ACTIVITY_COLORS) {
-        return {
-          bg: ACTIVITY_COLORS[primaryActivity as Exclude<ActivityType, "">].bg,
-          text: ACTIVITY_COLORS[primaryActivity as Exclude<ActivityType, "">].text
-        };
+      // Проверяем, есть ли такой ключ в ACTIVITY_TYPES
+      if (primaryActivity && primaryActivity in ACTIVITY_TYPES) {
+        // Для упрощения: формируем стиль вручную, без зависимости от ACTIVITY_COLORS
+        switch(primaryActivity) {
+          case 'У': return { bg: "bg-blue-100", text: "text-blue-800" };
+          case 'К': return { bg: "bg-gray-100", text: "text-gray-800" };
+          case 'П': return { bg: "bg-yellow-100", text: "text-yellow-800" };
+          case 'Э': return { bg: "bg-red-100", text: "text-red-800" };
+          case 'Д': return { bg: "bg-purple-100", text: "text-purple-800" };
+          default: return { bg: "bg-slate-200 dark:bg-slate-600", text: "text-slate-800 dark:text-white" };
+        }
       }
       return { bg: "bg-slate-200 dark:bg-slate-600", text: "text-slate-800 dark:text-white" };
     }
     
     // Для одиночной буквы
-    if (activity in ACTIVITY_COLORS) {
-      return {
-        bg: ACTIVITY_COLORS[activity as Exclude<ActivityType, "">].bg,
-        text: ACTIVITY_COLORS[activity as Exclude<ActivityType, "">].text
-      };
+    if (activity in ACTIVITY_TYPES) {
+      // Для упрощения: формируем стиль вручную, без зависимости от ACTIVITY_COLORS
+      switch(activity) {
+        case 'У': return { bg: "bg-blue-100", text: "text-blue-800" };
+        case 'К': return { bg: "bg-gray-100", text: "text-gray-800" };
+        case 'П': return { bg: "bg-yellow-100", text: "text-yellow-800" };
+        case 'Э': return { bg: "bg-red-100", text: "text-red-800" };
+        case 'Д': return { bg: "bg-purple-100", text: "text-purple-800" };
+        default: return { bg: "bg-slate-200 dark:bg-slate-600", text: "text-slate-800 dark:text-white" };
+      }
     }
     
     // Для нестандартного символа активности
