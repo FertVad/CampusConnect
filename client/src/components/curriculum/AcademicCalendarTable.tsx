@@ -174,13 +174,12 @@ export function AcademicCalendarTable({
     return { bg: "bg-slate-200 dark:bg-slate-600", text: "text-slate-800 dark:text-white" };
   };
   
-  // Проверка на семестровые даты (31 января и 30 июня)
-  const isSemesterBoundary = (date: Date): boolean => {
-    // 31 января - конец первого семестра
-    if (date.getMonth() === 0 && date.getDate() === 31) return true;
-    // 30 июня - конец второго семестра
-    if (date.getMonth() === 5 && date.getDate() === 30) return true;
-    return false;
+  // Проверка на последний день месяца (для границы месяцев)
+  const isLastDayOfMonth = (date: Date): boolean => {
+    // Создаем новую дату, прибавляем 1 день и проверяем, изменился ли месяц
+    const nextDay = new Date(date);
+    nextDay.setDate(date.getDate() + 1);
+    return nextDay.getMonth() !== date.getMonth();
   };
   
   // Создание заголовков месяцев и недель
@@ -233,21 +232,21 @@ export function AcademicCalendarTable({
           Недели
         </th>
         {firstCourseWeeks.map((w, idx) => {
-          // Проверяем, попадает ли конец семестра в эту неделю
-          const isSemesterEnd = (
-            isSemesterBoundary(w.startDate) || 
-            isSemesterBoundary(w.endDate) ||
-            // Проверка, если 31 января или 30 июня находятся внутри недели
-            (w.startDate.getMonth() === 0 && w.endDate.getMonth() === 1 && w.endDate.getDate() >= 1) ||
-            (w.startDate.getMonth() === 5 && w.endDate.getMonth() === 6 && w.endDate.getDate() >= 1)
-          );
+          // Определяем чередование фона по реальному месяцу
+          const month = w.startDate.getMonth();
+          const isEvenMonth = month % 2 === 0;
+          
+          // Проверяем, является ли эта неделя концом месяца
+          const isMonthEnd = isLastDayOfMonth(w.endDate) || 
+                          (w.startDate.getMonth() !== w.endDate.getMonth() && 
+                          w.endDate.getDate() >= 1);
           
           return (
             <th 
               key={`week_${w.index}`}
               className={`px-1 py-1 text-xs font-semibold w-8 text-center 
-                ${isSemesterEnd ? 'border-r-4 border-indigo-600 dark:border-indigo-400' : 'border-x'}
-                ${(idx % 8 < 4) ? 'bg-slate-200 dark:bg-slate-700' : 'bg-slate-100 dark:bg-slate-800'}`}
+                ${isMonthEnd ? 'border-r border-slate-400/40 dark:border-slate-500/40' : 'border-x border-slate-200 dark:border-slate-700'}
+                ${isEvenMonth ? 'bg-slate-200 dark:bg-slate-700' : 'bg-slate-100 dark:bg-slate-800'}`}
             >
               {w.index}
             </th>
@@ -299,7 +298,7 @@ export function AcademicCalendarTable({
         tableData={tableData}
         selectedCellKey={selectedCellKey}
         onCellClick={handleCellClick}
-        isSemesterBoundary={isSemesterBoundary}
+        isLastDayOfMonth={isLastDayOfMonth}
       />
     ));
   };

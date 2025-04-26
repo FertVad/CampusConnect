@@ -28,7 +28,7 @@ interface CourseRowProps {
   tableData: Record<string, ActivityType>;
   selectedCellKey: string | null;
   onCellClick: (info: CellInfo) => void;
-  isSemesterBoundary: (date: Date) => boolean;
+  isLastDayOfMonth: (date: Date) => boolean;
 }
 
 export function CourseRow({
@@ -37,7 +37,7 @@ export function CourseRow({
   tableData,
   selectedCellKey,
   onCellClick,
-  isSemesterBoundary
+  isLastDayOfMonth
 }: CourseRowProps) {
   // Функция для генерации ключа ячейки
   const getCellKey = (courseId: number, weekNumber: number): string => {
@@ -63,34 +63,38 @@ export function CourseRow({
         // Неделя пересекает границу месяца?
         const crossMonth = w.startDate.getMonth() !== w.endDate.getMonth();
         
-        // Базовый стиль ячейки в зависимости от чётности группы
-        const isEvenGroup = idx % 8 < 4;
+        // Определяем стили на основе реального месяца, а не по чередованию
+        const month = w.startDate.getMonth();
+        const isEvenMonth = month % 2 === 0;
         
-        // Градиенты для четных и нечетных столбцов
-        const baseLeft = isEvenGroup ? 'from-slate-50' : 'from-white';
-        const baseRight = isEvenGroup ? 'to-slate-100' : 'to-slate-50';
-        const darkLeft = isEvenGroup ? 'dark:from-slate-900' : 'dark:from-slate-950';
-        const darkRight = isEvenGroup ? 'dark:to-slate-800' : 'dark:to-slate-900';
+        // CSS переменные для градиентного фона
+        const monthBgLeft = isEvenMonth ? 'var(--month-bg-left, #f8fafc)' : 'var(--month-bg-left, #ffffff)';
+        const monthBgRight = !isEvenMonth ? 'var(--month-bg-right, #f1f5f9)' : 'var(--month-bg-right, #f8fafc)';
+        
+        // Градиенты для месяцев на стыке (чередуются по реальному месяцу)
+        const baseLeft = isEvenMonth ? 'from-slate-100' : 'from-white';
+        const baseRight = !isEvenMonth ? 'to-slate-200' : 'to-slate-100';
+        const darkLeft = isEvenMonth ? 'dark:from-slate-800' : 'dark:from-slate-900';
+        const darkRight = !isEvenMonth ? 'dark:to-slate-700' : 'dark:to-slate-800';
         
         // Шахматный фон для обычных ячеек
-        const chessBg = isEvenGroup
-          ? 'bg-slate-50/50 dark:bg-slate-900/50'
-          : 'bg-white dark:bg-slate-950/40';
+        const chessBg = isEvenMonth
+          ? 'bg-slate-100 dark:bg-slate-800'
+          : 'bg-white dark:bg-slate-900';
         
-        // Градиентный фон для недель на стыке месяцев
+        // Градиентный фон для недель на стыке месяцев (50/50)
         const gradientBg = `bg-gradient-to-r ${baseLeft} ${baseRight} ${darkLeft} ${darkRight}`;
         
-        // Граница правее, если следующая неделя от другого месяца
-        const isMonthBoundary = idx === weeks.length - 1 || 
-          (idx + 1 < weeks.length && w.endDate.getMonth() !== weeks[idx + 1].startDate.getMonth());
+        // Проверяем, заканчивается ли месяц в этой неделе
+        const isMonthEnd = isLastDayOfMonth(w.endDate) || 
+                       (w.startDate.getMonth() !== w.endDate.getMonth() && 
+                       w.endDate.getDate() >= 1);
         
         return (
           <td 
             key={`cell-${cellKey}`}
             className={`p-0 h-8 text-center cursor-pointer transition-colors
-              ${isMonthBoundary ? 'border-r-2 border-slate-300 dark:border-slate-600' : ''}
-              ${isSemesterBoundary(w.startDate) || isSemesterBoundary(w.endDate) ? 
-                'border-r-4 border-indigo-600 dark:border-indigo-400' : ''}
+              ${isMonthEnd ? 'border-r border-slate-400/40 dark:border-slate-500/40' : 'border-x border-slate-200 dark:border-slate-700'}
               ${isSelected ? 'ring-2 ring-blue-500 shadow-lg' : ''}
               ${!activity ? (crossMonth ? gradientBg : chessBg) : ''}
               hover:outline hover:outline-2 hover:outline-blue-500 hover:outline-offset-[-2px]
@@ -104,7 +108,7 @@ export function CourseRow({
               startDate: w.startDate,
               endDate: w.endDate
             })}
-            title={`Неделя ${weekNumber}: ${format(w.startDate, 'd MMM', {locale: ru})} – ${format(w.endDate, 'd MMM', {locale: ru})}\n${activity ? `Активности: ${activity}` : 'Нет активностей'}`}
+            title={`Учебная неделя ${weekNumber}\n${format(w.startDate, 'd MMM', {locale: ru})} – ${format(w.endDate, 'd MMM', {locale: ru})}\nПн - ${activity || "Не указано"}`}
           >
             {/* Для краткости отображаем только количество разных активностей */}
             {activity && activity.length > 1 ? (
