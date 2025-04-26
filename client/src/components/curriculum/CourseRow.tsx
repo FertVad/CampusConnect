@@ -1,8 +1,21 @@
 import React from "react";
 import { WeekCell } from "@/utils/calendar";
-import { format } from "date-fns";
+import { format, getWeek } from "date-fns";
 import { ru } from "date-fns/locale/ru";
-import { ActivityType, ACTIVITY_COLORS, weekGradient } from "./WeekActivityDialog";
+import { ActivityType, ACTIVITY_COLORS, ACTIVITY_TYPES, weekGradient } from "./WeekActivityDialog";
+import { Tooltip } from "react-tooltip";
+
+// Функция для определения класса цвета активности для тултипа
+const getActivityColorClass = (activity: ActivityType): string => {
+  if (!activity || activity === '') return 'bg-gray-300';
+  
+  if (activity in ACTIVITY_COLORS) {
+    const colorObj = ACTIVITY_COLORS[activity as keyof typeof ACTIVITY_COLORS];
+    return colorObj.bg;
+  }
+  
+  return 'bg-gray-300';
+};
 
 // Интерфейс курса
 interface Course {
@@ -141,7 +154,7 @@ export function CourseRow({
               startDate: w.startDate,
               endDate: w.endDate
             })}
-            title={`Учебная неделя ${weekNumber}\n${format(w.startDate, 'd MMM', {locale: ru})} – ${format(w.endDate, 'd MMM', {locale: ru})}\nПн - ${activity || "Не указано"}`}
+            title={`Кал. неделя ${getWeek(w.startDate)} / Уч. неделя ${weekNumber}\n${format(w.startDate, 'd MMM', {locale: ru})} – ${format(w.endDate, 'd MMM', {locale: ru})}`}
           >
             {/* Для краткости отображаем только количество разных активностей */}
             {activity && activity.length > 1 ? (

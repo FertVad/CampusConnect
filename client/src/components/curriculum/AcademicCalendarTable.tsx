@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { WeekActivityDialog, WeekInfo, ActivityType, ACTIVITY_TYPES } from "./WeekActivityDialog";
+import { WeekActivityDialog, WeekInfo, ActivityType, ACTIVITY_TYPES, ACTIVITY_COLORS } from "./WeekActivityDialog";
 import { WeekCell, getFirstWorkdayOfSeptember, buildAcademicWeeks } from "@/utils/calendar";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale/ru";
@@ -131,7 +131,7 @@ export function AcademicCalendarTable({
   
   // Функция для получения стиля ячейки в зависимости от активности
   const getActivityStyle = (activity: ActivityType): { bg: string, text: string } => {
-    const defaultStyle = { bg: "bg-white dark:bg-slate-900", text: "text-gray-800 dark:text-gray-300" };
+    const defaultStyle = { bg: "bg-slate-50 dark:bg-slate-900", text: "text-slate-900 dark:text-slate-100 font-bold" };
     
     if (!activity) {
       return defaultStyle;
@@ -144,34 +144,26 @@ export function AcademicCalendarTable({
       
       // Проверяем, есть ли такой ключ в ACTIVITY_TYPES
       if (primaryActivity && primaryActivity in ACTIVITY_TYPES) {
-        // Обновленные цвета в соответствии с цветами из WeekActivityDialog
-        switch(primaryActivity) {
-          case 'У': return { bg: "bg-blue-300", text: "text-blue-900" };
-          case 'К': return { bg: "bg-gray-300", text: "text-gray-900" };
-          case 'П': return { bg: "bg-yellow-300", text: "text-yellow-900" };
-          case 'Э': return { bg: "bg-red-300", text: "text-red-900" };
-          case 'Д': return { bg: "bg-purple-300", text: "text-purple-900" };
-          default: return { bg: "bg-slate-200 dark:bg-slate-600", text: "text-slate-800 dark:text-white" };
+        // Используем цвета из WeekActivityDialog
+        if (primaryActivity in ACTIVITY_COLORS) {
+          const colorObj = ACTIVITY_COLORS[primaryActivity as keyof typeof ACTIVITY_COLORS];
+          return { bg: colorObj.bg, text: "text-slate-900 dark:text-slate-100 font-bold" };
         }
       }
-      return { bg: "bg-slate-200 dark:bg-slate-600", text: "text-slate-800 dark:text-white" };
+      return { bg: "bg-slate-200 dark:bg-slate-600", text: "text-slate-900 dark:text-slate-100 font-bold" };
     }
     
     // Для одиночной буквы
     if (activity in ACTIVITY_TYPES) {
-      // Обновленные цвета в соответствии с цветами из WeekActivityDialog
-      switch(activity) {
-        case 'У': return { bg: "bg-blue-300", text: "text-blue-900" };
-        case 'К': return { bg: "bg-gray-300", text: "text-gray-900" };
-        case 'П': return { bg: "bg-yellow-300", text: "text-yellow-900" };
-        case 'Э': return { bg: "bg-red-300", text: "text-red-900" };
-        case 'Д': return { bg: "bg-purple-300", text: "text-purple-900" };
-        default: return { bg: "bg-slate-200 dark:bg-slate-600", text: "text-slate-800 dark:text-white" };
+      // Используем цвета из WeekActivityDialog
+      if (activity in ACTIVITY_COLORS) {
+        const colorObj = ACTIVITY_COLORS[activity as keyof typeof ACTIVITY_COLORS];
+        return { bg: colorObj.bg, text: "text-slate-900 dark:text-slate-100 font-bold" };
       }
     }
     
     // Для нестандартного символа активности
-    return { bg: "bg-slate-200 dark:bg-slate-600", text: "text-slate-800 dark:text-white" };
+    return { bg: "bg-slate-200 dark:bg-slate-600", text: "text-slate-900 dark:text-slate-100 font-bold" };
   };
   
   // Проверка на последний день месяца (для границы месяцев)
@@ -322,7 +314,7 @@ export function AcademicCalendarTable({
   return (
     <div className="w-full">
       <div className="rounded-md overflow-hidden border shadow-sm dark:border-slate-700">
-        <div className="overflow-auto max-h-[500px]">
+        <div className="overflow-auto max-h-[500px] custom-scrollbar">
           <div className="min-w-max">
             <table className="w-full border-collapse">
               <thead>
