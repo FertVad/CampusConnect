@@ -446,3 +446,34 @@
 :root:not(.dark) .btn-outline {
   @apply border border-gray-200 text-slate-700 hover:bg-gray-50;
 }
+
+/* Custom scrollbar for academic calendar table */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  @apply bg-slate-600/60 rounded-full;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  @apply bg-slate-500/60;
+}
+
+/* Tooltip styles for academic calendar */
+.academic-tooltip {
+  @apply rounded-md px-3 py-2 shadow-lg;
+}
+
+.academic-tooltip.light {
+  @apply bg-white text-slate-900;
+}
+
+.academic-tooltip.dark {
+  @apply bg-slate-900 text-slate-100;
+}

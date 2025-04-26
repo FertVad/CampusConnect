@@ -154,7 +154,25 @@ export function CourseRow({
               startDate: w.startDate,
               endDate: w.endDate
             })}
-            title={`Кал. неделя ${getWeek(w.startDate)} / Уч. неделя ${weekNumber}\n${format(w.startDate, 'd MMM', {locale: ru})} – ${format(w.endDate, 'd MMM', {locale: ru})}`}
+            data-tooltip-id="calendar-tooltip"
+            data-tooltip-html={`
+              <div class="font-medium">Кал. неделя ${getWeek(w.startDate)} / Уч. неделя ${weekNumber}</div>
+              <div class="text-slate-400 text-sm">${format(w.startDate, 'd MMM', {locale: ru})} – ${format(w.endDate, 'd MMM', {locale: ru})}</div>
+              <div class="mt-1 text-sm">
+                ${activity ? activity.split('').map((char, i) => {
+                  const day = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'][i];
+                  const colorClass = char in ACTIVITY_COLORS ? 
+                    ACTIVITY_COLORS[char as keyof typeof ACTIVITY_COLORS].color : 
+                    '#d1d5db';
+                  return `
+                    <div class="flex items-center my-0.5">
+                      <span style="background-color: ${colorClass}; width: 0.75rem; height: 0.75rem; display: inline-block; border-radius: 0.125rem; margin-right: 0.25rem;"></span>
+                      <span>${day}: ${char || "—"}</span>
+                    </div>
+                  `;
+                }).join('') : '<div>Нет активности</div>'}
+              </div>
+            `}
           >
             {/* Для краткости отображаем только количество разных активностей */}
             {activity && activity.length > 1 ? (

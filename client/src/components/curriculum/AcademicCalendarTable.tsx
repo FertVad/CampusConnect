@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { WeekActivityDialog, WeekInfo, ActivityType, ACTIVITY_TYPES, ACTIVITY_COLORS } from "./WeekActivityDialog";
+import { Tooltip } from 'react-tooltip';
 import { WeekCell, getFirstWorkdayOfSeptember, buildAcademicWeeks } from "@/utils/calendar";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale/ru";
@@ -370,6 +371,21 @@ export function AcademicCalendarTable({
         weekInfo={selectedWeek}
         currentActivity={selectedWeek ? tableData[getCellKey(selectedWeek.courseId, selectedWeek.weekNumber)] || "" : ""}
         onActivityChange={handleActivityChange}
+      />
+      
+      {/* Тултип для календаря */}
+      <Tooltip 
+        id="calendar-tooltip" 
+        className="academic-tooltip" 
+        place="top"
+        style={{ 
+          backgroundColor: 'white', 
+          color: '#0f172a',
+          boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+          borderRadius: '0.375rem',
+          padding: '0.75rem 1rem',
+          zIndex: 9999
+        }}
       />
     </div>
   );
