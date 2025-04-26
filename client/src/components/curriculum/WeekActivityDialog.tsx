@@ -373,14 +373,23 @@ export function WeekActivityDialog({
       {open && weekInfo && (
         <DialogContent
           key={`dialog-week-${weekInfo.courseId}-${weekInfo.weekNumber}`}
-          className="sm:max-w-md calendar-dialog-content"
+          className="sm:max-w-md calendar-dialog-content bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 shadow-lg"
         >
-          <DialogHeader>
-            <DialogTitle>
-              Активность для недели {weekInfo.weekNumber}
+          <DialogHeader className="pb-3 border-b mb-4">
+            <DialogTitle className="text-lg font-bold">
+              Учебная неделя {weekInfo.weekNumber}
             </DialogTitle>
-            <DialogDescription>
-              {weekInfo.monthName}, курс {weekInfo.courseId}
+            <DialogDescription className="text-sm font-medium">
+              {weekInfo.startDate.toLocaleDateString("ru-RU", {
+                day: "numeric",
+                month: "long",
+              })}
+              {" — "}
+              {weekInfo.endDate.toLocaleDateString("ru-RU", {
+                day: "numeric",
+                month: "long",
+              })}
+              {", курс "}{weekInfo.courseId}
             </DialogDescription>
           </DialogHeader>
 
