@@ -145,13 +145,13 @@ export function AcademicCalendarTable({
       
       // Проверяем, есть ли такой ключ в ACTIVITY_TYPES
       if (primaryActivity && primaryActivity in ACTIVITY_TYPES) {
-        // Для упрощения: формируем стиль вручную, без зависимости от ACTIVITY_COLORS
+        // Обновленные цвета в соответствии с цветами из WeekActivityDialog
         switch(primaryActivity) {
-          case 'У': return { bg: "bg-blue-100", text: "text-blue-800" };
-          case 'К': return { bg: "bg-gray-100", text: "text-gray-800" };
-          case 'П': return { bg: "bg-yellow-100", text: "text-yellow-800" };
-          case 'Э': return { bg: "bg-red-100", text: "text-red-800" };
-          case 'Д': return { bg: "bg-purple-100", text: "text-purple-800" };
+          case 'У': return { bg: "bg-blue-300", text: "text-blue-900" };
+          case 'К': return { bg: "bg-gray-300", text: "text-gray-900" };
+          case 'П': return { bg: "bg-yellow-300", text: "text-yellow-900" };
+          case 'Э': return { bg: "bg-red-300", text: "text-red-900" };
+          case 'Д': return { bg: "bg-purple-300", text: "text-purple-900" };
           default: return { bg: "bg-slate-200 dark:bg-slate-600", text: "text-slate-800 dark:text-white" };
         }
       }
@@ -160,13 +160,13 @@ export function AcademicCalendarTable({
     
     // Для одиночной буквы
     if (activity in ACTIVITY_TYPES) {
-      // Для упрощения: формируем стиль вручную, без зависимости от ACTIVITY_COLORS
+      // Обновленные цвета в соответствии с цветами из WeekActivityDialog
       switch(activity) {
-        case 'У': return { bg: "bg-blue-100", text: "text-blue-800" };
-        case 'К': return { bg: "bg-gray-100", text: "text-gray-800" };
-        case 'П': return { bg: "bg-yellow-100", text: "text-yellow-800" };
-        case 'Э': return { bg: "bg-red-100", text: "text-red-800" };
-        case 'Д': return { bg: "bg-purple-100", text: "text-purple-800" };
+        case 'У': return { bg: "bg-blue-300", text: "text-blue-900" };
+        case 'К': return { bg: "bg-gray-300", text: "text-gray-900" };
+        case 'П': return { bg: "bg-yellow-300", text: "text-yellow-900" };
+        case 'Э': return { bg: "bg-red-300", text: "text-red-900" };
+        case 'Д': return { bg: "bg-purple-300", text: "text-purple-900" };
         default: return { bg: "bg-slate-200 dark:bg-slate-600", text: "text-slate-800 dark:text-white" };
       }
     }
