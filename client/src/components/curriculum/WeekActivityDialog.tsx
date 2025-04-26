@@ -24,7 +24,7 @@ export const ACTIVITY_TYPES: { [key in Exclude<ActivityType, "">]: string } = {
   Д: "Дипломное проектирование",
 };
 
-// Цвета для активностей (пастельные оттенки)
+// Цвета для активностей (яркие оттенки)
 export const ACTIVITY_COLORS: {
   [key in Exclude<ActivityType, "">]: {
     bg: string;
@@ -33,20 +33,20 @@ export const ACTIVITY_COLORS: {
     color: string;
   };
 } = {
-  У: { bg: "bg-blue-100", text: "text-blue-800", hoverBg: "hover:bg-blue-200", color: "#dbeafe" },
-  К: { bg: "bg-gray-100", text: "text-gray-800", hoverBg: "hover:bg-gray-200", color: "#f3f4f6" },
+  У: { bg: "bg-blue-300", text: "text-blue-900", hoverBg: "hover:bg-blue-400", color: "#93c5fd" },
+  К: { bg: "bg-gray-300", text: "text-gray-900", hoverBg: "hover:bg-gray-400", color: "#d1d5db" },
   П: {
-    bg: "bg-yellow-100",
-    text: "text-yellow-800",
-    hoverBg: "hover:bg-yellow-200",
-    color: "#fef9c3"
+    bg: "bg-yellow-300",
+    text: "text-yellow-900",
+    hoverBg: "hover:bg-yellow-400",
+    color: "#fde047"
   },
-  Э: { bg: "bg-red-100", text: "text-red-800", hoverBg: "hover:bg-red-200", color: "#fee2e2" },
+  Э: { bg: "bg-red-300", text: "text-red-900", hoverBg: "hover:bg-red-400", color: "#fca5a5" },
   Д: {
-    bg: "bg-purple-100",
-    text: "text-purple-800",
-    hoverBg: "hover:bg-purple-200",
-    color: "#f3e8ff"
+    bg: "bg-purple-300",
+    text: "text-purple-900",
+    hoverBg: "hover:bg-purple-400",
+    color: "#d8b4fe"
   },
 };
 
@@ -512,7 +512,11 @@ export function WeekActivityDialog({
                   // Сохраняем изменения, но НЕ закрываем диалог
                   onActivityChange(fullWeekActivity as ActivityType);
                 }}
-                className={`w-full ${selectedActivity ? "bg-blue-600 hover:bg-blue-700 text-white" : ""}`}
+                className={`w-full ${
+                  selectedActivity 
+                    ? "bg-primary hover:bg-primary/90 text-primary-foreground" 
+                    : ""
+                }`}
               >
                 Применить ко всей неделе
               </Button>
@@ -520,12 +524,16 @@ export function WeekActivityDialog({
           </div>
           
           <DialogFooter className="sm:justify-between">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
+            <Button 
+              variant="outline" 
+              onClick={() => onOpenChange(false)}
+              className="border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
+            >
               Отмена
             </Button>
             <Button
               onClick={handleSave}
-              className="bg-blue-600 hover:bg-blue-700"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground"
               disabled={
                 weekDays.every((day) => !day.activity) && !hasSelectedDays
               }
