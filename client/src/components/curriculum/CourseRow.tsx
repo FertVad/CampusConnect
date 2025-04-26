@@ -63,27 +63,60 @@ export function CourseRow({
         // Неделя пересекает границу месяца?
         const crossMonth = w.startDate.getMonth() !== w.endDate.getMonth();
         
-        // Определяем стили на основе реального месяца, а не по чередованию
-        const month = w.startDate.getMonth();
-        const isEvenMonth = month % 2 === 0;
+        // Определяем месяц для шахматного порядка (четный/нечетный месяц)
+        const startMonth = format(w.startDate, "LLLL", { locale: ru });
+        const endMonth = format(w.endDate, "LLLL", { locale: ru });
         
-        // CSS переменные для градиентного фона
-        const monthBgLeft = isEvenMonth ? 'var(--month-bg-left, #f8fafc)' : 'var(--month-bg-left, #ffffff)';
-        const monthBgRight = !isEvenMonth ? 'var(--month-bg-right, #f1f5f9)' : 'var(--month-bg-right, #f8fafc)';
+        // Пытаемся определить индекс месяца в порядке учебного года (сентябрь = 0)
+        const monthNames = ["сентябрь", "октябрь", "ноябрь", "декабрь", "январь", "февраль", "март", "апрель", "май", "июнь", "июль", "август"];
+        let monthIndex = monthNames.indexOf(startMonth.toLowerCase());
+        monthIndex = monthIndex === -1 ? w.startDate.getMonth() : monthIndex;
         
-        // Градиенты для месяцев на стыке (чередуются по реальному месяцу)
-        const baseLeft = isEvenMonth ? 'from-slate-100' : 'from-white';
-        const baseRight = !isEvenMonth ? 'to-slate-200' : 'to-slate-100';
-        const darkLeft = isEvenMonth ? 'dark:from-slate-800' : 'dark:from-slate-900';
-        const darkRight = !isEvenMonth ? 'dark:to-slate-700' : 'dark:to-slate-800';
+        const isEvenMonth = monthIndex % 2 === 0;
+        
+        // Вычисляем количество дней в текущем месяце и в следующем
+        let daysInCurrentMonth = 0;
+        let daysInNextMonth = 0;
+        
+        if (crossMonth) {
+            // Рассчитываем количество дней в текущем месяце
+            const lastDayOfMonth = new Date(w.startDate.getFullYear(), w.startDate.getMonth() + 1, 0);
+            daysInCurrentMonth = lastDayOfMonth.getDate() - w.startDate.getDate() + 1;
+            
+            // Рассчитываем количество дней в следующем месяце
+            daysInNextMonth = w.endDate.getDate();
+        }
+        
+        // Световые цвета для градиента
+        const lightCurrentBg = isEvenMonth ? 'bg-slate-100' : 'bg-slate-200';
+        const lightNextBg = !isEvenMonth ? 'bg-slate-100' : 'bg-slate-200';
+        
+        // Темные цвета для градиента
+        const darkCurrentBg = isEvenMonth ? 'dark:bg-slate-800' : 'dark:bg-slate-700';
+        const darkNextBg = !isEvenMonth ? 'dark:bg-slate-800' : 'dark:bg-slate-700';
         
         // Шахматный фон для обычных ячеек
         const chessBg = isEvenMonth
           ? 'bg-slate-100 dark:bg-slate-800'
-          : 'bg-white dark:bg-slate-900';
+          : 'bg-slate-200 dark:bg-slate-700';
         
-        // Градиентный фон для недель на стыке месяцев (50/50)
-        const gradientBg = `bg-gradient-to-r ${baseLeft} ${baseRight} ${darkLeft} ${darkRight}`;
+        // Градиентный фон для недель на стыке месяцев
+        let gradientStyle = {};
+        if (crossMonth) {
+            const percentage = (daysInCurrentMonth / 7) * 100;
+            
+            // Создаем стиль с градиентом
+            gradientStyle = {
+                background: `linear-gradient(to right, var(--month-bg-current, ${isEvenMonth ? '#f1f5f9' : '#e2e8f0'}) 0% ${percentage}%, var(--month-bg-next, ${!isEvenMonth ? '#f1f5f9' : '#e2e8f0'}) ${percentage}% 100%)`,
+            };
+            
+            // То же самое для темной темы
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                gradientStyle = {
+                    background: `linear-gradient(to right, var(--month-bg-current, ${isEvenMonth ? '#1e293b' : '#334155'}) 0% ${percentage}%, var(--month-bg-next, ${!isEvenMonth ? '#1e293b' : '#334155'}) ${percentage}% 100%)`,
+                };
+            }
+        }
         
         // Проверяем, заканчивается ли месяц в этой неделе
         const isMonthEnd = isLastDayOfMonth(w.endDate) || 
@@ -94,12 +127,12 @@ export function CourseRow({
           <td 
             key={`cell-${cellKey}`}
             className={`p-0 h-8 text-center cursor-pointer transition-colors
-              ${isMonthEnd ? 'border-r border-slate-400/40 dark:border-slate-500/40' : 'border-x border-slate-200 dark:border-slate-700'}
+              ${isMonthEnd ? 'border-r border-slate-400/40 dark:border-slate-400/40' : ''}
               ${isSelected ? 'ring-2 ring-blue-500 shadow-lg' : ''}
-              ${!activity ? (crossMonth ? gradientBg : chessBg) : ''}
+              ${!activity && !crossMonth ? chessBg : ''}
               hover:outline hover:outline-2 hover:outline-blue-500 hover:outline-offset-[-2px]
             `}
-            style={activity ? { background: weekGradient(activity) } : {}}
+            style={activity ? { background: weekGradient(activity) } : (crossMonth ? gradientStyle : {})}
             onClick={() => onCellClick({
               courseId: course.id,
               weekNumber,

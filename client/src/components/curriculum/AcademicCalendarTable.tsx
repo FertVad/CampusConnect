@@ -202,7 +202,7 @@ export function AcademicCalendarTable({
     
     // Заголовок "Месяцы"
     headers.push(
-      <tr key="month-row" className="bg-slate-100 whitespace-nowrap dark:bg-slate-800">
+      <tr key="month-row" className="whitespace-nowrap">
         <th 
           className="sticky left-0 z-30 bg-slate-800 dark:bg-slate-900 text-white px-4 py-2 text-center font-semibold border-r-2 border-r-slate-600 shadow-md"
           rowSpan={1}
@@ -214,7 +214,7 @@ export function AcademicCalendarTable({
             <th 
               key={key} 
               colSpan={list.length}
-              className={`px-2 py-1 text-center font-medium border-x ${i % 2 === 0 ? 'bg-slate-200 dark:bg-slate-700' : 'bg-slate-100 dark:bg-slate-800'}`}
+              className={`px-2 py-1 text-center font-medium ${i % 2 === 0 ? 'bg-slate-100 dark:bg-slate-800' : 'bg-slate-200 dark:bg-slate-700'}`}
             >
               {key}
             </th>
@@ -232,21 +232,37 @@ export function AcademicCalendarTable({
           Недели
         </th>
         {firstCourseWeeks.map((w, idx) => {
-          // Определяем чередование фона по реальному месяцу
-          const month = w.startDate.getMonth();
-          const isEvenMonth = month % 2 === 0;
+          // Определяем месяц для чередования фона
+          const monthIndex = Object.keys(monthGroups).findIndex(
+            month => month === format(w.startDate, "LLLL", { locale: ru })
+          );
+          const isEvenMonth = monthIndex % 2 === 0;
           
           // Проверяем, является ли эта неделя концом месяца
-          const isMonthEnd = isLastDayOfMonth(w.endDate) || 
-                          (w.startDate.getMonth() !== w.endDate.getMonth() && 
-                          w.endDate.getDate() >= 1);
+          const isMonthEnd = isLastDayOfMonth(w.endDate);
+          
+          // Проверяем, пересекает ли неделя границу месяцев
+          const isCrossingMonths = w.startDate.getMonth() !== w.endDate.getMonth();
+          
+          // Если неделя пересекает месяцы, расчитываем количество дней в текущем и следующем месяце
+          let bgClass = '';
+          if (isCrossingMonths) {
+            // Для недель на границе месяцев используем фоновый стиль первого месяца
+            bgClass = isEvenMonth 
+              ? 'bg-slate-100 dark:bg-slate-800' 
+              : 'bg-slate-200 dark:bg-slate-700';
+          } else {
+            bgClass = isEvenMonth 
+              ? 'bg-slate-100 dark:bg-slate-800' 
+              : 'bg-slate-200 dark:bg-slate-700';
+          }
           
           return (
             <th 
               key={`week_${w.index}`}
               className={`px-1 py-1 text-xs font-semibold w-8 text-center 
-                ${isMonthEnd ? 'border-r border-slate-400/40 dark:border-slate-500/40' : 'border-x border-slate-200 dark:border-slate-700'}
-                ${isEvenMonth ? 'bg-slate-200 dark:bg-slate-700' : 'bg-slate-100 dark:bg-slate-800'}`}
+                ${isMonthEnd ? 'border-r border-slate-400/40 dark:border-slate-400/40' : ''}
+                ${bgClass}`}
             >
               {w.index}
             </th>
@@ -312,7 +328,7 @@ export function AcademicCalendarTable({
               <thead>
                 {renderHeaders()}
               </thead>
-              <tbody className="bg-white dark:bg-slate-900">
+              <tbody className="bg-slate-50 dark:bg-slate-900">
                 {renderCourseRows()}
               </tbody>
             </table>
