@@ -324,7 +324,7 @@ export function AcademicCalendarTable({
         selectedCellKey={selectedCellKey}
         onCellClick={handleCellClick}
         isLastDayOfMonth={isLastDayOfMonth}
-        startDate={course.startDate}
+        startDate={startDates && startDates[course.id] ? startDates[course.id] : course.startDate}
       />
     ));
   };

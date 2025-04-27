@@ -38,11 +38,12 @@ export default function GraphTab({
   
   // Создаем дефолтный объект с датами старта для каждого курса
   const defaultStartDates = useMemo(() => {
-    const dates: Record<string, Date> = {};
-    courses.forEach(course => {
-      dates[course.id] = getFirstWorkdayOfSeptember(planYear + (parseInt(course.id) - 1));
-    });
-    return dates;
+    return Object.fromEntries(
+      courses.map((course, idx) => [
+        course.id,
+        getFirstWorkdayOfSeptember(planYear + idx) // +idx год
+      ])
+    );
   }, [courses, planYear]);
   
   // Стейт для хранения дат старта каждого курса
@@ -53,10 +54,12 @@ export default function GraphTab({
   
   // Обновляем даты при изменении planYear
   useEffect(() => {
-    const newDates: Record<string, Date> = {};
-    courses.forEach(course => {
-      newDates[course.id] = getFirstWorkdayOfSeptember(planYear + (parseInt(course.id) - 1));
-    });
+    const newDates = Object.fromEntries(
+      courses.map((course, idx) => [
+        course.id,
+        getFirstWorkdayOfSeptember(planYear + idx) // +idx год
+      ])
+    );
     setStartDates(newDates);
   }, [planYear, courses]);
   

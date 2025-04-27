@@ -62,7 +62,11 @@ export function CourseRow({
   };
   
   // Рассчитываем смещение в неделях между глобальными неделями и неделями курса
-  const offset = differenceInWeeks(startDate, weeks[0].startDate);
+  // Убедимся, что смещение не отрицательное
+  const offset = Math.max(
+    differenceInWeeks(startDate, weeks[0].startDate),
+    0
+  );
   
   return (
     <tr key={`course-${course.id}`} className="border-t hover:bg-slate-50 dark:hover:bg-slate-800/70">
@@ -145,16 +149,25 @@ export function CourseRow({
         // Проверяем, заканчивается ли месяц в этой неделе
         const isMonthEnd = isLastDayOfMonth(globalWeek.endDate);
         
+        // Базовый класс ячейки без фонового цвета
+        const baseCellClass = `p-0 h-8 text-center cursor-pointer transition-colors
+          ${isMonthEnd ? 'border-r border-slate-500/15 dark:border-slate-500/10' : ''}
+          ${isSelected ? 'ring-2 ring-blue-500 shadow-lg' : ''}
+          hover:outline hover:outline-2 hover:outline-blue-500 hover:outline-offset-[-2px]`;
+        
+        // Класс фона в зависимости от месяца
+        const monthBg = !activity && !crossMonth ? chessBg : '';
+        
+        // Определяем стиль для ячейки
+        const style = activity 
+          ? { background: weekGradient(activity) } 
+          : (crossMonth ? gradientStyle : undefined);
+        
         return (
           <td 
             key={`cell-${cellKey}`}
-            className={`p-0 h-8 text-center cursor-pointer transition-colors
-              ${isMonthEnd ? 'border-r border-slate-500/15 dark:border-slate-500/10' : ''}
-              ${isSelected ? 'ring-2 ring-blue-500 shadow-lg' : ''}
-              ${!activity && !crossMonth ? chessBg : ''}
-              hover:outline hover:outline-2 hover:outline-blue-500 hover:outline-offset-[-2px]
-            `}
-            style={activity ? { background: weekGradient(activity) } : (crossMonth ? gradientStyle : {})}
+            className={`${baseCellClass} ${!activity && !crossMonth ? monthBg : ''}`}
+            style={style}
             onClick={() => onCellClick({
               courseId: course.id,
               weekNumber,
