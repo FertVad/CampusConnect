@@ -182,12 +182,12 @@ export function CourseRow({
           >
             {/* Для краткости отображаем только количество разных активностей */}
             {activity && activity.length > 1 ? (
-              <span className="font-bold text-xs text-slate-700 dark:text-slate-200">
+              <span className="font-semibold text-xs text-slate-900 dark:text-slate-100">
                 {activity[0]}
                 <span className="text-[10px] ml-0.5">+{activity.length-1}</span>
               </span>
             ) : (
-              <span className={`font-bold text-sm ${activity ? 'text-slate-700 dark:text-slate-200' : ''}`}>
+              <span className={`font-semibold text-sm ${activity ? 'text-slate-900 dark:text-slate-100' : ''}`}>
                 {activity || ""}
               </span>
             )}
