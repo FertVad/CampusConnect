@@ -118,15 +118,21 @@ export function CourseRow({
         if (crossMonth) {
             const percentage = (daysInCurrentMonth / 7) * 100;
             
-            // Создаем стиль с градиентом
+            // Создаем стиль с плавным градиентом
             gradientStyle = {
-                background: `linear-gradient(to right, var(--month-bg-current, ${isEvenMonth ? '#f1f5f9' : '#e2e8f0'}) 0% ${percentage}%, var(--month-bg-next, ${!isEvenMonth ? '#f1f5f9' : '#e2e8f0'}) ${percentage}% 100%)`,
+                background: `linear-gradient(to right,
+                var(--month-color, ${isEvenMonth ? '#f1f5f9' : '#e2e8f0'}) 0%,
+                var(--month-color, ${isEvenMonth ? '#f1f5f9' : '#e2e8f0'}) 90%,
+                var(--next-month-color, ${!isEvenMonth ? '#f1f5f9' : '#e2e8f0'}) 100%)`,
             };
             
             // То же самое для темной темы
             if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
                 gradientStyle = {
-                    background: `linear-gradient(to right, var(--month-bg-current, ${isEvenMonth ? '#1e293b' : '#334155'}) 0% ${percentage}%, var(--month-bg-next, ${!isEvenMonth ? '#1e293b' : '#334155'}) ${percentage}% 100%)`,
+                    background: `linear-gradient(to right,
+                    var(--month-color, ${isEvenMonth ? '#1e293b' : '#334155'}) 0%,
+                    var(--month-color, ${isEvenMonth ? '#1e293b' : '#334155'}) 90%,
+                    var(--next-month-color, ${!isEvenMonth ? '#1e293b' : '#334155'}) 100%)`,
                 };
             }
         }

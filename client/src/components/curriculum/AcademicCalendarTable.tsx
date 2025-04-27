@@ -239,16 +239,12 @@ export function AcademicCalendarTable({
           
           // Если неделя пересекает месяцы, расчитываем количество дней в текущем и следующем месяце
           let bgClass = '';
-          if (isCrossingMonths) {
-            // Для недель на границе месяцев используем фоновый стиль первого месяца
-            bgClass = isEvenMonth 
-              ? 'bg-slate-100 dark:bg-slate-800' 
-              : 'bg-slate-200 dark:bg-slate-700';
-          } else {
-            bgClass = isEvenMonth 
-              ? 'bg-slate-100 dark:bg-slate-800' 
-              : 'bg-slate-200 dark:bg-slate-700';
-          }
+          bgClass = isEvenMonth 
+            ? 'bg-slate-100 dark:bg-slate-800' 
+            : 'bg-slate-200 dark:bg-slate-700';
+            
+          // Стиль для последнего столбца месяца (градиент)
+          let gradientStyle = {};
           
           return (
             <th 
