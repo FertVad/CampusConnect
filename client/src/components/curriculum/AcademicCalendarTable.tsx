@@ -398,7 +398,6 @@ export function AcademicCalendarTable({
         clickable={true}
         delayHide={0}
         delayShow={1000}
-        openDelay={1000}
         style={{ 
           backgroundColor: 'white', 
           color: '#0f172a',

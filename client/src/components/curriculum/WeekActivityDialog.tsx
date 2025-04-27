@@ -85,6 +85,40 @@ export const weekGradient = (days: string): string => {
   return gradient;
 };
 
+// Функция для создания градиента для недель на стыке месяцев
+export const monthTransitionGradient = (
+  daysInCurrentMonth: number, 
+  daysInNextMonth: number, 
+  isEvenCurrentMonth: boolean,
+  isDarkMode: boolean = false
+): string => {
+  // Проверка параметров
+  if (daysInCurrentMonth <= 0 || daysInNextMonth <= 0) {
+    return ''; // Возвращаем пустую строку, если данные неверны
+  }
+  
+  // Общее количество дней в неделе
+  const totalDays = daysInCurrentMonth + daysInNextMonth;
+  
+  // Рассчитываем точный процент для текущего месяца
+  const currentMonthPercent = (daysInCurrentMonth / totalDays) * 100;
+  
+  // Определяем цвета для светлой темы
+  const lightCurrentColor = isEvenCurrentMonth ? '#f1f5f9' : '#e2e8f0'; // slate-100 : slate-200
+  const lightNextColor = !isEvenCurrentMonth ? '#f1f5f9' : '#e2e8f0'; // slate-100 : slate-200
+  
+  // Определяем цвета для темной темы
+  const darkCurrentColor = isEvenCurrentMonth ? '#1e293b' : '#334155'; // slate-800 : slate-700
+  const darkNextColor = !isEvenCurrentMonth ? '#1e293b' : '#334155'; // slate-800 : slate-700
+  
+  // Выбираем набор цветов в зависимости от темы
+  const currentColor = isDarkMode ? darkCurrentColor : lightCurrentColor;
+  const nextColor = isDarkMode ? darkNextColor : lightNextColor;
+  
+  // Строим градиент
+  return `linear-gradient(to right, ${currentColor} 0%, ${currentColor} ${currentMonthPercent}%, ${nextColor} ${currentMonthPercent}%, ${nextColor} 100%)`;
+};
+
 // Интерфейс для дня недели
 interface WeekDay {
   name: string; // Пн, Вт, и т.д.

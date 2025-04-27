@@ -2,7 +2,7 @@ import React from "react";
 import { WeekCell } from "@/utils/calendar";
 import { format, getWeek, differenceInWeeks } from "date-fns";
 import { ru } from "date-fns/locale/ru";
-import { ActivityType, ACTIVITY_COLORS, ACTIVITY_TYPES, weekGradient } from "./WeekActivityDialog";
+import { ActivityType, ACTIVITY_COLORS, ACTIVITY_TYPES, weekGradient, monthTransitionGradient } from "./WeekActivityDialog";
 import { Tooltip } from "react-tooltip";
 
 // Функция для определения класса цвета активности для тултипа
@@ -124,27 +124,22 @@ export function CourseRow({
         // Градиентный фон для недель на стыке месяцев
         let gradientStyle = {};
         if (crossMonth) {
-            // Рассчитываем проценты для градиента на основе реального количества дней
-            const totalDays = daysInCurrentMonth + daysInNextMonth;
-            const currentMonthPercent = (daysInCurrentMonth / totalDays) * 100;
+            // Проверяем темный режим
+            const isDarkMode = window.matchMedia && 
+                              window.matchMedia('(prefers-color-scheme: dark)').matches;
             
-            // Создаем стиль с плавным градиентом, используя точные проценты
+            // Используем нашу новую функцию для создания градиента
+            const gradientBackground = monthTransitionGradient(
+                daysInCurrentMonth,
+                daysInNextMonth,
+                isEvenMonth,
+                isDarkMode
+            );
+            
+            // Устанавливаем стиль
             gradientStyle = {
-                background: `linear-gradient(to right,
-                ${isEvenMonth ? '#f1f5f9' : '#e2e8f0'} 0%,
-                ${isEvenMonth ? '#f1f5f9' : '#e2e8f0'} ${currentMonthPercent}%,
-                ${!isEvenMonth ? '#f1f5f9' : '#e2e8f0'} 100%)`,
+                background: gradientBackground
             };
-            
-            // То же самое для темной темы
-            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                gradientStyle = {
-                    background: `linear-gradient(to right,
-                    ${isEvenMonth ? '#1e293b' : '#334155'} 0%,
-                    ${isEvenMonth ? '#1e293b' : '#334155'} ${currentMonthPercent}%,
-                    ${!isEvenMonth ? '#1e293b' : '#334155'} 100%)`,
-                };
-            }
         }
         
         // Проверяем, заканчивается ли месяц в этой неделе
