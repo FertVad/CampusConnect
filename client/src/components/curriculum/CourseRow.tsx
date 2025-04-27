@@ -58,31 +58,44 @@ export function CourseRow({
   // Определяем длину курса в неделях (фиксируем 52 недели)
   const courseLen = 52;
   
-  // Создаем ячейки для рендеринга
+  // Рендер всех ячеек строки
   const renderCells = () => {
+    // Массив для хранения всех ячеек
     const cells: React.ReactNode[] = [];
     
-    // Если есть смещение, добавляем пустую ячейку с colspan
-    if (offset > 0) {
-      cells.push(
-        <td 
-          key="pre"
-          colSpan={offset}
-          className="bg-slate-900/10 dark:bg-slate-600/10"
-        />
-      );
-    }
-    
-    // Проходим по неделям курса
-    for (let idx = 0; idx < courseLen && idx < courseWeeks.length; idx++) {
-      const weekInCourse = courseWeeks[idx];
+    // Проходим по всем неделям в таблице
+    for (let idx = 0; idx < weeks.length; idx++) {
+      // Неделя в календаре (глобальная для отображения)
+      const globalWeek = weeks[idx];
       
-      // Получаем соответствующую глобальную неделю для определения стилей
-      // Добавляем проверку чтобы избежать выхода за границы массива
-      const globalIdx = idx + offset;
-      if (globalIdx >= weeks.length) continue;
+      // Определяем, к активным ли неделям текущего курса относится данная глобальная неделя
+      // Вычисляем индекс недели в курсе
+      const courseWeekIdx = idx - offset;
       
-      const globalWeek = weeks[globalIdx];
+      // Если индекс отрицательный, это неделя до начала курса (серая ячейка)
+      // Если индекс больше или равен длине курса, это неделя после окончания курса (не отображаем)
+      const isBeforeCourseStart = courseWeekIdx < 0;
+      const isAfterCourseEnd = courseWeekIdx >= courseLen;
+      
+      // Если ячейка вне периода курса, рендерим серую ячейку
+      if (isBeforeCourseStart) {
+        // Рендерим серую ячейку
+        cells.push(
+          <td 
+            key={`pre-${idx}`}
+            className="bg-slate-900/10 dark:bg-slate-600/10"
+          />
+        );
+        continue;
+      }
+      
+      // Пропускаем недели после окончания курса
+      if (isAfterCourseEnd || courseWeekIdx >= courseWeeks.length) {
+        continue;
+      }
+      
+      // Получаем данные для активной недели курса
+      const weekInCourse = courseWeeks[courseWeekIdx];
       const weekNumber = weekInCourse.index;
       const cellKey = getCellKey(course.id, weekNumber);
       const activity = tableData[cellKey] || "";
