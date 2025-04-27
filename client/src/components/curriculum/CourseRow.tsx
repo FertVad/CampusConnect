@@ -1,6 +1,6 @@
 import React from "react";
 import { WeekCell } from "@/utils/calendar";
-import { format, getWeek } from "date-fns";
+import { format, getWeek, differenceInWeeks } from "date-fns";
 import { ru } from "date-fns/locale/ru";
 import { ActivityType, ACTIVITY_COLORS, ACTIVITY_TYPES, weekGradient } from "./WeekActivityDialog";
 import { Tooltip } from "react-tooltip";
@@ -37,28 +37,32 @@ interface CellInfo {
 
 interface CourseRowProps {
   course: Course;
-  weeks: WeekCell[];
+  weeks: WeekCell[]; // Общие недели для заголовков
+  courseWeeks: WeekCell[]; // Недели специфичные для этого курса
   tableData: Record<string, ActivityType>;
   selectedCellKey: string | null;
   onCellClick: (info: CellInfo) => void;
   isLastDayOfMonth: (date: Date) => boolean;
+  startDate: Date; // Дата начала для этого курса
 }
 
 export function CourseRow({
   course,
   weeks,
+  courseWeeks,
   tableData,
   selectedCellKey,
   onCellClick,
-  isLastDayOfMonth
+  isLastDayOfMonth,
+  startDate
 }: CourseRowProps) {
   // Функция для генерации ключа ячейки
   const getCellKey = (courseId: number, weekNumber: number): string => {
     return `course${courseId}_week${weekNumber}`;
   };
   
-  // Каждый курс начинается с первой ячейки в таблице
-  // Для этого мы не применяем смещение (убран расчет blank)
+  // Рассчитываем смещение в неделях между глобальными неделями и неделями курса
+  const offset = differenceInWeeks(startDate, weeks[0].startDate);
   
   return (
     <tr key={`course-${course.id}`} className="border-t hover:bg-slate-50 dark:hover:bg-slate-800/70">
@@ -66,24 +70,36 @@ export function CourseRow({
         {course.name || `Курс ${course.id}`}
       </td>
       
-      {/* Отображаем все недели для каждого курса */}
-      {weeks.map((w, idx) => {
+      {/* Если есть смещение, добавляем пустую ячейку с colspan */}
+      {offset > 0 && (
+        <td 
+          colSpan={offset}
+          className="bg-slate-300/30 dark:bg-slate-700/30"
+        ></td>
+      )}
+      
+      {/* Отображаем недели для курса, учитывая смещение */}
+      {courseWeeks.slice(0, weeks.length - offset).map((w, idx) => {
+        // Глобальная неделя в календаре (для правильного отображения)
+        const globalWeekIdx = idx + offset;
+        if (globalWeekIdx >= weeks.length) return null; // Не показываем недели за пределами видимой области
+        
+        const globalWeek = weeks[globalWeekIdx];
         const weekNumber = w.index;
         const cellKey = getCellKey(course.id, weekNumber);
         const activity = tableData[cellKey] || "";
         const isSelected = cellKey === selectedCellKey;
         
         // Неделя пересекает границу месяца?
-        const crossMonth = w.startDate.getMonth() !== w.endDate.getMonth();
+        const crossMonth = globalWeek.startDate.getMonth() !== globalWeek.endDate.getMonth();
         
         // Определяем месяц для шахматного порядка (четный/нечетный месяц)
-        const startMonth = format(w.startDate, "LLLL", { locale: ru });
-        const endMonth = format(w.endDate, "LLLL", { locale: ru });
+        const startMonth = format(globalWeek.startDate, "LLLL", { locale: ru });
         
         // Пытаемся определить индекс месяца в порядке учебного года (сентябрь = 0)
         const monthNames = ["сентябрь", "октябрь", "ноябрь", "декабрь", "январь", "февраль", "март", "апрель", "май", "июнь", "июль", "август"];
         let monthIndex = monthNames.indexOf(startMonth.toLowerCase());
-        monthIndex = monthIndex === -1 ? w.startDate.getMonth() : monthIndex;
+        monthIndex = monthIndex === -1 ? globalWeek.startDate.getMonth() : monthIndex;
         
         const isEvenMonth = monthIndex % 2 === 0;
         
@@ -93,20 +109,12 @@ export function CourseRow({
         
         if (crossMonth) {
             // Рассчитываем количество дней в текущем месяце
-            const lastDayOfMonth = new Date(w.startDate.getFullYear(), w.startDate.getMonth() + 1, 0);
-            daysInCurrentMonth = lastDayOfMonth.getDate() - w.startDate.getDate() + 1;
+            const lastDayOfMonth = new Date(globalWeek.startDate.getFullYear(), globalWeek.startDate.getMonth() + 1, 0);
+            daysInCurrentMonth = lastDayOfMonth.getDate() - globalWeek.startDate.getDate() + 1;
             
             // Рассчитываем количество дней в следующем месяце
-            daysInNextMonth = w.endDate.getDate();
+            daysInNextMonth = globalWeek.endDate.getDate();
         }
-        
-        // Световые цвета для градиента
-        const lightCurrentBg = isEvenMonth ? 'bg-slate-100' : 'bg-slate-200';
-        const lightNextBg = !isEvenMonth ? 'bg-slate-100' : 'bg-slate-200';
-        
-        // Темные цвета для градиента
-        const darkCurrentBg = isEvenMonth ? 'dark:bg-slate-800' : 'dark:bg-slate-700';
-        const darkNextBg = !isEvenMonth ? 'dark:bg-slate-800' : 'dark:bg-slate-700';
         
         // Шахматный фон для обычных ячеек
         const chessBg = isEvenMonth
@@ -116,37 +124,37 @@ export function CourseRow({
         // Градиентный фон для недель на стыке месяцев
         let gradientStyle = {};
         if (crossMonth) {
-            const percentage = (daysInCurrentMonth / 7) * 100;
+            // Рассчитываем проценты для градиента на основе реального количества дней
+            const totalDays = daysInCurrentMonth + daysInNextMonth;
+            const currentMonthPercent = (daysInCurrentMonth / totalDays) * 100;
             
-            // Создаем стиль с плавным градиентом
+            // Создаем стиль с плавным градиентом, используя точные проценты
             gradientStyle = {
                 background: `linear-gradient(to right,
-                var(--month-color, ${isEvenMonth ? '#f1f5f9' : '#e2e8f0'}) 0%,
-                var(--month-color, ${isEvenMonth ? '#f1f5f9' : '#e2e8f0'}) 90%,
-                var(--next-month-color, ${!isEvenMonth ? '#f1f5f9' : '#e2e8f0'}) 100%)`,
+                ${isEvenMonth ? '#f1f5f9' : '#e2e8f0'} 0%,
+                ${isEvenMonth ? '#f1f5f9' : '#e2e8f0'} ${currentMonthPercent}%,
+                ${!isEvenMonth ? '#f1f5f9' : '#e2e8f0'} 100%)`,
             };
             
             // То же самое для темной темы
             if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
                 gradientStyle = {
                     background: `linear-gradient(to right,
-                    var(--month-color, ${isEvenMonth ? '#1e293b' : '#334155'}) 0%,
-                    var(--month-color, ${isEvenMonth ? '#1e293b' : '#334155'}) 90%,
-                    var(--next-month-color, ${!isEvenMonth ? '#1e293b' : '#334155'}) 100%)`,
+                    ${isEvenMonth ? '#1e293b' : '#334155'} 0%,
+                    ${isEvenMonth ? '#1e293b' : '#334155'} ${currentMonthPercent}%,
+                    ${!isEvenMonth ? '#1e293b' : '#334155'} 100%)`,
                 };
             }
         }
         
         // Проверяем, заканчивается ли месяц в этой неделе
-        const isMonthEnd = isLastDayOfMonth(w.endDate) || 
-                       (w.startDate.getMonth() !== w.endDate.getMonth() && 
-                       w.endDate.getDate() >= 1);
+        const isMonthEnd = isLastDayOfMonth(globalWeek.endDate);
         
         return (
           <td 
             key={`cell-${cellKey}`}
             className={`p-0 h-8 text-center cursor-pointer transition-colors
-              ${isMonthEnd ? 'border-r border-slate-400/40 dark:border-slate-400/40' : ''}
+              ${isMonthEnd ? 'border-r border-slate-500/15 dark:border-slate-500/10' : ''}
               ${isSelected ? 'ring-2 ring-blue-500 shadow-lg' : ''}
               ${!activity && !crossMonth ? chessBg : ''}
               hover:outline hover:outline-2 hover:outline-blue-500 hover:outline-offset-[-2px]

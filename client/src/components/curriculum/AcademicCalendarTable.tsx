@@ -37,13 +37,15 @@ interface AcademicCalendarTableProps {
   yearsOfStudy: number;
   onChange?: (data: CalendarData) => void;
   initialData?: CalendarData;
+  startDates?: Record<string, Date>; // Даты начала для каждого курса
 }
 
 export function AcademicCalendarTable({ 
   weeks,
   yearsOfStudy = 4, 
   onChange,
-  initialData = {} 
+  initialData = {},
+  startDates = {}
 }: AcademicCalendarTableProps) {
   // Состояние для хранения данных таблицы
   const [tableData, setTableData] = useState<CalendarData>(initialData);
@@ -286,25 +288,19 @@ export function AcademicCalendarTable({
     return headers;
   };
   
-  // Создание строк для курсов с учетом сдвига по годам
+  // Создание строк для курсов с учетом дат из startDates
   const renderCourseRows = () => {
-    // Базовый год - год начала обучения
-    const baseYear = weeks[0].startDate.getFullYear();
-    
     // Создаем данные курсов для каждого года обучения
     const courses: Course[] = [];
     
     // Для каждого курса генерируем отдельный набор недель
     for (let courseIdx = 0; courseIdx < NUMBER_OF_COURSES; courseIdx++) {
       const courseId = courseIdx + 1;
+      const courseIdStr = courseId.toString();
       
-      // Определяем год начала данного курса
-      const courseYear = baseYear + courseIdx;
-      
-      // Получаем первый рабочий день сентября для года начала этого курса
-      const courseStartDate = courseIdx === 0 
-        ? weeks[0].startDate // Для первого курса используем начальную дату из входных данных
-        : getFirstWorkdayOfSeptember(courseYear); // Для других курсов вычисляем дату
+      // Используем дату из startDates или дефолтную дату
+      const courseStartDate = startDates[courseIdStr] || 
+        (courseIdx === 0 ? weeks[0].startDate : getFirstWorkdayOfSeptember(weeks[0].startDate.getFullYear() + courseIdx));
       
       // Генерируем массив недель для этого курса, начиная с его даты начала
       const courseWeeks = buildAcademicWeeks(courseStartDate);
@@ -322,11 +318,13 @@ export function AcademicCalendarTable({
       <CourseRow
         key={`course-row-${course.id}`}
         course={course}
-        weeks={course.weeks} // Передаем недели специфичные для этого курса
+        weeks={weeks} // Передаем базовые недели для заголовков (используемые для отображения)
+        courseWeeks={course.weeks} // Передаем недели специфичные для этого курса (для расчета смещения)
         tableData={tableData}
         selectedCellKey={selectedCellKey}
         onCellClick={handleCellClick}
         isLastDayOfMonth={isLastDayOfMonth}
+        startDate={course.startDate}
       />
     ));
   };
@@ -400,6 +398,7 @@ export function AcademicCalendarTable({
         clickable={true}
         delayHide={0}
         delayShow={1000}
+        openDelay={1000}
         style={{ 
           backgroundColor: 'white', 
           color: '#0f172a',

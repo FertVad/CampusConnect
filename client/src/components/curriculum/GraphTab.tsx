@@ -23,36 +23,60 @@ export default function GraphTab({
   initialData = {},
   onChange
 }: GraphTabProps) {
-  // Получаем первый рабочий день сентября в году начала обучения
-  const firstWorkdayInSeptember = useMemo(() => 
-    getFirstWorkdayOfSeptember(planYear),
-    [planYear]
-  );
+  // Создаем массив курсов - нам нужно 4 курса
+  const courses = useMemo(() => {
+    const result = [];
+    for (let i = 1; i <= yearsOfStudy; i++) {
+      result.push({
+        id: i.toString(),
+        name: `Курс ${i}`,
+        year: planYear + (i - 1)
+      });
+    }
+    return result;
+  }, [planYear, yearsOfStudy]);
   
-  // Используем этот день как дату начала по умолчанию
-  const [startDate, setStartDate] = useState<Date>(firstWorkdayInSeptember);
+  // Создаем дефолтный объект с датами старта для каждого курса
+  const defaultStartDates = useMemo(() => {
+    const dates: Record<string, Date> = {};
+    courses.forEach(course => {
+      dates[course.id] = getFirstWorkdayOfSeptember(planYear + (parseInt(course.id) - 1));
+    });
+    return dates;
+  }, [courses, planYear]);
   
-  // Выбранный курс (по умолчанию 1)
-  const [selectedCourse, setSelectedCourse] = useState<string>("1");
+  // Стейт для хранения дат старта каждого курса
+  const [startDates, setStartDates] = useState<Record<string, Date>>(defaultStartDates);
   
-  // Обновляем дату начала при изменении planYear
+  // Выбранный курс (по умолчанию "1")
+  const [selectedCourseId, setSelectedCourseId] = useState<string>("1");
+  
+  // Обновляем даты при изменении planYear
   useEffect(() => {
-    setStartDate(getFirstWorkdayOfSeptember(planYear));
-  }, [planYear]);
+    const newDates: Record<string, Date> = {};
+    courses.forEach(course => {
+      newDates[course.id] = getFirstWorkdayOfSeptember(planYear + (parseInt(course.id) - 1));
+    });
+    setStartDates(newDates);
+  }, [planYear, courses]);
   
   // Обработчик смены курса
   const handleCourseChange = (value: string) => {
-    setSelectedCourse(value);
-    const courseIndex = parseInt(value) - 1;
-    // Устанавливаем дату начала для выбранного курса
-    const courseYear = planYear + courseIndex;
-    setStartDate(getFirstWorkdayOfSeptember(courseYear));
+    setSelectedCourseId(value);
+  };
+  
+  // Обработчик изменения даты для выбранного курса
+  const handleDateChange = (date: Date) => {
+    setStartDates({
+      ...startDates,
+      [selectedCourseId]: date
+    });
   };
 
-  // Генерируем недели на основе выбранной даты старта
+  // Генерируем недели на основе даты старта первого курса (для заголовков)
   const weeks = useMemo(() => 
-    buildAcademicWeeks(startDate, yearsOfStudy), 
-    [startDate, yearsOfStudy]
+    buildAcademicWeeks(startDates["1"], yearsOfStudy), 
+    [startDates, yearsOfStudy]
   );
 
   return (
@@ -60,26 +84,28 @@ export default function GraphTab({
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium">Курс:</span>
-          <Select value={selectedCourse} onValueChange={handleCourseChange}>
+          <Select value={selectedCourseId} onValueChange={handleCourseChange}>
             <SelectTrigger className="w-24">
               <SelectValue placeholder="Выберите курс" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="1">Курс 1</SelectItem>
-              <SelectItem value="2">Курс 2</SelectItem>
-              <SelectItem value="3">Курс 3</SelectItem>
-              <SelectItem value="4">Курс 4</SelectItem>
+              {courses.map(course => (
+                <SelectItem key={course.id} value={course.id}>{course.name}</SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
         
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium">Дата начала:</span>
-          <StartDatePicker value={startDate} onChange={setStartDate} />
+          <StartDatePicker 
+            value={startDates[selectedCourseId]} 
+            onChange={handleDateChange}
+          />
         </div>
         
         <div className="text-xs text-slate-500">
-          (По умолчанию - первый рабочий день сентября {planYear + parseInt(selectedCourse) - 1} года)
+          (По умолчанию - первый рабочий день сентября {planYear + parseInt(selectedCourseId) - 1} года)
         </div>
       </div>
 
@@ -88,6 +114,7 @@ export default function GraphTab({
         yearsOfStudy={yearsOfStudy}
         initialData={initialData}
         onChange={onChange}
+        startDates={startDates}
       />
     </div>
   );
