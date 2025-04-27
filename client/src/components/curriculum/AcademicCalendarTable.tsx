@@ -244,14 +244,37 @@ export function AcademicCalendarTable({
             : 'bg-slate-200 dark:bg-slate-700';
             
           // Стиль для последнего столбца месяца (градиент)
-          let gradientStyle = {};
+          let style = {};
+          
+          // Если это последний столбец месяца и существует следующий месяц, добавляем градиент
+          if (isMonthEnd && idx < firstCourseWeeks.length - 1) {
+            const nextMonthIdx = monthIndex + 1;
+            const isNextMonthEven = nextMonthIdx % 2 === 0;
+            const monthColor = isEvenMonth ? 'var(--month-color, #f1f5f9)' : 'var(--month-color, #e2e8f0)';
+            const nextMonthColor = isNextMonthEven ? 'var(--next-month-color, #f1f5f9)' : 'var(--next-month-color, #e2e8f0)';
+            
+            style = {
+              background: `linear-gradient(to right, ${monthColor} 0%, ${monthColor} 90%, ${nextMonthColor} 100%)`
+            };
+            
+            // Для темной темы
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+              const darkMonthColor = isEvenMonth ? 'var(--month-color, #1e293b)' : 'var(--month-color, #334155)';
+              const darkNextMonthColor = isNextMonthEven ? 'var(--next-month-color, #1e293b)' : 'var(--next-month-color, #334155)';
+              
+              style = {
+                background: `linear-gradient(to right, ${darkMonthColor} 0%, ${darkMonthColor} 90%, ${darkNextMonthColor} 100%)`
+              };
+            }
+          }
           
           return (
             <th 
               key={`week_${w.index}`}
               className={`px-1 py-1 text-xs font-semibold w-8 text-center 
                 ${isMonthEnd ? 'border-r border-slate-400/40 dark:border-slate-400/40' : ''}
-                ${bgClass}`}
+                ${!isMonthEnd ? bgClass : ''}`}
+              style={isMonthEnd ? style : {}}
             >
               {w.index}
             </th>
@@ -374,12 +397,15 @@ export function AcademicCalendarTable({
         id="calendar-tooltip" 
         className="academic-tooltip" 
         place="top"
+        clickable={true}
+        delayHide={0}
+        delayShow={1000}
         style={{ 
           backgroundColor: 'white', 
           color: '#0f172a',
           boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
           borderRadius: '0.375rem',
-          padding: '0.75rem 1rem',
+          padding: '0.5rem 0.75rem',
           zIndex: 9999
         }}
       />
