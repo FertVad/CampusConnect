@@ -1,5 +1,5 @@
 import React from "react";
-import { WeekCell } from "@/utils/calendar";
+import { WeekCell, buildAcademicWeeks } from "@/utils/calendar";
 import { format, getWeek, differenceInWeeks } from "date-fns";
 import { ru } from "date-fns/locale/ru";
 import { ActivityType, ACTIVITY_COLORS, ACTIVITY_TYPES, weekGradient, monthTransitionGradient } from "./WeekActivityDialog";
@@ -25,7 +25,7 @@ interface CellInfo {
 
 interface CourseRowProps {
   course: Course;
-  weeks: WeekCell[]; // Общие недели для заголовков
+  weeks: WeekCell[]; // Общие недели для заголовков (первый курс)
   courseWeeks: WeekCell[]; // Недели специфичные для этого курса
   tableData: Record<string, ActivityType>;
   selectedCellKey: string | null;
@@ -49,68 +49,35 @@ export function CourseRow({
     return `course${courseId}_week${weekNumber}`;
   };
   
-  // Определяем академическую стартовую дату (для первого курса)
-  const academicStartDate = weeks[0].startDate;
+  // Строим собственный массив недель для курса - начиная с его стартовой даты
+  // Всегда создаем ровно один год (52 недели) от даты старта
+  const weeksForCourse = buildAcademicWeeks(startDate, 1);
   
-  // Рассчитываем смещение в неделях между началом курса и началом академического года
-  const offset = Math.max(differenceInWeeks(startDate, academicStartDate), 0);
-  
-  // Определяем длину курса в неделях (фиксируем 52 недели)
+  // Определяем длину курса в неделях - сейчас фиксированно 52 недели
   const courseLen = 52;
   
-  // Рендер всех ячеек строки
+  // Рендер ячеек для текущего курса
   const renderCells = () => {
-    // Массив для хранения всех ячеек
     const cells: React.ReactNode[] = [];
     
-    // Проходим по всем неделям в таблице
-    for (let idx = 0; idx < weeks.length; idx++) {
-      // Неделя в календаре (глобальная для отображения)
-      const globalWeek = weeks[idx];
-      
-      // Определяем, к активным ли неделям текущего курса относится данная глобальная неделя
-      // Вычисляем индекс недели в курсе
-      const courseWeekIdx = idx - offset;
-      
-      // Если индекс отрицательный, это неделя до начала курса (серая ячейка)
-      // Если индекс больше или равен длине курса, это неделя после окончания курса (не отображаем)
-      const isBeforeCourseStart = courseWeekIdx < 0;
-      const isAfterCourseEnd = courseWeekIdx >= courseLen;
-      
-      // Если ячейка вне периода курса, рендерим серую ячейку
-      if (isBeforeCourseStart) {
-        // Рендерим серую ячейку
-        cells.push(
-          <td 
-            key={`pre-${idx}`}
-            className="bg-slate-900/10 dark:bg-slate-600/10"
-          />
-        );
-        continue;
-      }
-      
-      // Пропускаем недели после окончания курса
-      if (isAfterCourseEnd || courseWeekIdx >= courseWeeks.length) {
-        continue;
-      }
-      
-      // Получаем данные для активной недели курса
-      const weekInCourse = courseWeeks[courseWeekIdx];
+    // Проходим по всем неделям курса, беря 52 недели без смещений
+    for (let idx = 0; idx < courseLen && idx < weeksForCourse.length; idx++) {
+      const weekInCourse = weeksForCourse[idx];
       const weekNumber = weekInCourse.index;
       const cellKey = getCellKey(course.id, weekNumber);
       const activity = tableData[cellKey] || "";
       const isSelected = cellKey === selectedCellKey;
       
       // Неделя пересекает границу месяца?
-      const crossMonth = globalWeek.startDate.getMonth() !== globalWeek.endDate.getMonth();
+      const crossMonth = weekInCourse.startDate.getMonth() !== weekInCourse.endDate.getMonth();
       
       // Определяем месяц для шахматного порядка (четный/нечетный месяц)
-      const startMonth = format(globalWeek.startDate, "LLLL", { locale: ru });
+      const startMonth = format(weekInCourse.startDate, "LLLL", { locale: ru });
       
       // Пытаемся определить индекс месяца в порядке учебного года (сентябрь = 0)
       const monthNames = ["сентябрь", "октябрь", "ноябрь", "декабрь", "январь", "февраль", "март", "апрель", "май", "июнь", "июль", "август"];
       let monthIndex = monthNames.indexOf(startMonth.toLowerCase());
-      monthIndex = monthIndex === -1 ? globalWeek.startDate.getMonth() : monthIndex;
+      monthIndex = monthIndex === -1 ? weekInCourse.startDate.getMonth() : monthIndex;
       
       const isEvenMonth = monthIndex % 2 === 0;
       
@@ -120,11 +87,11 @@ export function CourseRow({
       
       if (crossMonth) {
         // Рассчитываем количество дней в текущем месяце
-        const lastDayOfMonth = new Date(globalWeek.startDate.getFullYear(), globalWeek.startDate.getMonth() + 1, 0);
-        daysInCurrentMonth = lastDayOfMonth.getDate() - globalWeek.startDate.getDate() + 1;
+        const lastDayOfMonth = new Date(weekInCourse.startDate.getFullYear(), weekInCourse.startDate.getMonth() + 1, 0);
+        daysInCurrentMonth = lastDayOfMonth.getDate() - weekInCourse.startDate.getDate() + 1;
         
         // Рассчитываем количество дней в следующем месяце
-        daysInNextMonth = globalWeek.endDate.getDate();
+        daysInNextMonth = weekInCourse.endDate.getDate();
       }
       
       // Шахматный фон для обычных ячеек
@@ -137,7 +104,7 @@ export function CourseRow({
       if (crossMonth) {
         // Проверяем темный режим
         const isDarkMode = window.matchMedia && 
-                           window.matchMedia('(prefers-color-scheme: dark)').matches;
+                         window.matchMedia('(prefers-color-scheme: dark)').matches;
         
         // Используем нашу функцию для создания градиента
         const gradientBackground = monthTransitionGradient(
@@ -154,7 +121,7 @@ export function CourseRow({
       }
       
       // Проверяем, заканчивается ли месяц в этой неделе
-      const isMonthEnd = isLastDayOfMonth(globalWeek.endDate);
+      const isMonthEnd = isLastDayOfMonth(weekInCourse.endDate);
       
       // Базовый класс ячейки без фонового цвета
       const baseCellClass = `p-0 h-8 text-center cursor-pointer transition-colors
