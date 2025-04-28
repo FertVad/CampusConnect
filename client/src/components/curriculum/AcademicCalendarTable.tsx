@@ -1,13 +1,14 @@
-import React, { useState, useMemo, useEffect, useCallback } from "react";
+import React, { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { WeekActivityDialog, WeekInfo, ActivityType, ACTIVITY_TYPES, ACTIVITY_COLORS } from "./WeekActivityDialog";
 import { Tooltip } from 'react-tooltip';
 import { WeekCell, getFirstWorkdayOfSeptember, buildAcademicWeeks } from "@/utils/calendar";
-import { format } from "date-fns";
+import { format, getWeek } from "date-fns";
 import { ru } from "date-fns/locale/ru";
 import { useAutoSave } from "@/hooks/useAutoSave";
 import { SaveButton } from "@/components/ui/save-button";
 import { CourseRow } from "./CourseRow";
 import { X } from "lucide-react";
+import { useFloating, offset, shift, flip } from '@floating-ui/react-dom';
 
 // Количество курсов
 const NUMBER_OF_COURSES = 4;
@@ -207,6 +208,55 @@ export function AcademicCalendarTable({
     // Просто делегируем в основной обработчик, указывая что это НЕ множественное изменение
     handleCellChange(activity, false);
   };
+  
+  // Refs для ActionBar
+  const actionBarRef = useRef<HTMLDivElement>(null);
+  const tableRef = useRef<HTMLTableElement>(null);
+  
+  // Получаем первый выделенный элемент для размещения actionBar
+  const getFirstSelectedElement = (): HTMLElement | null => {
+    if (selectedCells.size === 0) return null;
+    
+    // Берем первый ключ из выделенных ячеек
+    const firstCellKey = Array.from(selectedCells)[0];
+    const cell = document.querySelector(`[data-cell-key="${firstCellKey}"]`) as HTMLElement;
+    return cell;
+  };
+  
+  // Состояние для хранения позиции popup
+  const { x, y, strategy, refs, update, floatingStyles } = useFloating({
+    placement: 'top',
+    middleware: [
+      offset(8), // 8px offset
+      shift({ padding: 8 }), // Чтобы не выходил за пределы экрана
+      flip() // Переворачиваем при необходимости
+    ],
+  });
+  
+  // Обновляем положение ActionBar при изменении выделенных ячеек
+  useEffect(() => {
+    if (selectedCells.size > 0) {
+      const firstElement = getFirstSelectedElement();
+      
+      if (firstElement) {
+        // Устанавливаем референс виртуального элемента
+        refs.setReference({
+          getBoundingClientRect: () => {
+            return {
+              ...firstElement.getBoundingClientRect(),
+              // Ограничиваем верхнюю границу шапкой таблицы (если нужно)
+              y: Math.max(firstElement.getBoundingClientRect().y, 
+                tableRef.current?.querySelector('thead')?.getBoundingClientRect().bottom || 0),
+              x: firstElement.getBoundingClientRect().x
+            };
+          }
+        });
+        
+        // Обновляем позицию
+        update();
+      }
+    }
+  }, [selectedCells, refs, update]);
   
   // Обновляем tooltip цвета и стили
   useEffect(() => {
@@ -501,9 +551,19 @@ export function AcademicCalendarTable({
         </div>
       </div>
       
-      {/* Floating Action Bar для множественного выделения */}
+      {/* Floating Action Bar с использованием Popper.js */}
       {selectedCells.size > 0 && (
-        <div className="fixed top-20 left-1/2 -translate-x-1/2 flex gap-2 bg-white dark:bg-slate-800 text-slate-900 dark:text-white px-4 py-2 rounded-lg shadow-lg z-50">
+        <div 
+          ref={actionBarRef}
+          className="flex gap-2 bg-white dark:bg-slate-800 text-slate-900 dark:text-white px-4 py-2 rounded-lg shadow-lg z-50 fixed"
+          style={{
+            position: strategy,
+            top: y ?? 0,
+            left: x ?? 0,
+            transform: 'translateX(-50%)',
+            willChange: 'transform',
+          }}
+        >
           <span className="mr-2 text-sm">Выбрано {selectedCells.size} недель:</span>
           
           {/* Кнопки активностей */}
