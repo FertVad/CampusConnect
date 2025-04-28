@@ -249,6 +249,9 @@ export function AcademicCalendarTable({
   // Состояние для хранения позиции ActionBar
   const [actionBarPosition, setActionBarPosition] = useState({ top: 0, left: 0 });
   
+  // Константа для отступа ActionBar от выделенной области
+  const BAR_GAP = 16; // px
+  
   // Обновляем положение ActionBar при изменении выделенных ячеек
   useEffect(() => {
     if (selectedCells.size > 0 && scrollWrapperRef.current) {
@@ -259,13 +262,18 @@ export function AcademicCalendarTable({
       const wrapRect = scrollWrapperRef.current.getBoundingClientRect();
       const wrapper = scrollWrapperRef.current;
       
-      // Устанавливаем минимальное значение для Y координаты (не выше шапки таблицы)
-      const minY = headerRef.current?.getBoundingClientRect().bottom ?? 0;
-      const topPosition = selectionRect.top < minY ? minY : selectionRect.top;
+      // Получаем границы заголовка (шапки таблицы)
+      const headerRect = headerRef.current?.getBoundingClientRect() ?? { bottom: 0 };
+      
+      // Вычисляем позицию панели с учетом отступа
+      const barTop = Math.max(
+        selectionRect.top - wrapRect.top + wrapper.scrollTop - BAR_GAP,
+        headerRect.bottom - wrapRect.top + wrapper.scrollTop + 8
+      );
       
       // Рассчитываем позицию ActionBar
       setActionBarPosition({
-        top: Math.max(topPosition - wrapRect.top + wrapper.scrollTop - 40, 0),
+        top: barTop,
         left: selectionRect.left - wrapRect.left + wrapper.scrollLeft
       });
     }
@@ -581,7 +589,7 @@ export function AcademicCalendarTable({
         onActivityChange={handleActivityChange}
       />
       
-      {/* Тултип для календаря */}
+      {/* Тултип для календаря (z-index ниже Action Bar) */}
       <Tooltip 
         id="calendar-tooltip" 
         className="academic-tooltip" 
@@ -589,6 +597,7 @@ export function AcademicCalendarTable({
         clickable={true}
         delayHide={0}
         delayShow={1000}
+        style={{ zIndex: 40 }}
       />
     </div>
   );
