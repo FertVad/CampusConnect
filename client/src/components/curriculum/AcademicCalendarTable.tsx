@@ -103,10 +103,11 @@ export function AcademicCalendarTable({
     setLastSelectedCell(null);
   }, []);
   
-  // Обработчик нажатия клавиш для выделения (Esc)
+  // Обработчик нажатия клавиш для выделения (Del, Backspace)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        // При нажатии Delete или Backspace снимаем выделение
         clearSelection();
       }
     };
@@ -211,19 +212,31 @@ export function AcademicCalendarTable({
   useEffect(() => {
     const tooltipStyle = `
       .academic-tooltip {
-        background-color: rgb(15 23 42) !important;
+        background-color: rgb(15 23 42) !important; /* bg-slate-900 */
         color: white !important;
-        border-radius: 0.375rem !important;
-        padding: 0.5rem 0.75rem !important;
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2) !important;
+        border-radius: 0.375rem !important; /* rounded-md */
+        padding: 0.75rem !important; /* px-3 py-2 */
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2) !important; /* shadow-lg */
         z-index: 50 !important;
         transition-delay: 1000ms !important;
+        opacity: 1 !important;
       }
       
       @media (prefers-color-scheme: dark) {
         .academic-tooltip {
-          background-color: rgb(248 250 252) !important;
-          color: rgb(15 23 42) !important;
+          background-color: white !important; /* dark:bg-white */
+          color: rgb(15 23 42) !important; /* dark:text-slate-900 */
+        }
+      }
+      
+      /* Tooltip arrow */
+      .academic-tooltip.react-tooltip .react-tooltip-arrow {
+        color: rgb(15 23 42) !important;
+      }
+      
+      @media (prefers-color-scheme: dark) {
+        .academic-tooltip.react-tooltip .react-tooltip-arrow {
+          color: white !important;
         }
       }
     `;
@@ -488,9 +501,9 @@ export function AcademicCalendarTable({
         </div>
       </div>
       
-      {/* Action Bar для множественного выделения */}
+      {/* Floating Action Bar для множественного выделения */}
       {selectedCells.size > 0 && (
-        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 flex gap-2 bg-slate-700/90 dark:bg-slate-800/90 backdrop-blur text-white px-4 py-2 rounded-lg shadow-xl z-50">
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 flex gap-2 bg-white dark:bg-slate-800 text-slate-900 dark:text-white px-4 py-2 rounded-lg shadow-lg z-50">
           <span className="mr-2 text-sm">Выбрано {selectedCells.size} недель:</span>
           
           {/* Кнопки активностей */}
@@ -499,7 +512,7 @@ export function AcademicCalendarTable({
             return (
               <button
                 key={code}
-                className={`${bg} w-8 h-8 rounded font-semibold hover:ring-2 hover:ring-white/50 transition-all`}
+                className={`${bg} w-8 h-8 rounded font-semibold hover:ring-2 hover:ring-slate-400/50 dark:hover:ring-white/50 transition-all`}
                 onClick={() => handleCellChange(code as ActivityType, true)}
                 title={description}
               >
@@ -510,16 +523,17 @@ export function AcademicCalendarTable({
           
           {/* Кнопка очистки */}
           <button
-            className="bg-slate-500 hover:bg-slate-400 px-2 rounded text-sm hover:ring-2 hover:ring-white/50 transition-all"
+            className="bg-slate-200 dark:bg-slate-600 hover:bg-slate-300 dark:hover:bg-slate-500 px-2 rounded text-sm hover:ring-2 hover:ring-slate-400/50 dark:hover:ring-white/50 transition-all"
             onClick={() => handleCellChange("", true)}
           >
             Очистить
           </button>
           
-          {/* Кнопка закрытия */}
+          {/* Кнопка закрытия (снимает выделение) */}
           <button
-            className="ml-1 hover:bg-slate-600 rounded-full p-1 transition-colors"
+            className="ml-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full p-1 transition-colors"
             onClick={clearSelection}
+            title="Снять выделение"
           >
             <X size={16} />
           </button>
