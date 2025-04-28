@@ -159,18 +159,56 @@ export function CourseRow({
             <div class="font-medium">Кал. неделя ${getWeek(weekInCourse.startDate)} | Уч. неделя ${weekNumber}</div>
             <div class="text-slate-400 text-sm">${format(weekInCourse.startDate, 'd MMM', {locale: ru})} – ${format(weekInCourse.endDate, 'd MMM', {locale: ru})}</div>
             <div class="mt-2 text-sm">
-              ${activity ? activity.split('').map((char, i) => {
-                const day = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'][i];
-                const colorClass = char in ACTIVITY_COLORS ? 
-                  ACTIVITY_COLORS[char as keyof typeof ACTIVITY_COLORS].color : 
-                  '#d1d5db';
-                return `
-                  <div class="flex items-center my-0.5">
-                    <span style="background-color: ${colorClass}; width: 0.75rem; height: 0.75rem; display: inline-block; border-radius: 0.125rem; margin-right: 0.25rem;"></span>
-                    <span>${day} — ${char || "—"}</span>
-                  </div>
-                `;
-              }).join('') : '<div>Нет активности</div>'}
+              ${activity ? (() => {
+                // Создаем объект с днями недели
+                const days: Record<string, string> = {};
+                const dayNames = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+                
+                // Заполняем объект для каждого дня
+                activity.split('').forEach((char, i) => {
+                  if (char && char.trim()) {
+                    days[dayNames[i]] = char;
+                  }
+                });
+                
+                // Проверяем, все ли дни имеют одинаковую активность
+                const uniqueActivities = [...new Set(Object.values(days))];
+                
+                // Если все дни одинаковые и есть хотя бы один день с активностью
+                if (uniqueActivities.length === 1 && uniqueActivities[0] && Object.keys(days).length > 0) {
+                  const activity = uniqueActivities[0];
+                  const colorClass = activity in ACTIVITY_COLORS ? 
+                    ACTIVITY_COLORS[activity as keyof typeof ACTIVITY_COLORS].color : 
+                    '#d1d5db';
+                  const activityName = activity in ACTIVITY_TYPES ? 
+                    ACTIVITY_TYPES[activity as keyof typeof ACTIVITY_TYPES] : 
+                    'Активность';
+                  
+                  return `
+                    <div class="flex items-center my-1">
+                      <span style="background-color: ${colorClass}; width: 0.75rem; height: 0.75rem; display: inline-block; border-radius: 0.125rem; margin-right: 0.25rem;"></span>
+                      <span>${activityName} — вся неделя (${activity})</span>
+                    </div>
+                  `;
+                } 
+                // Иначе отображаем по дням (только непустые дни)
+                else {
+                  return Object.entries(days).map(([day, char]) => {
+                    if (!char) return '';
+                    
+                    const colorClass = char in ACTIVITY_COLORS ? 
+                      ACTIVITY_COLORS[char as keyof typeof ACTIVITY_COLORS].color : 
+                      '#d1d5db';
+                    
+                    return `
+                      <div class="flex items-center my-0.5">
+                        <span style="background-color: ${colorClass}; width: 0.75rem; height: 0.75rem; display: inline-block; border-radius: 0.125rem; margin-right: 0.25rem;"></span>
+                        <span>${day} — ${char}</span>
+                      </div>
+                    `;
+                  }).join('');
+                }
+              })() : '<div>Нет активности</div>'}
             </div>
           `}
         >
