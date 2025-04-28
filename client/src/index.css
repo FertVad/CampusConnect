@@ -492,9 +492,17 @@
   color: white !important;
 }
 
-/* Calendar wrapper positioning */
+/* Calendar wrapper positioning и overflow */
 .calendar-wrapper {
   position: relative;
+}
+
+/* Важно обеспечить visible overflow для всей цепочки */
+.calendar-wrapper,
+.calendar-wrapper table,
+.calendar-wrapper tr,
+.calendar-wrapper td {
+  overflow: visible !important;
 }
 
 /* Selected cell styles */
@@ -519,4 +527,22 @@
 [data-cell-key].relative span {
   position: relative;
   z-index: 2;
+}
+
+/* Action Bar стили */
+.action-bar {
+  display: flex;
+  gap: 0.5rem;
+  background-color: white;
+  color: rgb(15 23 42);
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  z-index: 50;
+  width: fit-content;
+}
+
+.dark .action-bar {
+  background-color: rgb(30 41 59);
+  color: white;
 }

@@ -8,7 +8,7 @@ import { useAutoSave } from "@/hooks/useAutoSave";
 import { SaveButton } from "@/components/ui/save-button";
 import { CourseRow } from "./CourseRow";
 import { X } from "lucide-react";
-import { useFloating, offset, shift, flip } from '@floating-ui/react-dom';
+// Абсолютное позиционирование вместо Floating UI
 
 // Количество курсов
 const NUMBER_OF_COURSES = 4;
@@ -209,8 +209,7 @@ export function AcademicCalendarTable({
     handleCellChange(activity, false);
   };
   
-  // Refs для ActionBar и таблицы
-  const actionBarRef = useRef<HTMLDivElement>(null);
+  // Refs для таблицы и скролл-контейнера
   const tableRef = useRef<HTMLTableElement>(null);
   const headerRef = useRef<HTMLTableSectionElement>(null);
   const scrollWrapperRef = useRef<HTMLDivElement>(null);
@@ -247,64 +246,30 @@ export function AcademicCalendarTable({
     };
   };
   
-  // Состояние для хранения позиции popup
-  const { x, y, strategy, refs, update, floatingStyles } = useFloating({
-    placement: 'top',
-    middleware: [
-      offset(8), // 8px offset
-      shift({ padding: 8 }), // Чтобы не выходил за пределы экрана
-      flip() // Переворачиваем при необходимости
-    ],
-  });
+  // Состояние для хранения позиции ActionBar
+  const [actionBarPosition, setActionBarPosition] = useState({ top: 0, left: 0 });
   
   // Обновляем положение ActionBar при изменении выделенных ячеек
   useEffect(() => {
     if (selectedCells.size > 0 && scrollWrapperRef.current) {
-      // Создаем или получаем anchor-элемент
+      // Получаем границы выделенных ячеек
       const selectionRect = getSelectionRect(selectedCells);
-      const anchor = document.getElementById('multi-anchor') ?? 
-                   Object.assign(document.createElement('div'), { id: 'multi-anchor' });
       
       // Получаем границы контейнера для расчета относительной позиции
-      const wrapperRect = scrollWrapperRef.current.getBoundingClientRect();
+      const wrapRect = scrollWrapperRef.current.getBoundingClientRect();
+      const wrapper = scrollWrapperRef.current;
       
       // Устанавливаем минимальное значение для Y координаты (не выше шапки таблицы)
       const minY = headerRef.current?.getBoundingClientRect().bottom ?? 0;
       const topPosition = selectionRect.top < minY ? minY : selectionRect.top;
       
-      // Вычисляем положение относительно wrapper с учетом прокрутки
-      const top = (topPosition - wrapperRect.top + scrollWrapperRef.current.scrollTop);
-      const left = (selectionRect.left - wrapperRect.left + scrollWrapperRef.current.scrollLeft + selectionRect.width / 2);
-      
-      // Устанавливаем позицию якоря
-      anchor.style.cssText = `
-        position: absolute;
-        top: ${top}px;
-        left: ${left}px;
-        width: 1px;
-        height: 1px;
-        background: transparent;
-        z-index: 40;
-        pointer-events: none;
-      `;
-      
-      // Добавляем элемент в контейнер
-      if (!anchor.parentNode) {
-        scrollWrapperRef.current.appendChild(anchor);
-      }
-      
-      // Устанавливаем reference для Floating UI
-      refs.setReference(anchor);
-      update();
-      
-      // Удаляем anchor при размонтировании
-      return () => {
-        if (anchor.parentNode) {
-          anchor.parentNode.removeChild(anchor);
-        }
-      };
+      // Рассчитываем позицию ActionBar
+      setActionBarPosition({
+        top: Math.max(topPosition - wrapRect.top + wrapper.scrollTop - 40, 0),
+        left: selectionRect.left - wrapRect.left + wrapper.scrollLeft
+      });
     }
-  }, [selectedCells, refs, update, headerRef, scrollWrapperRef]);
+  }, [selectedCells, headerRef]);
   
   // Примечание: стили для тултипов и выделенных ячеек 
   // теперь находятся в файле index.css
