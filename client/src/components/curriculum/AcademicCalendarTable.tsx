@@ -269,23 +269,32 @@ export function AcademicCalendarTable({
       const wrapperRect = scrollWrapperRef.current.getBoundingClientRect();
       
       // Устанавливаем минимальное значение для Y координаты (не выше шапки таблицы)
-      const minY = headerRef.current?.getBoundingClientRect().bottom ?? 0 + 8;
+      const minY = headerRef.current?.getBoundingClientRect().bottom ?? 0;
       const topPosition = selectionRect.top < minY ? minY : selectionRect.top;
       
-      // Устанавливаем положение anchor-элемента относительно контейнера с учетом прокрутки
-      anchor.style.position = 'absolute';
-      anchor.style.top = (topPosition - wrapperRect.top + scrollWrapperRef.current.scrollTop) + 'px';
-      anchor.style.left = (selectionRect.left - wrapperRect.left + scrollWrapperRef.current.scrollLeft + selectionRect.width / 2) + 'px';
-      anchor.style.width = '1px';
-      anchor.style.height = '1px';
-      anchor.style.zIndex = '40';
-      anchor.style.pointerEvents = 'none';
+      // Вычисляем положение относительно wrapper с учетом прокрутки
+      const top = (topPosition - wrapperRect.top + scrollWrapperRef.current.scrollTop);
+      const left = (selectionRect.left - wrapperRect.left + scrollWrapperRef.current.scrollLeft + selectionRect.width / 2);
       
-      // Добавляем элемент в контейнер (вместо body) для правильного позиционирования
-      scrollWrapperRef.current.appendChild(anchor);
+      // Устанавливаем позицию якоря
+      anchor.style.cssText = `
+        position: absolute;
+        top: ${top}px;
+        left: ${left}px;
+        width: 1px;
+        height: 1px;
+        background: transparent;
+        z-index: 40;
+        pointer-events: none;
+      `;
+      
+      // Добавляем элемент в контейнер
+      if (!anchor.parentNode) {
+        scrollWrapperRef.current.appendChild(anchor);
+      }
+      
+      // Устанавливаем reference для Floating UI
       refs.setReference(anchor);
-      
-      // Обновляем позицию
       update();
       
       // Удаляем anchor при размонтировании
@@ -297,73 +306,8 @@ export function AcademicCalendarTable({
     }
   }, [selectedCells, refs, update, headerRef, scrollWrapperRef]);
   
-  // Обновляем tooltip цвета и стили
-  useEffect(() => {
-    const customStyle = `
-      /* Стили для тултипа */
-      .academic-tooltip {
-        background-color: rgb(15 23 42) !important; /* bg-slate-900 */
-        color: white !important;
-        border-radius: 0.375rem !important; /* rounded-md */
-        padding: 0.75rem !important; /* px-3 py-2 */
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2) !important; /* shadow-lg */
-        z-index: 50 !important;
-        transition-delay: 1000ms !important;
-        opacity: 1 !important;
-      }
-      
-      @media (prefers-color-scheme: dark) {
-        .academic-tooltip {
-          background-color: white !important; /* dark:bg-white */
-          color: rgb(15 23 42) !important; /* dark:text-slate-900 */
-        }
-      }
-      
-      /* Tooltip arrow */
-      .academic-tooltip.react-tooltip .react-tooltip-arrow {
-        color: rgb(15 23 42) !important;
-      }
-      
-      @media (prefers-color-scheme: dark) {
-        .academic-tooltip.react-tooltip .react-tooltip-arrow {
-          color: white !important;
-        }
-      }
-      
-      /* Стили для выделенных ячеек */
-      [data-cell-key].relative {
-        position: relative;
-        box-shadow: 0 0 0 2px rgb(129 140 248); /* ring-indigo-400 */
-        overflow: visible; /* Важно! Чтобы ::after не обрезался */
-        z-index: 10;
-      }
-      
-      [data-cell-key].relative::after {
-        content: '';
-        position: absolute;
-        inset: 0;
-        background-color: rgb(99 102 241 / 0.25); /* bg-indigo-500/25 */
-        border-radius: 0.125rem; /* rounded-sm */
-        pointer-events: none;
-        z-index: 1;
-      }
-      
-      /* Текст внутри выделенной ячейки должен быть поверх оверлея */
-      [data-cell-key].relative span {
-        position: relative;
-        z-index: 2;
-      }
-    `;
-    
-    // Добавляем стили в head
-    const styleElement = document.createElement('style');
-    styleElement.innerHTML = customStyle;
-    document.head.appendChild(styleElement);
-    
-    return () => {
-      document.head.removeChild(styleElement);
-    };
-  }, []);
+  // Примечание: стили для тултипов и выделенных ячеек 
+  // теперь находятся в файле index.css
   
   // Функция для получения стиля ячейки в зависимости от активности
   const getActivityStyle = (activity: ActivityType): { bg: string, text: string } => {
@@ -567,7 +511,7 @@ export function AcademicCalendarTable({
     <div className="w-full">
       <div className="rounded-md overflow-hidden border shadow-sm dark:border-slate-700">
         <div className="overflow-auto max-h-[500px] custom-scrollbar calendar-wrapper" ref={scrollWrapperRef}>
-          <div className="min-w-max position-relative">
+          <div className="min-w-max relative">
             <table className="w-full border-collapse" ref={tableRef}>
               <thead ref={headerRef}>
                 {renderHeaders()}

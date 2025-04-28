@@ -468,12 +468,55 @@
 /* Tooltip styles for academic calendar */
 .academic-tooltip {
   @apply rounded-md px-3 py-2 shadow-lg;
+  background-color: rgb(15 23 42) !important; /* bg-slate-900 */
+  color: white !important;
+  border-radius: 0.375rem !important; /* rounded-md */
+  padding: 0.75rem !important; /* px-3 py-2 */
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2) !important; /* shadow-lg */
+  z-index: 50 !important;
+  transition-delay: 1000ms !important;
+  opacity: 1 !important;
 }
 
-.academic-tooltip.light {
-  @apply bg-white text-slate-900;
+.dark .academic-tooltip {
+  background-color: white !important; /* dark:bg-white */
+  color: rgb(15 23 42) !important; /* dark:text-slate-900 */
 }
 
-.academic-tooltip.dark {
-  @apply bg-slate-900 text-slate-100;
+/* Tooltip arrow */
+.academic-tooltip.react-tooltip .react-tooltip-arrow {
+  color: rgb(15 23 42) !important;
+}
+
+.dark .academic-tooltip.react-tooltip .react-tooltip-arrow {
+  color: white !important;
+}
+
+/* Calendar wrapper positioning */
+.calendar-wrapper {
+  position: relative;
+}
+
+/* Selected cell styles */
+[data-cell-key].relative {
+  position: relative;
+  box-shadow: 0 0 0 2px rgb(129 140 248); /* ring-indigo-400 */
+  overflow: visible !important; /* Важно! Чтобы ::after не обрезался */
+  z-index: 10 !important;
+}
+
+[data-cell-key].relative::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-color: rgb(99 102 241 / 0.25); /* bg-indigo-500/25 */
+  border-radius: 0.125rem; /* rounded-sm */
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Ensure text in cells is above the overlay */
+[data-cell-key].relative span {
+  position: relative;
+  z-index: 2;
 }
