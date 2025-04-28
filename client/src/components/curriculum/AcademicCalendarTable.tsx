@@ -207,6 +207,37 @@ export function AcademicCalendarTable({
     handleCellChange(activity, false);
   };
   
+  // Обновляем tooltip цвета и стили
+  useEffect(() => {
+    const tooltipStyle = `
+      .academic-tooltip {
+        background-color: rgb(15 23 42) !important;
+        color: white !important;
+        border-radius: 0.375rem !important;
+        padding: 0.5rem 0.75rem !important;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2) !important;
+        z-index: 50 !important;
+        transition-delay: 1000ms !important;
+      }
+      
+      @media (prefers-color-scheme: dark) {
+        .academic-tooltip {
+          background-color: rgb(248 250 252) !important;
+          color: rgb(15 23 42) !important;
+        }
+      }
+    `;
+    
+    // Добавляем стили в head
+    const styleElement = document.createElement('style');
+    styleElement.innerHTML = tooltipStyle;
+    document.head.appendChild(styleElement);
+    
+    return () => {
+      document.head.removeChild(styleElement);
+    };
+  }, []);
+  
   // Функция для получения стиля ячейки в зависимости от активности
   const getActivityStyle = (activity: ActivityType): { bg: string, text: string } => {
     const defaultStyle = { bg: "bg-slate-50 dark:bg-slate-900", text: "text-slate-900 dark:text-slate-100 font-bold" };
@@ -397,6 +428,7 @@ export function AcademicCalendarTable({
         courseWeeks={course.weeks} // Передаем недели специфичные для этого курса (для расчета смещения)
         tableData={tableData}
         selectedCellKey={selectedCellKey}
+        selectedCells={selectedCells}
         onCellClick={handleCellClick}
         isLastDayOfMonth={isLastDayOfMonth}
         startDate={startDates && startDates[course.id] ? startDates[course.id] : course.startDate}
@@ -438,13 +470,12 @@ export function AcademicCalendarTable({
             })}
           </div>
           
-          {/* TODO drag-select / Ctrl-click для заливки нескольких недель */}
-          <div className="text-xs text-slate-500 mt-2">
-            * В будущей версии будет добавлено выделение нескольких недель для массового изменения
+          <div className="text-xs text-slate-500 mt-1">
+            * Курс 2, 3, 4 начинаются с первого рабочего дня сентября (+1, +2, +3 года от начала обучения)
           </div>
           
           <div className="text-xs text-slate-500 mt-1">
-            * Курс 2, 3, 4 начинаются с первого рабочего дня сентября (+1, +2, +3 года от начала обучения)
+            * Одинарный клик — выделить ячейку, Shift+клик — выделить диапазон, двойной клик — редактировать
           </div>
         </div>
         
@@ -456,6 +487,44 @@ export function AcademicCalendarTable({
           />
         </div>
       </div>
+      
+      {/* Action Bar для множественного выделения */}
+      {selectedCells.size > 0 && (
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 flex gap-2 bg-slate-700/90 dark:bg-slate-800/90 backdrop-blur text-white px-4 py-2 rounded-lg shadow-xl z-50">
+          <span className="mr-2 text-sm">Выбрано {selectedCells.size} недель:</span>
+          
+          {/* Кнопки активностей */}
+          {Object.entries(ACTIVITY_TYPES).map(([code, description]) => {
+            const { bg } = getActivityStyle(code as ActivityType);
+            return (
+              <button
+                key={code}
+                className={`${bg} w-8 h-8 rounded font-semibold hover:ring-2 hover:ring-white/50 transition-all`}
+                onClick={() => handleCellChange(code as ActivityType, true)}
+                title={description}
+              >
+                {code}
+              </button>
+            );
+          })}
+          
+          {/* Кнопка очистки */}
+          <button
+            className="bg-slate-500 hover:bg-slate-400 px-2 rounded text-sm hover:ring-2 hover:ring-white/50 transition-all"
+            onClick={() => handleCellChange("", true)}
+          >
+            Очистить
+          </button>
+          
+          {/* Кнопка закрытия */}
+          <button
+            className="ml-1 hover:bg-slate-600 rounded-full p-1 transition-colors"
+            onClick={clearSelection}
+          >
+            <X size={16} />
+          </button>
+        </div>
+      )}
       
       <WeekActivityDialog
         open={dialogOpen}
@@ -473,14 +542,6 @@ export function AcademicCalendarTable({
         clickable={true}
         delayHide={0}
         delayShow={1000}
-        style={{ 
-          backgroundColor: 'white', 
-          color: '#0f172a',
-          boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.15)',
-          borderRadius: '0.375rem',
-          padding: '0.5rem 0.75rem',
-          zIndex: 9999
-        }}
       />
     </div>
   );

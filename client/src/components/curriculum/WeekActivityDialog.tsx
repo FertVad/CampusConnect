@@ -100,8 +100,19 @@ export const monthTransitionGradient = (
   // Общее количество дней в неделе
   const totalDays = daysInCurrentMonth + daysInNextMonth;
   
-  // Рассчитываем точный процент для текущего месяца
-  const currentMonthPercent = (daysInCurrentMonth / totalDays) * 100;
+  // Рассчитываем точный процент для текущего месяца (как в задании: LEFT = daysCurr/7*100)
+  const LEFT = Math.round((daysInCurrentMonth / 7) * 100);
+  
+  // Определяем CSS-переменные для светлой и темной темы
+  const currVar = `var(--curr)`;
+  const nextVar = `var(--next)`;
+  
+  // Строим градиент с переменными CSS для поддержки динамического изменения темы
+  // linear-gradient(to right, var(--curr) 0%, var(--curr) LEFT%, var(--next) LEFT%, var(--next) 100%)
+  const gradient = `linear-gradient(to right, ${currVar} 0%, ${currVar} ${LEFT}%, ${nextVar} ${LEFT}%, ${nextVar} 100%)`;
+  
+  // CSS переменные для светлой и темной темы
+  const style = document.createElement('style');
   
   // Определяем цвета для светлой темы
   const lightCurrentColor = isEvenCurrentMonth ? '#f1f5f9' : '#e2e8f0'; // slate-100 : slate-200
@@ -111,12 +122,26 @@ export const monthTransitionGradient = (
   const darkCurrentColor = isEvenCurrentMonth ? '#1e293b' : '#334155'; // slate-800 : slate-700
   const darkNextColor = !isEvenCurrentMonth ? '#1e293b' : '#334155'; // slate-800 : slate-700
   
-  // Выбираем набор цветов в зависимости от темы
-  const currentColor = isDarkMode ? darkCurrentColor : lightCurrentColor;
-  const nextColor = isDarkMode ? darkNextColor : lightNextColor;
+  // Добавляем CSS-переменные в документ, если их еще нет
+  if (!document.querySelector('#month-gradient-vars')) {
+    style.id = 'month-gradient-vars';
+    style.innerHTML = `
+      :root {
+        --curr: ${lightCurrentColor};
+        --next: ${lightNextColor};
+      }
+      
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --curr: ${darkCurrentColor};
+          --next: ${darkNextColor};
+        }
+      }
+    `;
+    document.head.appendChild(style);
+  }
   
-  // Строим градиент
-  return `linear-gradient(to right, ${currentColor} 0%, ${currentColor} ${currentMonthPercent}%, ${nextColor} ${currentMonthPercent}%, ${nextColor} 100%)`;
+  return gradient;
 };
 
 // Интерфейс для дня недели
