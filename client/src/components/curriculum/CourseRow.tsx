@@ -29,7 +29,8 @@ interface CourseRowProps {
   courseWeeks: WeekCell[]; // Недели специфичные для этого курса
   tableData: Record<string, ActivityType>;
   selectedCellKey: string | null;
-  onCellClick: (info: CellInfo) => void;
+  selectedCells?: Set<string>; // Добавляем поддержку для множественного выделения
+  onCellClick: (info: CellInfo, event: React.MouseEvent) => void;
   isLastDayOfMonth: (date: Date) => boolean;
   startDate: Date; // Дата начала для этого курса
 }
@@ -40,6 +41,7 @@ export function CourseRow({
   courseWeeks,
   tableData,
   selectedCellKey,
+  selectedCells = new Set(),
   onCellClick,
   isLastDayOfMonth,
   startDate
@@ -140,16 +142,17 @@ export function CourseRow({
       cells.push(
         <td 
           key={`cell-${cellKey}`}
-          className={`${baseCellClass} ${!activity && !crossMonth ? monthBg : ''}`}
+          className={`${baseCellClass} ${!activity && !crossMonth ? monthBg : ''} 
+            ${selectedCells.has(cellKey) ? 'ring-2 ring-blue-500 ring-offset-1' : ''}`}
           style={style}
-          onClick={() => onCellClick({
+          onClick={(event) => onCellClick({
             courseId: course.id,
             weekNumber,
             monthName: weekInCourse.month,
             value: activity,
             startDate: weekInCourse.startDate,
             endDate: weekInCourse.endDate
-          })}
+          }, event)}
           data-tooltip-id="calendar-tooltip"
           data-tooltip-html={`
             <div class="font-medium">Кал. неделя ${getWeek(weekInCourse.startDate)} | Уч. неделя ${weekNumber}</div>

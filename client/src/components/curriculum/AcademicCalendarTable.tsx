@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
 import { WeekActivityDialog, WeekInfo, ActivityType, ACTIVITY_TYPES, ACTIVITY_COLORS } from "./WeekActivityDialog";
 import { Tooltip } from 'react-tooltip';
 import { WeekCell, getFirstWorkdayOfSeptember, buildAcademicWeeks } from "@/utils/calendar";
@@ -7,6 +7,7 @@ import { ru } from "date-fns/locale/ru";
 import { useAutoSave } from "@/hooks/useAutoSave";
 import { SaveButton } from "@/components/ui/save-button";
 import { CourseRow } from "./CourseRow";
+import { X } from "lucide-react";
 
 // Количество курсов
 const NUMBER_OF_COURSES = 4;
@@ -74,14 +75,66 @@ export function AcademicCalendarTable({
   const [selectedWeek, setSelectedWeek] = useState<WeekInfo | null>(null);
   const [selectedCellKey, setSelectedCellKey] = useState<string | null>(null);
   
+  // Состояние для множественного выделения ячеек
+  const [selectedCells, setSelectedCells] = useState<Set<string>>(new Set());
+  
+  // Состояние для отслеживания последней выбранной ячейки (для Shift+клик)
+  const [lastSelectedCell, setLastSelectedCell] = useState<string | null>(null);
+  
   // Функция для генерации ключа ячейки
   const getCellKey = (courseId: number, weekNumber: number): string => {
     return `course${courseId}_week${weekNumber}`;
   };
   
-  // Обработчик изменения значения ячейки
-  const handleCellChange = (key: string, value: ActivityType) => {
-    const newData = { ...tableData, [key]: value };
+  // Функция парсинга ключа ячейки в компоненты (для Shift+клик)
+  const parseCellKey = (key: string): { courseId: number, weekNumber: number } | null => {
+    const match = key.match(/course([0-9]+)_week([0-9]+)/);
+    if (!match) return null;
+    
+    return {
+      courseId: parseInt(match[1]),
+      weekNumber: parseInt(match[2])
+    };
+  };
+  
+  // Очистка выделения
+  const clearSelection = useCallback(() => {
+    setSelectedCells(new Set());
+    setLastSelectedCell(null);
+  }, []);
+  
+  // Обработчик нажатия клавиш для выделения (Esc)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        clearSelection();
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [clearSelection]);
+  
+  // Обработчик изменения значения ячейки или группы ячеек
+  const handleCellChange = (activity: ActivityType, applyToSelection: boolean = false) => {
+    const newData = { ...tableData };
+    
+    // Если применяем к выделению и есть выделенные ячейки
+    if (applyToSelection && selectedCells.size > 0) {
+      // Применяем значение ко всем выделенным ячейкам
+      selectedCells.forEach(cellKey => {
+        newData[cellKey] = activity;
+      });
+      
+      // Очищаем выделение после изменения группы ячеек
+      clearSelection();
+    } 
+    // Если просто меняем одну ячейку из диалога
+    else if (selectedWeek) {
+      const cellKey = getCellKey(selectedWeek.courseId, selectedWeek.weekNumber);
+      newData[cellKey] = activity;
+    }
+    
     setTableData(newData);
     
     // Вызов колбэка при изменении данных
@@ -90,46 +143,68 @@ export function AcademicCalendarTable({
     }
   };
   
-  // Обработчик клика по ячейке
-  const handleCellClick = (info: CellInfo) => {
-    // В info теперь приходит вся необходимая информация о неделе,
-    // так как каждый курс имеет свой набор недель
+  // Обработчик клика по ячейке с поддержкой множественного выделения
+  const handleCellClick = (info: CellInfo, event: React.MouseEvent) => {
     const cellKey = getCellKey(info.courseId, info.weekNumber);
-    setSelectedCellKey(cellKey);
     
-    // Создаем объект с информацией о выбранной неделе
-    setSelectedWeek({
-      courseId: info.courseId,
-      weekNumber: info.weekNumber,
-      startDate: info.startDate,
-      endDate: info.endDate,
-      monthName: info.monthName
-    });
-    
-    setDialogOpen(true);
-  };
-  
-  // Обработчик изменения активности в диалоге
-  const handleActivityChange = (activity: ActivityType) => {
-    if (!selectedWeek) return;
-    
-    // Создаем ключ для ячейки (например: "course1_week5")
-    const cellKey = getCellKey(selectedWeek.courseId, selectedWeek.weekNumber);
-    
-    console.log("Saving activity for cell:", cellKey, "Activity:", activity);
-    
-    // Обновляем данные в таблице
-    const newTableData = { ...tableData };
-    newTableData[cellKey] = activity;
-    setTableData(newTableData);
-    
-    // Сохраняем через родительскую функцию
-    if (onChange) {
-      onChange(newTableData);
+    // Если это двойной клик - открываем диалог для редактирования одной недели
+    if (event.detail === 2) {
+      setSelectedCellKey(cellKey);
+      
+      // Создаем объект с информацией о выбранной неделе
+      setSelectedWeek({
+        courseId: info.courseId,
+        weekNumber: info.weekNumber,
+        startDate: info.startDate,
+        endDate: info.endDate,
+        monthName: info.monthName
+      });
+      
+      setDialogOpen(true);
+      return;
     }
     
-    // Обновляем визуальное выделение выбранной ячейки
-    setSelectedCellKey(cellKey);
+    // Если Shift+клик и у нас есть последний выбранный элемент,
+    // добавляем все элементы в диапазоне
+    if (event.shiftKey && lastSelectedCell) {
+      const lastCell = parseCellKey(lastSelectedCell);
+      const currentCell = { courseId: info.courseId, weekNumber: info.weekNumber };
+      
+      if (lastCell && lastCell.courseId === currentCell.courseId) {
+        // Определяем диапазон недель для выделения
+        const minWeek = Math.min(lastCell.weekNumber, currentCell.weekNumber);
+        const maxWeek = Math.max(lastCell.weekNumber, currentCell.weekNumber);
+        
+        const newSelectedCells = new Set(selectedCells);
+        
+        // Добавляем все ячейки в диапазоне
+        for (let week = minWeek; week <= maxWeek; week++) {
+          const key = getCellKey(currentCell.courseId, week);
+          newSelectedCells.add(key);
+        }
+        
+        setSelectedCells(newSelectedCells);
+      }
+    } 
+    // Одиночный клик - добавляем/удаляем ячейку из выделения
+    else {
+      const newSelectedCells = new Set(selectedCells);
+      
+      if (newSelectedCells.has(cellKey)) {
+        newSelectedCells.delete(cellKey);
+      } else {
+        newSelectedCells.add(cellKey);
+      }
+      
+      setSelectedCells(newSelectedCells);
+      setLastSelectedCell(cellKey);
+    }
+  };
+  
+  // Обработчик изменения активности в диалоге (для одной ячейки)
+  const handleActivityChange = (activity: ActivityType) => {
+    // Просто делегируем в основной обработчик, указывая что это НЕ множественное изменение
+    handleCellChange(activity, false);
   };
   
   // Функция для получения стиля ячейки в зависимости от активности
