@@ -1,14 +1,13 @@
-import React, { useState, useMemo, useEffect, useCallback, useRef } from "react";
+import React, { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import { WeekActivityDialog, WeekInfo, ActivityType, ACTIVITY_TYPES, ACTIVITY_COLORS } from "./WeekActivityDialog";
 import { Tooltip } from 'react-tooltip';
 import { WeekCell, getFirstWorkdayOfSeptember, buildAcademicWeeks } from "@/utils/calendar";
-import { format, getWeek } from "date-fns";
+import { format } from "date-fns";
 import { ru } from "date-fns/locale/ru";
 import { useAutoSave } from "@/hooks/useAutoSave";
 import { SaveButton } from "@/components/ui/save-button";
 import { CourseRow } from "./CourseRow";
-import { X } from "lucide-react";
-// Абсолютное позиционирование вместо Floating UI
+import { FloatingActionBar } from "./FloatingActionBar";
 
 // Количество курсов
 const NUMBER_OF_COURSES = 4;
@@ -246,38 +245,8 @@ export function AcademicCalendarTable({
     };
   };
   
-  // Состояние для хранения позиции ActionBar
-  const [actionBarPosition, setActionBarPosition] = useState({ top: 0, left: 0 });
-  
-  // Константа для отступа ActionBar от выделенной области
-  const BAR_GAP = 16; // px
-  
-  // Обновляем положение ActionBar при изменении выделенных ячеек
-  useEffect(() => {
-    if (selectedCells.size > 0 && scrollWrapperRef.current) {
-      // Получаем границы выделенных ячеек
-      const selectionRect = getSelectionRect(selectedCells);
-      
-      // Получаем границы контейнера для расчета относительной позиции
-      const wrapRect = scrollWrapperRef.current.getBoundingClientRect();
-      const wrapper = scrollWrapperRef.current;
-      
-      // Получаем границы заголовка (шапки таблицы)
-      const headerRect = headerRef.current?.getBoundingClientRect() ?? { bottom: 0 };
-      
-      // Вычисляем позицию панели с учетом отступа
-      const barTop = Math.max(
-        selectionRect.top - wrapRect.top + wrapper.scrollTop - BAR_GAP,
-        headerRect.bottom - wrapRect.top + wrapper.scrollTop + 8
-      );
-      
-      // Рассчитываем позицию ActionBar
-      setActionBarPosition({
-        top: barTop,
-        left: selectionRect.left - wrapRect.left + wrapper.scrollLeft
-      });
-    }
-  }, [selectedCells, headerRef]);
+  // Использем новый компонент FloatingActionBar вместо встроенного ActionBar
+  // Состояние и эффекты для позиционирования больше не нужны
   
   // Примечание: стили для тултипов и выделенных ячеек 
   // теперь находятся в файле index.css
@@ -493,53 +462,6 @@ export function AcademicCalendarTable({
                 {renderCourseRows()}
               </tbody>
             </table>
-            
-            {/* Action Bar с абсолютным позиционированием внутри календаря */}
-            {selectedCells.size > 0 && (
-              <div 
-                className="action-bar"
-                style={{
-                  position: 'absolute',
-                  top: actionBarPosition.top,
-                  left: actionBarPosition.left,
-                  transform: 'translateX(-50%)',
-                }}
-              >
-                <span className="mr-2 text-sm">Выбрано {selectedCells.size} недель:</span>
-                
-                {/* Кнопки активностей */}
-                {Object.entries(ACTIVITY_TYPES).map(([code, description]) => {
-                  const { bg } = getActivityStyle(code as ActivityType);
-                  return (
-                    <button
-                      key={code}
-                      className={`${bg} w-8 h-8 rounded font-semibold hover:ring-2 hover:ring-slate-400/50 dark:hover:ring-white/50 transition-all`}
-                      onClick={() => handleCellChange(code as ActivityType, true)}
-                      title={description}
-                    >
-                      {code}
-                    </button>
-                  );
-                })}
-                
-                {/* Кнопка очистки */}
-                <button
-                  className="bg-slate-200 dark:bg-slate-600 hover:bg-slate-300 dark:hover:bg-slate-500 px-2 rounded text-sm hover:ring-2 hover:ring-slate-400/50 dark:hover:ring-white/50 transition-all"
-                  onClick={() => handleCellChange("", true)}
-                >
-                  Очистить
-                </button>
-                
-                {/* Кнопка закрытия (снимает выделение) */}
-                <button
-                  className="ml-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full p-1 transition-colors"
-                  onClick={clearSelection}
-                  title="Снять выделение"
-                >
-                  <X size={16} />
-                </button>
-              </div>
-            )}
           </div>
         </div>
       </div>
@@ -579,7 +501,20 @@ export function AcademicCalendarTable({
         </div>
       </div>
       
-      {/* ActionBar перенесен внутрь calendar-wrapper */}
+      {/* Используем новый компонент FloatingActionBar с портальным рендерингом */}
+      <FloatingActionBar
+        selectedCells={selectedCells}
+        getActivityStyle={getActivityStyle}
+        onActivityChange={handleCellChange}
+        clearSelection={clearSelection}
+        headerRef={headerRef}
+        getSelectionRect={getSelectionRect}
+      />
+      
+      {/* Создаем div для портала, если его нет */}
+      {typeof document !== 'undefined' && !document.getElementById('portal-root') && (
+        <div id="portal-root" />
+      )}
       
       <WeekActivityDialog
         open={dialogOpen}
