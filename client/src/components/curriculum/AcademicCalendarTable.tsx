@@ -213,6 +213,7 @@ export function AcademicCalendarTable({
   const actionBarRef = useRef<HTMLDivElement>(null);
   const tableRef = useRef<HTMLTableElement>(null);
   const headerRef = useRef<HTMLTableSectionElement>(null);
+  const scrollWrapperRef = useRef<HTMLDivElement>(null);
   
   // Получение границ прямоугольника выделения
   const getSelectionRect = (selectedCells: Set<string>): { top: number, left: number, width: number, height: number } => {
@@ -258,28 +259,30 @@ export function AcademicCalendarTable({
   
   // Обновляем положение ActionBar при изменении выделенных ячеек
   useEffect(() => {
-    if (selectedCells.size > 0) {
+    if (selectedCells.size > 0 && scrollWrapperRef.current) {
       // Создаем или получаем anchor-элемент
       const selectionRect = getSelectionRect(selectedCells);
       const anchor = document.getElementById('multi-anchor') ?? 
                    Object.assign(document.createElement('div'), { id: 'multi-anchor' });
       
+      // Получаем границы контейнера для расчета относительной позиции
+      const wrapperRect = scrollWrapperRef.current.getBoundingClientRect();
+      
       // Устанавливаем минимальное значение для Y координаты (не выше шапки таблицы)
       const minY = headerRef.current?.getBoundingClientRect().bottom ?? 0 + 8;
       const topPosition = selectionRect.top < minY ? minY : selectionRect.top;
       
-      // Устанавливаем положение anchor-элемента
-      anchor.style.cssText = `
-         position:absolute;
-         top:${topPosition}px;
-         left:${selectionRect.left + selectionRect.width / 2}px;
-         width:1px;
-         height:1px;
-         z-index:40;
-         pointer-events:none;`;
+      // Устанавливаем положение anchor-элемента относительно контейнера с учетом прокрутки
+      anchor.style.position = 'absolute';
+      anchor.style.top = (topPosition - wrapperRect.top + scrollWrapperRef.current.scrollTop) + 'px';
+      anchor.style.left = (selectionRect.left - wrapperRect.left + scrollWrapperRef.current.scrollLeft + selectionRect.width / 2) + 'px';
+      anchor.style.width = '1px';
+      anchor.style.height = '1px';
+      anchor.style.zIndex = '40';
+      anchor.style.pointerEvents = 'none';
       
-      // Добавляем элемент в DOM и устанавливаем как референс для Floating UI
-      document.body.appendChild(anchor);
+      // Добавляем элемент в контейнер (вместо body) для правильного позиционирования
+      scrollWrapperRef.current.appendChild(anchor);
       refs.setReference(anchor);
       
       // Обновляем позицию
@@ -292,7 +295,7 @@ export function AcademicCalendarTable({
         }
       };
     }
-  }, [selectedCells, refs, update, headerRef]);
+  }, [selectedCells, refs, update, headerRef, scrollWrapperRef]);
   
   // Обновляем tooltip цвета и стили
   useEffect(() => {
@@ -331,6 +334,7 @@ export function AcademicCalendarTable({
       [data-cell-key].relative {
         position: relative;
         box-shadow: 0 0 0 2px rgb(129 140 248); /* ring-indigo-400 */
+        overflow: visible; /* Важно! Чтобы ::after не обрезался */
         z-index: 10;
       }
       
@@ -342,6 +346,12 @@ export function AcademicCalendarTable({
         border-radius: 0.125rem; /* rounded-sm */
         pointer-events: none;
         z-index: 1;
+      }
+      
+      /* Текст внутри выделенной ячейки должен быть поверх оверлея */
+      [data-cell-key].relative span {
+        position: relative;
+        z-index: 2;
       }
     `;
     
@@ -556,8 +566,8 @@ export function AcademicCalendarTable({
   return (
     <div className="w-full">
       <div className="rounded-md overflow-hidden border shadow-sm dark:border-slate-700">
-        <div className="overflow-auto max-h-[500px] custom-scrollbar">
-          <div className="min-w-max">
+        <div className="overflow-auto max-h-[500px] custom-scrollbar calendar-wrapper" ref={scrollWrapperRef}>
+          <div className="min-w-max position-relative">
             <table className="w-full border-collapse" ref={tableRef}>
               <thead ref={headerRef}>
                 {renderHeaders()}
