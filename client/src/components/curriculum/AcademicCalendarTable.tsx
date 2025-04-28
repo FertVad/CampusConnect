@@ -209,18 +209,41 @@ export function AcademicCalendarTable({
     handleCellChange(activity, false);
   };
   
-  // Refs для ActionBar
+  // Refs для ActionBar и таблицы
   const actionBarRef = useRef<HTMLDivElement>(null);
   const tableRef = useRef<HTMLTableElement>(null);
+  const headerRef = useRef<HTMLTableSectionElement>(null);
   
-  // Получаем первый выделенный элемент для размещения actionBar
-  const getFirstSelectedElement = (): HTMLElement | null => {
-    if (selectedCells.size === 0) return null;
+  // Получение границ прямоугольника выделения
+  const getSelectionRect = (selectedCells: Set<string>): { top: number, left: number, width: number, height: number } => {
+    if (selectedCells.size === 0) {
+      return { top: 0, left: 0, width: 0, height: 0 };
+    }
     
-    // Берем первый ключ из выделенных ячеек
-    const firstCellKey = Array.from(selectedCells)[0];
-    const cell = document.querySelector(`[data-cell-key="${firstCellKey}"]`) as HTMLElement;
-    return cell;
+    let minLeft = Infinity;
+    let minTop = Infinity;
+    let maxRight = -Infinity;
+    let maxBottom = -Infinity;
+    
+    // Проходим по всем выделенным ячейкам и находим границы
+    selectedCells.forEach(cellKey => {
+      const cell = document.querySelector(`[data-cell-key="${cellKey}"]`) as HTMLElement;
+      if (cell) {
+        const rect = cell.getBoundingClientRect();
+        minLeft = Math.min(minLeft, rect.left);
+        minTop = Math.min(minTop, rect.top);
+        maxRight = Math.max(maxRight, rect.right);
+        maxBottom = Math.max(maxBottom, rect.bottom);
+      }
+    });
+    
+    // Возвращаем прямоугольник, охватывающий все выделенные ячейки
+    return {
+      top: minTop,
+      left: minLeft,
+      width: maxRight - minLeft,
+      height: maxBottom - minTop
+    };
   };
   
   // Состояние для хранения позиции popup
@@ -236,31 +259,45 @@ export function AcademicCalendarTable({
   // Обновляем положение ActionBar при изменении выделенных ячеек
   useEffect(() => {
     if (selectedCells.size > 0) {
-      const firstElement = getFirstSelectedElement();
+      // Создаем или получаем anchor-элемент
+      const selectionRect = getSelectionRect(selectedCells);
+      const anchor = document.getElementById('multi-anchor') ?? 
+                   Object.assign(document.createElement('div'), { id: 'multi-anchor' });
       
-      if (firstElement) {
-        // Устанавливаем референс виртуального элемента
-        refs.setReference({
-          getBoundingClientRect: () => {
-            return {
-              ...firstElement.getBoundingClientRect(),
-              // Ограничиваем верхнюю границу шапкой таблицы (если нужно)
-              y: Math.max(firstElement.getBoundingClientRect().y, 
-                tableRef.current?.querySelector('thead')?.getBoundingClientRect().bottom || 0),
-              x: firstElement.getBoundingClientRect().x
-            };
-          }
-        });
-        
-        // Обновляем позицию
-        update();
-      }
+      // Устанавливаем минимальное значение для Y координаты (не выше шапки таблицы)
+      const minY = headerRef.current?.getBoundingClientRect().bottom ?? 0 + 8;
+      const topPosition = selectionRect.top < minY ? minY : selectionRect.top;
+      
+      // Устанавливаем положение anchor-элемента
+      anchor.style.cssText = `
+         position:absolute;
+         top:${topPosition}px;
+         left:${selectionRect.left + selectionRect.width / 2}px;
+         width:1px;
+         height:1px;
+         z-index:40;
+         pointer-events:none;`;
+      
+      // Добавляем элемент в DOM и устанавливаем как референс для Floating UI
+      document.body.appendChild(anchor);
+      refs.setReference(anchor);
+      
+      // Обновляем позицию
+      update();
+      
+      // Удаляем anchor при размонтировании
+      return () => {
+        if (anchor.parentNode) {
+          anchor.parentNode.removeChild(anchor);
+        }
+      };
     }
-  }, [selectedCells, refs, update]);
+  }, [selectedCells, refs, update, headerRef]);
   
   // Обновляем tooltip цвета и стили
   useEffect(() => {
-    const tooltipStyle = `
+    const customStyle = `
+      /* Стили для тултипа */
       .academic-tooltip {
         background-color: rgb(15 23 42) !important; /* bg-slate-900 */
         color: white !important;
@@ -289,11 +326,28 @@ export function AcademicCalendarTable({
           color: white !important;
         }
       }
+      
+      /* Стили для выделенных ячеек */
+      [data-cell-key].relative {
+        position: relative;
+        box-shadow: 0 0 0 2px rgb(129 140 248); /* ring-indigo-400 */
+        z-index: 10;
+      }
+      
+      [data-cell-key].relative::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background-color: rgb(99 102 241 / 0.25); /* bg-indigo-500/25 */
+        border-radius: 0.125rem; /* rounded-sm */
+        pointer-events: none;
+        z-index: 1;
+      }
     `;
     
     // Добавляем стили в head
     const styleElement = document.createElement('style');
-    styleElement.innerHTML = tooltipStyle;
+    styleElement.innerHTML = customStyle;
     document.head.appendChild(styleElement);
     
     return () => {
@@ -504,8 +558,8 @@ export function AcademicCalendarTable({
       <div className="rounded-md overflow-hidden border shadow-sm dark:border-slate-700">
         <div className="overflow-auto max-h-[500px] custom-scrollbar">
           <div className="min-w-max">
-            <table className="w-full border-collapse">
-              <thead>
+            <table className="w-full border-collapse" ref={tableRef}>
+              <thead ref={headerRef}>
                 {renderHeaders()}
               </thead>
               <tbody className="bg-slate-50 dark:bg-slate-900">

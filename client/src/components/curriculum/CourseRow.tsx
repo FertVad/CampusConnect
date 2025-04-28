@@ -143,7 +143,7 @@ export function CourseRow({
         <td 
           key={`cell-${cellKey}`}
           className={`${baseCellClass} ${!activity && !crossMonth ? monthBg : ''} 
-            ${selectedCells.has(cellKey) ? 'bg-indigo-500/25 ring-2 ring-indigo-400 rounded-sm' : ''}`}
+            ${selectedCells.has(cellKey) ? 'relative' : ''}`}
           data-cell-key={cellKey}
           style={style}
           onClick={(event) => onCellClick({
