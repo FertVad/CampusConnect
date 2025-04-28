@@ -485,6 +485,53 @@ export function AcademicCalendarTable({
                 {renderCourseRows()}
               </tbody>
             </table>
+            
+            {/* Action Bar с абсолютным позиционированием внутри календаря */}
+            {selectedCells.size > 0 && (
+              <div 
+                className="action-bar"
+                style={{
+                  position: 'absolute',
+                  top: actionBarPosition.top,
+                  left: actionBarPosition.left,
+                  transform: 'translateX(-50%)',
+                }}
+              >
+                <span className="mr-2 text-sm">Выбрано {selectedCells.size} недель:</span>
+                
+                {/* Кнопки активностей */}
+                {Object.entries(ACTIVITY_TYPES).map(([code, description]) => {
+                  const { bg } = getActivityStyle(code as ActivityType);
+                  return (
+                    <button
+                      key={code}
+                      className={`${bg} w-8 h-8 rounded font-semibold hover:ring-2 hover:ring-slate-400/50 dark:hover:ring-white/50 transition-all`}
+                      onClick={() => handleCellChange(code as ActivityType, true)}
+                      title={description}
+                    >
+                      {code}
+                    </button>
+                  );
+                })}
+                
+                {/* Кнопка очистки */}
+                <button
+                  className="bg-slate-200 dark:bg-slate-600 hover:bg-slate-300 dark:hover:bg-slate-500 px-2 rounded text-sm hover:ring-2 hover:ring-slate-400/50 dark:hover:ring-white/50 transition-all"
+                  onClick={() => handleCellChange("", true)}
+                >
+                  Очистить
+                </button>
+                
+                {/* Кнопка закрытия (снимает выделение) */}
+                <button
+                  className="ml-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full p-1 transition-colors"
+                  onClick={clearSelection}
+                  title="Снять выделение"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -524,54 +571,7 @@ export function AcademicCalendarTable({
         </div>
       </div>
       
-      {/* Floating Action Bar с использованием Popper.js */}
-      {selectedCells.size > 0 && (
-        <div 
-          ref={actionBarRef}
-          className="flex gap-2 bg-white dark:bg-slate-800 text-slate-900 dark:text-white px-4 py-2 rounded-lg shadow-lg z-50 fixed"
-          style={{
-            position: strategy,
-            top: y ?? 0,
-            left: x ?? 0,
-            transform: 'translateX(-50%)',
-            willChange: 'transform',
-          }}
-        >
-          <span className="mr-2 text-sm">Выбрано {selectedCells.size} недель:</span>
-          
-          {/* Кнопки активностей */}
-          {Object.entries(ACTIVITY_TYPES).map(([code, description]) => {
-            const { bg } = getActivityStyle(code as ActivityType);
-            return (
-              <button
-                key={code}
-                className={`${bg} w-8 h-8 rounded font-semibold hover:ring-2 hover:ring-slate-400/50 dark:hover:ring-white/50 transition-all`}
-                onClick={() => handleCellChange(code as ActivityType, true)}
-                title={description}
-              >
-                {code}
-              </button>
-            );
-          })}
-          
-          {/* Кнопка очистки */}
-          <button
-            className="bg-slate-200 dark:bg-slate-600 hover:bg-slate-300 dark:hover:bg-slate-500 px-2 rounded text-sm hover:ring-2 hover:ring-slate-400/50 dark:hover:ring-white/50 transition-all"
-            onClick={() => handleCellChange("", true)}
-          >
-            Очистить
-          </button>
-          
-          {/* Кнопка закрытия (снимает выделение) */}
-          <button
-            className="ml-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full p-1 transition-colors"
-            onClick={clearSelection}
-            title="Снять выделение"
-          >
-            <X size={16} />
-          </button>
-        </div>
-      )}
+      {/* ActionBar перенесен внутрь calendar-wrapper */}
       
       <WeekActivityDialog
         open={dialogOpen}
