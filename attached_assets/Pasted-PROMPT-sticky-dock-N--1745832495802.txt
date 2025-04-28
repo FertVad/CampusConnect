@@ -1,0 +1,83 @@
+PROMPT — «невидимый» sticky‑dock бар (появляется при выделении)
+
+Цель: панель "Выбрано N недель" появляется под строкой «Курс / Дата начала» только когда есть выделенные ячейки. Пока выделения нет — невидима и не перетаскивает layout.
+
+1 . CSS (index.css) (index.css)
+
+/* базовый док‑бар */
+.calendar-dock-bar {
+  position: sticky;
+  top: 56px;                 /* сразу под выпадашкой курса */
+  z-index: 60;
+
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+
+  background: hsl(240 10% 10% / 0.90);  /* полупрозрачный тёмный */
+  color: white;
+  backdrop-filter: blur(4px);
+  border-radius: 0 0 6px 6px;
+  box-shadow: 0 1px 3px hsl(0 0% 0% / 0.30);
+
+  transition: opacity 150ms ease;
+  opacity: 0;                /* скрыто по умолчанию */
+  pointer-events: none;      /* не ловит клики, пока скрыто */
+}
+
+/* когда есть выделение → добавить класс .is-visible */
+.calendar-dock-bar.is-visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+2 . JSX (AcademicCalendarTable)
+
+// hasSelection — bool: selectedCells.size > 0
+return (
+  <>
+    <div className={clsx('calendar-dock-bar', { 'is-visible': hasSelection })}>
+      <span className="mr-2">Выбрано {selectedCells.size}:</span>
+      {activityButtons /* У К П Э Д */}
+      <button onClick={clearSelection}>Очистить</button>
+    </div>
+
+    {/* … сама таблица … */}
+  </>
+);
+
+3 . Что убрать
+
+Старый floating‑toolbar / Popper не нужен → удалить.
+
+Anchor‑логика больше не используется.
+
+4 . Проверка
+
+Ничего не выбрано — панели не видно.
+
+Одинарный клик → панель плавно проявилась.
+
+Scroll таблицы — панель всегда «прилипает» к верху календаря.
+
+Двойной клик открывает модалку, панель не перекрывается.
+
+Commit msg: ui: sticky dock‑bar (opacity toggle)
+
+
+
+3 . Очистка лишнего кода
+
+Удалить старый Popper‑based action‑bar и anchor‑div.
+
+Удалить JS‑логика, где вычислялись selectionRect/top/left для плавающего бара.
+
+Удалить CSS‑классы .action-bar { position: fixed / absolute … }, которые больше не нужны.
+
+Проверь, что никаких z-index: 30, z-40 стилей не остаётся от старой реализации.
+
+В TooltipProvider оставь delayDuration={1000}, убери временные z-index костыли.
+
+После: код таблицы чище, только одна реализация бар‑панели.
+

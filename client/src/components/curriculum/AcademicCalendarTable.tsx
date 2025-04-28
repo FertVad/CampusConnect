@@ -7,7 +7,8 @@ import { ru } from "date-fns/locale/ru";
 import { useAutoSave } from "@/hooks/useAutoSave";
 import { SaveButton } from "@/components/ui/save-button";
 import { CourseRow } from "./CourseRow";
-import { FloatingActionBar } from "./FloatingActionBar";
+import { X } from "lucide-react";
+import clsx from "clsx";
 
 // Количество курсов
 const NUMBER_OF_COURSES = 4;
@@ -449,8 +450,48 @@ export function AcademicCalendarTable({
     ));
   };
   
+  // Проверяем, есть ли выделение для dock-bar
+  const hasSelection = selectedCells.size > 0;
+
   return (
     <div className="w-full">
+      {/* Sticky dock-bar (прикреплен к верху области просмотра) */}
+      <div className={clsx('calendar-dock-bar', { 'is-visible': hasSelection })}>
+        <span className="mr-2">Выбрано {selectedCells.size}:</span>
+        
+        {/* Кнопки активностей */}
+        {Object.entries(ACTIVITY_TYPES).map(([code, description]) => {
+          const { bg } = getActivityStyle(code as ActivityType);
+          return (
+            <button
+              key={code}
+              className={`${bg} w-6 h-6 rounded font-semibold hover:ring-1 hover:ring-white/70 transition-all`}
+              onClick={() => handleCellChange(code as ActivityType, true)}
+              title={description}
+            >
+              {code}
+            </button>
+          );
+        })}
+        
+        {/* Кнопка очистки */}
+        <button
+          className="bg-slate-200/20 hover:bg-slate-200/30 px-2 rounded text-sm"
+          onClick={() => handleCellChange("", true)}
+        >
+          Очистить
+        </button>
+        
+        {/* Кнопка закрытия (снимает выделение) */}
+        <button
+          className="ml-1 hover:bg-slate-700/50 rounded-full p-1 transition-colors"
+          onClick={clearSelection}
+          title="Снять выделение"
+        >
+          <X size={14} />
+        </button>
+      </div>
+
       <div className="rounded-md overflow-hidden border shadow-sm dark:border-slate-700">
         <div className="overflow-auto max-h-[500px] custom-scrollbar calendar-wrapper" ref={scrollWrapperRef}>
           <div className="min-w-max relative">
@@ -500,21 +541,6 @@ export function AcademicCalendarTable({
           />
         </div>
       </div>
-      
-      {/* Используем новый компонент FloatingActionBar с портальным рендерингом */}
-      <FloatingActionBar
-        selectedCells={selectedCells}
-        getActivityStyle={getActivityStyle}
-        onActivityChange={handleCellChange}
-        clearSelection={clearSelection}
-        headerRef={headerRef}
-        getSelectionRect={getSelectionRect}
-      />
-      
-      {/* Создаем div для портала, если его нет */}
-      {typeof document !== 'undefined' && !document.getElementById('portal-root') && (
-        <div id="portal-root" />
-      )}
       
       <WeekActivityDialog
         open={dialogOpen}

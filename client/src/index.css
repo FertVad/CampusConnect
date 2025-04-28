@@ -529,20 +529,34 @@
   z-index: 2;
 }
 
-/* Action Bar стили */
-.action-bar {
+/* Стили для sticky dock-bar */
+.calendar-dock-bar {
+  position: sticky;
+  top: 56px;                 /* сразу под выпадашкой курса */
+  z-index: 60;
+
   display: flex;
-  gap: 0.5rem;
-  background-color: white;
-  color: rgb(15 23 42);
-  padding: 0.5rem 1rem;
-  border-radius: 0.5rem;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  z-index: 60; /* Выше тултипа: 60 > 50 */
-  width: fit-content;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+
+  background: hsl(240 10% 10% / 0.90);  /* полупрозрачный тёмный */
+  color: white;
+  backdrop-filter: blur(4px);
+  border-radius: 0 0 6px 6px;
+  box-shadow: 0 1px 3px hsl(0 0% 0% / 0.30);
+
+  transition: opacity 150ms ease;
+  opacity: 0;                /* скрыто по умолчанию */
+  pointer-events: none;      /* не ловит клики, пока скрыто */
 }
 
-.dark .action-bar {
-  background-color: rgb(30 41 59);
-  color: white;
+/* когда есть выделение → добавить класс .is-visible */
+.calendar-dock-bar.is-visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.dark .calendar-dock-bar {
+  background: hsl(220 20% 10% / 0.90);
 }
