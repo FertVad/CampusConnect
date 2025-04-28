@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import { WeekActivityDialog, WeekInfo, ActivityType, ACTIVITY_TYPES, ACTIVITY_COLORS } from "./WeekActivityDialog";
-import { Tooltip } from 'react-tooltip';
+import { Tooltip } from 'react-tooltip'; // Возвращаемся к react-tooltip, так как он проще в использовании
 import { WeekCell, getFirstWorkdayOfSeptember, buildAcademicWeeks } from "@/utils/calendar";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale/ru";
@@ -452,11 +452,36 @@ export function AcademicCalendarTable({
   
   // Проверяем, есть ли выделение для dock-bar
   const hasSelection = selectedCells.size > 0;
+  
+  // Рассчитываем высоту шапки таблицы для правильного позиционирования бара
+  const [headerHeight, setHeaderHeight] = useState(0);
+  const dockBarRef = useRef<HTMLDivElement>(null);
+  
+  // Обновляем высоту шапки при монтировании и изменении размеров окна
+  useEffect(() => {
+    function updateHeaderHeight() {
+      if (headerRef.current) {
+        const height = headerRef.current.offsetHeight;
+        setHeaderHeight(height);
+      }
+    }
+    
+    // Инициализация при загрузке
+    updateHeaderHeight();
+    
+    // Обновление при ресайзе окна
+    window.addEventListener('resize', updateHeaderHeight);
+    return () => window.removeEventListener('resize', updateHeaderHeight);
+  }, [headerRef]);
 
   return (
     <div className="w-full">
-      {/* Sticky dock-bar (прикреплен к верху области просмотра) */}
-      <div className={clsx('calendar-dock-bar', { 'is-visible': hasSelection })}>
+      {/* Sticky dock-bar (прикреплен к верху области просмотра с учетом высоты шапки) */}
+      <div 
+        ref={dockBarRef}
+        className={clsx('calendar-dock-bar', { 'is-visible': hasSelection })}
+        style={{ top: `calc(${headerHeight}px + 12px)` }}
+      >
         <span className="mr-2">Выбрано {selectedCells.size}:</span>
         
         {/* Кнопки активностей */}
