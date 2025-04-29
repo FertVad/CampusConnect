@@ -474,9 +474,10 @@
   padding: 0.75rem !important; /* px-3 py-2 */
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2) !important; /* shadow-lg */
   z-index: 30 !important; /* Строго ниже dock-bar (z-index: 60) */
-  transition-delay: 1000ms !important; 
+  transition-delay: 0ms !important; 
   opacity: 0.95 !important;
   max-width: 300px !important;
+  margin-top: 65px !important; /* Принудительный отступ сверху, чтобы быть ниже dock-bar */
 }
 
 .dark .academic-tooltip {
@@ -513,10 +514,11 @@
   --month-b: hsl(218 40% 93%); /* чуть темнее в светлой теме */
 }
 
+/* Для темной темы BODY имеет класс .dark */
 .dark {
-  /* Темная тема */
-  --month-a: hsl(218 40% 16%); /* тёмный navy */
-  --month-b: hsl(218 40% 20%); /* +4% L */
+  /* Темная тема с увеличенным контрастом */
+  --month-a: hsl(218 40% 13%); /* темный месяц */
+  --month-b: hsl(218 40% 22%); /* светлый месяц, +9% яркость для контраста */
 }
 
 /* Стили для шахматной сетки месяцев */
@@ -574,32 +576,36 @@ td.week-cell.--split-month[data-month-odd="1"] {
 
 /* Стили для sticky dock-bar */
 .calendar-dock-bar {
-  position: sticky;
-  top: 56px;                 /* сразу под выпадашкой курса */
-  z-index: 60;
+  position: fixed;           /* Изменено с sticky на fixed для гарантированного позиционирования */
+  top: 60px;                 /* Немного ниже шапки */
+  left: 50%;                 /* Центрируем горизонтально */
+  transform: translateX(-50%); /* Смещаем для точного центрирования */
+  z-index: 999;              /* Максимальный z-index, чтобы быть поверх всего */
 
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 12px;
+  padding: 8px 16px;
 
-  background: hsl(240 10% 10% / 0.90);  /* полупрозрачный тёмный */
+  background: hsl(240 10% 10% / 0.95);  /* Почти непрозрачный тёмный */
   color: white;
-  backdrop-filter: blur(4px);
-  border-radius: 0 0 6px 6px;
-  box-shadow: 0 1px 3px hsl(0 0% 0% / 0.30);
+  backdrop-filter: blur(5px);
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25); /* Усиленная тень */
 
-  transition: opacity 150ms ease;
+  transition: opacity 150ms ease, transform 200ms ease;
   opacity: 0;                /* скрыто по умолчанию */
   pointer-events: none;      /* не ловит клики, пока скрыто */
+  transform: translate(-50%, -10px); /* Изначально немного сдвинут вверх */
 }
 
 /* когда есть выделение → добавить класс .is-visible */
 .calendar-dock-bar.is-visible {
   opacity: 1;
   pointer-events: auto;
+  transform: translate(-50%, 0); /* Плавно появляется из верхней позиции */
 }
 
 .dark .calendar-dock-bar {
-  background: hsl(220 20% 10% / 0.90);
+  background: hsl(220 20% 10% / 0.95);
 }

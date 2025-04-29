@@ -104,8 +104,11 @@ export function CourseRow({
         ${isSelected ? 'ring-2 ring-blue-500 shadow-lg' : ''}
         hover:outline hover:outline-2 hover:outline-blue-500 hover:outline-offset-[-2px]`;
       
-      // Определяем стиль для ячейки - только если есть активность
-      const style = activity ? { background: weekGradient(activity) } : undefined;
+      // Определяем цвет для активности, если она есть
+      const activityStyle = activity ? { background: weekGradient(activity) } : undefined;
+      
+      // Определяем является ли месяц четным (0, 2, 4...) или нечетным (1, 3, 5...)
+      const monthOdd = monthIndex % 2 === 1 ? 1 : 0;
       
       cells.push(
         <td 
@@ -114,8 +117,8 @@ export function CourseRow({
             ${crossMonth ? '--split-month' : ''} 
             ${selectedCells && cellKey && Array.from(selectedCells).includes(cellKey) ? 'relative' : ''}`}
           data-cell-key={cellKey}
-          data-month-odd={monthIndex % 2}
-          style={style}
+          data-month-odd={monthOdd}
+          style={activityStyle}
           onClick={(event) => onCellClick({
             courseId: course.id,
             weekNumber,
