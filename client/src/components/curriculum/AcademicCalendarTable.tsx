@@ -458,8 +458,6 @@ export function AcademicCalendarTable({
   const dockBarRef = useRef<HTMLDivElement>(null);
   
   // Обновляем высоту шапки при монтировании и изменении размеров окна
-  // Теперь этот эффект не влияет на dock-bar, так как он позиционируется fixed,
-  // но оставим его для совместимости с будущими изменениями
   useEffect(() => {
     function updateHeaderHeight() {
       if (headerRef.current) {
@@ -482,6 +480,7 @@ export function AcademicCalendarTable({
       <div 
         ref={dockBarRef}
         className={clsx('calendar-dock-bar', { 'is-visible': hasSelection })}
+        style={{ top: `calc(${headerHeight}px + 12px)` }}
       >
         <span className="mr-2">Выбрано {selectedCells.size}:</span>
         
@@ -580,12 +579,36 @@ export function AcademicCalendarTable({
       <Tooltip 
         id="calendar-tooltip" 
         className="academic-tooltip" 
-        place="bottom" /* Показываем тултип снизу по умолчанию */
+        place="top"
         clickable={true}
         delayHide={0}
-        delayShow={500}
+        delayShow={1000}
         positionStrategy="fixed"
-        offset={20} /* Увеличиваем смещение от элемента */
+        afterShow={() => {
+          setTimeout(() => {
+            // Проверяем положение dock-bar, чтобы тултип его обходил
+            if (hasSelection && dockBarRef.current) {
+              const barRect = dockBarRef.current.getBoundingClientRect();
+              const tooltipContent = document.querySelector('.academic-tooltip');
+              
+              if (tooltipContent) {
+                const tooltipRect = tooltipContent.getBoundingClientRect();
+                const overlap = 
+                  tooltipRect.top < barRect.bottom &&
+                  tooltipRect.bottom > barRect.top;
+                
+                if (overlap) {
+                  // Если перекрывается с баром, скрываем тултип и затем показываем его снизу
+                  const tooltip = document.getElementById('calendar-tooltip');
+                  if (tooltip) {
+                    tooltip.setAttribute('data-tooltip-place', 'bottom');
+                    tooltip.style.top = `${barRect.bottom + 10}px`;
+                  }
+                }
+              }
+            }
+          }, 0);
+        }}
       />
     </div>
   );
