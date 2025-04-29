@@ -2,7 +2,7 @@ import React from "react";
 import { WeekCell, buildAcademicWeeks } from "@/utils/calendar";
 import { format, getWeek, differenceInWeeks } from "date-fns";
 import { ru } from "date-fns/locale/ru";
-import { ActivityType, ACTIVITY_COLORS, ACTIVITY_TYPES, weekGradient, monthTransitionGradient } from "./WeekActivityDialog";
+import { ActivityType, ACTIVITY_COLORS, ACTIVITY_TYPES, weekGradient } from "./WeekActivityDialog";
 import { Tooltip } from "react-tooltip";
 
 // Интерфейс курса
@@ -96,32 +96,6 @@ export function CourseRow({
         daysInNextMonth = weekInCourse.endDate.getDate();
       }
       
-      // Шахматный фон для обычных ячеек
-      const chessBg = isEvenMonth
-        ? 'bg-slate-100 dark:bg-slate-800'
-        : 'bg-slate-200 dark:bg-slate-700';
-      
-      // Градиентный фон для недель на стыке месяцев
-      let gradientStyle = {};
-      if (crossMonth) {
-        // Проверяем темный режим
-        const isDarkMode = window.matchMedia && 
-                         window.matchMedia('(prefers-color-scheme: dark)').matches;
-        
-        // Используем нашу функцию для создания градиента
-        const gradientBackground = monthTransitionGradient(
-          daysInCurrentMonth,
-          daysInNextMonth,
-          isEvenMonth,
-          isDarkMode
-        );
-        
-        // Устанавливаем стиль
-        gradientStyle = {
-          background: gradientBackground
-        };
-      }
-      
       // Проверяем, заканчивается ли месяц в этой неделе
       const isMonthEnd = isLastDayOfMonth(weekInCourse.endDate);
       
@@ -131,20 +105,17 @@ export function CourseRow({
         ${isSelected ? 'ring-2 ring-blue-500 shadow-lg' : ''}
         hover:outline hover:outline-2 hover:outline-blue-500 hover:outline-offset-[-2px]`;
       
-      // Класс фона в зависимости от месяца
-      const monthBg = !activity && !crossMonth ? chessBg : '';
-      
-      // Определяем стиль для ячейки
-      const style = activity 
-        ? { background: weekGradient(activity) } 
-        : (crossMonth ? gradientStyle : undefined);
+      // Определяем стиль для ячейки - только если есть активность
+      const style = activity ? { background: weekGradient(activity) } : undefined;
       
       cells.push(
         <td 
           key={`cell-${cellKey}`}
-          className={`${baseCellClass} ${!activity && !crossMonth ? monthBg : ''} 
-            ${selectedCells.has(cellKey) ? 'relative' : ''}`}
+          className={`${baseCellClass} week-cell
+            ${crossMonth ? '--split-month' : ''} 
+            ${selectedCells && cellKey && Array.from(selectedCells).includes(cellKey) ? 'relative' : ''}`}
           data-cell-key={cellKey}
+          data-month-odd={monthIndex % 2}
           style={style}
           onClick={(event) => onCellClick({
             courseId: course.id,
@@ -172,7 +143,7 @@ export function CourseRow({
                 });
                 
                 // Проверяем, все ли дни имеют одинаковую активность
-                const uniqueActivities = [...new Set(Object.values(days))];
+                const uniqueActivities = Array.from(new Set(Object.values(days)));
                 
                 // Если все дни одинаковые и есть хотя бы один день с активностью
                 if (uniqueActivities.length === 1 && uniqueActivities[0] && Object.keys(days).length > 0) {

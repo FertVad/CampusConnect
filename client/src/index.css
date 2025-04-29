@@ -505,6 +505,34 @@
   overflow: visible !important;
 }
 
+/* Переменные цветов для месяцев календаря */
+:root {
+  /* Светлая тема */
+  --month-a: hsl(218 40% 97%); /* светлый в светлой теме */
+  --month-b: hsl(218 40% 93%); /* чуть темнее в светлой теме */
+}
+
+.dark {
+  /* Темная тема */
+  --month-a: hsl(218 40% 23%); /* тёмный navy */
+  --month-b: hsl(218 40% 28%); /* +5 L */
+}
+
+/* Стили для шахматной сетки месяцев */
+.week-cell[data-month-odd="0"] { 
+  background: var(--month-a); 
+}
+.week-cell[data-month-odd="1"] { 
+  background: var(--month-b); 
+}
+
+/* Градиент для недель, разделенных между месяцами */
+.week-cell.--split-month {
+  background: linear-gradient(90deg,
+              var(--month-a) 0% 49%,
+              var(--month-b) 51% 100%);
+}
+
 /* Selected cell styles */
 [data-cell-key].relative {
   position: relative;

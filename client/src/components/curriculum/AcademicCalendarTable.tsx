@@ -575,7 +575,7 @@ export function AcademicCalendarTable({
         onActivityChange={handleActivityChange}
       />
       
-      {/* Тултип для календаря (z-index ниже Action Bar) */}
+      {/* Тултип для календаря (z-index ниже dock-bar) */}
       <Tooltip 
         id="calendar-tooltip" 
         className="academic-tooltip" 
@@ -583,7 +583,30 @@ export function AcademicCalendarTable({
         clickable={true}
         delayHide={0}
         delayShow={1000}
-        style={{ zIndex: 40 }}
+        positionStrategy="fixed"
+        afterShow={() => {
+          // Проверяем положение dock-bar, чтобы тултип его обходил
+          if (hasSelection && dockBarRef.current) {
+            const barRect = dockBarRef.current.getBoundingClientRect();
+            const tooltipContent = document.querySelector('.academic-tooltip');
+            
+            if (tooltipContent) {
+              const tooltipRect = tooltipContent.getBoundingClientRect();
+              const overlap = 
+                tooltipRect.top < barRect.bottom &&
+                tooltipRect.bottom > barRect.top;
+              
+              if (overlap) {
+                // Если перекрывается с баром, меняем позицию через плейсмент снизу
+                const tooltip = document.getElementById('calendar-tooltip');
+                if (tooltip) {
+                  // Используем data-attribute для изменения положения
+                  tooltip.setAttribute('data-tooltip-place', 'bottom');
+                }
+              }
+            }
+          }
+        }}
       />
     </div>
   );
