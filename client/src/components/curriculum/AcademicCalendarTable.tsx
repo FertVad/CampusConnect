@@ -124,7 +124,7 @@ export function AcademicCalendarTable({
     // Если применяем к выделению и есть выделенные ячейки
     if (applyToSelection && selectedCells.size > 0) {
       // Применяем значение ко всем выделенным ячейкам
-      selectedCells.forEach(cellKey => {
+      Array.from(selectedCells).forEach(cellKey => {
         newData[cellKey] = activity;
       });
       
@@ -226,7 +226,7 @@ export function AcademicCalendarTable({
     let maxBottom = -Infinity;
     
     // Проходим по всем выделенным ячейкам и находим границы
-    selectedCells.forEach(cellKey => {
+    Array.from(selectedCells).forEach(cellKey => {
       const cell = document.querySelector(`[data-cell-key="${cellKey}"]`) as HTMLElement;
       if (cell) {
         const rect = cell.getBoundingClientRect();
