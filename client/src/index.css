@@ -473,9 +473,10 @@
   border-radius: 0.375rem !important; /* rounded-md */
   padding: 0.75rem !important; /* px-3 py-2 */
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2) !important; /* shadow-lg */
-  z-index: 40 !important; /* Ниже dock-bar (z-index: 60) */
-  transition-delay: 1000ms !important;
-  opacity: 1 !important;
+  z-index: 30 !important; /* Строго ниже dock-bar (z-index: 60) */
+  transition-delay: 1000ms !important; 
+  opacity: 0.95 !important;
+  max-width: 300px !important;
 }
 
 .dark .academic-tooltip {
@@ -514,23 +515,37 @@
 
 .dark {
   /* Темная тема */
-  --month-a: hsl(218 40% 23%); /* тёмный navy */
-  --month-b: hsl(218 40% 28%); /* +5 L */
+  --month-a: hsl(218 40% 16%); /* тёмный navy */
+  --month-b: hsl(218 40% 20%); /* +4% L */
 }
 
 /* Стили для шахматной сетки месяцев */
-.week-cell[data-month-odd="0"] { 
-  background: var(--month-a); 
+td.week-cell[data-month-odd="0"] { 
+  background-color: var(--month-a) !important; 
 }
-.week-cell[data-month-odd="1"] { 
-  background: var(--month-b); 
+td.week-cell[data-month-odd="1"] { 
+  background-color: var(--month-b) !important; 
 }
 
 /* Градиент для недель, разделенных между месяцами */
-.week-cell.--split-month {
+/* Для светлой темы */
+td.week-cell.--split-month {
   background: linear-gradient(90deg,
               var(--month-a) 0% 49%,
-              var(--month-b) 51% 100%);
+              var(--month-b) 51% 100%) !important;
+}
+
+/* Специальные классы для каждой комбинации месяцев */
+td.week-cell.--split-month[data-month-odd="0"] {
+  background: linear-gradient(90deg,
+              var(--month-a) 0% 49%,
+              var(--month-b) 51% 100%) !important;
+}
+
+td.week-cell.--split-month[data-month-odd="1"] {
+  background: linear-gradient(90deg,
+              var(--month-b) 0% 49%,
+              var(--month-a) 51% 100%) !important;
 }
 
 /* Selected cell styles */

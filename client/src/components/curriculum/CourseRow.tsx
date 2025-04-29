@@ -71,17 +71,16 @@ export function CourseRow({
       const isSelected = cellKey === selectedCellKey;
       
       // Неделя пересекает границу месяца?
-      const crossMonth = weekInCourse.startDate.getMonth() !== weekInCourse.endDate.getMonth();
+      const startMonthNum = weekInCourse.startDate.getMonth();
+      const endMonthNum = weekInCourse.endDate.getMonth();
+      const crossMonth = startMonthNum !== endMonthNum;
       
       // Определяем месяц для шахматного порядка (четный/нечетный месяц)
-      const startMonth = format(weekInCourse.startDate, "LLLL", { locale: ru });
+      const startMonthName = format(weekInCourse.startDate, "LLLL", { locale: ru });
       
-      // Пытаемся определить индекс месяца в порядке учебного года (сентябрь = 0)
-      const monthNames = ["сентябрь", "октябрь", "ноябрь", "декабрь", "январь", "февраль", "март", "апрель", "май", "июнь", "июль", "август"];
-      let monthIndex = monthNames.indexOf(startMonth.toLowerCase());
-      monthIndex = monthIndex === -1 ? weekInCourse.startDate.getMonth() : monthIndex;
-      
-      const isEvenMonth = monthIndex % 2 === 0;
+      // Используем фактический месяц (0-11) для определения четности/нечетности
+      // Обратите внимание, что getMonth() возвращает 0 для января, 1 для февраля и т.д.
+      const monthIndex = startMonthNum;
       
       // Вычисляем количество дней в текущем месяце и в следующем
       let daysInCurrentMonth = 0;

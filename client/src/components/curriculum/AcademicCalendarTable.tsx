@@ -585,27 +585,29 @@ export function AcademicCalendarTable({
         delayShow={1000}
         positionStrategy="fixed"
         afterShow={() => {
-          // Проверяем положение dock-bar, чтобы тултип его обходил
-          if (hasSelection && dockBarRef.current) {
-            const barRect = dockBarRef.current.getBoundingClientRect();
-            const tooltipContent = document.querySelector('.academic-tooltip');
-            
-            if (tooltipContent) {
-              const tooltipRect = tooltipContent.getBoundingClientRect();
-              const overlap = 
-                tooltipRect.top < barRect.bottom &&
-                tooltipRect.bottom > barRect.top;
+          setTimeout(() => {
+            // Проверяем положение dock-bar, чтобы тултип его обходил
+            if (hasSelection && dockBarRef.current) {
+              const barRect = dockBarRef.current.getBoundingClientRect();
+              const tooltipContent = document.querySelector('.academic-tooltip');
               
-              if (overlap) {
-                // Если перекрывается с баром, меняем позицию через плейсмент снизу
-                const tooltip = document.getElementById('calendar-tooltip');
-                if (tooltip) {
-                  // Используем data-attribute для изменения положения
-                  tooltip.setAttribute('data-tooltip-place', 'bottom');
+              if (tooltipContent) {
+                const tooltipRect = tooltipContent.getBoundingClientRect();
+                const overlap = 
+                  tooltipRect.top < barRect.bottom &&
+                  tooltipRect.bottom > barRect.top;
+                
+                if (overlap) {
+                  // Если перекрывается с баром, скрываем тултип и затем показываем его снизу
+                  const tooltip = document.getElementById('calendar-tooltip');
+                  if (tooltip) {
+                    tooltip.setAttribute('data-tooltip-place', 'bottom');
+                    tooltip.style.top = `${barRect.bottom + 10}px`;
+                  }
                 }
               }
             }
-          }
+          }, 0);
         }}
       />
     </div>
