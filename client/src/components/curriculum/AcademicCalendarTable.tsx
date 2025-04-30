@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import { WeekActivityDialog, WeekInfo, ActivityType, ACTIVITY_TYPES, ACTIVITY_COLORS } from "./WeekActivityDialog";
-import { Tooltip } from 'react-tooltip'; // Возвращаемся к react-tooltip, так как он проще в использовании
+import { Tooltip } from 'react-tooltip';
 import { WeekCell, getFirstWorkdayOfSeptember, buildAcademicWeeks } from "@/utils/calendar";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale/ru";
@@ -9,6 +9,7 @@ import { SaveButton } from "@/components/ui/save-button";
 import { CourseRow } from "./CourseRow";
 import { X } from "lucide-react";
 import clsx from "clsx";
+import { Portal } from "@/components/ui/portal";
 
 // Количество курсов
 const NUMBER_OF_COURSES = 4;
@@ -417,13 +418,16 @@ export function AcademicCalendarTable({
   // Проверяем, есть ли выделение для dock-bar
   const hasSelection = selectedCells.size > 0;
   
-  // Обновляем CSS переменные для высоты шапки и количества недель
+  // Обновляем CSS переменные для таблицы
   useEffect(() => {
     function updateCssVariables() {
-      // Обновляем высоту заголовка для позиционирования dock-bar
-      if (headerRef.current) {
-        const headerHeight = headerRef.current.offsetHeight;
-        document.documentElement.style.setProperty('--header-h', `${headerHeight}px`);
+      // Устанавливаем позицию для dock-bar
+      if (headerRef.current && tableRef.current) {
+        const headerRect = headerRef.current.getBoundingClientRect();
+        const tableRect = tableRef.current.getBoundingClientRect();
+        
+        // Создаем переменную --calendar-top для dock-bar (верхняя граница таблицы + паддинг)
+        document.documentElement.style.setProperty('--calendar-top', `${headerRect.bottom + 12}px`);
       }
       
       // Обновляем количество недель для расчёта ширины таблицы
@@ -431,51 +435,61 @@ export function AcademicCalendarTable({
       document.documentElement.style.setProperty('--week-count', `${weekCount}`);
     }
     
+    // Запускаем сразу и добавляем отслеживание изменения размера окна
     updateCssVariables();
     window.addEventListener('resize', updateCssVariables);
-    return () => window.removeEventListener('resize', updateCssVariables);
+    
+    // Также добавляем обработчик события прокрутки, чтобы dock-bar следовал за таблицей
+    window.addEventListener('scroll', updateCssVariables);
+    
+    return () => {
+      window.removeEventListener('resize', updateCssVariables);
+      window.removeEventListener('scroll', updateCssVariables);
+    };
   }, [weeks.length]);
 
   return (
     <div className="w-full">
-      {/* Sticky dock-bar (прикреплен к верху области просмотра с учетом высоты шапки) */}
-      <div 
-        className={clsx('calendar-dock-bar', { 'is-visible': hasSelection })}
-      >
-        <span className="mr-2">Выбрано {selectedCells.size}:</span>
-        
-        {/* Кнопки активностей */}
-        {Object.entries(ACTIVITY_TYPES).map(([code, description]) => {
-          const { bg } = getActivityStyle(code as ActivityType);
-          return (
-            <button
-              key={code}
-              className={`${bg} w-6 h-6 rounded font-semibold hover:ring-1 hover:ring-white/70 transition-all`}
-              onClick={() => handleCellChange(code as ActivityType, true)}
-              title={description}
-            >
-              {code}
-            </button>
-          );
-        })}
-        
-        {/* Кнопка очистки */}
-        <button
-          className="bg-slate-200/20 hover:bg-slate-200/30 px-2 rounded text-sm"
-          onClick={() => handleCellChange("", true)}
+      {/* Dock-bar через React.Portal (фиксированное позиционирование) */}
+      <Portal>
+        <div 
+          className={clsx('calendar-dock-bar', { 'is-visible': hasSelection })}
         >
-          Очистить
-        </button>
-        
-        {/* Кнопка закрытия (снимает выделение) */}
-        <button
-          className="ml-1 hover:bg-slate-700/50 rounded-full p-1 transition-colors"
-          onClick={clearSelection}
-          title="Снять выделение"
-        >
-          <X size={14} />
-        </button>
-      </div>
+          <span className="mr-2">Выбрано {selectedCells.size}:</span>
+          
+          {/* Кнопки активностей */}
+          {Object.entries(ACTIVITY_TYPES).map(([code, description]) => {
+            const { bg } = getActivityStyle(code as ActivityType);
+            return (
+              <button
+                key={code}
+                className={`${bg} w-6 h-6 rounded font-semibold hover:ring-1 hover:ring-white/70 transition-all`}
+                onClick={() => handleCellChange(code as ActivityType, true)}
+                title={description}
+              >
+                {code}
+              </button>
+            );
+          })}
+          
+          {/* Кнопка очистки */}
+          <button
+            className="bg-slate-200/20 hover:bg-slate-200/30 px-2 rounded text-sm"
+            onClick={() => handleCellChange("", true)}
+          >
+            Очистить
+          </button>
+          
+          {/* Кнопка закрытия (снимает выделение) */}
+          <button
+            className="ml-1 hover:bg-slate-700/50 rounded-full p-1 transition-colors"
+            onClick={clearSelection}
+            title="Снять выделение"
+          >
+            <X size={14} />
+          </button>
+        </div>
+      </Portal>
 
       <div className="rounded-md overflow-hidden border shadow-sm dark:border-slate-700">
         <div className="overflow-auto max-h-[500px] custom-scrollbar calendar-wrapper" ref={scrollWrapperRef}>
@@ -539,11 +553,11 @@ export function AcademicCalendarTable({
       <Tooltip 
         id="calendar-tooltip" 
         className="academic-tooltip" 
-        place="top"
+        place="top-start"
         offset={12}
         clickable={true}
         delayHide={0}
-        delayShow={400}
+        delayShow={600}
         positionStrategy="fixed"
       />
     </div>

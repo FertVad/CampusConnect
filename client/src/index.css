@@ -594,26 +594,28 @@ td.week-cell.--split-month {
 
 /* Стили для dock-bar */
 .calendar-dock-bar {
-  position: sticky;
-  top: calc(var(--header-h) + 12px); /* header‑h обновляем в useEffect */
-  left: 0;
-  width: 100%;
-  z-index: 60;            /* выше tooltip, ниже modal */
+  position: fixed;
+  top: var(--calendar-top, 120px);
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 240px;
+  max-width: 100%;
+  z-index: 40;
   
   display: flex;
   align-items: center;
   gap: 6px;
   padding: 8px 12px;
   
-  background: hsl(240 10% 10% / 0.90);  /* полупрозрачный тёмный */
+  background: hsl(240 10% 10% / 0.90);
   color: white;
   backdrop-filter: blur(4px);
   border-radius: 4px;
-  box-shadow: 0 1px 3px hsl(0 0% 0% / 0.30);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
   
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.15s ease;
+  transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
 .calendar-dock-bar.is-visible {
@@ -622,14 +624,39 @@ td.week-cell.--split-month {
 }
 
 .dark .calendar-dock-bar {
-  background: hsl(220 20% 10% / 0.90);
+  background: hsl(220 20% 10% / 0.95);
 }
 
 /* Tooltip styles */
 .academic-tooltip {
-  z-index: 25;
+  z-index: 50 !important;
   max-width: 220px !important;
   white-space: normal !important;
+}
+
+/* Custom scrollbar for calendar */
+.calendar-wrapper {
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-behavior: smooth;
+}
+
+.calendar-wrapper::-webkit-scrollbar {
+  height: 8px;
+}
+
+.calendar-wrapper::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 4px;
+}
+
+.calendar-wrapper::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+.calendar-wrapper::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
 }
 
 /* Split month cell styling */
