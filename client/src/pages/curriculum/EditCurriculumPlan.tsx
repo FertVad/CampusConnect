@@ -493,6 +493,7 @@ function EditCurriculumPlanContent() {
                           planYear={plan.startYear || new Date().getFullYear()} 
                           yearsOfStudy={plan.yearsOfStudy}
                           initialData={plan.calendarData ? JSON.parse(plan.calendarData as string) : {}}
+                          planId={planId.toString()} // Явно указываем planId из родительского компонента
                           onChange={(data) => {
                             console.log("Calendar data updated:", data);
                             // Сохраняем данные графика

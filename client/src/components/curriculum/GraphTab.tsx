@@ -19,17 +19,22 @@ interface GraphTabProps {
   yearsOfStudy: number;   // Количество лет обучения
   initialData?: CalendarData; // Начальные данные календаря
   onChange?: (data: CalendarData) => void; // Колбэк для сохранения изменений
+  planId?: string;        // ID учебного плана (передается от родительского компонента)
 }
 
 export default function GraphTab({ 
   planYear = 2025, 
   yearsOfStudy = 4,
   initialData = {},
-  onChange
+  onChange,
+  planId
 }: GraphTabProps) {
-  // Извлекаем ключ planId из URLSearchParams
+  // Получаем planId из пропсов, если передано, иначе из URL для обратной совместимости
   const urlParams = new URLSearchParams(window.location.search);
-  const planId = urlParams.get('id') || '';
+  const urlPlanId = urlParams.get('id') || '';
+  // Используем planId из пропсов или fallback к URL
+  const effectivePlanId = planId || urlPlanId;
+  console.log('[GraphTab] Plan ID from props:', planId, 'from URL:', urlPlanId, 'effective:', effectivePlanId);
   // Локальное состояние для хранения данных календаря
   const [calendarData, setCalendarData] = useState<Record<string, string>>(initialData);
   
@@ -146,7 +151,7 @@ export default function GraphTab({
         initialData={calendarData}
         onChange={handleCalendarChange}
         startDates={startDates}
-        planId={planId}
+        planId={effectivePlanId}
       />
     </div>
   );
