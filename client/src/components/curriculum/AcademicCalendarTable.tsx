@@ -453,25 +453,27 @@ export function AcademicCalendarTable({
   // Проверяем, есть ли выделение для dock-bar
   const hasSelection = selectedCells.size > 0;
   
-  // Рассчитываем высоту шапки таблицы для правильного позиционирования бара
-  const [headerHeight, setHeaderHeight] = useState(0);
+  // Refs для элементов интерфейса
   const dockBarRef = useRef<HTMLDivElement>(null);
   
-  // Обновляем высоту шапки при монтировании и изменении размеров окна
+  // Позиционируем dock-bar на фиксированной позиции
+  const [barTop, setBarTop] = useState('56px');
+  
+  // Обновляем позицию dock-bar при монтировании и когда доступен headerRef
   useEffect(() => {
-    function updateHeaderHeight() {
+    function updateBarPosition() {
       if (headerRef.current) {
-        const height = headerRef.current.offsetHeight;
-        setHeaderHeight(height);
+        const headerRect = headerRef.current.getBoundingClientRect();
+        setBarTop(`${headerRect.bottom + 12}px`);
       }
     }
     
     // Инициализация при загрузке
-    updateHeaderHeight();
+    updateBarPosition();
     
-    // Обновление при ресайзе окна
-    window.addEventListener('resize', updateHeaderHeight);
-    return () => window.removeEventListener('resize', updateHeaderHeight);
+    // Отслеживание изменения размеров
+    window.addEventListener('resize', updateBarPosition);
+    return () => window.removeEventListener('resize', updateBarPosition);
   }, [headerRef]);
 
   return (
@@ -479,8 +481,16 @@ export function AcademicCalendarTable({
       {/* Sticky dock-bar (прикреплен к верху области просмотра с учетом высоты шапки) */}
       <div 
         ref={dockBarRef}
-        className={clsx('calendar-dock-bar', { 'is-visible': hasSelection })}
-        style={{ top: `calc(${headerHeight}px + 12px)` }}
+        style={{
+          position: 'fixed',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          top: barTop,
+          zIndex: 60,
+          opacity: hasSelection ? 1 : 0,
+          pointerEvents: hasSelection ? 'auto' : 'none',
+        }}
+        className="calendar-dock-bar"
       >
         <span className="mr-2">Выбрано {selectedCells.size}:</span>
         
@@ -575,40 +585,15 @@ export function AcademicCalendarTable({
         onActivityChange={handleActivityChange}
       />
       
-      {/* Тултип для календаря (z-index ниже dock-bar) */}
+      {/* Тултип для календаря (с auto-размещением) */}
       <Tooltip 
         id="calendar-tooltip" 
         className="academic-tooltip" 
-        place="top"
+        place="auto"
         clickable={true}
         delayHide={0}
-        delayShow={1000}
+        delayShow={800}
         positionStrategy="fixed"
-        afterShow={() => {
-          setTimeout(() => {
-            // Проверяем положение dock-bar, чтобы тултип его обходил
-            if (hasSelection && dockBarRef.current) {
-              const barRect = dockBarRef.current.getBoundingClientRect();
-              const tooltipContent = document.querySelector('.academic-tooltip');
-              
-              if (tooltipContent) {
-                const tooltipRect = tooltipContent.getBoundingClientRect();
-                const overlap = 
-                  tooltipRect.top < barRect.bottom &&
-                  tooltipRect.bottom > barRect.top;
-                
-                if (overlap) {
-                  // Если перекрывается с баром, скрываем тултип и затем показываем его снизу
-                  const tooltip = document.getElementById('calendar-tooltip');
-                  if (tooltip) {
-                    tooltip.setAttribute('data-tooltip-place', 'bottom');
-                    tooltip.style.top = `${barRect.bottom + 10}px`;
-                  }
-                }
-              }
-            }
-          }, 0);
-        }}
       />
     </div>
   );

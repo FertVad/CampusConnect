@@ -528,24 +528,16 @@ td.week-cell[data-month-odd="1"] {
 }
 
 /* Градиент для недель, разделенных между месяцами */
-/* Для светлой темы */
 td.week-cell.--split-month {
   background: linear-gradient(90deg,
-              var(--month-a) 0% 49%,
-              var(--month-b) 51% 100%) !important;
+      #f1f5f9 0 49%, #e2e8f0 51% 100%) !important;
 }
 
-/* Специальные классы для каждой комбинации месяцев */
-td.week-cell.--split-month[data-month-odd="0"] {
-  background: linear-gradient(90deg,
-              var(--month-a) 0% 49%,
-              var(--month-b) 51% 100%) !important;
-}
-
-td.week-cell.--split-month[data-month-odd="1"] {
-  background: linear-gradient(90deg,
-              var(--month-b) 0% 49%,
-              var(--month-a) 51% 100%) !important;
+@media (prefers-color-scheme: dark) {
+  td.week-cell.--split-month {
+    background: linear-gradient(90deg,
+        #1e293b 0 49%, #334155 51% 100%) !important;
+  }
 }
 
 /* Selected cell styles */
