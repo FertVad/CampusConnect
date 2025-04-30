@@ -43,7 +43,7 @@ export const SummaryTab: React.FC<SummaryTabProps> = ({
   // Если данных нет, показываем предупреждение
   if (Object.keys(localData).length === 0) {
     return (
-      <Alert variant="warning" className="mb-4">
+      <Alert className="mb-4 bg-yellow-50 text-yellow-900 border-yellow-200">
         <AlertCircle className="h-4 w-4" />
         <AlertTitle>Данные отсутствуют</AlertTitle>
         <AlertDescription>

@@ -36,10 +36,10 @@ async function throwIfResNotOk(res: Response) {
 import { getAuthHeaders } from "./auth";
 
 export async function apiRequest(
-  method: string,
   url: string,
+  method: string = 'GET',
   data?: unknown | undefined,
-): Promise<Response> {
+): Promise<any> {
   try {
     // Убедимся, что включены все необходимые заголовки для корректной работы
     const headers: HeadersInit = { 
@@ -60,7 +60,7 @@ export async function apiRequest(
     const res = await fetch(url, {
       method,
       headers,
-      body: data ? JSON.stringify(data) : undefined,
+      body: data ? data.toString() : undefined,
       credentials: "include", // Всегда включаем учетные данные для cookie сессии
       mode: 'cors', // Для лучшей совместимости
       redirect: 'follow', // Следовать за перенаправлениями
@@ -71,7 +71,14 @@ export async function apiRequest(
     clearTimeout(timeoutId);
 
     await throwIfResNotOk(res);
-    return res;
+    
+    // Пытаемся распарсить ответ как JSON и вернуть уже обработанные данные
+    try {
+      return await res.json();
+    } catch (parseError) {
+      console.warn('Response is not JSON, returning raw response:', parseError);
+      return res;
+    }
   } catch (error) {
     // Более подробное логирование ошибок
     if (error instanceof Error && error.name === 'AbortError') {
@@ -79,7 +86,7 @@ export async function apiRequest(
       throw new Error(`Request timeout: ${method} ${url}`);
     }
 
-    console.error(`API request error (${method} ${url}):`, error);
+    console.error(`API request error (${url} ${method}):`, error);
     throw error;
   }
 }

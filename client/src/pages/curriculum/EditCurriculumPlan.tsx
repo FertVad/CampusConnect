@@ -16,6 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { AlertCircle, Save, ArrowLeft, FileText, CalendarClock, BookOpen, BarChart, Table } from "lucide-react";
 import GraphTab, { CalendarData } from "@/components/curriculum/GraphTab";
 import { SummaryTable } from "@/components/curriculum/SummaryTable";
+import { SummaryTab } from "@/components/curriculum/SummaryTab";
 import { buildSummary } from "@/utils/buildSummary";
 
 import { z } from "zod";
