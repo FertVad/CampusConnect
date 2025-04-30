@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useParams, useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
@@ -68,6 +68,8 @@ function EditCurriculumPlanContent() {
   const queryClient = useQueryClient();
   const { t } = useI18n();
   const [activeTab, setActiveTab] = useState("title");
+  const [calendarData, setCalendarData] = useState<Record<string, string>>({});
+  const calendarDataRef = useRef<Record<string, string>>({});
   
   // Получаем данные о учебном плане
   const { data: plan, isLoading, error } = useQuery<CurriculumPlan>({
@@ -130,6 +132,19 @@ function EditCurriculumPlanContent() {
         educationLevel: plan.educationLevel,
         description: plan.description || "",
       });
+      
+      // Инициализируем данные календаря из плана, если они есть
+      if (plan.calendarData) {
+        try {
+          const parsedData = JSON.parse(plan.calendarData as string);
+          setCalendarData(parsedData);
+          calendarDataRef.current = parsedData;
+        } catch (e) {
+          console.error("Ошибка при парсинге данных календаря:", e);
+          setCalendarData({});
+          calendarDataRef.current = {};
+        }
+      }
     }
   }, [plan, form]);
   
