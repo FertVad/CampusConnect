@@ -154,41 +154,54 @@ function EditCurriculumPlanContent() {
   const saveCalendarData = async () => {
     if (Object.keys(calendarDataRef.current).length === 0) {
       console.log("[EditCurriculumPlan] No calendar data to save");
-      return;
+      return false;
     }
     
     try {
       console.log("[EditCurriculumPlan] Saving calendar data:", calendarDataRef.current);
+      
       // Создаем глубокую копию объекта перед преобразованием в строку
       const calendarDataCopy = JSON.parse(JSON.stringify(calendarDataRef.current));
       const calendarDataString = JSON.stringify(calendarDataCopy);
       
-      // Вместо PUT-запроса к /api/curriculum-plans используем POST-запрос к /api/curriculum/weeks, 
-      // который точно работает, как видно из серверных логов
-      await apiRequest(`/api/curriculum/weeks`, 'POST', JSON.stringify({
+      // Используем POST-запрос к /api/curriculum/weeks, который, как мы видели, работает
+      const response = await apiRequest(`/api/curriculum/weeks`, 'POST', JSON.stringify({
         planId: planId.toString(),
         calendarData: calendarDataCopy
       }));
       
-      toast({
-        title: "График обновлен",
-        description: "Данные графика успешно сохранены",
-      });
+      console.log("[EditCurriculumPlan] Save response:", response);
       
-      // Увеличиваем счетчик обновлений, чтобы принудительно обновить SummaryTable
-      setCalendarUpdateCount(prev => prev + 1);
-      
-      // Обновляем кэш, чтобы получить актуальные данные при следующем запросе
-      await queryClient.invalidateQueries({ queryKey: [`/api/curriculum-plans/${planId}`] });
-      
-      // Принудительно обновляем данные в кэше
-      const updatedPlan = { 
-        ...plan, 
-        calendarData: calendarDataString 
-      };
-      queryClient.setQueryData([`/api/curriculum-plans/${planId}`], updatedPlan);
-      
-      return true;
+      if (response && response.success) {
+        toast({
+          title: "График обновлен",
+          description: "Данные графика успешно сохранены",
+        });
+        
+        // Обновляем кэш, чтобы получить актуальные данные при следующем запросе
+        await queryClient.invalidateQueries({ queryKey: [`/api/curriculum-plans/${planId}`] });
+        
+        // Если у нас есть план, обновляем его кэш принудительно
+        if (plan) {
+          // Создаем обновленный план
+          const updatedPlan = { 
+            ...plan, 
+            calendarData: calendarDataString 
+          };
+          
+          // Обновляем данные в кэше
+          queryClient.setQueryData([`/api/curriculum-plans/${planId}`], updatedPlan);
+          
+          console.log("[EditCurriculumPlan] Updated plan cache with new data:", updatedPlan);
+        }
+        
+        // Увеличиваем счетчик обновлений, чтобы принудительно обновить SummaryTable
+        setCalendarUpdateCount(prev => prev + 1);
+        
+        return true;
+      } else {
+        throw new Error("Save operation failed");
+      }
     } catch (error) {
       console.error("Ошибка при сохранении графика:", error);
       toast({
@@ -207,16 +220,52 @@ function EditCurriculumPlanContent() {
     setCalendarUpdateCount(prev => prev + 1);
   }, []);
   
+  // Эффект для обновления данных календаря при изменении плана
+  useEffect(() => {
+    if (plan && plan.calendarData) {
+      try {
+        // Пытаемся распарсить данные календаря из плана
+        const parsedData = JSON.parse(plan.calendarData);
+        console.log("[EditCurriculumPlan] Parsed calendar data from plan:", parsedData);
+        
+        // Обновляем данные в ссылке
+        calendarDataRef.current = parsedData;
+        
+        // Форсируем обновление
+        setCalendarUpdateCount(prev => prev + 1);
+      } catch (e) {
+        console.error("Ошибка при парсинге данных календаря:", e);
+      }
+    }
+  }, [plan]);
+
   // Обработчик смены вкладок
-  const handleTabChange = (value: string) => {
+  const handleTabChange = async (value: string) => {
     // Если мы уходим с вкладки "schedule", сохраняем данные календаря
     if (activeTab === "schedule" && value !== "schedule") {
-      saveCalendarData();
+      // Дожидаемся завершения сохранения
+      await saveCalendarData();
+      
+      // После сохранения, перезагружаем данные плана с сервера
+      await queryClient.invalidateQueries({ queryKey: [`/api/curriculum-plans/${planId}`] });
     }
     
-    // Если мы переходим на вкладку с итогами, обновляем ее данными из calendarDataRef
+    // Если мы переходим на вкладку графика, обновляем данные календаря
     if (value === "schedule") {
-      // Небольшая задержка перед обновлением, чтобы DOM успел обновиться
+      if (plan && plan.calendarData) {
+        try {
+          // Пытаемся распарсить данные календаря из плана
+          const parsedData = JSON.parse(plan.calendarData);
+          console.log("[EditCurriculumPlan] Loading calendar data for schedule tab:", parsedData);
+          
+          // Обновляем данные в ссылке
+          calendarDataRef.current = parsedData;
+        } catch (e) {
+          console.error("Ошибка при парсинге данных календаря:", e);
+        }
+      }
+      
+      // Обновляем таблицу после небольшой задержки
       setTimeout(() => {
         updateSummaryTable();
       }, 100);
@@ -623,20 +672,11 @@ function EditCurriculumPlanContent() {
                     <div className="bg-muted/20 p-6 rounded-lg">
                       <h3 className="text-lg font-medium mb-4">Сводная таблица нагрузки</h3>
                       <div className="border p-4 rounded-md bg-card overflow-x-auto">
-                        <SummaryTable 
-                          // Используем актуальные данные из calendarDataRef вместо plan.calendarData
-                          summary={
-                            Object.keys(calendarDataRef.current).length > 0 
-                              ? buildSummary(calendarDataRef.current, plan.yearsOfStudy) 
-                              : (plan.calendarData ? buildSummary(JSON.parse(plan.calendarData as string), plan.yearsOfStudy) : [])
-                          } 
-                          courses={plan.yearsOfStudy}
-                          // Используем счетчик для принудительного обновления
-                          key={`summary-table-${calendarUpdateCount}`}
+                        <SummaryTab 
+                          calendarData={calendarDataRef.current}
+                          yearsOfStudy={plan.yearsOfStudy}
+                          updateCounter={calendarUpdateCount}
                         />
-                        {Object.keys(calendarDataRef.current).length === 0 && !plan.calendarData && (
-                          <p className="text-center text-muted-foreground mt-4">Нет данных для отображения. Заполните график учебного процесса.</p>
-                        )}
                       </div>
                     </div>
                   </TabsContent>
