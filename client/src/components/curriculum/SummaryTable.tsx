@@ -17,11 +17,14 @@ export const SummaryTable: React.FC<{ summary: SummaryRow[]; courses: number }> 
           <th rowSpan={2}>Всего</th>
         </tr>
         <tr>
-          {Array.from({ length: courses }, (_, i) => (
-            <React.Fragment key={i}>
-              <th>Сем 1</th><th>Сем 2</th><th>Σ</th>
-            </React.Fragment>
-          ))}
+          {Array.from({ length: courses }, (_, i) => {
+            // Используем явный массив вместо React.Fragment
+            return [
+              <th key={`sem1-${i}`}>Сем 1</th>,
+              <th key={`sem2-${i}`}>Сем 2</th>,
+              <th key={`total-${i}`}>Σ</th>
+            ];
+          }).flat()}
         </tr>
       </thead>
       <tbody>
@@ -33,14 +36,13 @@ export const SummaryTable: React.FC<{ summary: SummaryRow[]; courses: number }> 
               </td>
               {Array.from({ length: courses }, (_, i) => {
                 const v = r.perCourse[i + 1] ?? { sem1: 0, sem2: 0, total: 0 };
-                return (
-                  <React.Fragment key={i}>
-                    <td className="text-center">{v.sem1 || ""}</td>
-                    <td className="text-center">{v.sem2 || ""}</td>
-                    <td className="text-center font-semibold">{v.total || ""}</td>
-                  </React.Fragment>
-                );
-              })}
+                // Используем явный массив вместо React.Fragment
+                return [
+                  <td key={`${r.activity}-sem1-${i}`} className="text-center">{v.sem1 || ""}</td>,
+                  <td key={`${r.activity}-sem2-${i}`} className="text-center">{v.sem2 || ""}</td>,
+                  <td key={`${r.activity}-total-${i}`} className="text-center font-semibold">{v.total || ""}</td>
+                ];
+              }).flat()}
               <td className="text-center font-bold">{r.grandTotal}</td>
             </tr>
           ))
@@ -49,12 +51,13 @@ export const SummaryTable: React.FC<{ summary: SummaryRow[]; courses: number }> 
           <tr>
             <td className="sticky left-0 bg-slate-700 text-white px-3 py-1">-</td>
             {Array.from({ length: courses }, (_, i) => (
-              <React.Fragment key={`empty-row-${i}`}>
-                <td className="text-center">-</td>
-                <td className="text-center">-</td>
-                <td className="text-center">-</td>
-              </React.Fragment>
-            ))}
+              // Используем явный массив вместо React.Fragment
+              [
+                <td key={`empty-sem1-${i}`} className="text-center">-</td>,
+                <td key={`empty-sem2-${i}`} className="text-center">-</td>,
+                <td key={`empty-total-${i}`} className="text-center">-</td>
+              ]
+            )).flat()}
             <td className="text-center">-</td>
           </tr>
         )}
