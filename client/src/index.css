@@ -668,3 +668,31 @@
 }
 
 /* конец календарного блока */
+
+/* Стили для summary-table */
+.summary-table th {
+  padding: 0.5rem;
+  text-align: center;
+  font-weight: 500;
+  background-color: rgba(100, 116, 139, 0.1);
+  border: 1px solid rgba(100, 116, 139, 0.2);
+}
+
+.summary-table td {
+  padding: 0.5rem;
+  border: 1px solid rgba(100, 116, 139, 0.2);
+}
+
+.summary-table .sticky {
+  position: sticky;
+  left: 0;
+  z-index: 10;
+}
+
+.dark .summary-table th {
+  background-color: rgba(100, 116, 139, 0.2);
+}
+
+.dark .summary-table td {
+  border-color: rgba(100, 116, 139, 0.3);
+}

@@ -25,6 +25,8 @@ export default function GraphTab({
   initialData = {},
   onChange
 }: GraphTabProps) {
+  // Состояние для текущей активной вкладки (график или итоги)
+  const [activeTab, setActiveTab] = useState<'grafik' | 'summary'>('grafik');
   // Создаем массив курсов - нам нужно 4 курса
   const courses = useMemo(() => {
     const result = [];
@@ -86,41 +88,68 @@ export default function GraphTab({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium">Курс:</span>
-          <Select value={selectedCourseId} onValueChange={handleCourseChange}>
-            <SelectTrigger className="w-24">
-              <SelectValue placeholder="Выберите курс" />
-            </SelectTrigger>
-            <SelectContent>
-              {courses.map(course => (
-                <SelectItem key={course.id} value={course.id}>{course.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium">Дата начала:</span>
-          <StartDatePicker 
-            value={startDates[selectedCourseId]} 
-            onChange={handleDateChange}
-          />
-        </div>
-        
-        <div className="text-xs text-slate-500">
-          (По умолчанию - первый рабочий день сентября {planYear + parseInt(selectedCourseId) - 1} года)
-        </div>
+      {/* Переключатель вкладок "График" и "Итоги" */}
+      <div className="flex gap-6 text-sm border-b mb-4">
+        <button 
+          onClick={() => setActiveTab('grafik')} 
+          className={activeTab === 'grafik' ? 'border-b-2 border-primary pb-2 font-medium' : 'text-muted-foreground pb-2'}
+        >
+          График
+        </button>
+        <button 
+          onClick={() => setActiveTab('summary')} 
+          className={activeTab === 'summary' ? 'border-b-2 border-primary pb-2 font-medium' : 'text-muted-foreground pb-2'}
+        >
+          Итоги
+        </button>
       </div>
+      
+      {/* Показываем управление календарем только во вкладке "График" */}
+      {activeTab === 'grafik' && (
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium">Курс:</span>
+            <Select value={selectedCourseId} onValueChange={handleCourseChange}>
+              <SelectTrigger className="w-24">
+                <SelectValue placeholder="Выберите курс" />
+              </SelectTrigger>
+              <SelectContent>
+                {courses.map(course => (
+                  <SelectItem key={course.id} value={course.id}>{course.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium">Дата начала:</span>
+            <StartDatePicker 
+              value={startDates[selectedCourseId]} 
+              onChange={handleDateChange}
+            />
+          </div>
+          
+          <div className="text-xs text-slate-500">
+            (По умолчанию - первый рабочий день сентября {planYear + parseInt(selectedCourseId) - 1} года)
+          </div>
+        </div>
+      )}
 
-      <AcademicCalendarTable 
-        weeks={weeks} 
-        yearsOfStudy={yearsOfStudy}
-        initialData={initialData}
-        onChange={onChange}
-        startDates={startDates}
-      />
+      {/* Отображаем AcademicCalendarTable или SummaryTable в зависимости от активной вкладки */}
+      {activeTab === 'grafik' ? (
+        <AcademicCalendarTable 
+          weeks={weeks} 
+          yearsOfStudy={yearsOfStudy}
+          initialData={initialData}
+          onChange={onChange}
+          startDates={startDates}
+        />
+      ) : (
+        <SummaryTable 
+          summary={buildSummary(initialData || {}, yearsOfStudy)} 
+          courses={yearsOfStudy} 
+        />
+      )}
     </div>
   );
 }

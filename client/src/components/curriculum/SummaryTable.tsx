@@ -1,5 +1,5 @@
 import React from "react";
-import { ACTIVITY_TYPES, ActivityType } from "./WeekActivityDialog";
+import { ACTIVITY_TYPES, ActivityType } from "./ActivityTypes";
 import { SummaryRow } from "@/utils/buildSummary";
 
 export const SummaryTable: React.FC<{ summary: SummaryRow[]; courses: number }> = ({ summary, courses }) => (
