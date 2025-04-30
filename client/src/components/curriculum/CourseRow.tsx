@@ -141,7 +141,12 @@ export function CourseRow({
             ${selectedCells && cellKey && selectedCells.has(cellKey) ? 'selected' : ''}`}
           data-cell-key={cellKey}
           data-month-odd={monthIndex % 2}
-          style={style}
+          style={{
+            ...(style || {}),
+            position: 'relative',
+            overflow: 'visible',
+            zIndex: activity ? 1 : 0 // Увеличиваем z-index для ячеек с активностью
+          }}
           onClick={(event) => onCellClick({
             courseId: course.id,
             weekNumber,
