@@ -159,7 +159,9 @@ function EditCurriculumPlanContent() {
     
     try {
       console.log("[EditCurriculumPlan] Saving calendar data:", calendarDataRef.current);
-      const calendarDataString = JSON.stringify(calendarDataRef.current);
+      // Создаем глубокую копию объекта перед преобразованием в строку
+      const calendarDataCopy = JSON.parse(JSON.stringify(calendarDataRef.current));
+      const calendarDataString = JSON.stringify(calendarDataCopy);
       
       // Используем напрямую apiRequest для обхода типизации
       await apiRequest(`/api/curriculum-plans/${planId}`, 'PUT', JSON.stringify({
@@ -175,7 +177,16 @@ function EditCurriculumPlanContent() {
       setCalendarUpdateCount(prev => prev + 1);
       
       // Обновляем кэш, чтобы получить актуальные данные при следующем запросе
-      queryClient.invalidateQueries({ queryKey: [`/api/curriculum-plans/${planId}`] });
+      await queryClient.invalidateQueries({ queryKey: [`/api/curriculum-plans/${planId}`] });
+      
+      // Принудительно обновляем данные в кэше
+      const updatedPlan = { 
+        ...plan, 
+        calendarData: calendarDataString 
+      };
+      queryClient.setQueryData([`/api/curriculum-plans/${planId}`], updatedPlan);
+      
+      return true;
     } catch (error) {
       console.error("Ошибка при сохранении графика:", error);
       toast({
@@ -183,6 +194,7 @@ function EditCurriculumPlanContent() {
         description: "Не удалось сохранить график. Пожалуйста, попробуйте снова.",
         variant: "destructive",
       });
+      return false;
     }
   };
   
@@ -583,16 +595,22 @@ function EditCurriculumPlanContent() {
                           initialData={plan.calendarData ? JSON.parse(plan.calendarData as string) : {}}
                           planId={planId.toString()} // Явно указываем planId из родительского компонента
                           onChange={(data) => {
-                            console.log("Calendar data updated:", data);
-                            // Обновляем локальное состояние и ссылку для отслеживания актуальных данных
-                            setCalendarData(data);
-                            calendarDataRef.current = data;
+                            console.log("[EditCurriculumPlan] Calendar data updated:", data);
+                            
+                            // Создаем глубокую копию данных для защиты от мутаций
+                            const dataCopy = JSON.parse(JSON.stringify(data));
+                            
+                            // Обновляем локальное состояние
+                            setCalendarData(dataCopy);
+                            
+                            // Обновляем ссылку для отслеживания актуальных данных
+                            calendarDataRef.current = dataCopy;
+                            
                             // Обновляем счетчик для принудительного обновления SummaryTable
                             setCalendarUpdateCount(prev => prev + 1);
                             
-                            // Отключаем прямое сохранение здесь, так как оно может вызывать конфликты
-                            // и потерю данных. Вместо этого мы будем использовать принудительное сохранение
-                            // при переключении вкладок или useAutoSave внутри компонента AcademicCalendarTable
+                            // Немедленно выполняем сохранение, чтобы убедиться, что данные не потеряются
+                            saveCalendarData();
                           }}
                         />
                       </div>

@@ -6,6 +6,11 @@ export const SummaryTable: React.FC<{ summary: SummaryRow[]; courses: number }> 
   // Проверяем, чтобы summary всегда был массивом
   const data = Array.isArray(summary) ? summary : [];
   
+  // Используем эффект для логирования при изменении данных
+  useEffect(() => {
+    console.log('[SummaryTable] Received summary data:', summary);
+  }, [summary]);
+  
   return (
     <table className="summary-table w-full border-collapse text-sm">
       <thead>

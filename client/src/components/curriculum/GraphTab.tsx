@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { StartDatePicker } from "@/components/ui/StartDatePicker";
 import { buildAcademicWeeks, getFirstWorkdayOfSeptember } from "@/utils/calendar";
 import { AcademicCalendarTable } from "@/components/curriculum/AcademicCalendarTable";
@@ -35,14 +35,31 @@ export default function GraphTab({
   // Используем planId из пропсов или fallback к URL
   const effectivePlanId = planId || urlPlanId;
   console.log('[GraphTab] Plan ID from props:', planId, 'from URL:', urlPlanId, 'effective:', effectivePlanId);
+  
+  // Используем ссылку для хранения первоначальных данных
+  const initialDataRef = useRef(initialData);
+  
   // Локальное состояние для хранения данных календаря
-  const [calendarData, setCalendarData] = useState<Record<string, string>>(initialData);
+  const [calendarData, setCalendarData] = useState<Record<string, string>>(() => {
+    // Создаем глубокую копию начальных данных
+    return JSON.parse(JSON.stringify(initialData));
+  });
   
   // Обновляем локальное состояние при изменении initialData
   useEffect(() => {
     console.log('[GraphTab] initialData изменилось:', initialData);
-    // Копируем initialData, чтобы избежать проблем с мутацией объекта
-    setCalendarData({...initialData});
+    
+    // Проверяем, действительно ли изменились данные
+    if (JSON.stringify(initialDataRef.current) !== JSON.stringify(initialData)) {
+      console.log('[GraphTab] Applying new initialData');
+      
+      // Обновляем ссылку
+      initialDataRef.current = initialData;
+      
+      // Создаем глубокую копию initialData и обновляем состояние
+      const newData = JSON.parse(JSON.stringify(initialData));
+      setCalendarData(newData);
+    }
   }, [initialData]);
   // Создаем массив курсов - нам нужно 4 курса
   const courses = useMemo(() => {
