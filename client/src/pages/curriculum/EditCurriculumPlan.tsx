@@ -69,6 +69,8 @@ function EditCurriculumPlanContent() {
   const { t } = useI18n();
   const [activeTab, setActiveTab] = useState("title");
   const [calendarData, setCalendarData] = useState<Record<string, string>>({});
+  // Счетчик обновлений для принудительного обновления SummaryTable
+  const [calendarUpdateCount, setCalendarUpdateCount] = useState<number>(0);
   const calendarDataRef = useRef<Record<string, string>>({});
   
   // Получаем данные о учебном плане
@@ -169,6 +171,10 @@ function EditCurriculumPlanContent() {
         description: "Данные графика успешно сохранены",
       });
       
+      // Увеличиваем счетчик обновлений, чтобы принудительно обновить SummaryTable
+      setCalendarUpdateCount(prev => prev + 1);
+      
+      // Обновляем кэш, чтобы получить актуальные данные при следующем запросе
       queryClient.invalidateQueries({ queryKey: [`/api/curriculum-plans/${planId}`] });
     } catch (error) {
       console.error("Ошибка при сохранении графика:", error);
@@ -555,6 +561,8 @@ function EditCurriculumPlanContent() {
                             // Обновляем локальное состояние и ссылку для отслеживания актуальных данных
                             setCalendarData(data);
                             calendarDataRef.current = data;
+                            // Обновляем счетчик для принудительного обновления SummaryTable
+                            setCalendarUpdateCount(prev => prev + 1);
                             
                             // Отключаем прямое сохранение здесь, так как оно может вызывать конфликты
                             // и потерю данных. Вместо этого мы будем использовать принудительное сохранение
@@ -570,10 +578,17 @@ function EditCurriculumPlanContent() {
                       <h3 className="text-lg font-medium mb-4">Сводная таблица нагрузки</h3>
                       <div className="border p-4 rounded-md bg-card overflow-x-auto">
                         <SummaryTable 
-                          summary={plan.calendarData ? buildSummary(JSON.parse(plan.calendarData as string), plan.yearsOfStudy) : []} 
-                          courses={plan.yearsOfStudy} 
+                          // Используем актуальные данные из calendarDataRef вместо plan.calendarData
+                          summary={
+                            Object.keys(calendarDataRef.current).length > 0 
+                              ? buildSummary(calendarDataRef.current, plan.yearsOfStudy) 
+                              : (plan.calendarData ? buildSummary(JSON.parse(plan.calendarData as string), plan.yearsOfStudy) : [])
+                          } 
+                          courses={plan.yearsOfStudy}
+                          // Используем счетчик для принудительного обновления
+                          key={`summary-table-${calendarUpdateCount}`}
                         />
-                        {!plan.calendarData && (
+                        {Object.keys(calendarDataRef.current).length === 0 && !plan.calendarData && (
                           <p className="text-center text-muted-foreground mt-4">Нет данных для отображения. Заполните график учебного процесса.</p>
                         )}
                       </div>
