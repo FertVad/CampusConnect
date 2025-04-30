@@ -327,23 +327,45 @@ export function WeekActivityDialog({
           key={`dialog-week-${weekInfo.courseId}-${weekInfo.weekNumber}`}
           className="sm:max-w-md calendar-dialog-content bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 shadow-lg"
         >
-          <DialogHeader className="pb-3 border-b mb-4">
-            <DialogTitle className="text-lg font-bold">
-              Учебная неделя {weekInfo.weekNumber}
-            </DialogTitle>
-            <DialogDescription className="text-sm font-medium">
-              {weekInfo.startDate.toLocaleDateString("ru-RU", {
-                day: "numeric",
-                month: "long",
-              })}
-              {" — "}
-              {weekInfo.endDate.toLocaleDateString("ru-RU", {
-                day: "numeric",
-                month: "long",
-              })}
-              {", курс "}{weekInfo.courseId}
-            </DialogDescription>
-          </DialogHeader>
+          <div className="flex justify-between items-center">
+            <DialogHeader className="pb-3 mb-4">
+              <DialogTitle className="text-lg font-bold">
+                Учебная неделя {weekInfo.weekNumber}
+              </DialogTitle>
+              <DialogDescription className="text-sm font-medium">
+                {weekInfo.startDate.toLocaleDateString("ru-RU", {
+                  day: "numeric",
+                  month: "long",
+                })}
+                {" — "}
+                {weekInfo.endDate.toLocaleDateString("ru-RU", {
+                  day: "numeric",
+                  month: "long",
+                })}
+                {", курс "}{weekInfo.courseId}
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                onClick={() => onOpenChange(false)}
+                className="h-8 border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
+              >
+                Отмена
+              </Button>
+              <Button
+                onClick={handleSave}
+                className="h-8 bg-primary hover:bg-primary/90 text-primary-foreground"
+                disabled={
+                  weekDays.every((day) => !day.activity) && !hasSelectedDays
+                }
+              >
+                Сохранить
+              </Button>
+            </div>
+          </div>
+          <div className="border-b mb-4"></div>
 
           <div className="space-y-4" onClick={handleContainerClick}>
             <div
@@ -488,25 +510,6 @@ export function WeekActivityDialog({
               </Button>
             </div>
           </div>
-          
-          <DialogFooter className="sm:justify-between mt-2">
-            <Button 
-              variant="outline" 
-              onClick={() => onOpenChange(false)}
-              className="border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
-            >
-              Отмена
-            </Button>
-            <Button
-              onClick={handleSave}
-              className="bg-primary hover:bg-primary/90 text-primary-foreground"
-              disabled={
-                weekDays.every((day) => !day.activity) && !hasSelectedDays
-              }
-            >
-              Сохранить
-            </Button>
-          </DialogFooter>
         </DialogContent>
       )}
     </Dialog>
