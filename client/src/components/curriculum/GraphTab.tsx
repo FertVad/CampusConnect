@@ -27,6 +27,9 @@ export default function GraphTab({
   initialData = {},
   onChange
 }: GraphTabProps) {
+  // Извлекаем ключ planId из URLSearchParams
+  const urlParams = new URLSearchParams(window.location.search);
+  const planId = urlParams.get('id') || '';
   // Локальное состояние для хранения данных календаря
   const [calendarData, setCalendarData] = useState<Record<string, string>>(initialData);
   
@@ -143,6 +146,7 @@ export default function GraphTab({
         initialData={calendarData}
         onChange={handleCalendarChange}
         startDates={startDates}
+        planId={planId}
       />
     </div>
   );

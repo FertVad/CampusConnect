@@ -41,6 +41,7 @@ interface AcademicCalendarTableProps {
   onChange?: (data: CalendarData) => void;
   initialData?: CalendarData;
   startDates?: Record<string, Date>; // Даты начала для каждого курса
+  planId?: string;              // ID учебного плана
 }
 
 export function AcademicCalendarTable({ 
@@ -48,17 +49,18 @@ export function AcademicCalendarTable({
   yearsOfStudy = 4, 
   onChange,
   initialData = {},
-  startDates = {}
+  startDates = {},
+  planId = ''
 }: AcademicCalendarTableProps) {
   // Состояние для хранения данных таблицы
   const [tableData, setTableData] = useState<CalendarData>(initialData);
   
-  // Извлекаем ключ planId из URLSearchParams
+  // Используем planId из props или извлекаем из URL если он не был передан
   const urlParams = new URLSearchParams(window.location.search);
-  const planId = urlParams.get('id') || '';
+  const effectivePlanId = planId || urlParams.get('id') || '';
   
   // Используем хук автосохранения с добавлением planId
-  const { isSaving, forceSave } = useAutoSave({...tableData, planId}, {
+  const { isSaving, forceSave } = useAutoSave({...tableData, planId: effectivePlanId}, {
     url: '/api/curriculum/weeks',
     debounceMs: 1000,
     onSuccess: (data) => {
