@@ -339,8 +339,8 @@ export function AcademicCalendarTable({
           if (isMonthEnd && idx < firstCourseWeeks.length - 1) {
             const nextMonthIdx = monthIndex + 1;
             const isNextMonthEven = nextMonthIdx % 2 === 0;
-            const monthColor = isEvenMonth ? 'var(--month-color, #f1f5f9)' : 'var(--month-color, #e2e8f0)';
-            const nextMonthColor = isNextMonthEven ? 'var(--next-month-color, #f1f5f9)' : 'var(--next-month-color, #e2e8f0)';
+            const monthColor = isEvenMonth ? 'var(--month-even, #f1f5f9)' : 'var(--month-odd, #e2e8f0)';
+            const nextMonthColor = isNextMonthEven ? 'var(--month-even, #f1f5f9)' : 'var(--month-odd, #e2e8f0)';
             
             style = {
               background: `linear-gradient(to right, ${monthColor} 0%, ${monthColor} 90%, ${nextMonthColor} 100%)`
@@ -348,8 +348,8 @@ export function AcademicCalendarTable({
             
             // Для темной темы
             if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-              const darkMonthColor = isEvenMonth ? 'var(--month-color, #1e293b)' : 'var(--month-color, #334155)';
-              const darkNextMonthColor = isNextMonthEven ? 'var(--next-month-color, #1e293b)' : 'var(--next-month-color, #334155)';
+              const darkMonthColor = isEvenMonth ? 'var(--month-even, #1e293b)' : 'var(--month-odd, #334155)';
+              const darkNextMonthColor = isNextMonthEven ? 'var(--month-even, #1e293b)' : 'var(--month-odd, #334155)';
               
               style = {
                 background: `linear-gradient(to right, ${darkMonthColor} 0%, ${darkMonthColor} 90%, ${darkNextMonthColor} 100%)`
