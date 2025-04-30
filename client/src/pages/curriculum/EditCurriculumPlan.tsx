@@ -236,7 +236,7 @@ function EditCurriculumPlanContent() {
         
         <CardContent>
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="mb-4 grid w-full grid-cols-4">
+            <TabsList className="mb-4 grid w-full grid-cols-3">
               <TabsTrigger value="title" className="flex items-center">
                 <FileText className="h-4 w-4 mr-2" />
                 Титульный лист
@@ -244,10 +244,6 @@ function EditCurriculumPlanContent() {
               <TabsTrigger value="schedule" className="flex items-center">
                 <CalendarClock className="h-4 w-4 mr-2" />
                 График реализации
-              </TabsTrigger>
-              <TabsTrigger value="summary" className="flex items-center">
-                <BarChart className="h-4 w-4 mr-2" />
-                Итоги
               </TabsTrigger>
               <TabsTrigger value="plan" className="flex items-center">
                 <BookOpen className="h-4 w-4 mr-2" />
