@@ -325,7 +325,7 @@ export function WeekActivityDialog({
       {open && weekInfo && (
         <DialogContent
           key={`dialog-week-${weekInfo.courseId}-${weekInfo.weekNumber}`}
-          className="sm:max-w-md calendar-dialog-content bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 shadow-lg"
+          className="sm:max-w-md calendar-dialog-content bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 shadow-lg max-h-[90vh] overflow-y-auto"
         >
           <DialogHeader className="pb-3 border-b mb-4">
             <DialogTitle className="text-lg font-bold">
@@ -465,8 +465,8 @@ export function WeekActivityDialog({
             </div>
           </div>
 
-          <div className="pt-3 border-t">
-            <div className="flex justify-center mb-4">
+          <div className="pt-3 border-t mb-12">
+            <div className="flex justify-center">
               <Button 
                 variant={selectedActivity ? "default" : "secondary"}
                 onClick={() => {
@@ -489,7 +489,7 @@ export function WeekActivityDialog({
             </div>
           </div>
           
-          <DialogFooter className="sm:justify-between">
+          <DialogFooter className="sm:justify-between sticky bottom-0 bg-white dark:bg-slate-900 pt-3 mt-3 z-10 border-t shadow-[0_-2px_5px_rgba(0,0,0,0.05)]">
             <Button 
               variant="outline" 
               onClick={() => onOpenChange(false)}
