@@ -104,26 +104,28 @@ export function CourseRow({
         hover:outline hover:outline-2 hover:outline-blue-500 hover:outline-offset-[-2px]`;
       
       // Используем импортированные цвета из модуля ActivityTypes
-      let backgroundColor = '';
+      let backgroundStyle = '';
       
       if (activity) {
         console.log(`Ячейка ${cellKey} с активностью ${activity}`);
         
         if (activity.length === 1 && activity in ACTIVITY_COLORS) {
-          backgroundColor = ACTIVITY_COLORS[activity as keyof typeof ACTIVITY_COLORS].color;
-          console.log(`[${cellKey}] Цвет для активности ${activity}: ${backgroundColor}`);
+          // Для одиночной активности используем сплошной цвет
+          backgroundStyle = ACTIVITY_COLORS[activity as keyof typeof ACTIVITY_COLORS].color;
+          console.log(`[${cellKey}] Цвет для активности ${activity}: ${backgroundStyle}`);
         } else if (activity.length > 1) {
-          // Для комбинированных активностей берем первую букву
-          const firstChar = activity[0];
-          if (firstChar in ACTIVITY_COLORS) {
-            backgroundColor = ACTIVITY_COLORS[firstChar as keyof typeof ACTIVITY_COLORS].color;
-            console.log(`[${cellKey}] Цвет для комбо-активности ${activity} (первый символ ${firstChar}): ${backgroundColor}`);
-          }
+          // Для комбинированных активностей используем градиент
+          backgroundStyle = weekGradient(activity);
+          console.log(`[${cellKey}] Градиент для комбо-активности ${activity}: ${backgroundStyle}`);
         }
       }
       
       // Создаем стиль для ячейки и логируем значение
-      const style = backgroundColor ? { backgroundColor } : undefined;
+      const style = backgroundStyle ? 
+        (backgroundStyle.startsWith('linear-gradient') ? 
+          { background: backgroundStyle } : 
+          { backgroundColor: backgroundStyle }) 
+        : undefined;
       console.log(`Стиль для ${cellKey}: `, style);
       
       cells.push(
