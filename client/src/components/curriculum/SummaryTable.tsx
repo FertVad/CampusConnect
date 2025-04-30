@@ -48,8 +48,8 @@ export const SummaryTable: React.FC<{ summary: SummaryRow[]; courses: number }> 
           // Пустая строка, чтобы таблица всегда отображалась
           <tr>
             <td className="sticky left-0 bg-slate-700 text-white px-3 py-1">-</td>
-            {Array.from({ length: courses }, () => (
-              <React.Fragment key={Math.random()}>
+            {Array.from({ length: courses }, (_, i) => (
+              <React.Fragment key={`empty-row-${i}`}>
                 <td className="text-center">-</td>
                 <td className="text-center">-</td>
                 <td className="text-center">-</td>
