@@ -52,17 +52,17 @@ export function CourseRow({
   };
   
   // Строим собственный массив недель для курса - начиная с его стартовой даты
-  // Всегда создаем ровно один год (52 недели) от даты старта
+  // Может быть до 53 недель в зависимости от даты
   const weeksForCourse = buildAcademicWeeks(startDate, 1);
   
-  // Определяем длину курса в неделях - сейчас фиксированно 52 недели
-  const courseLen = 52;
+  // Используем фактическое количество недель из построенного массива (обычно 52, но может быть 53)
+  const courseLen = weeksForCourse.length;
   
   // Рендер ячеек для текущего курса
   const renderCells = () => {
     const cells: React.ReactNode[] = [];
     
-    // Проходим по всем неделям курса, беря 52 недели без смещений
+    // Проходим по всем неделям курса (до 53 недель)
     for (let idx = 0; idx < courseLen && idx < weeksForCourse.length; idx++) {
       const weekInCourse = weeksForCourse[idx];
       const weekNumber = weekInCourse.index;
