@@ -3046,6 +3046,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Server error" });
     }
   });
+
+  // API для сохранения данных календаря через useAutoSave
+  app.post('/api/curriculum/weeks', authenticateUser, async (req, res) => {
+    try {
+      // Получаем данные и план ID из запроса
+      const { planId, ...calendarData } = req.body;
+      
+      if (!planId) {
+        return res.status(400).json({
+          message: "Missing plan ID",
+          details: "A planId is required"
+        });
+      }
+      
+      const id = parseInt(planId);
+      if (isNaN(id)) {
+        return res.status(400).json({
+          message: "Invalid plan ID",
+          details: "Plan ID must be a valid number"
+        });
+      }
+      
+      // Получаем учебный план
+      const plan = await getStorage().getCurriculumPlan(id);
+      if (!plan) {
+        return res.status(404).json({
+          message: "Curriculum plan not found",
+          details: `No plan found with ID ${id}`
+        });
+      }
+      
+      // Сохраняем данные календаря
+      const calendarDataString = JSON.stringify(calendarData);
+      
+      const updatedPlan = await getStorage().updateCurriculumPlan(id, {
+        calendarData: calendarDataString
+      });
+      
+      return res.json({
+        success: true,
+        message: "Calendar data saved",
+        plan: updatedPlan
+      });
+    } catch (error) {
+      console.error('Error saving calendar data:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      res.status(500).json({
+        message: "Error saving calendar data",
+        details: errorMessage
+      });
+    }
+  });
   
   return httpServer;
 }

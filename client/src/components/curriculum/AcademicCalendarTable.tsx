@@ -53,8 +53,12 @@ export function AcademicCalendarTable({
   // Состояние для хранения данных таблицы
   const [tableData, setTableData] = useState<CalendarData>(initialData);
   
-  // Используем хук автосохранения
-  const { isSaving, forceSave } = useAutoSave(tableData, {
+  // Извлекаем ключ planId из URLSearchParams
+  const urlParams = new URLSearchParams(window.location.search);
+  const planId = urlParams.get('id') || '';
+  
+  // Используем хук автосохранения с добавлением planId
+  const { isSaving, forceSave } = useAutoSave({...tableData, planId}, {
     url: '/api/curriculum/weeks',
     debounceMs: 1000,
     onSuccess: (data) => {
@@ -144,6 +148,9 @@ export function AcademicCalendarTable({
     if (onChange) {
       onChange(newData);
     }
+    
+    // Принудительное сохранение после изменений
+    forceSave();
   };
   
   // Обработчик клика по ячейке с поддержкой множественного выделения
