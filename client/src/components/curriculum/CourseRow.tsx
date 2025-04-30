@@ -103,51 +103,45 @@ export function CourseRow({
         ${isMonthEnd ? 'border-r border-slate-500/15 dark:border-slate-500/10' : ''}
         hover:outline hover:outline-2 hover:outline-blue-500 hover:outline-offset-[-2px]`;
       
-      // Вместо использования стилей напрямую, добавляем классы
-      // Таким образом избегаем проблем со стилями в рантайме
-      let activityClass = "";
+      // Используем хардкод стилей напрямую вместо динамического подхода
+      let backgroundColor = '';
       
       if (activity) {
         console.log(`Ячейка ${cellKey} с активностью ${activity}`);
         
         if (activity.length === 1) {
-          if (activity === "У") {
-            activityClass = "bg-blue-300 text-blue-900";
-          } else if (activity === "К") {
-            activityClass = "bg-gray-300 text-gray-900";
-          } else if (activity === "П") {
-            activityClass = "bg-yellow-300 text-yellow-900";
-          } else if (activity === "Э") {
-            activityClass = "bg-red-300 text-red-900";
-          } else if (activity === "Д") {
-            activityClass = "bg-purple-300 text-purple-900";
+          switch (activity) {
+            case 'У': backgroundColor = '#93c5fd'; break; // bg-blue-300
+            case 'К': backgroundColor = '#d1d5db'; break; // bg-gray-300
+            case 'П': backgroundColor = '#fde047'; break; // bg-yellow-300
+            case 'Э': backgroundColor = '#fca5a5'; break; // bg-red-300
+            case 'Д': backgroundColor = '#d8b4fe'; break; // bg-purple-300
           }
         } else if (activity.length > 1) {
           // Для комбинированных активностей берем первую букву
           const firstChar = activity[0];
-          if (firstChar === "У") {
-            activityClass = "bg-blue-300 text-blue-900";
-          } else if (firstChar === "К") {
-            activityClass = "bg-gray-300 text-gray-900";
-          } else if (firstChar === "П") {
-            activityClass = "bg-yellow-300 text-yellow-900";
-          } else if (firstChar === "Э") {
-            activityClass = "bg-red-300 text-red-900";
-          } else if (firstChar === "Д") {
-            activityClass = "bg-purple-300 text-purple-900";
+          switch (firstChar) {
+            case 'У': backgroundColor = '#93c5fd'; break; // bg-blue-300
+            case 'К': backgroundColor = '#d1d5db'; break; // bg-gray-300
+            case 'П': backgroundColor = '#fde047'; break; // bg-yellow-300
+            case 'Э': backgroundColor = '#fca5a5'; break; // bg-red-300
+            case 'Д': backgroundColor = '#d8b4fe'; break; // bg-purple-300
           }
         }
       }
+      
+      // Создаем стиль для ячейки
+      const style = backgroundColor ? { backgroundColor } : undefined;
       
       cells.push(
         <td 
           key={`cell-${cellKey}`}
           className={`${baseCellClass} week-cell
             ${crossMonth ? '--split-month' : ''} 
-            ${selectedCells && cellKey && selectedCells.has(cellKey) ? 'selected' : ''}
-            ${activityClass}`}
+            ${selectedCells && cellKey && selectedCells.has(cellKey) ? 'selected' : ''}`}
           data-cell-key={cellKey}
           data-month-odd={monthIndex % 2}
+          style={style}
           onClick={(event) => onCellClick({
             courseId: course.id,
             weekNumber,
