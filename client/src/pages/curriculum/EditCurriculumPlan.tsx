@@ -524,13 +524,12 @@ function EditCurriculumPlanContent() {
                     <div className="bg-muted/20 p-6 rounded-lg">
                       <h3 className="text-lg font-medium mb-4">Сводная таблица нагрузки</h3>
                       <div className="border p-4 rounded-md bg-card overflow-x-auto">
-                        {plan.calendarData ? (
-                          <SummaryTable 
-                            summary={buildSummary(JSON.parse(plan.calendarData as string), plan.yearsOfStudy)} 
-                            courses={plan.yearsOfStudy} 
-                          />
-                        ) : (
-                          <p className="text-center text-muted-foreground py-6">Нет данных для отображения. Заполните график учебного процесса.</p>
+                        <SummaryTable 
+                          summary={plan.calendarData ? buildSummary(JSON.parse(plan.calendarData as string), plan.yearsOfStudy) : []} 
+                          courses={plan.yearsOfStudy} 
+                        />
+                        {!plan.calendarData && (
+                          <p className="text-center text-muted-foreground mt-4">Нет данных для отображения. Заполните график учебного процесса.</p>
                         )}
                       </div>
                     </div>
