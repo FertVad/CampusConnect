@@ -1999,7 +1999,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/notifications/:id/read', authenticateUser, async (req, res) => {
     try {
       const notificationId = parseInt(req.params.id);
-      console.log(`ROUTE: Marking notification ${notificationId} as read`);
       
       // First make sure the notification exists and belongs to the current user
       const notification = await getStorage().getNotification(notificationId);
@@ -2008,14 +2007,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       if (notification.userId !== req.user.id) {
-        console.log(`ROUTE: User ${req.user.id} tried to mark notification ${notificationId} as read but it belongs to user ${notification.userId}`);
         return res.status(403).json({ message: "You don't have permission to modify this notification" });
       }
       
       const updatedNotification = await getStorage().markNotificationAsRead(notificationId);
       res.json(updatedNotification);
     } catch (error) {
-      console.error('Error marking notification as read:', error);
       res.status(500).json({ message: "Server error" });
     }
   });
@@ -2024,7 +2021,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete('/api/notifications/:id', authenticateUser, async (req, res) => {
     try {
       const notificationId = parseInt(req.params.id);
-      console.log(`ROUTE: Deleting notification ${notificationId}`);
       
       // First make sure the notification exists and belongs to the current user
       const notification = await getStorage().getNotification(notificationId);
@@ -2033,7 +2029,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       if (notification.userId !== req.user.id) {
-        console.log(`ROUTE: User ${req.user.id} tried to delete notification ${notificationId} but it belongs to user ${notification.userId}`);
         return res.status(403).json({ message: "You don't have permission to delete this notification" });
       }
       
@@ -2044,7 +2039,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.status(500).json({ message: "Failed to delete notification" });
       }
     } catch (error) {
-      console.error('Error deleting notification:', error);
       res.status(500).json({ message: "Server error" });
     }
   });
@@ -2069,7 +2063,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const notification = await getStorage().createNotification(notificationData);
       res.status(201).json(notification);
     } catch (error) {
-      console.error('Error creating notification:', error);
       res.status(500).json({ message: "Server error" });
     }
   });
@@ -2092,7 +2085,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const updatedNotification = await getStorage().markNotificationAsRead(notificationId);
       res.json(updatedNotification);
     } catch (error) {
-      console.error('Error marking notification as read:', error);
       res.status(500).json({ message: "Server error" });
     }
   });
@@ -2104,7 +2096,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await getStorage().markAllNotificationsAsRead(userId);
       res.json({ success: true, message: "All notifications marked as read" });
     } catch (error) {
-      console.error('Error marking all notifications as read:', error);
       res.status(500).json({ message: "Server error" });
     }
   });
