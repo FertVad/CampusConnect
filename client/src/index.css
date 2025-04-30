@@ -478,17 +478,17 @@
 /* ─── ячейка недели ─────────────────────────────── */
 .week-cell{position:relative;overflow:visible !important}
 
-.week-cell[data-month-odd="0"]{background:var(--month-even) !important}
-.week-cell[data-month-odd="1"]{background:var(--month-odd)  !important}
+.week-cell[data-month-odd="0"]:not([style*="background"]){background:var(--month-even) !important}
+.week-cell[data-month-odd="1"]:not([style*="background"]){background:var(--month-odd)  !important}
 
 /* неделя, пересекающая месяцы */
-.week-cell.--split-month{
+.week-cell.--split-month:not([style*="background"]){
   background:linear-gradient(90deg,
       var(--month-even) 0 49%,
       var(--month-odd)  51% 100%) !important;
 }
 @media (prefers-color-scheme:dark){
-  .week-cell.--split-month{
+  .week-cell.--split-month:not([style*="background"]){
     background:linear-gradient(90deg,
         var(--month-even) 0 49%,
         var(--month-odd)  51% 100%) !important;
