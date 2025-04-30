@@ -14,7 +14,9 @@ import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertCircle, Save, ArrowLeft, FileText, CalendarClock, BookOpen, BarChart, Table } from "lucide-react";
-import GraphTab from "@/components/curriculum/GraphTab";
+import GraphTab, { CalendarData } from "@/components/curriculum/GraphTab";
+import { SummaryTable } from "@/components/curriculum/SummaryTable";
+import { buildSummary } from "@/utils/buildSummary";
 
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -234,7 +236,7 @@ function EditCurriculumPlanContent() {
         
         <CardContent>
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="mb-4 grid w-full grid-cols-3">
+            <TabsList className="mb-4 grid w-full grid-cols-4">
               <TabsTrigger value="title" className="flex items-center">
                 <FileText className="h-4 w-4 mr-2" />
                 Титульный лист
@@ -242,6 +244,10 @@ function EditCurriculumPlanContent() {
               <TabsTrigger value="schedule" className="flex items-center">
                 <CalendarClock className="h-4 w-4 mr-2" />
                 График реализации
+              </TabsTrigger>
+              <TabsTrigger value="summary" className="flex items-center">
+                <BarChart className="h-4 w-4 mr-2" />
+                Итоги
               </TabsTrigger>
               <TabsTrigger value="plan" className="flex items-center">
                 <BookOpen className="h-4 w-4 mr-2" />
@@ -502,8 +508,15 @@ function EditCurriculumPlanContent() {
                   <TabsContent value="summary" className="mt-4">
                     <div className="bg-muted/20 p-6 rounded-lg">
                       <h3 className="text-lg font-medium mb-4">Сводная таблица нагрузки</h3>
-                      <div className="border p-4 rounded-md bg-card">
-                        <p className="text-center text-muted-foreground">// summary coming soon</p>
+                      <div className="border p-4 rounded-md bg-card overflow-x-auto">
+                        {plan.calendarData ? (
+                          <SummaryTable 
+                            summary={buildSummary(plan.calendarData as CalendarData, plan.yearsOfStudy)} 
+                            courses={plan.yearsOfStudy} 
+                          />
+                        ) : (
+                          <p className="text-center text-muted-foreground py-6">Нет данных для отображения. Заполните график учебного процесса.</p>
+                        )}
                       </div>
                     </div>
                   </TabsContent>

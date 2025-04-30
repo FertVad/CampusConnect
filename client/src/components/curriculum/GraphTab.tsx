@@ -2,8 +2,6 @@ import { useState, useMemo, useEffect } from "react";
 import { StartDatePicker } from "@/components/ui/StartDatePicker";
 import { buildAcademicWeeks, getFirstWorkdayOfSeptember } from "@/utils/calendar";
 import { AcademicCalendarTable } from "@/components/curriculum/AcademicCalendarTable";
-import { SummaryTable } from "@/components/curriculum/SummaryTable";
-import { buildSummary } from "@/utils/buildSummary";
 import { 
   Select,
   SelectContent,
@@ -12,11 +10,15 @@ import {
   SelectValue
 } from "@/components/ui/select";
 
+// Тип для данных календаря
+export type CalendarData = Record<string, string>;
+
+// Интерфейс пропсов компонента
 interface GraphTabProps {
   planYear: number;       // Год начала обучения (по умолчанию)
   yearsOfStudy: number;   // Количество лет обучения
-  initialData?: Record<string, string>; // Начальные данные календаря
-  onChange?: (data: Record<string, string>) => void; // Колбэк для сохранения изменений
+  initialData?: CalendarData; // Начальные данные календаря
+  onChange?: (data: CalendarData) => void; // Колбэк для сохранения изменений
 }
 
 export default function GraphTab({ 
@@ -25,9 +27,6 @@ export default function GraphTab({
   initialData = {},
   onChange
 }: GraphTabProps) {
-  // Состояние для текущей активной вкладки (график или итоги)
-  const [activeTab, setActiveTab] = useState<'grafik' | 'summary'>('grafik');
-  
   // Локальное состояние для хранения данных календаря
   const [calendarData, setCalendarData] = useState<Record<string, string>>(initialData);
   
@@ -89,12 +88,17 @@ export default function GraphTab({
   };
   
   // Обработчик изменения данных календаря
-  const handleCalendarChange = (data: Record<string, string>) => {
+  const handleCalendarChange = (data: CalendarData) => {
     console.log('Изменение данных календаря:', data);
     setCalendarData(data);
     if (onChange) {
       onChange(data);
     }
+  };
+  
+  // Возвращает текущие данные календаря - только для внутреннего использования
+  const getCalendarData = (): CalendarData => {
+    return calendarData;
   };
 
   // Генерируем недели на основе даты старта первого курса (для заголовков)
@@ -105,68 +109,41 @@ export default function GraphTab({
 
   return (
     <div className="space-y-4">
-      {/* Переключатель вкладок "График" и "Итоги" */}
-      <div className="flex gap-6 text-sm border-b mb-4">
-        <button 
-          onClick={() => setActiveTab('grafik')} 
-          className={activeTab === 'grafik' ? 'border-b-2 border-primary pb-2 font-medium' : 'text-muted-foreground pb-2'}
-        >
-          График
-        </button>
-        <button 
-          onClick={() => setActiveTab('summary')} 
-          className={activeTab === 'summary' ? 'border-b-2 border-primary pb-2 font-medium' : 'text-muted-foreground pb-2'}
-        >
-          Итоги
-        </button>
+      <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium">Курс:</span>
+          <Select value={selectedCourseId} onValueChange={handleCourseChange}>
+            <SelectTrigger className="w-24">
+              <SelectValue placeholder="Выберите курс" />
+            </SelectTrigger>
+            <SelectContent>
+              {courses.map(course => (
+                <SelectItem key={course.id} value={course.id}>{course.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium">Дата начала:</span>
+          <StartDatePicker 
+            value={startDates[selectedCourseId]} 
+            onChange={handleDateChange}
+          />
+        </div>
+        
+        <div className="text-xs text-slate-500">
+          (По умолчанию - первый рабочий день сентября {planYear + parseInt(selectedCourseId) - 1} года)
+        </div>
       </div>
       
-      {/* Показываем управление календарем только во вкладке "График" */}
-      {activeTab === 'grafik' && (
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium">Курс:</span>
-            <Select value={selectedCourseId} onValueChange={handleCourseChange}>
-              <SelectTrigger className="w-24">
-                <SelectValue placeholder="Выберите курс" />
-              </SelectTrigger>
-              <SelectContent>
-                {courses.map(course => (
-                  <SelectItem key={course.id} value={course.id}>{course.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium">Дата начала:</span>
-            <StartDatePicker 
-              value={startDates[selectedCourseId]} 
-              onChange={handleDateChange}
-            />
-          </div>
-          
-          <div className="text-xs text-slate-500">
-            (По умолчанию - первый рабочий день сентября {planYear + parseInt(selectedCourseId) - 1} года)
-          </div>
-        </div>
-      )}
-
-      {/* Отображаем AcademicCalendarTable или SummaryTable в зависимости от активной вкладки */}
-      {activeTab === 'grafik' ? (
-        <AcademicCalendarTable 
-          weeks={weeks} 
-          yearsOfStudy={yearsOfStudy}
-          initialData={calendarData}
-          onChange={handleCalendarChange}
-          startDates={startDates}
-        />
-      ) : (
-        <SummaryTable 
-          summary={buildSummary(calendarData, yearsOfStudy)} 
-          courses={yearsOfStudy} 
-        />
-      )}
+      <AcademicCalendarTable 
+        weeks={weeks} 
+        yearsOfStudy={yearsOfStudy}
+        initialData={calendarData}
+        onChange={handleCalendarChange}
+        startDates={startDates}
+      />
     </div>
   );
 }
