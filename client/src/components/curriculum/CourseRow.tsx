@@ -123,18 +123,32 @@ export function CourseRow({
         // Рассчитываем пропорцию дней в каждом месяце
         const totalDays = daysInCurrentMonth + daysInNextMonth;
         const firstMonthPercent = Math.round((daysInCurrentMonth / totalDays) * 100);
-        const secondMonthPercent = 100 - firstMonthPercent;
+        
+        // Создаем несколько промежуточных точек для более плавного перехода
+        // Добавляем по 5% с обеих сторон от границы месяцев для плавности
+        const transitionStart = Math.max(0, firstMonthPercent - 5);
+        const transitionMiddle = firstMonthPercent;
+        const transitionEnd = Math.min(100, firstMonthPercent + 5);
         
         // Определяем цвета для текущего и следующего месяца
         const currentMonthColor = monthIndex % 2 === 0 ? 'var(--month-even)' : 'var(--month-odd)';
         const nextMonthColor = monthIndex % 2 === 0 ? 'var(--month-odd)' : 'var(--month-even)';
         
-        // Создаем градиент с учетом пропорции дней
+        // Создаем градиент с более плавным переходом, используя множественные промежуточные точки
+        // Вместо color-mix используем больше точек градиента для совместимости со всеми браузерами
         backgroundStyle = `linear-gradient(90deg, 
-          ${currentMonthColor} 0% ${firstMonthPercent}%, 
-          ${nextMonthColor} ${firstMonthPercent}% 100%)`;
+          ${currentMonthColor} 0%, 
+          ${currentMonthColor} ${transitionStart}%, 
+          ${currentMonthColor} ${transitionMiddle-3}%, 
+          ${currentMonthColor} ${transitionMiddle-2}%, 
+          ${currentMonthColor} ${transitionMiddle-1}%, 
+          ${nextMonthColor} ${transitionMiddle+1}%, 
+          ${nextMonthColor} ${transitionMiddle+2}%, 
+          ${nextMonthColor} ${transitionMiddle+3}%, 
+          ${nextMonthColor} ${transitionEnd}%, 
+          ${nextMonthColor} 100%)`;
           
-        console.log(`[${cellKey}] Плавный градиент для перехода месяцев: ${backgroundStyle}, дней: ${daysInCurrentMonth}/${daysInNextMonth}`);
+        console.log(`[${cellKey}] Плавный градиент для перехода месяцев: ${backgroundStyle}, дней: ${daysInCurrentMonth}/${daysInNextMonth} (${firstMonthPercent}%)`);
       }
       
       // Создаем стиль для ячейки и логируем значение
