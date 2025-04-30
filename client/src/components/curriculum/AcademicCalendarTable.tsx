@@ -417,19 +417,24 @@ export function AcademicCalendarTable({
   // Проверяем, есть ли выделение для dock-bar
   const hasSelection = selectedCells.size > 0;
   
-  // Обновляем CSS переменную для высоты шапки таблицы
+  // Обновляем CSS переменные для высоты шапки и количества недель
   useEffect(() => {
-    function updateHeaderHeight() {
+    function updateCssVariables() {
+      // Обновляем высоту заголовка для позиционирования dock-bar
       if (headerRef.current) {
         const headerHeight = headerRef.current.offsetHeight;
         document.documentElement.style.setProperty('--header-h', `${headerHeight}px`);
       }
+      
+      // Обновляем количество недель для расчёта ширины таблицы
+      const weekCount = weeks.length;
+      document.documentElement.style.setProperty('--week-count', `${weekCount}`);
     }
     
-    updateHeaderHeight();
-    window.addEventListener('resize', updateHeaderHeight);
-    return () => window.removeEventListener('resize', updateHeaderHeight);
-  }, []);
+    updateCssVariables();
+    window.addEventListener('resize', updateCssVariables);
+    return () => window.removeEventListener('resize', updateCssVariables);
+  }, [weeks.length]);
 
   return (
     <div className="w-full">
@@ -474,8 +479,8 @@ export function AcademicCalendarTable({
 
       <div className="rounded-md overflow-hidden border shadow-sm dark:border-slate-700">
         <div className="overflow-auto max-h-[500px] custom-scrollbar calendar-wrapper" ref={scrollWrapperRef}>
-          <div className="min-w-max relative">
-            <table className="w-full border-collapse" ref={tableRef}>
+          <div>
+            <table className="w-full border-collapse min-w-[calc(var(--week-count,52)*40px+160px)]" ref={tableRef}>
               <thead ref={headerRef}>
                 {renderHeaders()}
               </thead>
@@ -535,10 +540,10 @@ export function AcademicCalendarTable({
         id="calendar-tooltip" 
         className="academic-tooltip" 
         place="top"
-        fallbackPlacements={['bottom', 'right']}
+        offset={12}
         clickable={true}
         delayHide={0}
-        delayShow={800}
+        delayShow={400}
         positionStrategy="fixed"
       />
     </div>

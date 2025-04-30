@@ -545,11 +545,27 @@ td.week-cell.--split-month {
   }
 }
 
+:root {
+  --month-even: #f1f5f9;  /* slate-100 */
+  --month-odd: #e2e8f0;   /* slate-200 */
+  --violet-500: rgb(139, 92, 246);
+}
+
+.dark {
+  --month-even: #1e293b;  /* slate-800 */
+  --month-odd: #334155;   /* slate-700 */
+}
+
+/* Base cell styles */
+.week-cell {
+  position: relative;
+  overflow: visible !important;
+}
+
 /* Selected cell styles */
 .week-cell.selected {
-  position: relative;
-  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.7); /* ring-2 ring-violet-500/70 */
-  overflow: visible !important;
+  outline: 2px solid var(--violet-500);
+  outline-offset: -2px;
   z-index: 10 !important;
   border-radius: 0.125rem; /* rounded-sm */
 }
@@ -570,6 +586,12 @@ td.week-cell.--split-month {
   z-index: 2;
 }
 
+/* Calendar wrapper styles */
+.calendar-wrapper {
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
 /* Стили для dock-bar */
 .calendar-dock-bar {
   position: sticky;
@@ -577,22 +599,21 @@ td.week-cell.--split-month {
   left: 0;
   width: 100%;
   z-index: 60;            /* выше tooltip, ниже modal */
-  transform: translateY(-8px);
   
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 12px;
+  padding: 8px 12px;
   
   background: hsl(240 10% 10% / 0.90);  /* полупрозрачный тёмный */
   color: white;
   backdrop-filter: blur(4px);
-  border-radius: 0 0 6px 6px;
+  border-radius: 4px;
   box-shadow: 0 1px 3px hsl(0 0% 0% / 0.30);
   
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.15s;
+  transition: opacity 0.15s ease;
 }
 
 .calendar-dock-bar.is-visible {
@@ -602,4 +623,23 @@ td.week-cell.--split-month {
 
 .dark .calendar-dock-bar {
   background: hsl(220 20% 10% / 0.90);
+}
+
+/* Tooltip styles */
+.academic-tooltip {
+  z-index: 25;
+  max-width: 220px !important;
+  white-space: normal !important;
+}
+
+/* Split month cell styling */
+.week-cell.--split-month::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 2px;
+  background: rgba(100, 116, 139, 0.15); /* slate-500/15 */
+  pointer-events: none;
 }
