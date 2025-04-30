@@ -578,6 +578,11 @@
   border-radius: 0.125rem; /* rounded-sm */
 }
 
+/* modal body scroll */
+.dialog-body::-webkit-scrollbar{width:8px}
+.dialog-body::-webkit-scrollbar-thumb{background:rgba(100,116,139,.3);border-radius:4px}
+.dialog-body{scrollbar-width:thin}
+
 .week-cell.selected::before {
   content: "";
   position: absolute;
