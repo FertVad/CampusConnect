@@ -2,6 +2,8 @@ import { useState, useMemo, useEffect } from "react";
 import { StartDatePicker } from "@/components/ui/StartDatePicker";
 import { buildAcademicWeeks, getFirstWorkdayOfSeptember } from "@/utils/calendar";
 import { AcademicCalendarTable } from "@/components/curriculum/AcademicCalendarTable";
+import { SummaryTable } from "@/components/curriculum/SummaryTable";
+import { buildSummary } from "@/utils/buildSummary";
 import { 
   Select,
   SelectContent,
