@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useParams, useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
@@ -186,12 +186,28 @@ function EditCurriculumPlanContent() {
     }
   };
   
+  // Функция для обновления таблицы итогов
+  const updateSummaryTable = useCallback(() => {
+    console.log("[EditCurriculumPlan] Updating summary table with data:", calendarDataRef.current);
+    // Увеличиваем счетчик для принудительного обновления SummaryTable
+    setCalendarUpdateCount(prev => prev + 1);
+  }, []);
+  
   // Обработчик смены вкладок
   const handleTabChange = (value: string) => {
     // Если мы уходим с вкладки "schedule", сохраняем данные календаря
     if (activeTab === "schedule" && value !== "schedule") {
       saveCalendarData();
     }
+    
+    // Если мы переходим на вкладку с итогами, обновляем ее данными из calendarDataRef
+    if (value === "schedule") {
+      // Небольшая задержка перед обновлением, чтобы DOM успел обновиться
+      setTimeout(() => {
+        updateSummaryTable();
+      }, 100);
+    }
+    
     setActiveTab(value);
   };
   
@@ -527,7 +543,17 @@ function EditCurriculumPlanContent() {
             <TabsContent value="schedule">
               <div className="space-y-6">
                 {/* Вложенные табы для раздела "График учебного процесса" */}
-                <Tabs defaultValue="chart" className="w-full">
+                <Tabs defaultValue="chart" className="w-full" onValueChange={(value) => {
+                  // Если переключаемся на вкладку "Итоги", сначала сохраняем данные графика, затем обновляем итоги
+                  if (value === "summary") {
+                    // Принудительно сохраняем
+                    saveCalendarData();
+                    // Обновляем таблицу итогов
+                    setTimeout(() => {
+                      updateSummaryTable();
+                    }, 100);
+                  }
+                }}>
                   <div className="border-b mb-4">
                     <TabsList className="w-full justify-start h-10 bg-transparent p-0">
                       <TabsTrigger 

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { ACTIVITY_TYPES, ActivityType } from "./ActivityTypes";
 import { SummaryRow } from "@/utils/buildSummary";
 

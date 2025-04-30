@@ -40,7 +40,9 @@ export default function GraphTab({
   
   // Обновляем локальное состояние при изменении initialData
   useEffect(() => {
-    setCalendarData(initialData);
+    console.log('[GraphTab] initialData изменилось:', initialData);
+    // Копируем initialData, чтобы избежать проблем с мутацией объекта
+    setCalendarData({...initialData});
   }, [initialData]);
   // Создаем массив курсов - нам нужно 4 курса
   const courses = useMemo(() => {
@@ -98,9 +100,12 @@ export default function GraphTab({
   // Обработчик изменения данных календаря
   const handleCalendarChange = (data: CalendarData) => {
     console.log('Изменение данных календаря:', data);
-    setCalendarData(data);
+    // Создаем копию объекта, чтобы избежать проблем с мутацией
+    const newData = {...data};
+    setCalendarData(newData);
     if (onChange) {
-      onChange(data);
+      // Убеждаемся, что родительский компонент получает актуальные данные
+      onChange(newData);
     }
   };
   

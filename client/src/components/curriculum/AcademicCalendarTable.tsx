@@ -55,6 +55,13 @@ export function AcademicCalendarTable({
   // Состояние для хранения данных таблицы
   const [tableData, setTableData] = useState<CalendarData>(initialData);
   
+  // Обновляем локальное состояние, когда изменяются initialData
+  useEffect(() => {
+    console.log('[AcademicCalendarTable] initialData changed:', initialData);
+    // Создаем копию объекта, чтобы избежать проблем с мутацией
+    setTableData({...initialData});
+  }, [initialData]);
+  
   // Используем planId из props или извлекаем из URL если он не был передан
   const urlParams = new URLSearchParams(window.location.search);
   const urlPlanId = urlParams.get('id');
@@ -146,7 +153,8 @@ export function AcademicCalendarTable({
   
   // Обработчик изменения значения ячейки или группы ячеек
   const handleCellChange = (activity: ActivityType, applyToSelection: boolean = false) => {
-    const newData = { ...tableData };
+    // Создаем глубокую копию объекта для полной защиты от мутаций
+    const newData = JSON.parse(JSON.stringify(tableData));
     
     // Если применяем к выделению и есть выделенные ячейки
     if (applyToSelection && selectedCells.size > 0) {
@@ -164,11 +172,13 @@ export function AcademicCalendarTable({
       newData[cellKey] = activity;
     }
     
+    console.log('Обновляем данные таблицы:', newData);
     setTableData(newData);
     
-    // Вызов колбэка при изменении данных
+    // Вызов колбэка при изменении данных - всегда создаем новую копию
+    // для родительского компонента
     if (onChange) {
-      onChange(newData);
+      onChange({...newData});
     }
     
     // Принудительное сохранение после изменений
