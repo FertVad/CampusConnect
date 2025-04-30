@@ -78,7 +78,7 @@ function EditCurriculumPlanContent() {
   
   // Мутация для обновления учебного плана
   const updateMutation = useMutation({
-    mutationFn: (updatedPlan: Partial<CurriculumFormValues> & { id: number }) => {
+    mutationFn: (updatedPlan: Partial<CurriculumFormValues> & { id: number, calendarData?: string }) => {
       const { id, ...planData } = updatedPlan;
       return apiRequest(`/api/curriculum-plans/${id}`, 'PUT', JSON.stringify(planData));
     },
@@ -495,10 +495,16 @@ function EditCurriculumPlanContent() {
                       <div className="bg-card rounded-md p-4">
                         <GraphTab 
                           planYear={plan.startYear || new Date().getFullYear()} 
-                          yearsOfStudy={plan.yearsOfStudy} 
+                          yearsOfStudy={plan.yearsOfStudy}
+                          initialData={plan.calendarData ? JSON.parse(plan.calendarData) : {}}
                           onChange={(data) => {
                             console.log("Calendar data updated:", data);
-                            // Здесь будет код для сохранения данных графика
+                            // Сохраняем данные графика
+                            const calendarDataString = JSON.stringify(data);
+                            updateMutation.mutate({ 
+                              id: planId, 
+                              calendarData: calendarDataString 
+                            });
                           }}
                         />
                       </div>
@@ -511,7 +517,7 @@ function EditCurriculumPlanContent() {
                       <div className="border p-4 rounded-md bg-card overflow-x-auto">
                         {plan.calendarData ? (
                           <SummaryTable 
-                            summary={buildSummary(plan.calendarData as CalendarData, plan.yearsOfStudy)} 
+                            summary={buildSummary(JSON.parse(plan.calendarData), plan.yearsOfStudy)} 
                             courses={plan.yearsOfStudy} 
                           />
                         ) : (
