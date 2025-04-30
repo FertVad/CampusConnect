@@ -19,7 +19,6 @@ const dispatchAuthStatusChanged = (isAuthenticated: boolean) => {
       detail: { isAuthenticated }
     });
     document.dispatchEvent(event);
-    console.log(`Auth status changed: ${isAuthenticated ? 'authenticated' : 'unauthenticated'}`);
   } catch (error) {
     console.error('Error dispatching auth status:', error);
   }
