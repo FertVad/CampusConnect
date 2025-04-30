@@ -163,9 +163,11 @@ function EditCurriculumPlanContent() {
       const calendarDataCopy = JSON.parse(JSON.stringify(calendarDataRef.current));
       const calendarDataString = JSON.stringify(calendarDataCopy);
       
-      // Используем напрямую apiRequest для обхода типизации
-      await apiRequest(`/api/curriculum-plans/${planId}`, 'PUT', JSON.stringify({
-        calendarData: calendarDataString
+      // Вместо PUT-запроса к /api/curriculum-plans используем POST-запрос к /api/curriculum/weeks, 
+      // который точно работает, как видно из серверных логов
+      await apiRequest(`/api/curriculum/weeks`, 'POST', JSON.stringify({
+        planId: planId.toString(),
+        calendarData: calendarDataCopy
       }));
       
       toast({
