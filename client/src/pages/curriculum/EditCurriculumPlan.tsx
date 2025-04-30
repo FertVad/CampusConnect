@@ -496,14 +496,27 @@ function EditCurriculumPlanContent() {
                         <GraphTab 
                           planYear={plan.startYear || new Date().getFullYear()} 
                           yearsOfStudy={plan.yearsOfStudy}
-                          initialData={plan.calendarData ? JSON.parse(plan.calendarData) : {}}
+                          initialData={plan.calendarData ? JSON.parse(plan.calendarData as string) : {}}
                           onChange={(data) => {
                             console.log("Calendar data updated:", data);
                             // Сохраняем данные графика
                             const calendarDataString = JSON.stringify(data);
-                            updateMutation.mutate({ 
-                              id: planId, 
-                              calendarData: calendarDataString 
+                            // Используем directly apiRequest для обхода типизации
+                            apiRequest(`/api/curriculum-plans/${planId}`, 'PUT', JSON.stringify({
+                              calendarData: calendarDataString
+                            })).then(() => {
+                              queryClient.invalidateQueries({ queryKey: [`/api/curriculum-plans/${planId}`] });
+                              toast({
+                                title: "График обновлен",
+                                description: "Данные графика успешно сохранены",
+                              });
+                            }).catch(error => {
+                              console.error("Ошибка при сохранении графика:", error);
+                              toast({
+                                title: "Ошибка сохранения",
+                                description: "Не удалось сохранить график. Пожалуйста, попробуйте снова.",
+                                variant: "destructive",
+                              });
                             });
                           }}
                         />
@@ -517,7 +530,7 @@ function EditCurriculumPlanContent() {
                       <div className="border p-4 rounded-md bg-card overflow-x-auto">
                         {plan.calendarData ? (
                           <SummaryTable 
-                            summary={buildSummary(JSON.parse(plan.calendarData), plan.yearsOfStudy)} 
+                            summary={buildSummary(JSON.parse(plan.calendarData as string), plan.yearsOfStudy)} 
                             courses={plan.yearsOfStudy} 
                           />
                         ) : (
