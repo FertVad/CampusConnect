@@ -118,6 +118,23 @@ export function CourseRow({
           backgroundStyle = weekGradient(activity);
           console.log(`[${cellKey}] Градиент для комбо-активности ${activity}: ${backgroundStyle}`);
         }
+      } else if (crossMonth) {
+        // Для пустых ячеек, пересекающих месяцы, создаем плавный градиент
+        // Рассчитываем пропорцию дней в каждом месяце
+        const totalDays = daysInCurrentMonth + daysInNextMonth;
+        const firstMonthPercent = Math.round((daysInCurrentMonth / totalDays) * 100);
+        const secondMonthPercent = 100 - firstMonthPercent;
+        
+        // Определяем цвета для текущего и следующего месяца
+        const currentMonthColor = monthIndex % 2 === 0 ? 'var(--month-even)' : 'var(--month-odd)';
+        const nextMonthColor = monthIndex % 2 === 0 ? 'var(--month-odd)' : 'var(--month-even)';
+        
+        // Создаем градиент с учетом пропорции дней
+        backgroundStyle = `linear-gradient(90deg, 
+          ${currentMonthColor} 0% ${firstMonthPercent}%, 
+          ${nextMonthColor} ${firstMonthPercent}% 100%)`;
+          
+        console.log(`[${cellKey}] Плавный градиент для перехода месяцев: ${backgroundStyle}, дней: ${daysInCurrentMonth}/${daysInNextMonth}`);
       }
       
       // Создаем стиль для ячейки и логируем значение
