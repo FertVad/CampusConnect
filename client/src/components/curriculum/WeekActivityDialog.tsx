@@ -52,12 +52,31 @@ export const ACTIVITY_COLORS: {
 
 // Функция для создания градиента из активностей дней недели
 export const weekGradient = (days: string): string => {
+  console.log('weekGradient called with days:', days);
+  console.log('ACTIVITY_COLORS available:', typeof ACTIVITY_COLORS !== 'undefined');
+  
   if (!days || days.length === 0) return 'white';
+  
+  // Проверяем, что ACTIVITY_COLORS определен
+  if (typeof ACTIVITY_COLORS === 'undefined') {
+    console.error('ACTIVITY_COLORS is undefined in weekGradient');
+    return '#f3f4f6'; // Светло-серый цвет как запасной вариант
+  }
+  
+  console.log('ACTIVITY_COLORS keys:', Object.keys(ACTIVITY_COLORS));
   
   // Если только один тип активности - используем сплошной цвет
   if (days.length === 1 || new Set(days.split('')).size === 1) {
     const activity = days[0] as Exclude<ActivityType, "">;
-    return ACTIVITY_COLORS[activity]?.color || '#f3f4f6';
+    
+    if (!(activity in ACTIVITY_COLORS)) {
+      console.warn(`No color found for activity: ${activity}`);
+      return '#f3f4f6';
+    }
+    
+    const color = ACTIVITY_COLORS[activity]?.color || '#f3f4f6';
+    console.log(`Using solid color for "${activity}":`, color);
+    return color;
   }
   
   // Если разные активности - создаем градиент
@@ -71,9 +90,12 @@ export const weekGradient = (days: string): string => {
       activity = 'К'; // Используем цвет каникул для пустых дней
     }
     
-    const color = (activity && activity in ACTIVITY_COLORS) 
-      ? ACTIVITY_COLORS[activity as Exclude<ActivityType, "">].color 
-      : '#f3f4f6';
+    let color = '#f3f4f6';
+    if (activity && activity in ACTIVITY_COLORS) {
+      color = ACTIVITY_COLORS[activity as Exclude<ActivityType, "">].color;
+    } else {
+      console.warn(`No color found for day activity: ${activity}`);
+    }
     
     const start = index * percentStep;
     const end = (index + 1) * percentStep;
@@ -82,6 +104,7 @@ export const weekGradient = (days: string): string => {
   });
   
   gradient += ')';
+  console.log('Generated gradient:', gradient);
   return gradient;
 };
 

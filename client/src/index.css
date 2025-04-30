@@ -511,33 +511,53 @@
 }
 
 /* ─── dock-bar ───────────────────────────────────── */
-.calendar-dock-bar{
-  position:fixed;
-  left:50%;transform:translateX(-50%);
-  z-index:60;
-  display:flex;align-items:center;gap:6px;
-  padding:8px 12px;
-  min-width:260px;
-  background:rgba(17,24,39,.92); /* slate-900/90 */
-  color:#fff;border-radius:4px;
-  backdrop-filter:blur(4px);
-  opacity:0;pointer-events:none;
-  transition:opacity .2s ease,transform .2s ease;
+.calendar-dock-bar {
+  position: fixed;
+  top: 140px; /* Фиксированное значение */
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 240px;
+  max-width: 100%;
+  z-index: 999; /* Максимальный z-index */
+  
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  
+  background: rgba(17, 24, 39, 0.95); /* slate-900/95 */
+  color: white;
+  backdrop-filter: blur(4px);
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
 }
-.calendar-dock-bar.is-visible{
-  opacity:1;pointer-events:auto;
+.calendar-dock-bar.is-visible {
+  opacity: 1;
+  pointer-events: auto;
 }
-.dark .calendar-dock-bar{background:rgba(30,41,59,.95)} /* slate-800/95 */
+.dark .calendar-dock-bar {
+  background: rgba(30, 41, 59, 0.95); /* slate-800/95 */
+}
 
 /* ─── tooltip ───────────────────────────────────── */
-.academic-tooltip{
-  z-index:70 !important;
-  max-width:240px !important;
-  background:#0f172a !important; /* slate-900 */
-  color:#fff !important;border-radius:6px !important;
+.academic-tooltip {
+  z-index: 70 !important;
+  max-width: 240px !important;
+  background: #0f172a !important; /* slate-900 */
+  color: #fff !important;
+  border-radius: 6px !important;
+  padding: 8px 12px !important;
+  white-space: normal !important;
+  font-size: 0.875rem !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
 }
-.dark .academic-tooltip{
-  background:#fff !important;color:#0f172a !important;
+.dark .academic-tooltip {
+  background: #fff !important;
+  color: #0f172a !important;
 }
 
 /* Стили для календаря - обновленные */
@@ -609,47 +629,9 @@
   background: rgba(0, 0, 0, 0.3);
 }
 
-/* Стили для dock-bar */
-.calendar-dock-bar {
-  position: fixed;
-  top: 150px; /* Фиксированное значение */
-  left: 50%;
-  transform: translateX(-50%);
-  min-width: 240px;
-  max-width: 100%;
-  z-index: 999; /* Максимальный z-index */
-  
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 12px;
-  
-  background: hsl(240 10% 10% / 0.95);
-  color: white;
-  backdrop-filter: blur(4px);
-  border-radius: 4px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.2s ease, transform 0.2s ease;
-}
+/* Удалены дублирующиеся стили для dock-bar */
 
-.calendar-dock-bar.is-visible {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-.dark .calendar-dock-bar {
-  background: hsl(220 20% 10% / 0.95);
-}
-
-/* Tooltip styles */
-.academic-tooltip {
-  z-index: 50 !important;
-  max-width: 220px !important;
-  white-space: normal !important;
-}
+/* Удалены дублирующиеся стили для tooltip */
 
 /* Split month cell styling */
 .week-cell.--split-month::after {

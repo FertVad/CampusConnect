@@ -485,7 +485,8 @@ export function AcademicCalendarTable({
     <div className="w-full">
       {/* Управляющая панель - фиксированная позиция */}
       <div 
-        className={`fixed top-[60px] left-1/2 -translate-x-1/2 z-[999] 
+        ref={dockBarRef}
+        className={`fixed top-[140px] left-1/2 -translate-x-1/2 z-[999] 
           min-w-[240px] max-w-full
           flex items-center gap-2 px-3 py-2
           bg-slate-900/95 text-white rounded-md shadow-lg
