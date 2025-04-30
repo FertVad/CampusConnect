@@ -253,40 +253,59 @@ export function AcademicCalendarTable({
   // теперь находятся в файле index.css
   
   // Функция для получения стиля ячейки в зависимости от активности
+  // Функция преобразования ActivityType в стиль ячейки
   const getActivityStyle = (activity: ActivityType): { bg: string, text: string } => {
-    const defaultStyle = { bg: "bg-slate-50 dark:bg-slate-900", text: "text-slate-900 dark:text-slate-100 font-bold" };
+    // Базовый стиль для пустых ячеек
+    const defaultStyle = { bg: "bg-slate-50 dark:bg-slate-900", text: "text-slate-400 dark:text-slate-500" };
     
-    if (!activity) {
+    // Проверка на пустое значение
+    if (!activity || activity === "") {
       return defaultStyle;
     }
     
-    // Проверяем, является ли активность строкой из нескольких символов
-    if (activity.length > 1) {
-      // Если это строка активностей, берем первую букву как представителя всей недели
-      const primaryActivity = activity[0] as ActivityType;
-      
-      // Проверяем, есть ли такой ключ в ACTIVITY_TYPES
-      if (primaryActivity && primaryActivity in ACTIVITY_TYPES) {
-        // Используем цвета из WeekActivityDialog
-        if (primaryActivity in ACTIVITY_COLORS) {
-          const colorObj = ACTIVITY_COLORS[primaryActivity as keyof typeof ACTIVITY_COLORS];
-          return { bg: colorObj.bg, text: "text-slate-900 dark:text-slate-100 font-bold" };
-        }
-      }
-      return { bg: "bg-slate-200 dark:bg-slate-600", text: "text-slate-900 dark:text-slate-100 font-bold" };
+    // Пытаемся напрямую выведать ошибку, если она есть
+    console.log('Activity:', activity);
+    console.log('ACTIVITY_COLORS exists:', typeof ACTIVITY_COLORS !== 'undefined');
+    if (typeof ACTIVITY_COLORS !== 'undefined') {
+      console.log('ACTIVITY_COLORS keys:', Object.keys(ACTIVITY_COLORS));
     }
     
-    // Для одиночной буквы
-    if (activity in ACTIVITY_TYPES) {
-      // Используем цвета из WeekActivityDialog
-      if (activity in ACTIVITY_COLORS) {
-        const colorObj = ACTIVITY_COLORS[activity as keyof typeof ACTIVITY_COLORS];
-        return { bg: colorObj.bg, text: "text-slate-900 dark:text-slate-100 font-bold" };
+    // Обработка строки активностей (несколько дней)
+    if (activity.length > 1) {
+      // Если это строка активностей, берем первую букву как представителя
+      const primaryActivity = activity[0];
+      
+      // Проверка существования цветов для этой активности
+      if (
+        primaryActivity && 
+        typeof ACTIVITY_COLORS !== 'undefined' && 
+        primaryActivity in ACTIVITY_COLORS
+      ) {
+        // Используем bg класс из ACTIVITY_COLORS
+        return {
+          bg: ACTIVITY_COLORS[primaryActivity as Exclude<ActivityType, "">].bg,
+          text: "text-slate-900 dark:text-slate-100 font-bold"
+        };
       }
+      
+      // Если цвета не найдены, используем резервный стиль
+      return { bg: "bg-slate-200 dark:bg-slate-700", text: "text-slate-900 dark:text-slate-100" };
+    }
+    
+    // Для одиночной буквы активности
+    if (
+      typeof ACTIVITY_COLORS !== 'undefined' && 
+      activity in ACTIVITY_COLORS
+    ) {
+      // Используем цвета из определения
+      return {
+        bg: ACTIVITY_COLORS[activity as Exclude<ActivityType, "">].bg,
+        text: ACTIVITY_COLORS[activity as Exclude<ActivityType, "">].text
+      };
     }
     
     // Для нестандартного символа активности
-    return { bg: "bg-slate-200 dark:bg-slate-600", text: "text-slate-900 dark:text-slate-100 font-bold" };
+    return { bg: "bg-slate-200 dark:bg-slate-700", text: "text-slate-900 dark:text-slate-100" };
   };
   
   // Проверка на последний день месяца (для границы месяцев)
