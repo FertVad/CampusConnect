@@ -431,14 +431,14 @@ export function AcademicCalendarTable({
 
   return (
     <div className="w-full">
-      {/* Управляющая панель согласно требованиям из документации */}
+      {/* Управляющая панель - встроенная, не фиксированная */}
       <div 
         ref={dockBarRef}
-        className={`calendar-dock-bar sticky top-0 left-0 z-40 w-full
-          flex items-center gap-2 px-3 py-2 
-          bg-slate-900/95 text-white rounded-md shadow-lg
-          ${hasSelection ? 'is-visible' : ''}
-          transition-opacity duration-200 ease-in-out`}
+        className={`sticky top-0 left-0 z-40 w-full
+          flex items-center gap-2 px-3 py-2 mt-2 mb-2
+          bg-slate-900 text-white rounded-md shadow-lg
+          ${hasSelection ? 'opacity-100' : 'opacity-0 pointer-events-none'}
+          transition-all duration-200`}
       >
         <span className="mr-2 text-sm">Выбрано {selectedCells.size}:</span>
         
@@ -476,12 +476,9 @@ export function AcademicCalendarTable({
       </div>
 
       <div className="rounded-md overflow-hidden border shadow-sm dark:border-slate-700">
-        <div className="overflow-x-auto overflow-y-hidden max-h-[500px] custom-scrollbar calendar-wrapper" ref={scrollWrapperRef}>
-          <div className="relative">
-            <table 
-              className="w-full border-collapse" 
-              ref={tableRef}
-              style={{ minWidth: weeks.length * 40 + 160 }}>
+        <div className="overflow-auto max-h-[500px] custom-scrollbar calendar-wrapper" ref={scrollWrapperRef}>
+          <div className="min-w-max relative">
+            <table className="w-full border-collapse" ref={tableRef}>
               <thead ref={headerRef}>
                 {renderHeaders()}
               </thead>

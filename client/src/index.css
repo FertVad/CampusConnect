@@ -629,20 +629,7 @@
   background: rgba(0, 0, 0, 0.3);
 }
 
-/* Стили для календаря и его компонентов согласно документации */
-
-/* Стили для dock-bar */
-.calendar-dock-bar {
-  transition: opacity 0.2s ease;
-}
-
-.calendar-dock-bar:not(.is-visible) {
-  opacity: 0;
-  pointer-events: none;
-  height: 0;
-}
-
-/* Стили для выделения ячеек */
+/* Стили для выделения и dock-bar */
 .selected {
   position: relative;
 }
@@ -672,13 +659,7 @@
   white-space: normal !important;
 }
 
-/* Стили для ячеек с месяцами */
-.week-cell {
-  position: relative;
-  overflow: visible;
-}
-
-/* Стили для разделения месяцев */
+/* Split month cell styling */
 .week-cell.--split-month::after {
   content: '';
   position: absolute;
@@ -688,7 +669,6 @@
   width: 2px;
   background: rgba(100, 116, 139, 0.15); /* slate-500/15 */
   pointer-events: none;
-  z-index: 2;
 }
 
 /* конец календарного блока */
