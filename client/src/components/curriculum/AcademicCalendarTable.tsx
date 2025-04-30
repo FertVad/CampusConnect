@@ -535,6 +535,7 @@ export function AcademicCalendarTable({
         id="calendar-tooltip" 
         className="academic-tooltip" 
         place="top"
+        fallbackPlacements={['bottom', 'right']}
         clickable={true}
         delayHide={0}
         delayShow={800}

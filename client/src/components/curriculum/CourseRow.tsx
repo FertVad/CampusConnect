@@ -101,7 +101,6 @@ export function CourseRow({
       // Базовый класс ячейки без фонового цвета
       const baseCellClass = `p-0 h-8 text-center cursor-pointer transition-colors
         ${isMonthEnd ? 'border-r border-slate-500/15 dark:border-slate-500/10' : ''}
-        ${isSelected ? 'ring-2 ring-blue-500 shadow-lg' : ''}
         hover:outline hover:outline-2 hover:outline-blue-500 hover:outline-offset-[-2px]`;
       
       // Определяем стиль для ячейки - только если есть активность
@@ -112,7 +111,7 @@ export function CourseRow({
           key={`cell-${cellKey}`}
           className={`${baseCellClass} week-cell
             ${crossMonth ? '--split-month' : ''} 
-            ${selectedCells && cellKey && Array.from(selectedCells).includes(cellKey) ? 'relative' : ''}`}
+            ${selectedCells && cellKey && selectedCells.has(cellKey) ? 'selected' : ''}`}
           data-cell-key={cellKey}
           data-month-odd={monthIndex % 2}
           style={style}
