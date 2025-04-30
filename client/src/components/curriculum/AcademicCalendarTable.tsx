@@ -214,43 +214,7 @@ export function AcademicCalendarTable({
   const headerRef = useRef<HTMLTableSectionElement>(null);
   const scrollWrapperRef = useRef<HTMLDivElement>(null);
   
-  // Получение границ прямоугольника выделения
-  const getSelectionRect = (selectedCells: Set<string>): { top: number, left: number, width: number, height: number } => {
-    if (selectedCells.size === 0) {
-      return { top: 0, left: 0, width: 0, height: 0 };
-    }
-    
-    let minLeft = Infinity;
-    let minTop = Infinity;
-    let maxRight = -Infinity;
-    let maxBottom = -Infinity;
-    
-    // Проходим по всем выделенным ячейкам и находим границы
-    Array.from(selectedCells).forEach(cellKey => {
-      const cell = document.querySelector(`[data-cell-key="${cellKey}"]`) as HTMLElement;
-      if (cell) {
-        const rect = cell.getBoundingClientRect();
-        minLeft = Math.min(minLeft, rect.left);
-        minTop = Math.min(minTop, rect.top);
-        maxRight = Math.max(maxRight, rect.right);
-        maxBottom = Math.max(maxBottom, rect.bottom);
-      }
-    });
-    
-    // Возвращаем прямоугольник, охватывающий все выделенные ячейки
-    return {
-      top: minTop,
-      left: minLeft,
-      width: maxRight - minLeft,
-      height: maxBottom - minTop
-    };
-  };
-  
-  // Использем новый компонент FloatingActionBar вместо встроенного ActionBar
-  // Состояние и эффекты для позиционирования больше не нужны
-  
-  // Примечание: стили для тултипов и выделенных ячеек 
-  // теперь находятся в файле index.css
+  // Примечание: стили для тултипов и выделенных ячеек теперь находятся в файле index.css
   
   // Функция для получения стиля ячейки в зависимости от активности
   const getActivityStyle = (activity: ActivityType): { bg: string, text: string } => {
@@ -453,44 +417,25 @@ export function AcademicCalendarTable({
   // Проверяем, есть ли выделение для dock-bar
   const hasSelection = selectedCells.size > 0;
   
-  // Refs для элементов интерфейса
-  const dockBarRef = useRef<HTMLDivElement>(null);
-  
-  // Позиционируем dock-bar на фиксированной позиции
-  const [barTop, setBarTop] = useState('56px');
-  
-  // Обновляем позицию dock-bar при монтировании и когда доступен headerRef
+  // Обновляем CSS переменную для высоты шапки таблицы
   useEffect(() => {
-    function updateBarPosition() {
+    function updateHeaderHeight() {
       if (headerRef.current) {
-        const headerRect = headerRef.current.getBoundingClientRect();
-        setBarTop(`${headerRect.bottom + 12}px`);
+        const headerHeight = headerRef.current.offsetHeight;
+        document.documentElement.style.setProperty('--header-h', `${headerHeight}px`);
       }
     }
     
-    // Инициализация при загрузке
-    updateBarPosition();
-    
-    // Отслеживание изменения размеров
-    window.addEventListener('resize', updateBarPosition);
-    return () => window.removeEventListener('resize', updateBarPosition);
-  }, [headerRef]);
+    updateHeaderHeight();
+    window.addEventListener('resize', updateHeaderHeight);
+    return () => window.removeEventListener('resize', updateHeaderHeight);
+  }, []);
 
   return (
     <div className="w-full">
       {/* Sticky dock-bar (прикреплен к верху области просмотра с учетом высоты шапки) */}
       <div 
-        ref={dockBarRef}
-        style={{
-          position: 'fixed',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          top: barTop,
-          zIndex: 60,
-          opacity: hasSelection ? 1 : 0,
-          pointerEvents: hasSelection ? 'auto' : 'none',
-        }}
-        className="calendar-dock-bar"
+        className={clsx('calendar-dock-bar', { 'is-visible': hasSelection })}
       >
         <span className="mr-2">Выбрано {selectedCells.size}:</span>
         
