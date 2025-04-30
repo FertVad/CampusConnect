@@ -457,32 +457,23 @@ export function AcademicCalendarTable({
   const [headerHeight, setHeaderHeight] = useState(0);
   const dockBarRef = useRef<HTMLDivElement>(null);
   
-  // Обновляем высоту шапки при монтировании и изменении размеров окна
+  // Упрощенный код, без отслеживания высоты заголовка
   useEffect(() => {
-    function updateHeaderHeight() {
-      if (headerRef.current) {
-        const height = headerRef.current.offsetHeight;
-        setHeaderHeight(height);
-      }
-    }
-    
-    // Инициализация при загрузке
-    updateHeaderHeight();
-    
-    // Обновление при ресайзе окна
-    window.addEventListener('resize', updateHeaderHeight);
-    return () => window.removeEventListener('resize', updateHeaderHeight);
-  }, [headerRef]);
+    // Ничего не делаем, у нас фиксированное позиционирование
+  }, []);
 
   return (
     <div className="w-full">
-      {/* Sticky dock-bar (прикреплен к верху области просмотра с учетом высоты шапки) */}
+      {/* Управляющая панель - фиксированная позиция */}
       <div 
-        ref={dockBarRef}
-        className={clsx('calendar-dock-bar', { 'is-visible': hasSelection })}
-        style={{ top: `calc(${headerHeight}px + 12px)` }}
+        className={`fixed top-[60px] left-1/2 -translate-x-1/2 z-[999] 
+          min-w-[240px] max-w-full
+          flex items-center gap-2 px-3 py-2
+          bg-slate-900/95 text-white rounded-md shadow-lg
+          ${hasSelection ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}
+          transition-opacity duration-200 ease-in-out`}
       >
-        <span className="mr-2">Выбрано {selectedCells.size}:</span>
+        <span className="mr-2 text-sm">Выбрано {selectedCells.size}:</span>
         
         {/* Кнопки активностей */}
         {Object.entries(ACTIVITY_TYPES).map(([code, description]) => {
@@ -575,40 +566,15 @@ export function AcademicCalendarTable({
         onActivityChange={handleActivityChange}
       />
       
-      {/* Тултип для календаря (z-index ниже dock-bar) */}
+      {/* Простой тултип с фиксированным z-index */}
       <Tooltip 
         id="calendar-tooltip" 
         className="academic-tooltip" 
-        place="top"
+        place="top-start"
         clickable={true}
         delayHide={0}
-        delayShow={1000}
+        delayShow={600}
         positionStrategy="fixed"
-        afterShow={() => {
-          setTimeout(() => {
-            // Проверяем положение dock-bar, чтобы тултип его обходил
-            if (hasSelection && dockBarRef.current) {
-              const barRect = dockBarRef.current.getBoundingClientRect();
-              const tooltipContent = document.querySelector('.academic-tooltip');
-              
-              if (tooltipContent) {
-                const tooltipRect = tooltipContent.getBoundingClientRect();
-                const overlap = 
-                  tooltipRect.top < barRect.bottom &&
-                  tooltipRect.bottom > barRect.top;
-                
-                if (overlap) {
-                  // Если перекрывается с баром, скрываем тултип и затем показываем его снизу
-                  const tooltip = document.getElementById('calendar-tooltip');
-                  if (tooltip) {
-                    tooltip.setAttribute('data-tooltip-place', 'bottom');
-                    tooltip.style.top = `${barRect.bottom + 10}px`;
-                  }
-                }
-              }
-            }
-          }, 0);
-        }}
       />
     </div>
   );
