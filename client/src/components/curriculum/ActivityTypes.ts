@@ -56,18 +56,29 @@ export const ACTIVITY_COLORS: {
 
 // Функция создания градиента для недель с разными типами активности
 export const weekGradient = (days: string): string => {
-  if (!days || days.length === 0) return 'white';
+  console.log('weekGradient вызван с:', days);
+  
+  if (!days || days.length === 0) {
+    console.log('Нет активности, возвращаем белый');
+    return 'white';
+  }
   
   // Если только один тип активности - используем сплошной цвет
   if (days.length === 1 || new Set(days.split('')).size === 1) {
     const activity = days[0] as Exclude<ActivityType, "">;
+    console.log('Один тип активности:', activity);
+    
     if (activity in ACTIVITY_COLORS) {
-      return ACTIVITY_COLORS[activity].color;
+      const color = ACTIVITY_COLORS[activity].color;
+      console.log('Найден цвет для активности:', color);
+      return color;
     }
+    console.log('Цвет не найден, используем серый');
     return '#f3f4f6'; // Светло-серый для неизвестных активностей
   }
   
   // Если разные активности - создаем градиент
+  console.log('Несколько типов активности, создаем градиент');
   const dayActivities = days.padEnd(7, days[days.length - 1]).split('');
   const percentStep = 100 / 7;
   
@@ -78,9 +89,10 @@ export const weekGradient = (days: string): string => {
       activity = 'К'; // Используем цвет каникул для пустых дней
     }
     
-    const color = (activity && activity in ACTIVITY_COLORS) 
-      ? ACTIVITY_COLORS[activity as Exclude<ActivityType, "">].color 
-      : '#f3f4f6';
+    let color = '#f3f4f6';
+    if (activity && activity in ACTIVITY_COLORS) {
+      color = ACTIVITY_COLORS[activity as Exclude<ActivityType, "">].color;
+    }
     
     const start = index * percentStep;
     const end = (index + 1) * percentStep;
@@ -89,6 +101,7 @@ export const weekGradient = (days: string): string => {
   });
   
   gradient += ')';
+  console.log('Сгенерированный градиент:', gradient);
   return gradient;
 };
 

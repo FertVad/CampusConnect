@@ -103,18 +103,51 @@ export function CourseRow({
         ${isMonthEnd ? 'border-r border-slate-500/15 dark:border-slate-500/10' : ''}
         hover:outline hover:outline-2 hover:outline-blue-500 hover:outline-offset-[-2px]`;
       
-      // Определяем стиль для ячейки - только если есть активность
-      const style = activity ? { background: weekGradient(activity) } : undefined;
+      // Вместо использования стилей напрямую, добавляем классы
+      // Таким образом избегаем проблем со стилями в рантайме
+      let activityClass = "";
+      
+      if (activity) {
+        console.log(`Ячейка ${cellKey} с активностью ${activity}`);
+        
+        if (activity.length === 1) {
+          if (activity === "У") {
+            activityClass = "bg-blue-300 text-blue-900";
+          } else if (activity === "К") {
+            activityClass = "bg-gray-300 text-gray-900";
+          } else if (activity === "П") {
+            activityClass = "bg-yellow-300 text-yellow-900";
+          } else if (activity === "Э") {
+            activityClass = "bg-red-300 text-red-900";
+          } else if (activity === "Д") {
+            activityClass = "bg-purple-300 text-purple-900";
+          }
+        } else if (activity.length > 1) {
+          // Для комбинированных активностей берем первую букву
+          const firstChar = activity[0];
+          if (firstChar === "У") {
+            activityClass = "bg-blue-300 text-blue-900";
+          } else if (firstChar === "К") {
+            activityClass = "bg-gray-300 text-gray-900";
+          } else if (firstChar === "П") {
+            activityClass = "bg-yellow-300 text-yellow-900";
+          } else if (firstChar === "Э") {
+            activityClass = "bg-red-300 text-red-900";
+          } else if (firstChar === "Д") {
+            activityClass = "bg-purple-300 text-purple-900";
+          }
+        }
+      }
       
       cells.push(
         <td 
           key={`cell-${cellKey}`}
           className={`${baseCellClass} week-cell
             ${crossMonth ? '--split-month' : ''} 
-            ${selectedCells && cellKey && selectedCells.has(cellKey) ? 'selected' : ''}`}
+            ${selectedCells && cellKey && selectedCells.has(cellKey) ? 'selected' : ''}
+            ${activityClass}`}
           data-cell-key={cellKey}
           data-month-odd={monthIndex % 2}
-          style={style}
           onClick={(event) => onCellClick({
             courseId: course.id,
             weekNumber,
