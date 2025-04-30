@@ -148,6 +148,47 @@ function EditCurriculumPlanContent() {
     }
   }, [plan, form]);
   
+  // Функция сохранения данных календаря
+  const saveCalendarData = async () => {
+    if (Object.keys(calendarDataRef.current).length === 0) {
+      console.log("[EditCurriculumPlan] No calendar data to save");
+      return;
+    }
+    
+    try {
+      console.log("[EditCurriculumPlan] Saving calendar data:", calendarDataRef.current);
+      const calendarDataString = JSON.stringify(calendarDataRef.current);
+      
+      // Используем напрямую apiRequest для обхода типизации
+      await apiRequest(`/api/curriculum-plans/${planId}`, 'PUT', JSON.stringify({
+        calendarData: calendarDataString
+      }));
+      
+      toast({
+        title: "График обновлен",
+        description: "Данные графика успешно сохранены",
+      });
+      
+      queryClient.invalidateQueries({ queryKey: [`/api/curriculum-plans/${planId}`] });
+    } catch (error) {
+      console.error("Ошибка при сохранении графика:", error);
+      toast({
+        title: "Ошибка сохранения",
+        description: "Не удалось сохранить график. Пожалуйста, попробуйте снова.",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  // Обработчик смены вкладок
+  const handleTabChange = (value: string) => {
+    // Если мы уходим с вкладки "schedule", сохраняем данные календаря
+    if (activeTab === "schedule" && value !== "schedule") {
+      saveCalendarData();
+    }
+    setActiveTab(value);
+  };
+  
   // Обработчик отправки формы титульного листа
   const onSubmit = (data: CurriculumFormValues) => {
     updateMutation.mutate({ ...data, id: planId });
@@ -250,7 +291,7 @@ function EditCurriculumPlanContent() {
         </CardHeader>
         
         <CardContent>
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
             <TabsList className="mb-4 grid w-full grid-cols-3">
               <TabsTrigger value="title" className="flex items-center">
                 <FileText className="h-4 w-4 mr-2" />
@@ -511,25 +552,13 @@ function EditCurriculumPlanContent() {
                           planId={planId.toString()} // Явно указываем planId из родительского компонента
                           onChange={(data) => {
                             console.log("Calendar data updated:", data);
-                            // Сохраняем данные графика
-                            const calendarDataString = JSON.stringify(data);
-                            // Используем directly apiRequest для обхода типизации
-                            apiRequest(`/api/curriculum-plans/${planId}`, 'PUT', JSON.stringify({
-                              calendarData: calendarDataString
-                            })).then(() => {
-                              queryClient.invalidateQueries({ queryKey: [`/api/curriculum-plans/${planId}`] });
-                              toast({
-                                title: "График обновлен",
-                                description: "Данные графика успешно сохранены",
-                              });
-                            }).catch(error => {
-                              console.error("Ошибка при сохранении графика:", error);
-                              toast({
-                                title: "Ошибка сохранения",
-                                description: "Не удалось сохранить график. Пожалуйста, попробуйте снова.",
-                                variant: "destructive",
-                              });
-                            });
+                            // Обновляем локальное состояние и ссылку для отслеживания актуальных данных
+                            setCalendarData(data);
+                            calendarDataRef.current = data;
+                            
+                            // Отключаем прямое сохранение здесь, так как оно может вызывать конфликты
+                            // и потерю данных. Вместо этого мы будем использовать принудительное сохранение
+                            // при переключении вкладок или useAutoSave внутри компонента AcademicCalendarTable
                           }}
                         />
                       </div>
