@@ -12,6 +12,8 @@ interface AutoSaveOptions {
   onError?: (error: Error) => void;
   /** Обратный вызов при успешном сохранении */
   onSuccess?: (data: any) => void;
+  /** Флаг, контролирующий активность автосохранения (по умолчанию true) */
+  enabled?: boolean;
 }
 
 /**
@@ -20,7 +22,7 @@ interface AutoSaveOptions {
  * @param options Опции автосохранения
  */
 export function useAutoSave<T>(data: T, options: AutoSaveOptions) {
-  const { debounceMs = 1000, url, method = 'POST', onError, onSuccess } = options;
+  const { debounceMs = 1000, url, method = 'POST', onError, onSuccess, enabled = true } = options;
   
   const [isSaving, setIsSaving] = useState(false);
   const [lastSavedData, setLastSavedData] = useState<T | null>(null);
@@ -83,11 +85,18 @@ export function useAutoSave<T>(data: T, options: AutoSaveOptions) {
   
   // Принудительное сохранение (для кнопки "Сохранить")
   const forceSave = async () => {
+    // Проверяем, разрешено ли автосохранение
+    if (!enabled) {
+      console.log('[useAutoSave] Force save skipped - disabled');
+      return;
+    }
+    
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
     }
     
+    console.log('[useAutoSave] Force saving data');
     await saveData(data);
     
     toast({
@@ -99,11 +108,19 @@ export function useAutoSave<T>(data: T, options: AutoSaveOptions) {
   
   // Эффект для автоматического сохранения с дебаунсом
   useEffect(() => {
+    // Не запускаем автосохранение, если флаг enabled установлен в false
+    if (!enabled) {
+      return;
+    }
+    
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }
     
+    console.log('[useAutoSave] Scheduling auto-save in', debounceMs, 'ms');
+    
     timeoutRef.current = setTimeout(() => {
+      console.log('[useAutoSave] Auto-saving data', data);
       saveData(data);
     }, debounceMs);
     
@@ -112,7 +129,7 @@ export function useAutoSave<T>(data: T, options: AutoSaveOptions) {
         clearTimeout(timeoutRef.current);
       }
     };
-  }, [data, debounceMs]);
+  }, [data, debounceMs, enabled]);
   
   return {
     isSaving,

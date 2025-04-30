@@ -57,20 +57,34 @@ export function AcademicCalendarTable({
   
   // Используем planId из props или извлекаем из URL если он не был передан
   const urlParams = new URLSearchParams(window.location.search);
-  const effectivePlanId = planId || urlParams.get('id') || '';
+  const urlPlanId = urlParams.get('id');
+  // Убедимся, что у нас есть числовой ID для плана
+  const effectivePlanId = planId || urlPlanId || '';
   
   // Добавим развернутое логирование для отслеживания планов
   console.log('[AcademicCalendarTable] Effective Plan ID:', effectivePlanId);
   
-  // Создаем объект с именованным ключом planId
-  const dataToSave = { planId: effectivePlanId, calendarData: tableData };
+  // Блокируем автосохранение, если нет действительного planId
+  const isValidPlanId = !!effectivePlanId && effectivePlanId !== '' && !isNaN(parseInt(effectivePlanId));
+  console.log('[AcademicCalendarTable] Is Valid Plan ID:', isValidPlanId);
   
-  // Используем хук автосохранения с добавлением planId
+  // Создаем объект с именованным ключом planId
+  const dataToSave = { 
+    planId: effectivePlanId, 
+    calendarData: tableData 
+  };
+  
+  // Используем хук автосохранения с добавлением planId, только если он валидный
   const { isSaving, forceSave } = useAutoSave(dataToSave, {
     url: '/api/curriculum/weeks',
     debounceMs: 1000,
+    // Только запускаем автосохранение если planId валидный
+    enabled: isValidPlanId,
     onSuccess: (data) => {
       console.log('Данные автоматически сохранены', data);
+    },
+    onError: (error) => {
+      console.error('Ошибка автосохранения:', error.message);
     }
   });
   
