@@ -11,102 +11,15 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 
-// Тип активности
-// Может быть одиночным символом или строкой символов (для комбинации активностей по дням)
-export type ActivityType = "У" | "К" | "П" | "Э" | "Д" | "" | string;
+// Импортируем типы из общего модуля
+import { 
+  ActivityType, 
+  ACTIVITY_TYPES, 
+  ACTIVITY_COLORS, 
+  weekGradient 
+} from "./ActivityTypes";
 
-// Типы активностей с описаниями
-export const ACTIVITY_TYPES: { [key in Exclude<ActivityType, "">]: string } = {
-  У: "Учебный процесс",
-  К: "Каникулы",
-  П: "Практика",
-  Э: "Экзаменационная сессия",
-  Д: "Дипломное проектирование",
-};
-
-// Цвета для активностей (яркие оттенки)
-export const ACTIVITY_COLORS: {
-  [key in Exclude<ActivityType, "">]: {
-    bg: string;
-    text: string;
-    hoverBg: string;
-    color: string;
-  };
-} = {
-  У: { bg: "bg-blue-300", text: "text-blue-900", hoverBg: "hover:bg-blue-400", color: "#93c5fd" },
-  К: { bg: "bg-gray-300", text: "text-gray-900", hoverBg: "hover:bg-gray-400", color: "#d1d5db" },
-  П: {
-    bg: "bg-yellow-300",
-    text: "text-yellow-900",
-    hoverBg: "hover:bg-yellow-400",
-    color: "#fde047"
-  },
-  Э: { bg: "bg-red-300", text: "text-red-900", hoverBg: "hover:bg-red-400", color: "#fca5a5" },
-  Д: {
-    bg: "bg-purple-300",
-    text: "text-purple-900",
-    hoverBg: "hover:bg-purple-400",
-    color: "#d8b4fe"
-  },
-};
-
-// Функция для создания градиента из активностей дней недели
-export const weekGradient = (days: string): string => {
-  console.log('weekGradient called with days:', days);
-  console.log('ACTIVITY_COLORS available:', typeof ACTIVITY_COLORS !== 'undefined');
-  
-  if (!days || days.length === 0) return 'white';
-  
-  // Проверяем, что ACTIVITY_COLORS определен
-  if (typeof ACTIVITY_COLORS === 'undefined') {
-    console.error('ACTIVITY_COLORS is undefined in weekGradient');
-    return '#f3f4f6'; // Светло-серый цвет как запасной вариант
-  }
-  
-  console.log('ACTIVITY_COLORS keys:', Object.keys(ACTIVITY_COLORS));
-  
-  // Если только один тип активности - используем сплошной цвет
-  if (days.length === 1 || new Set(days.split('')).size === 1) {
-    const activity = days[0] as Exclude<ActivityType, "">;
-    
-    if (!(activity in ACTIVITY_COLORS)) {
-      console.warn(`No color found for activity: ${activity}`);
-      return '#f3f4f6';
-    }
-    
-    const color = ACTIVITY_COLORS[activity]?.color || '#f3f4f6';
-    console.log(`Using solid color for "${activity}":`, color);
-    return color;
-  }
-  
-  // Если разные активности - создаем градиент
-  const dayActivities = days.padEnd(7, days[days.length - 1]).split('');
-  const percentStep = 100 / 7;
-  
-  let gradient = 'linear-gradient(to right';
-  
-  dayActivities.forEach((activity, index) => {
-    if (!activity || activity === ' ') {
-      activity = 'К'; // Используем цвет каникул для пустых дней
-    }
-    
-    let color = '#f3f4f6';
-    if (activity && activity in ACTIVITY_COLORS) {
-      color = ACTIVITY_COLORS[activity as Exclude<ActivityType, "">].color;
-    } else {
-      console.warn(`No color found for day activity: ${activity}`);
-    }
-    
-    const start = index * percentStep;
-    const end = (index + 1) * percentStep;
-    
-    gradient += `, ${color} ${start}%, ${color} ${end}%`;
-  });
-  
-  gradient += ')';
-  console.log('Generated gradient:', gradient);
-  return gradient;
-};
+// Функция weekGradient теперь импортируется из ActivityTypes.ts
 
 // Интерфейс для дня недели
 interface WeekDay {

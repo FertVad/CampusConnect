@@ -629,9 +629,35 @@
   background: rgba(0, 0, 0, 0.3);
 }
 
-/* Удалены дублирующиеся стили для dock-bar */
+/* Стили для выделения и dock-bar */
+.selected {
+  position: relative;
+}
 
-/* Удалены дублирующиеся стили для tooltip */
+.selected::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(139, 92, 246, 0.15);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.selected {
+  outline: 2px solid rgb(139, 92, 246, 0.7) !important;
+  outline-offset: -2px !important;
+  z-index: 1;
+}
+
+/* Стили для tooltip */
+.academic-tooltip {
+  z-index: 50 !important;
+  max-width: 220px !important;
+  white-space: normal !important;
+}
 
 /* Split month cell styling */
 .week-cell.--split-month::after {

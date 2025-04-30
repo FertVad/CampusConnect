@@ -2,7 +2,7 @@ import React from "react";
 import { WeekCell, buildAcademicWeeks } from "@/utils/calendar";
 import { format, getWeek, differenceInWeeks } from "date-fns";
 import { ru } from "date-fns/locale/ru";
-import { ActivityType, ACTIVITY_COLORS, ACTIVITY_TYPES, weekGradient } from "./WeekActivityDialog";
+import { ActivityType, ACTIVITY_COLORS, ACTIVITY_TYPES, weekGradient } from "./ActivityTypes";
 import { Tooltip } from "react-tooltip";
 
 // Интерфейс курса

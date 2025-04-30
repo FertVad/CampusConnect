@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useCallback, useRef, useEffect } from "react";
-import { WeekActivityDialog, WeekInfo, ActivityType, ACTIVITY_TYPES, ACTIVITY_COLORS } from "./WeekActivityDialog";
+import { WeekActivityDialog, WeekInfo } from "./WeekActivityDialog";
+import { ActivityType, ACTIVITY_TYPES, ACTIVITY_COLORS, getActivityStyle } from "./ActivityTypes";
 import { Tooltip } from 'react-tooltip'; // Возвращаемся к react-tooltip, так как он проще в использовании
 import { WeekCell, getFirstWorkdayOfSeptember, buildAcademicWeeks } from "@/utils/calendar";
 import { format } from "date-fns";
@@ -252,61 +253,8 @@ export function AcademicCalendarTable({
   // Примечание: стили для тултипов и выделенных ячеек 
   // теперь находятся в файле index.css
   
-  // Функция для получения стиля ячейки в зависимости от активности
-  // Функция преобразования ActivityType в стиль ячейки
-  const getActivityStyle = (activity: ActivityType): { bg: string, text: string } => {
-    // Базовый стиль для пустых ячеек
-    const defaultStyle = { bg: "bg-slate-50 dark:bg-slate-900", text: "text-slate-400 dark:text-slate-500" };
-    
-    // Проверка на пустое значение
-    if (!activity || activity === "") {
-      return defaultStyle;
-    }
-    
-    // Пытаемся напрямую выведать ошибку, если она есть
-    console.log('Activity:', activity);
-    console.log('ACTIVITY_COLORS exists:', typeof ACTIVITY_COLORS !== 'undefined');
-    if (typeof ACTIVITY_COLORS !== 'undefined') {
-      console.log('ACTIVITY_COLORS keys:', Object.keys(ACTIVITY_COLORS));
-    }
-    
-    // Обработка строки активностей (несколько дней)
-    if (activity.length > 1) {
-      // Если это строка активностей, берем первую букву как представителя
-      const primaryActivity = activity[0];
-      
-      // Проверка существования цветов для этой активности
-      if (
-        primaryActivity && 
-        typeof ACTIVITY_COLORS !== 'undefined' && 
-        primaryActivity in ACTIVITY_COLORS
-      ) {
-        // Используем bg класс из ACTIVITY_COLORS
-        return {
-          bg: ACTIVITY_COLORS[primaryActivity as Exclude<ActivityType, "">].bg,
-          text: "text-slate-900 dark:text-slate-100 font-bold"
-        };
-      }
-      
-      // Если цвета не найдены, используем резервный стиль
-      return { bg: "bg-slate-200 dark:bg-slate-700", text: "text-slate-900 dark:text-slate-100" };
-    }
-    
-    // Для одиночной буквы активности
-    if (
-      typeof ACTIVITY_COLORS !== 'undefined' && 
-      activity in ACTIVITY_COLORS
-    ) {
-      // Используем цвета из определения
-      return {
-        bg: ACTIVITY_COLORS[activity as Exclude<ActivityType, "">].bg,
-        text: ACTIVITY_COLORS[activity as Exclude<ActivityType, "">].text
-      };
-    }
-    
-    // Для нестандартного символа активности
-    return { bg: "bg-slate-200 dark:bg-slate-700", text: "text-slate-900 dark:text-slate-100" };
-  };
+  // Функция getActivityStyle импортируется из модуля ActivityTypes
+  // Это позволяет избежать дублирования кода и проблем с импортами
   
   // Проверка на последний день месяца (для границы месяцев)
   const isLastDayOfMonth = (date: Date): boolean => {
@@ -483,15 +431,14 @@ export function AcademicCalendarTable({
 
   return (
     <div className="w-full">
-      {/* Управляющая панель - фиксированная позиция */}
+      {/* Управляющая панель - встроенная, не фиксированная */}
       <div 
         ref={dockBarRef}
-        className={`fixed top-[140px] left-1/2 -translate-x-1/2 z-[999] 
-          min-w-[240px] max-w-full
-          flex items-center gap-2 px-3 py-2
-          bg-slate-900/95 text-white rounded-md shadow-lg
-          ${hasSelection ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}
-          transition-opacity duration-200 ease-in-out`}
+        className={`sticky top-0 left-0 z-40 w-full
+          flex items-center gap-2 px-3 py-2 mt-2 mb-2
+          bg-slate-900 text-white rounded-md shadow-lg
+          ${hasSelection ? 'opacity-100' : 'opacity-0 pointer-events-none'}
+          transition-all duration-200`}
       >
         <span className="mr-2 text-sm">Выбрано {selectedCells.size}:</span>
         
