@@ -3051,7 +3051,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/curriculum/weeks', authenticateUser, async (req, res) => {
     try {
       // Получаем данные и план ID из запроса
-      const { planId, ...calendarData } = req.body;
+      console.log('[DEBUG - /api/curriculum/weeks]', 'Request body:', req.body);
+      
+      const { planId, calendarData } = req.body;
       
       if (!planId) {
         return res.status(400).json({
@@ -3079,6 +3081,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Сохраняем данные календаря
       const calendarDataString = JSON.stringify(calendarData);
+      console.log('[DEBUG - /api/curriculum/weeks]', 'Saving calendarData for planId:', id);
       
       const updatedPlan = await getStorage().updateCurriculumPlan(id, {
         calendarData: calendarDataString

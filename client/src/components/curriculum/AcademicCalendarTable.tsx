@@ -59,8 +59,14 @@ export function AcademicCalendarTable({
   const urlParams = new URLSearchParams(window.location.search);
   const effectivePlanId = planId || urlParams.get('id') || '';
   
+  // Добавим развернутое логирование для отслеживания планов
+  console.log('[AcademicCalendarTable] Effective Plan ID:', effectivePlanId);
+  
+  // Создаем объект с именованным ключом planId
+  const dataToSave = { planId: effectivePlanId, calendarData: tableData };
+  
   // Используем хук автосохранения с добавлением planId
-  const { isSaving, forceSave } = useAutoSave({...tableData, planId: effectivePlanId}, {
+  const { isSaving, forceSave } = useAutoSave(dataToSave, {
     url: '/api/curriculum/weeks',
     debounceMs: 1000,
     onSuccess: (data) => {
