@@ -174,7 +174,7 @@ export function CourseRow({
           }, event)}
           data-tooltip-id="calendar-tooltip"
           data-tooltip-html={`
-            <div class="font-medium">Кал. неделя ${getWeek(weekInCourse.startDate)} | Уч. неделя ${weekNumber}</div>
+            <div class="font-medium">Уч. неделя ${weekNumber}</div>
             <div class="text-slate-400 text-sm">${format(weekInCourse.startDate, 'd MMM', {locale: ru})} – ${format(weekInCourse.endDate, 'd MMM', {locale: ru})}</div>
             <div class="mt-2 text-sm">
               ${activity ? (() => {
