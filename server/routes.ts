@@ -2191,9 +2191,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Curriculum Plans (Учебные планы) Routes
   app.get('/api/curriculum-plans', authenticateUser, async (req, res) => {
     try {
-      console.log("GET /api/curriculum-plans - Request received");
-      console.log(`GET /api/curriculum-plans - Authenticated user: ${req.user ? JSON.stringify({id: req.user.id, role: req.user.role}) : 'undefined'}`);
-      
       // Получаем актуальное хранилище и создаем временные данные для тестирования
       // Пример базовых учебных планов для временного использования
       const defaultPlans = [
@@ -2239,27 +2236,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const storage = getStorage();
         
         if (typeof storage.getCurriculumPlans === 'function') {
-          console.log("GET /api/curriculum-plans - Storage has getCurriculumPlans method");
           curriculumPlans = await storage.getCurriculumPlans();
-          console.log(`GET /api/curriculum-plans - Retrieved ${curriculumPlans.length} plans from storage`);
         } else {
-          console.warn("GET /api/curriculum-plans - Warning: storage.getCurriculumPlans not found");
-          console.log("GET /api/curriculum-plans - Using default plans data");
           curriculumPlans = defaultPlans;
         }
       } catch (storageError) {
-        console.error("GET /api/curriculum-plans - Storage error:", storageError);
-        console.log("GET /api/curriculum-plans - Using default plans data after error");
         curriculumPlans = defaultPlans;
       }
       
       // Отправляем ответ
       res.json(curriculumPlans);
     } catch (error) {
-      console.error('Error fetching curriculum plans:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      const errorStack = error instanceof Error ? error.stack : 'No stack trace available';
-      console.error('Error stack:', errorStack);
       
       res.status(500).json({ 
         message: "Error fetching curriculum plans", 
@@ -2339,24 +2327,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      console.log(`GET /api/curriculum-plans/${planId} - Fetching curriculum plan`);
-      
-      // Получение плана напрямую из Map в хранилище (временное решение)
+      // Получение плана
       const memStorage = getStorage();
       let plan = null;
       
       // Проверка наличия метода getCurriculumPlan
       if (typeof memStorage.getCurriculumPlan === 'function') {
-        console.log(`GET /api/curriculum-plans/${planId} - Using getCurriculumPlan method`);
         plan = await memStorage.getCurriculumPlan(planId);
       } else {
         // Альтернативный доступ, если метод отсутствует
-        console.log(`GET /api/curriculum-plans/${planId} - Method not found, using direct access`);
         const allPlans = await memStorage.getCurriculumPlans();
         plan = allPlans.find(p => p.id === planId);
       }
-      
-      console.log(`GET /api/curriculum-plans/${planId} - Plan found:`, Boolean(plan));
       
       if (!plan) {
         return res.status(404).json({ 
@@ -2367,10 +2349,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json(plan);
     } catch (error) {
-      console.error('Error fetching curriculum plan:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      const errorStack = error instanceof Error ? error.stack : 'No stack trace available';
-      console.error('Error stack:', errorStack);
       
       res.status(500).json({ 
         message: "Error fetching curriculum plan", 
@@ -2390,9 +2369,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         createdBy: z.number().optional()
       });
       
-      console.log('Received curriculum plan data:', req.body);
       const planData = modifiedSchema.parse(req.body);
-      console.log('Parsed curriculum plan data:', planData);
       
       // Добавляем id текущего пользователя как создателя
       if (!planData.createdBy) {
@@ -2429,7 +2406,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           timestamp: new Date().toISOString()
         });
       }
-      console.error('Error creating curriculum plan:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       res.status(500).json({ 
         message: "Error creating curriculum plan", 
@@ -2466,7 +2442,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const modifiedSchema = insertCurriculumPlanSchema.partial();
       
       const planData = modifiedSchema.parse(req.body);
-      console.log('Updating curriculum plan with data:', planData);
       
       const updatedPlan = await getStorage().updateCurriculumPlan(planId, planData);
       
@@ -2498,7 +2473,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           timestamp: new Date().toISOString()
         });
       }
-      console.error('Error updating curriculum plan:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       res.status(500).json({ 
         message: "Error updating curriculum plan", 
@@ -2561,7 +2535,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         planId: planId
       });
     } catch (error) {
-      console.error('Error deleting curriculum plan:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       res.status(500).json({ 
         message: "Error deleting curriculum plan", 
