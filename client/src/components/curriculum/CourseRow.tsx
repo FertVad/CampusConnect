@@ -103,35 +103,28 @@ export function CourseRow({
         ${isMonthEnd ? 'border-r border-slate-500/15 dark:border-slate-500/10' : ''}
         hover:outline hover:outline-2 hover:outline-blue-500 hover:outline-offset-[-2px]`;
       
-      // Используем хардкод стилей напрямую вместо динамического подхода
+      // Используем импортированные цвета из модуля ActivityTypes
       let backgroundColor = '';
       
       if (activity) {
         console.log(`Ячейка ${cellKey} с активностью ${activity}`);
         
-        if (activity.length === 1) {
-          switch (activity) {
-            case 'У': backgroundColor = '#93c5fd'; break; // bg-blue-300
-            case 'К': backgroundColor = '#d1d5db'; break; // bg-gray-300
-            case 'П': backgroundColor = '#fde047'; break; // bg-yellow-300
-            case 'Э': backgroundColor = '#fca5a5'; break; // bg-red-300
-            case 'Д': backgroundColor = '#d8b4fe'; break; // bg-purple-300
-          }
+        if (activity.length === 1 && activity in ACTIVITY_COLORS) {
+          backgroundColor = ACTIVITY_COLORS[activity as keyof typeof ACTIVITY_COLORS].color;
+          console.log(`[${cellKey}] Цвет для активности ${activity}: ${backgroundColor}`);
         } else if (activity.length > 1) {
           // Для комбинированных активностей берем первую букву
           const firstChar = activity[0];
-          switch (firstChar) {
-            case 'У': backgroundColor = '#93c5fd'; break; // bg-blue-300
-            case 'К': backgroundColor = '#d1d5db'; break; // bg-gray-300
-            case 'П': backgroundColor = '#fde047'; break; // bg-yellow-300
-            case 'Э': backgroundColor = '#fca5a5'; break; // bg-red-300
-            case 'Д': backgroundColor = '#d8b4fe'; break; // bg-purple-300
+          if (firstChar in ACTIVITY_COLORS) {
+            backgroundColor = ACTIVITY_COLORS[firstChar as keyof typeof ACTIVITY_COLORS].color;
+            console.log(`[${cellKey}] Цвет для комбо-активности ${activity} (первый символ ${firstChar}): ${backgroundColor}`);
           }
         }
       }
       
-      // Создаем стиль для ячейки
+      // Создаем стиль для ячейки и логируем значение
       const style = backgroundColor ? { backgroundColor } : undefined;
+      console.log(`Стиль для ${cellKey}: `, style);
       
       cells.push(
         <td 
