@@ -108,7 +108,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginData) => {
-      console.log("Logging in with:", credentials);
       const res = await fetch("/api/login", {
         method: "POST",
         headers: {
@@ -139,7 +138,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       let userData = null;
       try {
         userData = await res.json();
-        console.log("Login successful, received user data:", userData);
       } catch (e) {
         console.error("Error parsing login response:", e);
         throw new Error("Invalid response from server");
@@ -269,12 +267,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Update authentication status whenever user data changes
   useEffect(() => {
     const isAuthenticated = user !== null;
-    console.log('Auth useEffect - User state changed:', { 
-      user, 
-      isAuthenticated, 
-      userId: user?.id,
-      userEmail: user?.email
-    });
     dispatchAuthStatusChanged(isAuthenticated);
   }, [user]);
 
@@ -283,19 +275,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Используем localStorage только для определения, нужно ли делать запрос, а не для окончательного состояния
   const isAuthenticated = user !== null;
   
-  // Добавляем дополнительный лог для отслеживания возвращаемого статуса аутентификации
-  console.log('Auth context final state:', { 
-    isAuthenticatedByUser: user !== null,
-    isAuthenticatedFromStorage: localStorage.getItem('isAuthenticated') === 'true',
-    combinedAuthStatus: isAuthenticated, 
-    userPresent: user !== null, 
-    user
-  });
-  
   // Если пользователь не аутентифицирован, убедимся, что флаг в localStorage также сброшен
   useEffect(() => {
     if (!isAuthenticated && localStorage.getItem('isAuthenticated') === 'true') {
-      console.log('Clearing localStorage authentication flag because user is not authenticated');
       localStorage.removeItem('isAuthenticated');
     }
   }, [isAuthenticated]);

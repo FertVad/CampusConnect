@@ -267,28 +267,19 @@ export function setupAuth(app: Express) {
   });
 
   app.post("/api/login", (req, res, next) => {
-    console.log("POST /api/login - Login attempt for email:", req.body.email);
-
     passport.authenticate("local", (err: Error, user: Express.User, info: any) => {
       if (err) {
-        console.error("POST /api/login - Authentication error:", err);
         return next(err);
       }
 
       if (!user) {
-        console.log("POST /api/login - Authentication failed:", info?.message);
         return res.status(401).json({ message: info?.message || "Authentication failed" });
       }
 
       req.login(user, (err) => {
         if (err) {
-          console.error("POST /api/login - Session creation error:", err);
           return next(err);
         }
-
-        // Make sure we're setting the correct cookie and returning the user data
-        console.log("POST /api/login - User authenticated successfully:", user.id);
-        console.log("POST /api/login - Session ID:", req.sessionID);
 
         // Don't expose the password hash to the client
         const { password, ...userWithoutPassword } = user;
@@ -301,7 +292,7 @@ export function setupAuth(app: Express) {
         // Ensure the session is saved immediately
         req.session.save((err) => {
           if (err) {
-            console.error("POST /api/login - Session save error:", err);
+            console.error("Session save error:", err);
           }
           return res.status(200).json(userWithoutPassword);
         });
@@ -317,14 +308,8 @@ export function setupAuth(app: Express) {
   });
 
   app.get("/api/user", (req, res) => {
-    console.log("GET /api/user - Session ID:", req.sessionID);
-    console.log("GET /api/user - Is Authenticated:", req.isAuthenticated ? req.isAuthenticated() : 'method undefined');
-    console.log("GET /api/user - Headers:", JSON.stringify(req.headers));
-    console.log("GET /api/user - Session:", req.session);
-
     // Проверяем метод isAuthenticated и наличие пользователя
     if (req.isAuthenticated && req.isAuthenticated() && req.user) {
-      console.log("GET /api/user - User authenticated:", (req.user as any).id, "Role:", (req.user as any).role);
       // Не отправляем пароль клиенту
       const { password, ...userWithoutPassword } = req.user as any;
 

@@ -1977,11 +1977,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/notifications', authenticateUser, async (req, res) => {
     try {
       const userId = req.user.id;
-      console.log(`ROUTE: Getting notifications for user ${userId}, req.user:`, req.user);
       const notifications = await getStorage().getNotificationsByUser(userId);
       res.json(notifications);
     } catch (error) {
-      console.error('Error getting notifications:', error);
       res.status(500).json({ message: "Server error" });
     }
   });
@@ -1990,11 +1988,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/notifications/unread', authenticateUser, async (req, res) => {
     try {
       const userId = req.user.id;
-      console.log(`ROUTE: Getting unread notifications for user ${userId}, req.user:`, req.user);
       const notifications = await getStorage().getUnreadNotificationsByUser(userId);
       res.json(notifications);
     } catch (error) {
-      console.error('Error getting unread notifications:', error);
       res.status(500).json({ message: "Server error" });
     }
   });
