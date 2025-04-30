@@ -27,6 +27,14 @@ export default function GraphTab({
 }: GraphTabProps) {
   // Состояние для текущей активной вкладки (график или итоги)
   const [activeTab, setActiveTab] = useState<'grafik' | 'summary'>('grafik');
+  
+  // Локальное состояние для хранения данных календаря
+  const [calendarData, setCalendarData] = useState<Record<string, string>>(initialData);
+  
+  // Обновляем локальное состояние при изменении initialData
+  useEffect(() => {
+    setCalendarData(initialData);
+  }, [initialData]);
   // Создаем массив курсов - нам нужно 4 курса
   const courses = useMemo(() => {
     const result = [];
@@ -78,6 +86,15 @@ export default function GraphTab({
       ...startDates,
       [selectedCourseId]: date
     });
+  };
+  
+  // Обработчик изменения данных календаря
+  const handleCalendarChange = (data: Record<string, string>) => {
+    console.log('Изменение данных календаря:', data);
+    setCalendarData(data);
+    if (onChange) {
+      onChange(data);
+    }
   };
 
   // Генерируем недели на основе даты старта первого курса (для заголовков)
@@ -140,13 +157,13 @@ export default function GraphTab({
         <AcademicCalendarTable 
           weeks={weeks} 
           yearsOfStudy={yearsOfStudy}
-          initialData={initialData}
-          onChange={onChange}
+          initialData={calendarData}
+          onChange={handleCalendarChange}
           startDates={startDates}
         />
       ) : (
         <SummaryTable 
-          summary={buildSummary(initialData || {}, yearsOfStudy)} 
+          summary={buildSummary(calendarData, yearsOfStudy)} 
           courses={yearsOfStudy} 
         />
       )}
