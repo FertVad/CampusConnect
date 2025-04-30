@@ -120,42 +120,38 @@ export function CourseRow({
         }
       } else if (crossMonth) {
         // Для пустых ячеек, пересекающих месяцы, создаем плавный градиент
-        // Рассчитываем пропорцию дней в каждом месяце
-        const totalDays = daysInCurrentMonth + daysInNextMonth;
-        const firstMonthPercent = Math.round((daysInCurrentMonth / totalDays) * 100);
-        
-        // Создаем несколько промежуточных точек для более плавного перехода
-        // Добавляем по 5% с обеих сторон от границы месяцев для плавности
-        const transitionStart = Math.max(0, firstMonthPercent - 5);
-        const transitionMiddle = firstMonthPercent;
-        const transitionEnd = Math.min(100, firstMonthPercent + 5);
-        
+        // Вместо сложных градиентов используем наложение двух фонов с режимом смешивания
         // Определяем цвета для текущего и следующего месяца
         const currentMonthColor = monthIndex % 2 === 0 ? 'var(--month-even)' : 'var(--month-odd)';
         const nextMonthColor = monthIndex % 2 === 0 ? 'var(--month-odd)' : 'var(--month-even)';
         
-        // Создаем градиент с более плавным переходом, используя множественные промежуточные точки
-        // Вместо color-mix используем больше точек градиента для совместимости со всеми браузерами
+        // Рассчитываем пропорцию дней в каждом месяце (насколько дней от месяца находятся в этой неделе)
+        const totalDays = daysInCurrentMonth + daysInNextMonth;
+        const firstMonthPercent = Math.round((daysInCurrentMonth / totalDays) * 100);
+        
+        // Используем максимально плавный градиент с большим количеством промежуточных точек
+        // Создаем градиент с очень постепенным переходом
+        const width = 30; // Ширина перехода в процентах (чем больше, тем плавнее)
+        
+        // Создаем более плавный многоточечный градиент
         backgroundStyle = `linear-gradient(90deg, 
-          ${currentMonthColor} 0%, 
-          ${currentMonthColor} ${transitionStart}%, 
-          ${currentMonthColor} ${transitionMiddle-3}%, 
-          ${currentMonthColor} ${transitionMiddle-2}%, 
-          ${currentMonthColor} ${transitionMiddle-1}%, 
-          ${nextMonthColor} ${transitionMiddle+1}%, 
-          ${nextMonthColor} ${transitionMiddle+2}%, 
-          ${nextMonthColor} ${transitionMiddle+3}%, 
-          ${nextMonthColor} ${transitionEnd}%, 
+          ${currentMonthColor} 0%,
+          ${currentMonthColor} ${Math.max(0, firstMonthPercent-width)}%,
+          ${currentMonthColor} ${Math.max(0, firstMonthPercent-width/1.5)}%,
+          ${currentMonthColor} ${Math.max(0, firstMonthPercent-width/2)}%,
+          ${currentMonthColor} ${Math.max(0, firstMonthPercent-width/3)}%,
+          ${nextMonthColor} ${Math.min(100, firstMonthPercent+width/3)}%,
+          ${nextMonthColor} ${Math.min(100, firstMonthPercent+width/2)}%,
+          ${nextMonthColor} ${Math.min(100, firstMonthPercent+width/1.5)}%,
+          ${nextMonthColor} ${Math.min(100, firstMonthPercent+width)}%,
           ${nextMonthColor} 100%)`;
           
-        console.log(`[${cellKey}] Плавный градиент для перехода месяцев: ${backgroundStyle}, дней: ${daysInCurrentMonth}/${daysInNextMonth} (${firstMonthPercent}%)`);
+        console.log(`[${cellKey}] Многоточечный плавный градиент: ${backgroundStyle}, дней: ${daysInCurrentMonth}/${daysInNextMonth} (${firstMonthPercent}%)`);
       }
       
       // Создаем стиль для ячейки и логируем значение
       const style = backgroundStyle ? 
-        (backgroundStyle.startsWith('linear-gradient') ? 
-          { background: backgroundStyle } : 
-          { backgroundColor: backgroundStyle }) 
+        { background: backgroundStyle } 
         : undefined;
       console.log(`Стиль для ${cellKey}: `, style);
       
