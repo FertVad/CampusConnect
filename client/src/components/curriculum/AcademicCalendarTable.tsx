@@ -589,7 +589,7 @@ export function AcademicCalendarTable({
       <Tooltip 
         id="calendar-tooltip" 
         className="academic-tooltip" 
-        place="auto"
+        place="top"
         clickable={true}
         delayHide={0}
         delayShow={800}
