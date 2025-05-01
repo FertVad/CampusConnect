@@ -33,15 +33,69 @@ export function useAutoSave<T>(data: T, options: AutoSaveOptions) {
   // Сравнение данных чтобы узнать, изменились ли они
   const isDataChanged = (oldData: T | null, newData: T): boolean => {
     if (!oldData) return true;
-    return JSON.stringify(oldData) !== JSON.stringify(newData);
+    
+    // Более детальная проверка для объектов с calendarData
+    if (typeof oldData === 'object' && oldData !== null && 
+        typeof newData === 'object' && newData !== null && 
+        'calendarData' in oldData && 'calendarData' in newData) {
+      
+      const oldCalendarData = (oldData as any).calendarData;
+      const newCalendarData = (newData as any).calendarData;
+      
+      // Если количество ключей разное, данные изменились
+      const oldKeys = Object.keys(oldCalendarData || {});
+      const newKeys = Object.keys(newCalendarData || {});
+      
+      if (oldKeys.length !== newKeys.length) {
+        console.log('[useAutoSave] Different number of keys:', oldKeys.length, newKeys.length);
+        return true;
+      }
+      
+      // Проверяем, есть ли изменения в значениях
+      for (const key of newKeys) {
+        if (oldCalendarData[key] !== newCalendarData[key]) {
+          console.log('[useAutoSave] Value changed for key:', key, oldCalendarData[key], newCalendarData[key]);
+          return true;
+        }
+      }
+      
+      console.log('[useAutoSave] No changes detected in calendar data');
+      return false;
+    }
+    
+    // Для других типов данных используем простое сравнение строк JSON
+    const oldJson = JSON.stringify(oldData);
+    const newJson = JSON.stringify(newData);
+    const changed = oldJson !== newJson;
+    
+    if (changed) {
+      console.log('[useAutoSave] Data changed (JSON comparison)');
+    } else {
+      console.log('[useAutoSave] No changes detected (JSON comparison)');
+    }
+    
+    return changed;
   };
+  
+  // Флаг для предотвращения параллельных сохранений
+  const savingRef = useRef(false);
   
   // Функция сохранения
   const saveData = async (dataToSave: T) => {
+    // Проверка на изменения в данных
     if (!isDataChanged(lastSavedData, dataToSave)) {
+      console.log('[useAutoSave] Skipping save - no changes detected');
       return; // Данные не изменились, не сохраняем
     }
     
+    // Если уже идет процесс сохранения, то пропускаем
+    if (savingRef.current) {
+      console.log('[useAutoSave] Skipping save - already saving');
+      return;
+    }
+    
+    // Устанавливаем флаг сохранения
+    savingRef.current = true;
     setIsSaving(true);
     setError(null);
     
@@ -80,6 +134,8 @@ export function useAutoSave<T>(data: T, options: AutoSaveOptions) {
       }
     } finally {
       setIsSaving(false);
+      // Сбрасываем флаг сохранения
+      savingRef.current = false;
     }
   };
   
