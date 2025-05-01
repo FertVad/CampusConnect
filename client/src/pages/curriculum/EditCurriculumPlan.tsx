@@ -220,10 +220,11 @@ function EditCurriculumPlanContent() {
         
         // Если у нас есть план, обновляем его кэш принудительно
         if (plan) {
-          // Создаем обновленный план
+          // Создаем обновленный план с актуальными данными календаря и yearsOfStudy
           const updatedPlan = { 
             ...plan, 
-            calendarData: calendarDataString 
+            calendarData: calendarDataString,
+            yearsOfStudy: planYearsOfStudy // Важно: используем текущее значение planYearsOfStudy
           };
           
           // Обновляем данные в кэше
@@ -275,6 +276,27 @@ function EditCurriculumPlanContent() {
       }
     }
   }, [plan]);
+  
+  // Эффект для сохранения данных при изменении yearsOfStudy
+  useEffect(() => {
+    // Предотвращаем срабатывание при первом рендере
+    if (plan && plan.yearsOfStudy !== planYearsOfStudy) {
+      console.log(`[EditCurriculumPlan] yearsOfStudy effect triggered: ${plan.yearsOfStudy} -> ${planYearsOfStudy}`);
+      
+      // Обновляем данные формы
+      form.setValue('yearsOfStudy', planYearsOfStudy);
+      
+      // Если есть данные календаря, сохраняем их с новым planYearsOfStudy
+      if (Object.keys(calendarDataRef.current).length > 0) {
+        console.log("[EditCurriculumPlan] Auto-saving calendar data after yearsOfStudy change");
+        
+        // Используем таймаут, чтобы дать время компонентам обновиться
+        setTimeout(() => {
+          saveCalendarData();
+        }, 100);
+      }
+    }
+  }, [planYearsOfStudy, plan, form]);
 
   // Обработчик смены вкладок
   const handleTabChange = async (value: string) => {
@@ -357,6 +379,12 @@ function EditCurriculumPlanContent() {
   
   // Обработчик отправки формы титульного листа
   const onSubmit = (data: CurriculumFormValues) => {
+    // Если количество лет обучения изменилось, обновляем локальное состояние
+    if (data.yearsOfStudy !== planYearsOfStudy) {
+      console.log(`[EditCurriculumPlan] yearsOfStudy changed in form submit: ${planYearsOfStudy} -> ${data.yearsOfStudy}`);
+      setPlanYearsOfStudy(data.yearsOfStudy);
+    }
+    
     updateMutation.mutate({ ...data, id: planId });
   };
   
