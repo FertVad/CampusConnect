@@ -2359,7 +2359,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.post('/api/curriculum-plans', authenticateUser, requireRole(['admin', 'director']), async (req, res) => {
+  app.post('/api/curriculum-plans', authenticateUser, requireRole(['admin']), async (req, res) => {
     try {
       // Валидируем данные с помощью схемы
       const { insertCurriculumPlanSchema } = await import('@shared/schema');
@@ -2381,11 +2381,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Создаем уведомление для всех администраторов
       const storage = getStorage();
       const admins = await storage.getUsersByRole('admin');
-      const directors = await storage.getUsersByRole('director');
-      const allAdmins = [...admins, ...directors];
+      // Удаляем запрос на директоров - эта роль вызывает ошибку в базе данных
+      // const directors = await storage.getUsersByRole('director');
+      // const allAdmins = [...admins, ...directors];
       
       // Отправляем уведомления всем администраторам, кроме текущего пользователя
-      for (const admin of allAdmins) {
+      for (const admin of admins) {
         if (admin.id !== req.user?.id) {
           await storage.createNotification({
             userId: admin.id,
@@ -2498,10 +2499,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   };
   
   // PUT обработчик для обновления учебного плана
-  app.put('/api/curriculum-plans/:id', authenticateUser, requireRole(['admin', 'director']), updateCurriculumPlan);
+  app.put('/api/curriculum-plans/:id', authenticateUser, requireRole(['admin']), updateCurriculumPlan);
   
   // POST обработчик как альтернатива PUT (для клиентов, где PUT не работает)
-  app.post('/api/curriculum-plans/:id', authenticateUser, requireRole(['admin', 'director']), (req, res) => {
+  app.post('/api/curriculum-plans/:id', authenticateUser, requireRole(['admin']), (req, res) => {
     // Проверяем, есть ли в теле запроса поле _method со значением PUT
     if (req.body._method === 'PUT') {
       return updateCurriculumPlan(req, res);
@@ -2514,7 +2515,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
   
-  app.delete('/api/curriculum-plans/:id', authenticateUser, requireRole(['admin', 'director']), async (req, res) => {
+  app.delete('/api/curriculum-plans/:id', authenticateUser, requireRole(['admin']), async (req, res) => {
     try {
       const planId = parseInt(req.params.id);
       
@@ -2547,11 +2548,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Создаем уведомление для всех администраторов
       const storage = getStorage();
       const admins = await storage.getUsersByRole('admin');
-      const directors = await storage.getUsersByRole('director');
-      const allAdmins = [...admins, ...directors];
+      
+      // Удаляем запрос на директоров - эта роль вызывает ошибку в базе данных
+      // const directors = await storage.getUsersByRole('director');
+      // const allAdmins = [...admins, ...directors];
       
       // Отправляем уведомления всем администраторам, кроме текущего пользователя
-      for (const admin of allAdmins) {
+      for (const admin of admins) {
         if (admin.id !== req.user?.id) {
           await storage.createNotification({
             userId: admin.id,
