@@ -4,11 +4,9 @@ import { Express } from "express";
 import session from "express-session";
 import bcrypt from "bcrypt";
 import { User as SelectUser } from "@shared/schema";
-import { createDatabaseStorage } from "./db/storage";
-import { migrateDatabase, seedDatabase } from "./db/migrations";
 
 // Import storage module and IStorage interface
-import { storage, IStorage, setStorage, getStorage } from "./storage";
+import { storage, IStorage, setStorage, getStorage, DatabaseStorage } from "./storage";
 
 declare global {
   namespace Express {

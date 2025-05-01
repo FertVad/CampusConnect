@@ -11,11 +11,19 @@ import {
   // Task Manager
   Task, InsertTask,
   // Curriculum Plans
-  CurriculumPlan, InsertCurriculumPlan
+  CurriculumPlan, InsertCurriculumPlan,
+  // Схемы таблиц для Drizzle
+  users, subjects, enrollments, scheduleItems, assignments, submissions,
+  grades, requests, documents, messages, notifications, specialties,
+  courses, groups, scheduleEntries, importedFiles, activityLogs, tasks,
+  curriculumPlans
 } from "@shared/schema";
+import { eq, and, desc, asc } from "drizzle-orm";
+import { db } from "./db";
 import session from "express-session";
 import * as expressSession from 'express-session';
 import createMemoryStore from "memorystore";
+import PgStoreFactory from 'connect-pg-simple';
 
 const MemoryStore = createMemoryStore(session);
 
@@ -1591,6 +1599,400 @@ export class MemStorage implements IStorage {
       createdBy: 1
     });
   }
+}
+
+// Класс для работы с базой данных через Drizzle ORM
+export class DatabaseStorage implements IStorage {
+  sessionStore: expressSession.Store;
+
+  constructor() {
+    // Создаем хранилище сессий на основе PostgreSQL
+    const PgStore = PgStoreFactory(session);
+    this.sessionStore = new PgStore({
+      pool: db.get().client, // Получаем клиент из Drizzle
+      tableName: 'sessions', // Имя таблицы для хранения сессий
+      createTableIfMissing: true,
+    });
+  }
+
+  // Методы для работы с пользователями
+  async getUser(id: number): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
+  }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user || undefined;
+  }
+
+  async getUsersByRole(role: string): Promise<User[]> {
+    return await db.select().from(users).where(eq(users.role, role));
+  }
+
+  async getAllAdminUsers(): Promise<User[]> {
+    return await db.select().from(users).where(eq(users.role, 'admin'));
+  }
+
+  async getUsers(): Promise<User[]> {
+    return await db.select().from(users);
+  }
+
+  async createUser(userData: InsertUser): Promise<User> {
+    const [user] = await db.insert(users).values(userData).returning();
+    return user;
+  }
+
+  async updateUser(id: number, userData: Partial<InsertUser>): Promise<User | undefined> {
+    try {
+      const [updatedUser] = await db
+        .update(users)
+        .set({ ...userData, updatedAt: new Date() })
+        .where(eq(users.id, id))
+        .returning();
+      return updatedUser || undefined;
+    } catch (error) {
+      console.error('Error updating user:', error);
+      return undefined;
+    }
+  }
+
+  async deleteUser(id: number): Promise<boolean> {
+    try {
+      await db.delete(users).where(eq(users.id, id));
+      return true;
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      return false;
+    }
+  }
+
+  async authenticate(credentials: LoginCredentials): Promise<User | undefined> {
+    return await this.getUserByEmail(credentials.email);
+  }
+
+  // Методы для учебных планов
+  async getCurriculumPlans(): Promise<CurriculumPlan[]> {
+    return await db.select().from(curriculumPlans);
+  }
+
+  async getCurriculumPlan(id: number): Promise<CurriculumPlan | undefined> {
+    const [plan] = await db.select().from(curriculumPlans).where(eq(curriculumPlans.id, id));
+    return plan || undefined;
+  }
+
+  async getCurriculumPlansByEducationLevel(level: string): Promise<CurriculumPlan[]> {
+    return await db.select().from(curriculumPlans).where(eq(curriculumPlans.educationLevel, level));
+  }
+
+  async createCurriculumPlan(planData: InsertCurriculumPlan): Promise<CurriculumPlan> {
+    const [plan] = await db.insert(curriculumPlans).values(planData).returning();
+    return plan;
+  }
+
+  async updateCurriculumPlan(id: number, planData: Partial<InsertCurriculumPlan>): Promise<CurriculumPlan | undefined> {
+    try {
+      // Если calendarData - это объект, то преобразуем его в строку
+      if (planData.calendarData && typeof planData.calendarData === 'object') {
+        planData.calendarData = JSON.stringify(planData.calendarData);
+      }
+      
+      console.log(`[DATABASE] Updating curriculum plan ${id} with data:`, planData);
+      
+      const [updatedPlan] = await db
+        .update(curriculumPlans)
+        .set({ ...planData, updatedAt: new Date() })
+        .where(eq(curriculumPlans.id, id))
+        .returning();
+      
+      console.log(`[DATABASE] Updated curriculum plan:`, updatedPlan);
+      return updatedPlan || undefined;
+    } catch (error) {
+      console.error('Error updating curriculum plan:', error);
+      return undefined;
+    }
+  }
+
+  async deleteCurriculumPlan(id: number): Promise<boolean> {
+    try {
+      await db.delete(curriculumPlans).where(eq(curriculumPlans.id, id));
+      return true;
+    } catch (error) {
+      console.error('Error deleting curriculum plan:', error);
+      return false;
+    }
+  }
+
+  // Заглушки для остальных методов, которые требуются интерфейсом IStorage
+  // Их нужно будет реализовать по мере необходимости
+  
+  // Subjects
+  async getSubjects(): Promise<Subject[]> {
+    return await db.select().from(subjects);
+  }
+  
+  async getSubject(id: number): Promise<Subject | undefined> {
+    const [subject] = await db.select().from(subjects).where(eq(subjects.id, id));
+    return subject || undefined;
+  }
+  
+  async getSubjectsByTeacher(teacherId: number): Promise<Subject[]> {
+    return await db.select().from(subjects).where(eq(subjects.teacherId, teacherId));
+  }
+  
+  async createSubject(subject: InsertSubject): Promise<Subject> {
+    const [newSubject] = await db.insert(subjects).values(subject).returning();
+    return newSubject;
+  }
+  
+  async updateSubject(id: number, subjectData: Partial<InsertSubject>): Promise<Subject | undefined> {
+    try {
+      const [updatedSubject] = await db
+        .update(subjects)
+        .set(subjectData)
+        .where(eq(subjects.id, id))
+        .returning();
+      return updatedSubject || undefined;
+    } catch (error) {
+      console.error('Error updating subject:', error);
+      return undefined;
+    }
+  }
+  
+  async deleteSubject(id: number): Promise<boolean> {
+    try {
+      await db.delete(subjects).where(eq(subjects.id, id));
+      return true;
+    } catch (error) {
+      console.error('Error deleting subject:', error);
+      return false;
+    }
+  }
+  
+  // Здесь нужно будет добавить остальные методы из интерфейса IStorage
+  // ...
+  
+  // Для прототипа и тестирования можно использовать заглушки
+  async getEnrollments(): Promise<Enrollment[]> {
+    return [];
+  }
+  
+  async getEnrollmentsByStudent(studentId: number): Promise<Enrollment[]> {
+    return [];
+  }
+  
+  async getEnrollmentsBySubject(subjectId: number): Promise<Enrollment[]> {
+    return [];
+  }
+  
+  async getStudentsBySubject(subjectId: number): Promise<User[]> {
+    return [];
+  }
+  
+  async getSubjectsByStudent(studentId: number): Promise<Subject[]> {
+    return [];
+  }
+  
+  async createEnrollment(enrollment: InsertEnrollment): Promise<Enrollment> {
+    throw new Error("Method not implemented.");
+  }
+  
+  async deleteEnrollment(id: number): Promise<boolean> {
+    return false;
+  }
+  
+  // Schedule
+  async getScheduleItems(): Promise<ScheduleItem[]> {
+    return [];
+  }
+  
+  async getScheduleItem(id: number): Promise<ScheduleItem | undefined> {
+    return undefined;
+  }
+  
+  async getScheduleItemsBySubject(subjectId: number): Promise<ScheduleItem[]> {
+    return [];
+  }
+  
+  async getScheduleItemsByStudent(studentId: number): Promise<(ScheduleItem & { subject: Subject })[]> {
+    return [];
+  }
+  
+  async getScheduleItemsByTeacher(teacherId: number): Promise<(ScheduleItem & { subject: Subject })[]> {
+    return [];
+  }
+  
+  async createScheduleItem(scheduleItem: InsertScheduleItem): Promise<ScheduleItem> {
+    throw new Error("Method not implemented.");
+  }
+  
+  async updateScheduleItem(id: number, scheduleItemData: Partial<InsertScheduleItem>): Promise<ScheduleItem | undefined> {
+    return undefined;
+  }
+  
+  async deleteScheduleItem(id: number): Promise<boolean> {
+    return false;
+  }
+  
+  // Assignments
+  async getAssignments(): Promise<Assignment[]> {
+    return [];
+  }
+  
+  async getAssignment(id: number): Promise<Assignment | undefined> {
+    return undefined;
+  }
+  
+  async getAssignmentsBySubject(subjectId: number): Promise<Assignment[]> {
+    return [];
+  }
+  
+  async getAssignmentsByTeacher(teacherId: number): Promise<Assignment[]> {
+    return [];
+  }
+  
+  async getAssignmentsByStudent(studentId: number): Promise<Assignment[]> {
+    return [];
+  }
+  
+  async createAssignment(assignment: InsertAssignment): Promise<Assignment> {
+    throw new Error("Method not implemented.");
+  }
+  
+  async updateAssignment(id: number, assignmentData: Partial<InsertAssignment>): Promise<Assignment | undefined> {
+    return undefined;
+  }
+  
+  async deleteAssignment(id: number): Promise<boolean> {
+    return false;
+  }
+  
+  // Для остальных методов реализация по мере необходимости
+  // Здесь следуют заглушки для всех остальных методов из интерфейса IStorage
+  // ...
+
+  // Submissions
+  async getSubmissions(): Promise<Submission[]> { return []; }
+  async getSubmission(id: number): Promise<Submission | undefined> { return undefined; }
+  async getSubmissionsByAssignment(assignmentId: number): Promise<Submission[]> { return []; }
+  async getSubmissionsByStudent(studentId: number): Promise<Submission[]> { return []; }
+  async getSubmissionByAssignmentAndStudent(assignmentId: number, studentId: number): Promise<Submission | undefined> { return undefined; }
+  async createSubmission(submission: InsertSubmission): Promise<Submission> { throw new Error("Method not implemented."); }
+  async updateSubmission(id: number, submissionData: Partial<InsertSubmission>): Promise<Submission | undefined> { return undefined; }
+  async deleteSubmission(id: number): Promise<boolean> { return false; }
+
+  // Grades
+  async getGrades(): Promise<Grade[]> { return []; }
+  async getGrade(id: number): Promise<Grade | undefined> { return undefined; }
+  async getGradesByStudent(studentId: number): Promise<Grade[]> { return []; }
+  async getGradesBySubject(subjectId: number): Promise<Grade[]> { return []; }
+  async getGradesByStudentAndSubject(studentId: number, subjectId: number): Promise<Grade[]> { return []; }
+  async createGrade(grade: InsertGrade): Promise<Grade> { throw new Error("Method not implemented."); }
+  async updateGrade(id: number, gradeData: Partial<InsertGrade>): Promise<Grade | undefined> { return undefined; }
+  async deleteGrade(id: number): Promise<boolean> { return false; }
+
+  // Requests
+  async getRequests(): Promise<Request[]> { return []; }
+  async getRequest(id: number): Promise<Request | undefined> { return undefined; }
+  async getRequestsByStudent(studentId: number): Promise<Request[]> { return []; }
+  async getPendingRequests(): Promise<Request[]> { return []; }
+  async createRequest(request: InsertRequest): Promise<Request> { throw new Error("Method not implemented."); }
+  async updateRequestStatus(id: number, status: 'pending' | 'approved' | 'rejected', resolvedBy: number, resolution?: string): Promise<Request | undefined> { return undefined; }
+  async deleteRequest(id: number): Promise<boolean> { return false; }
+
+  // Documents
+  async getDocuments(): Promise<Document[]> { return []; }
+  async getDocument(id: number): Promise<Document | undefined> { return undefined; }
+  async getDocumentsByUser(userId: number): Promise<Document[]> { return []; }
+  async getDocumentsByType(userId: number, type: string): Promise<Document[]> { return []; }
+  async createDocument(document: InsertDocument): Promise<Document> { throw new Error("Method not implemented."); }
+  async updateDocument(id: number, documentData: Partial<InsertDocument>): Promise<Document | undefined> { return undefined; }
+  async deleteDocument(id: number): Promise<boolean> { return false; }
+
+  // Messages
+  async getMessages(): Promise<Message[]> { return []; }
+  async getMessage(id: number): Promise<Message | undefined> { return undefined; }
+  async getMessagesByUser(userId: number): Promise<Message[]> { return []; }
+  async getMessagesBetweenUsers(fromUserId: number, toUserId: number): Promise<Message[]> { return []; }
+  async createMessage(message: InsertMessage): Promise<Message> { throw new Error("Method not implemented."); }
+  async updateMessageStatus(id: number, status: 'delivered' | 'read'): Promise<Message | undefined> { return undefined; }
+  async deleteMessage(id: number): Promise<boolean> { return false; }
+
+  // Notifications
+  async getNotifications(): Promise<Notification[]> { return []; }
+  async getNotification(id: number): Promise<Notification | undefined> { return undefined; }
+  async getNotificationsByUser(userId: number): Promise<Notification[]> { return []; }
+  async getUnreadNotificationsByUser(userId: number): Promise<Notification[]> { return []; }
+  async createNotification(notification: InsertNotification): Promise<Notification> { throw new Error("Method not implemented."); }
+  async markNotificationAsRead(id: number): Promise<Notification | undefined> { return undefined; }
+  async markAllNotificationsAsRead(userId: number): Promise<void> { }
+  async deleteNotification(id: number): Promise<boolean> { return false; }
+
+  // Specialties
+  async getSpecialties(): Promise<Specialty[]> { return []; }
+  async getSpecialty(id: number): Promise<Specialty | undefined> { return undefined; }
+  async createSpecialty(specialty: InsertSpecialty): Promise<Specialty> { throw new Error("Method not implemented."); }
+  async updateSpecialty(id: number, specialtyData: Partial<InsertSpecialty>): Promise<Specialty | undefined> { return undefined; }
+  async deleteSpecialty(id: number): Promise<boolean> { return false; }
+
+  // Courses
+  async getCourses(): Promise<Course[]> { return []; }
+  async getCourse(id: number): Promise<Course | undefined> { return undefined; }
+  async getCoursesBySpecialty(specialtyId: number): Promise<Course[]> { return []; }
+  async createCourse(course: InsertCourse): Promise<Course> { throw new Error("Method not implemented."); }
+  async updateCourse(id: number, courseData: Partial<InsertCourse>): Promise<Course | undefined> { return undefined; }
+  async deleteCourse(id: number): Promise<boolean> { return false; }
+
+  // Groups
+  async getGroups(): Promise<Group[]> { return []; }
+  async getGroup(id: number): Promise<Group | undefined> { return undefined; }
+  async getGroupsByCourse(courseId: number): Promise<Group[]> { return []; }
+  async createGroup(group: InsertGroup): Promise<Group> { throw new Error("Method not implemented."); }
+  async updateGroup(id: number, groupData: Partial<InsertGroup>): Promise<Group | undefined> { return undefined; }
+  async deleteGroup(id: number): Promise<boolean> { return false; }
+
+  // Schedule Entries
+  async getScheduleEntries(): Promise<ScheduleEntry[]> { return []; }
+  async getScheduleEntry(id: number): Promise<ScheduleEntry | undefined> { return undefined; }
+  async getScheduleEntriesByGroup(groupId: number): Promise<ScheduleEntry[]> { return []; }
+  async getScheduleEntriesByTeacher(teacherId: number): Promise<ScheduleEntry[]> { return []; }
+  async getScheduleEntriesBySubject(subjectId: number): Promise<ScheduleEntry[]> { return []; }
+  async createScheduleEntry(scheduleEntry: InsertScheduleEntry): Promise<ScheduleEntry> { throw new Error("Method not implemented."); }
+  async updateScheduleEntry(id: number, scheduleEntryData: Partial<InsertScheduleEntry>): Promise<ScheduleEntry | undefined> { return undefined; }
+  async deleteScheduleEntry(id: number): Promise<boolean> { return false; }
+
+  // Utility methods
+  async getTeacherByName(fullName: string): Promise<User | undefined> { return undefined; }
+  async getOrCreateSubject(name: string, teacherId?: number, roomNumber?: string): Promise<Subject> { throw new Error("Method not implemented."); }
+  async getOrCreateSpecialty(name: string, code?: string): Promise<Specialty> { throw new Error("Method not implemented."); }
+  async getOrCreateCourse(number: number, specialtyId: number, academicYear: string): Promise<Course> { throw new Error("Method not implemented."); }
+  async getOrCreateGroup(name: string, courseId: number): Promise<Group> { throw new Error("Method not implemented."); }
+
+  // Imported files
+  async getImportedFiles(): Promise<ImportedFile[]> { return []; }
+  async getImportedFile(id: number): Promise<ImportedFile | undefined> { return undefined; }
+  async getImportedFilesByUser(userId: number): Promise<ImportedFile[]> { return []; }
+  async createImportedFile(fileData: InsertImportedFile): Promise<ImportedFile> { throw new Error("Method not implemented."); }
+  async deleteImportedFile(id: number): Promise<boolean> { return false; }
+  async getImportedFilesByType(type: 'csv' | 'google-sheets'): Promise<ImportedFile[]> { return []; }
+
+  // Activity logs
+  async getActivityLogs(limit?: number): Promise<ActivityLog[]> { return []; }
+  async createActivityLog(logData: InsertActivityLog): Promise<ActivityLog> { throw new Error("Method not implemented."); }
+  async getActivityLogsByType(type: string, limit?: number): Promise<ActivityLog[]> { return []; }
+  async getActivityLogsByUser(userId: number, limit?: number): Promise<ActivityLog[]> { return []; }
+
+  // Tasks
+  async getTasks(): Promise<Task[]> { return []; }
+  async getTask(id: number): Promise<Task | undefined> { return undefined; }
+  async getTaskById(id: number): Promise<Task | null> { return null; }
+  async getTasksByClient(clientId: number): Promise<Task[]> { return []; }
+  async getTasksByExecutor(executorId: number): Promise<Task[]> { return []; }
+  async getTasksByStatus(status: string): Promise<Task[]> { return []; }
+  async getTasksDueSoon(days: number): Promise<Task[]> { return []; }
+  async createTask(taskData: InsertTask): Promise<Task> { throw new Error("Method not implemented."); }
+  async updateTask(id: number, taskData: Partial<InsertTask>): Promise<Task | undefined> { return undefined; }
+  async deleteTask(id: number): Promise<boolean> { return false; }
 }
 
 // Создаем хранилище, которое может быть заменено базой данных
