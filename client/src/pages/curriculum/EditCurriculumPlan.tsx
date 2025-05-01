@@ -277,23 +277,43 @@ function EditCurriculumPlanContent() {
     }
   }, [plan]);
   
+  // Добавляем ref для отслеживания первого рендера и предыдущего значения
+  const isFirstRenderRef = useRef(true);
+  const prevYearsOfStudyRef = useRef<number | null>(null);
+  
   // Эффект для сохранения данных при изменении yearsOfStudy
   useEffect(() => {
-    // Предотвращаем срабатывание при первом рендере
-    if (plan && plan.yearsOfStudy !== planYearsOfStudy) {
-      console.log(`[EditCurriculumPlan] yearsOfStudy effect triggered: ${plan.yearsOfStudy} -> ${planYearsOfStudy}`);
+    // Пропускаем первый рендер
+    if (isFirstRenderRef.current) {
+      console.log("[EditCurriculumPlan] First render, initializing refs");
+      isFirstRenderRef.current = false;
+      if (plan) {
+        prevYearsOfStudyRef.current = plan.yearsOfStudy;
+      }
+      return;
+    }
+    
+    // Проверяем, действительно ли изменилось значение по сравнению с предыдущим
+    if (prevYearsOfStudyRef.current !== planYearsOfStudy && plan) {
+      console.log(`[EditCurriculumPlan] yearsOfStudy changed: ${prevYearsOfStudyRef.current} -> ${planYearsOfStudy}`);
       
       // Обновляем данные формы
       form.setValue('yearsOfStudy', planYearsOfStudy);
+      
+      // Обновляем предыдущее значение
+      prevYearsOfStudyRef.current = planYearsOfStudy;
       
       // Если есть данные календаря, сохраняем их с новым planYearsOfStudy
       if (Object.keys(calendarDataRef.current).length > 0) {
         console.log("[EditCurriculumPlan] Auto-saving calendar data after yearsOfStudy change");
         
-        // Используем таймаут, чтобы дать время компонентам обновиться
-        setTimeout(() => {
+        // Используем debounce вместо setTimeout для предотвращения множественных вызовов
+        const timeoutId = setTimeout(() => {
           saveCalendarData();
-        }, 100);
+        }, 500);
+        
+        // Очищаем таймаут при размонтировании компонента
+        return () => clearTimeout(timeoutId);
       }
     }
   }, [planYearsOfStudy, plan, form]);
@@ -623,14 +643,13 @@ function EditCurriculumPlanContent() {
                               max={10}
                               {...field}
                               onChange={(e) => {
-                                const value = parseInt(e.target.value);
+                                // Применяем значение к полю формы
+                                const value = parseInt(e.target.value) || 1; // Гарантируем минимум 1 год
                                 field.onChange(value);
                                 
-                                // Обновляем значение planYearsOfStudy при изменении поля
-                                if (value !== planYearsOfStudy) {
-                                  console.log(`[EditCurriculumPlan] yearsOfStudy input changed: ${planYearsOfStudy} -> ${value}`);
-                                  setPlanYearsOfStudy(value);
-                                }
+                                // ВАЖНО: Не обновляем planYearsOfStudy здесь напрямую
+                                // Это будет обрабатываться в обработчике submit формы или handleTabChange
+                                console.log(`[EditCurriculumPlan] yearsOfStudy input changed to: ${value}, but not updating planYearsOfStudy yet`);
                               }}
                             />
                           </FormControl>
