@@ -21,9 +21,18 @@ export const SummaryTab: React.FC<SummaryTabProps> = ({
   // Создаем локальную копию данных календаря
   const [localData, setLocalData] = useState<Record<string, string>>({});
   
+  // Эффект для отслеживания изменений yearsOfStudy
+  useEffect(() => {
+    console.log(`[SummaryTab] yearsOfStudy изменилось: ${yearsOfStudy}`);
+  }, [yearsOfStudy]);
+  
   // Обновляем локальные данные при изменении calendarData или yearsOfStudy
   useEffect(() => {
-    console.log('[SummaryTab] Data changed:', { calendarData, yearsOfStudy, updateCounter });
+    console.log('[SummaryTab] Data changed:', { 
+      dataKeys: Object.keys(calendarData || {}).length,
+      yearsOfStudy, 
+      updateCounter 
+    });
     // Создаем глубокую копию данных
     const dataCopy = JSON.parse(JSON.stringify(calendarData || {}));
     setLocalData(dataCopy);

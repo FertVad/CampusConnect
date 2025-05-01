@@ -14,7 +14,7 @@ export const buildSummary = (
   data: CalendarData,
   courses = 4,
 ): SummaryRow[] => {
-  console.log('buildSummary вызван с данными:', data, 'и количеством курсов:', courses);
+  console.log(`[buildSummary] Вызван с данными (${Object.keys(data).length} ячеек) и количеством курсов: ${courses}`);
   
   const rows: Record<ActivityType, SummaryRow> = {} as any;
   const acts: ActivityType[] = ["У","К","П","Э","Д","-"]; // порядок вывода
@@ -57,6 +57,8 @@ export const buildSummary = (
     }
   }
   
-  console.log('Итоговые данные для таблицы:', acts.map(a => rows[a]));
+  const result = acts.map(a => rows[a]);
+  console.log(`[buildSummary] Итоговые данные сформированы для ${courses} курсов, найдено ${result.reduce((sum, r) => sum + r.grandTotal, 0)} ячеек активности`);
+  return result;
   return acts.map(a => rows[a]);
 };

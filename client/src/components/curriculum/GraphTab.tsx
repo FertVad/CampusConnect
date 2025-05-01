@@ -48,6 +48,11 @@ export default function GraphTab({
   // Используем ссылку для хранения актуальных данных календаря
   const calendarDataRef = useRef<Record<string, string>>(initialData);
   
+  // Эффект для отслеживания изменений yearsOfStudy
+  useEffect(() => {
+    console.log(`[GraphTab] yearsOfStudy изменилось: ${yearsOfStudy}`);
+  }, [yearsOfStudy]);
+  
   // Обновляем локальное состояние при изменении initialData
   useEffect(() => {
     console.log('[GraphTab] initialData изменилось:', initialData);
