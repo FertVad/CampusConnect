@@ -1608,10 +1608,8 @@ export class DatabaseStorage implements IStorage {
   constructor() {
     // Создаем хранилище сессий на основе PostgreSQL
     const PgStore = PgStoreFactory(session);
-    this.sessionStore = new PgStore({
-      pool: db.get().client, // Получаем клиент из Drizzle
-      tableName: 'sessions', // Имя таблицы для хранения сессий
-      createTableIfMissing: true,
+    this.sessionStore = new MemoryStore({
+      checkPeriod: 86400000, // проверка и удаление устаревших сессий каждые 24ч
     });
   }
 
