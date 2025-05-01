@@ -1,5 +1,6 @@
 import { addWeeks, isBefore, format, addDays, addYears, getDay, setDate } from "date-fns";
 import { ru } from "date-fns/locale/ru";
+import { getWeeksInYear } from "./getWeeksInYear";
 
 export interface WeekCell {
   startDate: Date;        // фактический день-старта недели
@@ -51,7 +52,19 @@ export const buildAcademicWeeks = (
   // Определяем день недели, с которого начинается первая неделя
   const startDayOfWeek = getDay(curr); // 0 = воскресенье, 1 = понедельник, ..., 6 = суббота
   
-  // Теперь генерируем недели для одного учебного года (может быть до 53 недель)
+  // Получаем количество недель в текущем учебном году
+  // Учебный год охватывает два календарных года, поэтому берем максимум из обоих
+  const startYear = startDate.getFullYear();
+  const endYear = startYear + 1;
+  const startYearWeeks = getWeeksInYear(startYear);
+  const endYearWeeks = getWeeksInYear(endYear);
+  const maxWeeksInYear = Math.max(startYearWeeks, endYearWeeks);
+  
+  console.log(`[buildAcademicWeeks] Количество недель в году ${startYear}: ${startYearWeeks}`);
+  console.log(`[buildAcademicWeeks] Количество недель в году ${endYear}: ${endYearWeeks}`);
+  console.log(`[buildAcademicWeeks] Максимальное количество недель: ${maxWeeksInYear}`);
+  
+  // Теперь генерируем недели для одного учебного года
   // Учебный год: с 1 сентября по 31 августа следующего года
   // Увеличим дату окончания на 6 дней, чтобы гарантировать отображение всех недель августа
   const studyYearEnd = new Date(startDate.getFullYear() + 1, 7, 31); // 31 августа следующего года
@@ -59,8 +72,8 @@ export const buildAcademicWeeks = (
   let n = 1;
 
   // Генерация всех недель учебного года, включая последнюю неделю августа
-  // Обрабатываем даже 53-ю неделю, если она присутствует
-  while (isBefore(curr, addDays(studyYearEnd, 7))) {
+  // Обрабатываем текущее количество недель в году
+  while (isBefore(curr, addDays(studyYearEnd, 7)) && n <= maxWeeksInYear) {
     // Вычисляем конец недели - 7 дней от начала, сохраняя день недели
     // Например, если первая неделя начинается в пятницу, то заканчивается в четверг
     const end = addDays(curr, 6);

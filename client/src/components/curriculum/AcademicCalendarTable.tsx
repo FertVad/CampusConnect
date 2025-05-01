@@ -309,7 +309,10 @@ export function AcademicCalendarTable({
     
     // Создаем объединенный массив всех недель из первого курса для заголовков
     // Используем недели первого учебного года в качестве шаблона
+    // Получаем недели для первого курса, которые будут использоваться для отображения в таблице
+    // Применяем нашу обновленную функцию, которая учитывает переменное количество недель в году
     const firstCourseWeeks = buildAcademicWeeks(weeks[0].startDate);
+    console.log(`[AcademicCalendarTable] Сгенерировано ${firstCourseWeeks.length} недель для отображения`);
     
     // Группируем недели только по месяцам
     const monthGroups = useMemo(() => {
@@ -430,6 +433,7 @@ export function AcademicCalendarTable({
       
       // Генерируем массив недель для этого курса, начиная с его даты начала
       const courseWeeks = buildAcademicWeeks(courseStartDate);
+      console.log(`[AcademicCalendarTable] Курс ${courseId}: сгенерировано ${courseWeeks.length} недель`);
       
       courses.push({
         id: courseId,
