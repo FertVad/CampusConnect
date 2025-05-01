@@ -307,6 +307,13 @@ function EditCurriculumPlanContent() {
       if (activeTab === "title" && value !== "title") {
         console.log("[EditCurriculumPlan] Leaving title tab, saving form data...");
         const formData = form.getValues();
+        
+        // Проверяем, изменилось ли количество лет обучения
+        if (formData.yearsOfStudy !== planYearsOfStudy) {
+          console.log(`[EditCurriculumPlan] Years of study changed in form before tab change: ${planYearsOfStudy} -> ${formData.yearsOfStudy}`);
+          setPlanYearsOfStudy(formData.yearsOfStudy);
+        }
+        
         // Проверяем, были ли изменения в форме
         if (form.formState.isDirty) {
           console.log("[EditCurriculumPlan] Form is dirty, submitting...");
@@ -361,6 +368,18 @@ function EditCurriculumPlanContent() {
         console.log("[EditCurriculumPlan] Switching to summary tab, refreshing data...");
         // Перезагружаем данные из сервера
         await queryClient.invalidateQueries({ queryKey: [`/api/curriculum-plans/${planId}`] });
+        
+        // Проверяем, есть ли актуальные данные и соответствует ли количество лет обучения текущему значению
+        if (plan && plan.yearsOfStudy !== planYearsOfStudy) {
+          console.log(`[EditCurriculumPlan] Years of study mismatch before summary tab: plan=${plan.yearsOfStudy}, current=${planYearsOfStudy}`);
+          
+          // Сначала пробуем сохранить актуальные данные
+          if (Object.keys(calendarDataRef.current).length > 0) {
+            console.log("[EditCurriculumPlan] Auto-saving before switching to summary tab");
+            await saveCalendarData();
+          }
+        }
+        
         // Обновляем счетчик для обновления таблицы итогов
         setCalendarUpdateCount(prev => prev + 1);
       }

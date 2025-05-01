@@ -60,5 +60,4 @@ export const buildSummary = (
   const result = acts.map(a => rows[a]);
   console.log(`[buildSummary] Итоговые данные сформированы для ${courses} курсов, найдено ${result.reduce((sum, r) => sum + r.grandTotal, 0)} ячеек активности`);
   return result;
-  return acts.map(a => rows[a]);
 };
