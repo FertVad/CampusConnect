@@ -31,8 +31,26 @@ export const buildSummary = (
     return acts.map(a => rows[a]); // Возвращаем пустые строки
   }
 
+  // Получаем все ключи календарных данных
+  const keys = Object.keys(data);
+  // Определяем максимальное количество недель, анализируя ключи
+  let maxWeeks = 0;
+  
+  // Анализируем ключи для определения максимального номера недели
+  keys.forEach(key => {
+    const match = key.match(/week(\d+)/);
+    if (match) {
+      const weekNum = parseInt(match[1], 10);
+      if (weekNum > maxWeeks) {
+        maxWeeks = weekNum;
+      }
+    }
+  });
+  
+  console.log(`[buildSummary] Определено максимальное количество недель: ${maxWeeks}`);
+  
   for (let c = 1; c <= courses; c++) {
-    for (let w = 1; w <= 52; w++) {
+    for (let w = 1; w <= maxWeeks; w++) {
       const key = `course${c}_week${w}` as const;
       const act = (data[key] ?? "-") as ActivityType;
       
