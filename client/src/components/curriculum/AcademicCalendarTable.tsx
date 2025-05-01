@@ -55,11 +55,23 @@ export function AcademicCalendarTable({
   // Состояние для хранения данных таблицы
   const [tableData, setTableData] = useState<CalendarData>(initialData);
   
-  // Обновляем локальное состояние, когда изменяются initialData
+  // Обновляем локальное состояние только при существенных изменениях initialData
+  // Используем useRef для хранения предыдущего значения initialData
+  const lastInitialDataRef = useRef<string>("");
+  
   useEffect(() => {
-    console.log('[AcademicCalendarTable] initialData changed:', initialData);
-    // Создаем копию объекта, чтобы избежать проблем с мутацией
-    setTableData({...initialData});
+    // Преобразуем в строку для глубокого сравнения
+    const currentInitialDataStr = JSON.stringify(initialData);
+    
+    // Проверяем, отличается ли текущее значение от предыдущего
+    if (lastInitialDataRef.current !== currentInitialDataStr) {
+      console.log('[AcademicCalendarTable] initialData changed, updating state');
+      // Обновляем состояние и запоминаем новое значение
+      setTableData({...initialData});
+      lastInitialDataRef.current = currentInitialDataStr;
+    } else {
+      console.log('[AcademicCalendarTable] initialData not changed, skipping update');
+    }
   }, [initialData]);
   
   // Используем planId из props или извлекаем из URL если он не был передан
