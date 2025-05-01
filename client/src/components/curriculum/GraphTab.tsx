@@ -64,8 +64,9 @@ export default function GraphTab({
       setCalendarData(newData);
     }
   }, [initialData]);
-  // Создаем массив курсов - нам нужно 4 курса
+  // Создаем массив курсов в зависимости от yearsOfStudy
   const courses = useMemo(() => {
+    console.log(`[GraphTab] Пересоздание списка курсов, количество: ${yearsOfStudy}`);
     const result = [];
     for (let i = 1; i <= yearsOfStudy; i++) {
       result.push({

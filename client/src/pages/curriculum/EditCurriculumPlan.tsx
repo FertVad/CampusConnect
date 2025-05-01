@@ -73,7 +73,7 @@ function EditCurriculumPlanContent() {
   // Счетчик обновлений для принудительного обновления SummaryTable
   const [calendarUpdateCount, setCalendarUpdateCount] = useState<number>(0);
   // Храним текущее количество лет обучения для синхронизации между компонентами
-  const [planYearsOfStudy, setPlanYearsOfStudy] = useState<number>(plan?.yearsOfStudy || 4);
+  const [planYearsOfStudy, setPlanYearsOfStudy] = useState<number>(4);
   // Ссылка на текущие данные календаря
   const calendarDataRef = useRef<Record<string, string>>({});
   
@@ -732,7 +732,7 @@ function EditCurriculumPlanContent() {
                       <div className="bg-card rounded-md p-4">
                         <GraphTab 
                           planYear={plan.startYear || new Date().getFullYear()} 
-                          yearsOfStudy={plan.yearsOfStudy}
+                          yearsOfStudy={planYearsOfStudy} // Используем локальное состояние вместо значения из плана
                           initialData={plan.calendarData ? JSON.parse(plan.calendarData as string) : {}}
                           planId={planId.toString()} // Явно указываем planId из родительского компонента
                           onChange={(data) => {
@@ -764,7 +764,7 @@ function EditCurriculumPlanContent() {
                       <div className="border p-4 rounded-md bg-card overflow-x-auto">
                         <SummaryTab 
                           calendarData={calendarDataRef.current}
-                          yearsOfStudy={plan.yearsOfStudy}
+                          yearsOfStudy={planYearsOfStudy} // Используем локальное состояние для синхронизации между компонентами
                           updateCounter={calendarUpdateCount}
                         />
                       </div>

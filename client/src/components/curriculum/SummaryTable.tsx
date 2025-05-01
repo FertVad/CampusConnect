@@ -11,6 +11,11 @@ export const SummaryTable: React.FC<{ summary: SummaryRow[]; courses: number }> 
     console.log('[SummaryTable] Received summary data:', summary);
   }, [summary]);
   
+  // Логирование при изменении количества курсов
+  useEffect(() => {
+    console.log('[SummaryTable] Courses count changed:', courses);
+  }, [courses]);
+  
   // Рассчитываем количество недель для каждого семестра на каждом курсе
   const weeksPerSemester = useMemo(() => {
     const result: { 
