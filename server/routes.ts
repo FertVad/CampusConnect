@@ -2459,11 +2459,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Создаем уведомление для всех администраторов
       const storage = getStorage();
       const admins = await storage.getUsersByRole('admin');
-      const directors = await storage.getUsersByRole('director');
-      const allAdmins = [...admins, ...directors];
+      
+      // Удаляем запрос на директоров - эта роль вызывает ошибку в базе данных
+      // const directors = await storage.getUsersByRole('director');
+      // const allAdmins = [...admins, ...directors];
       
       // Отправляем уведомления всем администраторам, кроме текущего пользователя
-      for (const admin of allAdmins) {
+      for (const admin of admins) {
         if (admin.id !== req.user?.id) {
           await storage.createNotification({
             userId: admin.id,
