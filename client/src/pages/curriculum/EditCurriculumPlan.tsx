@@ -72,6 +72,9 @@ function EditCurriculumPlanContent() {
   const [calendarData, setCalendarData] = useState<Record<string, string>>({});
   // Счетчик обновлений для принудительного обновления SummaryTable
   const [calendarUpdateCount, setCalendarUpdateCount] = useState<number>(0);
+  // Храним текущее количество лет обучения для синхронизации между компонентами
+  const [planYearsOfStudy, setPlanYearsOfStudy] = useState<number>(plan?.yearsOfStudy || 4);
+  // Ссылка на текущие данные календаря
   const calendarDataRef = useRef<Record<string, string>>({});
   
   // Получаем данные о учебном плане
@@ -139,6 +142,9 @@ function EditCurriculumPlanContent() {
   // Обновляем значения формы при получении данных о плане
   useEffect(() => {
     if (plan) {
+      console.log("[EditCurriculumPlan] Обновление данных плана из API:", plan);
+      
+      // Обновляем значения формы
       form.reset({
         specialtyName: plan.specialtyName,
         specialtyCode: plan.specialtyCode,
@@ -155,16 +161,31 @@ function EditCurriculumPlanContent() {
       if (plan.calendarData) {
         try {
           const parsedData = JSON.parse(plan.calendarData as string);
+          console.log("[EditCurriculumPlan] Обновление данных календаря:", parsedData);
           setCalendarData(parsedData);
           calendarDataRef.current = parsedData;
+          
+          // Форсируем обновление дочерних компонентов
+          setCalendarUpdateCount(prev => prev + 1);
         } catch (e) {
           console.error("Ошибка при парсинге данных календаря:", e);
           setCalendarData({});
           calendarDataRef.current = {};
         }
       }
+      
+      // Важно: проверяем, изменились ли даты при обновлении количества лет обучения
+      if (plan.yearsOfStudy !== planYearsOfStudy) {
+        console.log(`[EditCurriculumPlan] Количество лет обучения изменилось: ${planYearsOfStudy} -> ${plan.yearsOfStudy}`);
+        
+        // Устанавливаем новое значение
+        setPlanYearsOfStudy(plan.yearsOfStudy);
+        
+        // Форсируем обновление дочерних компонентов
+        setCalendarUpdateCount(prev => prev + 1);
+      }
     }
-  }, [plan, form]);
+  }, [plan, form, planYearsOfStudy]);
   
   // Функция сохранения данных календаря
   const saveCalendarData = async () => {
@@ -554,7 +575,16 @@ function EditCurriculumPlanContent() {
                               min={1}
                               max={10}
                               {...field}
-                              onChange={(e) => field.onChange(parseInt(e.target.value))}
+                              onChange={(e) => {
+                                const value = parseInt(e.target.value);
+                                field.onChange(value);
+                                
+                                // Обновляем значение planYearsOfStudy при изменении поля
+                                if (value !== planYearsOfStudy) {
+                                  console.log(`[EditCurriculumPlan] yearsOfStudy input changed: ${planYearsOfStudy} -> ${value}`);
+                                  setPlanYearsOfStudy(value);
+                                }
+                              }}
                             />
                           </FormControl>
                           <FormMessage />
