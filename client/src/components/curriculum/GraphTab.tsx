@@ -45,6 +45,9 @@ export default function GraphTab({
     return JSON.parse(JSON.stringify(initialData));
   });
   
+  // Используем ссылку для хранения актуальных данных календаря
+  const calendarDataRef = useRef<Record<string, string>>(initialData);
+  
   // Обновляем локальное состояние при изменении initialData
   useEffect(() => {
     console.log('[GraphTab] initialData изменилось:', initialData);
@@ -116,13 +119,28 @@ export default function GraphTab({
   
   // Обработчик изменения данных календаря
   const handleCalendarChange = (data: CalendarData) => {
-    console.log('Изменение данных календаря:', data);
-    // Создаем копию объекта, чтобы избежать проблем с мутацией
-    const newData = {...data};
-    setCalendarData(newData);
-    if (onChange) {
-      // Убеждаемся, что родительский компонент получает актуальные данные
-      onChange(newData);
+    console.log('[GraphTab] Calendar data changed, cells count:', Object.keys(data).length);
+    
+    try {
+      // Создаем глубокую копию объекта для предотвращения мутаций
+      const newData = JSON.parse(JSON.stringify(data));
+      
+      // Обновляем локальное состояние
+      setCalendarData(newData);
+      
+      // Также обновляем ссылку, чтобы данные были всегда актуальны
+      calendarDataRef.current = newData;
+      
+      // Вызываем колбэк onChange, если он предоставлен
+      if (onChange) {
+        console.log('[GraphTab] Calling parent onChange with updated data');
+        
+        // Создаем еще одну копию для передачи родителю
+        const dataCopy = JSON.parse(JSON.stringify(newData));
+        onChange(dataCopy);
+      }
+    } catch (error) {
+      console.error('[GraphTab] Error updating calendar data:', error);
     }
   };
   

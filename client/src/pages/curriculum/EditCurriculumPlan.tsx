@@ -85,15 +85,30 @@ function EditCurriculumPlanContent() {
   const updateMutation = useMutation({
     mutationFn: (updatedPlan: Partial<CurriculumFormValues> & { id: number, calendarData?: string }) => {
       const { id, ...planData } = updatedPlan;
-      return apiRequest(`/api/curriculum-plans/${id}`, 'PUT', JSON.stringify(planData));
+      
+      // Включаем текущие данные календаря, если они есть и не были переданы явно
+      if (!planData.calendarData && Object.keys(calendarDataRef.current).length > 0) {
+        planData.calendarData = JSON.stringify(calendarDataRef.current);
+      }
+      
+      console.log('[updateMutation] Отправка данных:', planData);
+      
+      // Используем POST вместо PUT, так как с PUT были проблемы
+      return apiRequest(`/api/curriculum-plans/${id}`, 'POST', JSON.stringify({
+        ...planData,
+        _method: 'PUT' // Этот параметр указывает серверу, что это на самом деле PUT-запрос
+      }));
     },
     onSuccess: () => {
       toast({
         title: "Учебный план обновлен",
         description: "Изменения успешно сохранены",
       });
+      // Принудительно обновляем данные из API
       queryClient.invalidateQueries({ queryKey: [`/api/curriculum-plans/${planId}`] });
       queryClient.invalidateQueries({ queryKey: ['/api/curriculum-plans'] });
+      // Обновляем счетчик для принудительного обновления всех компонентов
+      setCalendarUpdateCount(prev => prev + 1);
     },
     onError: (error) => {
       console.error("Ошибка при обновлении учебного плана:", error);
@@ -242,37 +257,81 @@ function EditCurriculumPlanContent() {
 
   // Обработчик смены вкладок
   const handleTabChange = async (value: string) => {
-    // Если мы уходим с вкладки "schedule", сохраняем данные календаря
-    if (activeTab === "schedule" && value !== "schedule") {
-      // Дожидаемся завершения сохранения
-      await saveCalendarData();
-      
-      // После сохранения, перезагружаем данные плана с сервера
-      await queryClient.invalidateQueries({ queryKey: [`/api/curriculum-plans/${planId}`] });
-    }
+    console.log(`[EditCurriculumPlan] Tab change: ${activeTab} -> ${value}`);
     
-    // Если мы переходим на вкладку графика, обновляем данные календаря
-    if (value === "schedule") {
-      if (plan && plan.calendarData) {
-        try {
-          // Пытаемся распарсить данные календаря из плана
-          const parsedData = JSON.parse(plan.calendarData);
-          console.log("[EditCurriculumPlan] Loading calendar data for schedule tab:", parsedData);
-          
-          // Обновляем данные в ссылке
-          calendarDataRef.current = parsedData;
-        } catch (e) {
-          console.error("Ошибка при парсинге данных календаря:", e);
+    try {
+      // Если мы уходим с вкладки "title", сохраняем данные формы
+      if (activeTab === "title" && value !== "title") {
+        console.log("[EditCurriculumPlan] Leaving title tab, saving form data...");
+        const formData = form.getValues();
+        // Проверяем, были ли изменения в форме
+        if (form.formState.isDirty) {
+          console.log("[EditCurriculumPlan] Form is dirty, submitting...");
+          await updateMutation.mutateAsync({ ...formData, id: planId });
         }
       }
       
-      // Обновляем таблицу после небольшой задержки
-      setTimeout(() => {
-        updateSummaryTable();
-      }, 100);
+      // Если мы уходим с вкладки "schedule", сохраняем данные календаря
+      if (activeTab === "schedule" && value !== "schedule") {
+        console.log("[EditCurriculumPlan] Leaving schedule tab, saving calendar data...");
+        // Дожидаемся завершения сохранения
+        const saveResult = await saveCalendarData();
+        console.log("[EditCurriculumPlan] Calendar save result:", saveResult);
+        
+        if (saveResult) {
+          // После сохранения, перезагружаем данные плана с сервера
+          console.log("[EditCurriculumPlan] Invalidating cache to refresh data...");
+          await queryClient.invalidateQueries({ queryKey: [`/api/curriculum-plans/${planId}`] });
+        }
+      }
+      
+      // Если мы переходим на вкладку графика, обновляем данные календаря
+      if (value === "schedule") {
+        console.log("[EditCurriculumPlan] Switching to schedule tab...");
+        // Перезагружаем данные из сервера перед переключением
+        await queryClient.invalidateQueries({ queryKey: [`/api/curriculum-plans/${planId}`] });
+        
+        // Обновляем календарные данные из плана
+        if (plan && plan.calendarData) {
+          try {
+            // Пытаемся распарсить данные календаря из плана
+            const parsedData = JSON.parse(plan.calendarData);
+            console.log("[EditCurriculumPlan] Loaded calendar data:", parsedData);
+            
+            // Создаем глубокую копию данных
+            const newData = JSON.parse(JSON.stringify(parsedData));
+            
+            // Обновляем данные в ссылке и состоянии
+            calendarDataRef.current = newData;
+            setCalendarData(newData);
+            
+            // Форсируем обновление дочерних компонентов
+            setCalendarUpdateCount(prev => prev + 1);
+          } catch (e) {
+            console.error("Ошибка при парсинге данных календаря:", e);
+          }
+        }
+      }
+      
+      // Если мы переходим на вкладку "summary", обновляем данные перед отображением
+      if (value === "summary") {
+        console.log("[EditCurriculumPlan] Switching to summary tab, refreshing data...");
+        // Перезагружаем данные из сервера
+        await queryClient.invalidateQueries({ queryKey: [`/api/curriculum-plans/${planId}`] });
+        // Обновляем счетчик для обновления таблицы итогов
+        setCalendarUpdateCount(prev => prev + 1);
+      }
+      
+      // После выполнения всей логики переключения, меняем активную вкладку
+      setActiveTab(value);
+    } catch (error) {
+      console.error("[EditCurriculumPlan] Error during tab change:", error);
+      toast({
+        title: "Ошибка",
+        description: "Произошла ошибка при переключении вкладок. Пожалуйста, попробуйте снова.",
+        variant: "destructive",
+      });
     }
-    
-    setActiveTab(value);
   };
   
   // Обработчик отправки формы титульного листа

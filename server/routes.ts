@@ -2415,7 +2415,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.put('/api/curriculum-plans/:id', authenticateUser, requireRole(['admin', 'director']), async (req, res) => {
+  // Общая функция обновления учебного плана
+  const updateCurriculumPlan = async (req: Request, res: Response) => {
     try {
       const planId = parseInt(req.params.id);
       
@@ -2441,7 +2442,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Модифицируем схему для частичного обновления
       const modifiedSchema = insertCurriculumPlanSchema.partial();
       
-      const planData = modifiedSchema.parse(req.body);
+      // Получаем данные плана из тела запроса
+      const bodyData = req.body;
+      
+      // Удаляем служебное поле _method, если оно присутствует
+      if (bodyData._method) {
+        delete bodyData._method;
+      }
+      
+      const planData = modifiedSchema.parse(bodyData);
+      
+      console.log(`[updateCurriculumPlan] Updating plan ${planId} with data:`, planData);
       
       const updatedPlan = await getStorage().updateCurriculumPlan(planId, planData);
       
@@ -2464,6 +2475,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
+      console.log(`[updateCurriculumPlan] Updated plan:`, updatedPlan);
       res.json(updatedPlan);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -2474,12 +2486,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error(`[updateCurriculumPlan] Error:`, error);
       res.status(500).json({ 
         message: "Error updating curriculum plan", 
         details: errorMessage,
         timestamp: new Date().toISOString()
       });
     }
+  };
+  
+  // PUT обработчик для обновления учебного плана
+  app.put('/api/curriculum-plans/:id', authenticateUser, requireRole(['admin', 'director']), updateCurriculumPlan);
+  
+  // POST обработчик как альтернатива PUT (для клиентов, где PUT не работает)
+  app.post('/api/curriculum-plans/:id', authenticateUser, requireRole(['admin', 'director']), (req, res) => {
+    // Проверяем, есть ли в теле запроса поле _method со значением PUT
+    if (req.body._method === 'PUT') {
+      return updateCurriculumPlan(req, res);
+    }
+    
+    // Если _method не равен PUT, возвращаем ошибку
+    return res.status(400).json({
+      message: "Invalid request method",
+      details: "Expected _method=PUT in the request body"
+    });
   });
   
   app.delete('/api/curriculum-plans/:id', authenticateUser, requireRole(['admin', 'director']), async (req, res) => {
