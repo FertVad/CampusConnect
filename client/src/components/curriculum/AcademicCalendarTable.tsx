@@ -51,7 +51,8 @@ export function AcademicCalendarTable({
   onChange,
   initialData = {},
   startDates = {},
-  planId = ''
+  planId = '',
+  autosavePaused = false
 }: AcademicCalendarTableProps) {
   // Состояние для хранения данных таблицы
   const [tableData, setTableData] = useState<CalendarData>(initialData);
@@ -98,13 +99,15 @@ export function AcademicCalendarTable({
   const { isSaving, forceSave } = useAutoSave(dataToSave, {
     url: '/api/curriculum/weeks',
     debounceMs: 1000,
-    // Только запускаем автосохранение если planId валидный
+    // Только запускаем автосохранение если planId валидный и не активирована пауза
     enabled: isValidPlanId,
+    // Используем флаг паузы из пропсов для приостановки автосохранения
+    paused: autosavePaused,
     onSuccess: (data) => {
-      console.log('Данные автоматически сохранены', data);
+      console.log('[AcademicCalendarTable] Данные автоматически сохранены', data);
     },
     onError: (error) => {
-      console.error('Ошибка автосохранения:', error.message);
+      console.error('[AcademicCalendarTable] Ошибка автосохранения:', error.message);
     }
   });
   

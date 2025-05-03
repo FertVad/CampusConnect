@@ -20,6 +20,7 @@ interface GraphTabProps {
   initialData?: CalendarData; // Начальные данные календаря
   onChange?: (data: CalendarData) => void; // Колбэк для сохранения изменений
   planId?: string;        // ID учебного плана (передается от родительского компонента)
+  autosavePaused?: boolean; // Флаг для паузы автосохранения
 }
 
 export default function GraphTab({ 
@@ -27,7 +28,8 @@ export default function GraphTab({
   yearsOfStudy = 4,
   initialData = {},
   onChange,
-  planId
+  planId,
+  autosavePaused = false
 }: GraphTabProps) {
   // Получаем planId из пропсов, если передано, иначе из URL для обратной совместимости
   const urlParams = new URLSearchParams(window.location.search);
@@ -198,6 +200,7 @@ export default function GraphTab({
         onChange={handleCalendarChange}
         startDates={startDates}
         planId={effectivePlanId}
+        autosavePaused={autosavePaused}
       />
     </div>
   );

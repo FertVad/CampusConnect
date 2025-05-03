@@ -965,6 +965,7 @@ function EditCurriculumPlanContent() {
                           yearsOfStudy={planYearsOfStudy} // Используем локальное состояние вместо значения из плана
                           initialData={plan.calendarData ? JSON.parse(plan.calendarData as string) : {}}
                           planId={planId.toString()} // Явно указываем planId из родительского компонента
+                          autosavePaused={autosavePaused} // Передаем флаг паузы автосохранения
                           onChange={(data) => {
                             console.log("[EditCurriculumPlan] Calendar data updated:", data);
                             
