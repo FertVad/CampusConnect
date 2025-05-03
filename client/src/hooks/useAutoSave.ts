@@ -14,6 +14,8 @@ interface AutoSaveOptions {
   onSuccess?: (data: any) => void;
   /** Флаг, контролирующий активность автосохранения (по умолчанию true) */
   enabled?: boolean;
+  /** Флаг для приостановки автосохранения во время ручного сохранения */
+  paused?: boolean;
 }
 
 /**
@@ -22,7 +24,7 @@ interface AutoSaveOptions {
  * @param options Опции автосохранения
  */
 export function useAutoSave<T>(data: T, options: AutoSaveOptions) {
-  const { debounceMs = 1000, url, method = 'POST', onError, onSuccess, enabled = true } = options;
+  const { debounceMs = 1000, url, method = 'POST', onError, onSuccess, enabled = true, paused = false } = options;
   
   const [isSaving, setIsSaving] = useState(false);
   const [lastSavedData, setLastSavedData] = useState<T | null>(null);
@@ -30,87 +32,49 @@ export function useAutoSave<T>(data: T, options: AutoSaveOptions) {
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
   
-  // Флаг для отслеживания быстрых последовательных вызовов сравнения данных
-  const lastCheckTimeRef = useRef<number>(0);
-  const MIN_INTERVAL_MS = 3000; // Минимальный интервал между сравнениями (3 секунды)
+  // Для отслеживания предыдущих данных через строковое представление, а не ссылки объектов
+  const lastDataStringRef = useRef<string | null>(null);
+  const currentDataString = JSON.stringify(data);
+  
+  // Флаг для предотвращения параллельных сохранений
+  const savingRef = useRef(false);
   
   // Сравнение данных чтобы узнать, изменились ли они
   const isDataChanged = (oldData: T | null, newData: T): boolean => {
     if (!oldData) return true;
     
-    // Если прошло меньше MIN_INTERVAL_MS с момента последнего сравнения,
-    // не считаем данные изменившимися, чтобы избежать частых сохранений
-    const now = Date.now();
-    if (now - lastCheckTimeRef.current < MIN_INTERVAL_MS) {
-      console.log('[useAutoSave] Skipping comparison - too frequent calls');
-      return false;
-    }
-    
-    // Обновляем время последней проверки
-    lastCheckTimeRef.current = now;
-    
-    // Более детальная проверка для объектов с calendarData
-    if (typeof oldData === 'object' && oldData !== null && 
-        typeof newData === 'object' && newData !== null && 
-        'calendarData' in oldData && 'calendarData' in newData) {
-      
-      const oldCalendarData = (oldData as any).calendarData;
-      const newCalendarData = (newData as any).calendarData;
-      
-      // Глубокое сравнение объектов calendarData вместо простого сравнения ссылок
-      try {
-        const oldJsonStr = JSON.stringify(oldCalendarData);
-        const newJsonStr = JSON.stringify(newCalendarData);
-        
-        if (oldJsonStr !== newJsonStr) {
-          console.log('[useAutoSave] Calendar data changed (deep comparison)');
-          return true;
-        }
-      } catch (err) {
-        console.error('[useAutoSave] Error comparing calendar data:', err);
-        // В случае ошибки считаем, что данные изменились
-        return true;
-      }
-      
-      console.log('[useAutoSave] No changes detected in calendar data');
-      return false;
-    }
-    
-    // Для других типов данных используем простое сравнение строк JSON
     try {
+      // Используем глубокое сравнение для всех типов данных через JSON строки
       const oldJson = JSON.stringify(oldData);
       const newJson = JSON.stringify(newData);
       const changed = oldJson !== newJson;
       
       if (changed) {
-        console.log('[useAutoSave] Data changed (JSON comparison)');
+        console.log('[useAutoSave] Data changed (deep comparison)');
       } else {
-        console.log('[useAutoSave] No changes detected (JSON comparison)');
+        console.log('[useAutoSave] No changes detected (deep comparison)');
       }
       
       return changed;
     } catch (err) {
-      console.error('[useAutoSave] Error stringifying data:', err);
-      // В случае ошибки считаем, что данные изменились
-      return true;
+      console.error('[useAutoSave] Error comparing data:', err);
+      // В случае ошибки возвращаем false, чтобы не срабатывало автосохранение из-за ошибки
+      return false;
     }
   };
   
-  // Флаг для предотвращения параллельных сохранений
-  const savingRef = useRef(false);
-  
   // Функция сохранения
-  const saveData = async (dataToSave: T) => {
+  const saveData = async (dataToSave: T): Promise<boolean> => {
     // Проверка на изменения в данных
     if (!isDataChanged(lastSavedData, dataToSave)) {
       console.log('[useAutoSave] Skipping save - no changes detected');
-      return; // Данные не изменились, не сохраняем
+      return false; // Данные не изменились, не сохраняем
     }
     
-    // Если уже идет процесс сохранения, то пропускаем
-    if (savingRef.current) {
-      console.log('[useAutoSave] Skipping save - already saving');
-      return;
+    // Если уже идет процесс сохранения или активирована пауза, то пропускаем
+    if (savingRef.current || paused) {
+      console.log(`[useAutoSave] Skipping save - ${savingRef.current ? 'already saving' : 'paused'}`);
+      return false;
     }
     
     // Устанавливаем флаг сохранения
@@ -119,6 +83,8 @@ export function useAutoSave<T>(data: T, options: AutoSaveOptions) {
     setError(null);
     
     try {
+      console.log('[useAutoSave] Saving data to', url, 'with method', method);
+      
       const response = await fetch(url, {
         method,
         headers: {
@@ -133,24 +99,35 @@ export function useAutoSave<T>(data: T, options: AutoSaveOptions) {
       }
       
       const result = await response.json();
+      console.log('[useAutoSave] Save successful, response:', result);
+      
+      // Сохраняем последние успешно сохраненные данные
       setLastSavedData(dataToSave);
+      // Обновляем строковое представление
+      lastDataStringRef.current = JSON.stringify(dataToSave);
       
       if (onSuccess) {
         onSuccess(result);
       }
+      
+      return true;
     } catch (err) {
       const error = err instanceof Error ? err : new Error(String(err));
+      console.error('[useAutoSave] Save error:', error);
+      
       setError(error);
       
       if (onError) {
         onError(error);
       } else {
         toast({
-          title: "Ошибка автосохранения",
+          title: "Ошибка сохранения",
           description: error.message,
           variant: "destructive",
         });
       }
+      
+      return false;
     } finally {
       setIsSaving(false);
       // Сбрасываем флаг сохранения
@@ -159,43 +136,54 @@ export function useAutoSave<T>(data: T, options: AutoSaveOptions) {
   };
   
   // Принудительное сохранение (для кнопки "Сохранить")
-  const forceSave = async () => {
-    // Проверяем, разрешено ли автосохранение
-    if (!enabled) {
-      console.log('[useAutoSave] Force save skipped - disabled');
-      return;
-    }
-    
+  const forceSave = async (): Promise<boolean> => {
+    // Очищаем любой таймаут автосохранения
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
     }
     
     console.log('[useAutoSave] Force saving data');
-    await saveData(data);
+    const success = await saveData(data);
     
-    toast({
-      title: "Сохранено",
-      description: "Данные успешно сохранены",
-      variant: "default",
-    });
+    if (success) {
+      toast({
+        title: "Сохранено",
+        description: "Данные успешно сохранены",
+        variant: "default",
+      });
+    }
+    
+    return success;
   };
   
   // Эффект для автоматического сохранения с дебаунсом
+  // Используем только строковое представление объекта данных в качестве зависимости
   useEffect(() => {
-    // Не запускаем автосохранение, если флаг enabled установлен в false
-    if (!enabled) {
+    // Если строковое представление не изменилось, ничего не делаем
+    if (currentDataString === lastDataStringRef.current) {
       return;
     }
     
+    // Не запускаем автосохранение при отключенных флагах или активной паузе
+    if (!enabled || paused) {
+      console.log(`[useAutoSave] Auto-save skipped - ${!enabled ? 'disabled' : 'paused'}`);
+      return;
+    }
+    
+    // Обновляем ссылку на текущее строковое представление
+    lastDataStringRef.current = currentDataString;
+    
+    // Отменяем предыдущий таймаут, если он был
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }
     
     console.log('[useAutoSave] Scheduling auto-save in', debounceMs, 'ms');
     
+    // Устанавливаем новый таймаут для сохранения
     timeoutRef.current = setTimeout(() => {
-      console.log('[useAutoSave] Auto-saving data', data);
+      console.log('[useAutoSave] Auto-save triggered');
       saveData(data);
     }, debounceMs);
     
@@ -204,12 +192,14 @@ export function useAutoSave<T>(data: T, options: AutoSaveOptions) {
         clearTimeout(timeoutRef.current);
       }
     };
-  }, [data, debounceMs, enabled]);
+  }, [currentDataString, debounceMs, enabled, paused]);
   
   return {
     isSaving,
     error,
     forceSave,
-    lastSavedData
+    lastSavedData,
+    // Возвращаем функцию прямого сохранения для использования в компонентах
+    saveData: () => saveData(data)
   };
 }

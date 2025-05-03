@@ -42,6 +42,7 @@ interface AcademicCalendarTableProps {
   initialData?: CalendarData;
   startDates?: Record<string, Date>; // Даты начала для каждого курса
   planId?: string;              // ID учебного плана
+  autosavePaused?: boolean;     // Флаг для паузы автосохранения
 }
 
 export function AcademicCalendarTable({ 

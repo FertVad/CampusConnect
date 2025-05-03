@@ -76,6 +76,8 @@ function EditCurriculumPlanContent() {
   const [planYearsOfStudy, setPlanYearsOfStudy] = useState<number>(4);
   // Ссылка на текущие данные календаря
   const calendarDataRef = useRef<Record<string, string>>({});
+  // Флаг для паузы автосохранения во время ручного сохранения
+  const [autosavePaused, setAutosavePaused] = useState<boolean>(false);
   
   // Получаем данные о учебном плане
   const { data: plan, isLoading, error } = useQuery<CurriculumPlan>({
@@ -238,6 +240,10 @@ function EditCurriculumPlanContent() {
     }
     
     try {
+      // Приостанавливаем автосохранение на время ручного сохранения
+      setAutosavePaused(true);
+      console.log("[EditCurriculumPlan] Auto-save paused for manual save");
+      
       console.log("[EditCurriculumPlan] Saving calendar data:", calendarDataRef.current);
       
       // Создаем глубокую копию объекта перед преобразованием в строку
@@ -258,10 +264,11 @@ function EditCurriculumPlanContent() {
           description: "Данные графика успешно сохранены",
         });
         
-        // Обновляем кэш, чтобы получить актуальные данные при следующем запросе
+        // Обновляем глобальный кэш для всех компонентов
+        // Инвалидируем сначала чтобы быть уверенными в актуальности данных
         await queryClient.invalidateQueries({ queryKey: [`/api/curriculum-plans/${planId}`] });
         
-        // Если у нас есть план, обновляем его кэш принудительно
+        // Если у нас есть план, обновляем его кэш принудительно чтобы все компоненты получили свежие данные
         if (plan) {
           // Создаем обновленный план с актуальными данными календаря и yearsOfStudy
           const updatedPlan = { 
@@ -274,6 +281,14 @@ function EditCurriculumPlanContent() {
           queryClient.setQueryData([`/api/curriculum-plans/${planId}`], updatedPlan);
           
           console.log("[EditCurriculumPlan] Updated plan cache with new data:", updatedPlan);
+          
+          // Обновляем данные в общем кэше планов
+          const plansCache = queryClient.getQueryData<CurriculumPlan[]>(['/api/curriculum-plans']);
+          if (plansCache) {
+            const updatedPlans = plansCache.map(p => p.id === planId ? updatedPlan : p);
+            queryClient.setQueryData(['/api/curriculum-plans'], updatedPlans);
+            console.log("[EditCurriculumPlan] Updated plans list cache with new data");
+          }
         }
         
         // Увеличиваем счетчик обновлений, чтобы принудительно обновить SummaryTable
@@ -291,6 +306,12 @@ function EditCurriculumPlanContent() {
         variant: "destructive",
       });
       return false;
+    } finally {
+      // Возобновляем автосохранение после завершения ручного сохранения
+      setTimeout(() => {
+        setAutosavePaused(false);
+        console.log("[EditCurriculumPlan] Auto-save resumed after manual save");
+      }, 500); // Небольшая задержка чтобы гарантировать, что другие операции завершатся
     }
   };
   
@@ -490,42 +511,83 @@ function EditCurriculumPlanContent() {
   const onSubmit = async (data: CurriculumFormValues) => {
     console.log('[EditCurriculumPlan] Submitting form data:', data);
     
-    // Если количество лет обучения изменилось, обновляем локальное состояние
-    if (data.yearsOfStudy !== planYearsOfStudy) {
-      console.log(`[EditCurriculumPlan] yearsOfStudy changed in form submit: ${planYearsOfStudy} -> ${data.yearsOfStudy}`);
-      // Обновляем локальное состояние
-      setPlanYearsOfStudy(data.yearsOfStudy);
-    }
-    
-    // Собираем все необходимые данные для сохранения
-    const formDataToSave = { 
-      ...data, 
-      id: planId,
-      // Включаем текущие данные календаря, если они есть
-      calendarData: Object.keys(calendarDataRef.current).length > 0 
-        ? JSON.stringify(calendarDataRef.current) 
-        : undefined
-    };
-    
-    console.log('[EditCurriculumPlan] Sending data to update mutation:', formDataToSave);
-    
     try {
+      // Приостанавливаем автосохранение на время ручного сохранения
+      setAutosavePaused(true);
+      console.log("[EditCurriculumPlan] Auto-save paused for manual form save");
+      
+      // Если количество лет обучения изменилось, обновляем локальное состояние
+      if (data.yearsOfStudy !== planYearsOfStudy) {
+        console.log(`[EditCurriculumPlan] yearsOfStudy changed in form submit: ${planYearsOfStudy} -> ${data.yearsOfStudy}`);
+        // Обновляем локальное состояние
+        setPlanYearsOfStudy(data.yearsOfStudy);
+      }
+      
+      // Собираем все необходимые данные для сохранения
+      const formDataToSave = { 
+        ...data, 
+        id: planId,
+        // Включаем текущие данные календаря, если они есть
+        calendarData: Object.keys(calendarDataRef.current).length > 0 
+          ? JSON.stringify(calendarDataRef.current) 
+          : undefined
+      };
+      
+      console.log('[EditCurriculumPlan] Sending data to update mutation:', formDataToSave);
+      
       // Отправляем запрос на сохранение и ждем результата
-      await updateMutation.mutateAsync(formDataToSave);
+      const result = await updateMutation.mutateAsync(formDataToSave);
+      
+      // Обновляем данные во всех кэшах для синхронизации между компонентами
+      await queryClient.invalidateQueries({ queryKey: [`/api/curriculum-plans/${planId}`] });
+      await queryClient.invalidateQueries({ queryKey: ['/api/curriculum-plans'] });
+      
+      // Обновляем кэш напрямую с новыми данными
+      if (plan) {
+        const updatedPlan = { 
+          ...plan, 
+          ...data,
+          calendarData: Object.keys(calendarDataRef.current).length > 0 
+            ? JSON.stringify(calendarDataRef.current) 
+            : plan.calendarData,
+          yearsOfStudy: data.yearsOfStudy
+        };
+        
+        queryClient.setQueryData([`/api/curriculum-plans/${planId}`], updatedPlan);
+        console.log('[EditCurriculumPlan] Updated plan cache after manual save:', updatedPlan);
+        
+        // Обновляем данные в общем кэше планов
+        const plansCache = queryClient.getQueryData<CurriculumPlan[]>(['/api/curriculum-plans']);
+        if (plansCache) {
+          const updatedPlans = plansCache.map(p => p.id === planId ? updatedPlan : p);
+          queryClient.setQueryData(['/api/curriculum-plans'], updatedPlans);
+          console.log("[EditCurriculumPlan] Updated plans list cache with new data");
+        }
+      }
       
       // Сбрасываем состояние "грязной" формы, указывая что изменения сохранены
       form.reset(data);
+      
+      // Увеличиваем счетчик для принудительного обновления всех компонентов
+      setCalendarUpdateCount(prev => prev + 1);
       
       // Сообщаем об успехе, если сообщение не было показано внутри мутации
       if (!updateMutation.isSuccess) {
         toast({
           title: "Сохранено",
           description: "Данные формы успешно сохранены",
+          variant: "default"
         });
       }
     } catch (error) {
       console.error('[EditCurriculumPlan] Error saving form data:', error);
       // Ошибка обрабатывается внутри мутации, дополнительно ничего не делаем
+    } finally {
+      // Возобновляем автосохранение после завершения ручного сохранения
+      setTimeout(() => {
+        setAutosavePaused(false);
+        console.log("[EditCurriculumPlan] Auto-save resumed after manual form save");
+      }, 500); // Небольшая задержка чтобы гарантировать, что другие операции завершатся
     }
   };
   
