@@ -56,29 +56,23 @@ export const ACTIVITY_COLORS: {
 
 // Функция создания градиента для недель с разными типами активности
 export const weekGradient = (days: string): string => {
-  console.log('weekGradient вызван с:', days);
+  // Удалены лишние логи для оптимизации производительности
   
   if (!days || days.length === 0) {
-    console.log('Нет активности, возвращаем белый');
     return 'white';
   }
   
   // Если только один тип активности - используем сплошной цвет
   if (days.length === 1 || new Set(days.split('')).size === 1) {
     const activity = days[0] as Exclude<ActivityType, "">;
-    console.log('Один тип активности:', activity);
     
     if (activity in ACTIVITY_COLORS) {
-      const color = ACTIVITY_COLORS[activity].color;
-      console.log('Найден цвет для активности:', color);
-      return color;
+      return ACTIVITY_COLORS[activity].color;
     }
-    console.log('Цвет не найден, используем серый');
     return '#f3f4f6'; // Светло-серый для неизвестных активностей
   }
   
   // Если разные активности - создаем градиент
-  console.log('Несколько типов активности, создаем градиент');
   const dayActivities = days.padEnd(7, days[days.length - 1]).split('');
   const percentStep = 100 / 7;
   
@@ -101,7 +95,6 @@ export const weekGradient = (days: string): string => {
   });
   
   gradient += ')';
-  console.log('Сгенерированный градиент:', gradient);
   return gradient;
 };
 
