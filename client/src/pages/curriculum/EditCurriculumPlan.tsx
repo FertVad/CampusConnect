@@ -89,6 +89,15 @@ function EditCurriculumPlanContent() {
     mutationFn: (updatedPlan: Partial<CurriculumFormValues> & { id: number, calendarData?: string }) => {
       const { id, ...planData } = updatedPlan;
       
+      // Сохраняем текущие данные yearsOfStudy для синхронизации между компонентами
+      if (planData.yearsOfStudy && planData.yearsOfStudy !== planYearsOfStudy) {
+        console.log(`[updateMutation] Обновляем planYearsOfStudy: ${planYearsOfStudy} -> ${planData.yearsOfStudy}`);
+        // Обновляем в следующем цикле рендеринга, чтобы избежать состояния гонки
+        setTimeout(() => {
+          setPlanYearsOfStudy(planData.yearsOfStudy as number);
+        }, 0);
+      }
+      
       // Включаем текущие данные календаря, если они есть и не были переданы явно
       if (!planData.calendarData && Object.keys(calendarDataRef.current).length > 0) {
         planData.calendarData = JSON.stringify(calendarDataRef.current);
@@ -102,14 +111,48 @@ function EditCurriculumPlanContent() {
         _method: 'PUT' // Этот параметр указывает серверу, что это на самом деле PUT-запрос
       }));
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       toast({
         title: "Учебный план обновлен",
         description: "Изменения успешно сохранены",
       });
-      // Принудительно обновляем данные из API
-      queryClient.invalidateQueries({ queryKey: [`/api/curriculum-plans/${planId}`] });
+      
+      // Принудительно обновляем данные в кэше
+      try {
+        // Получаем текущие данные из кэша
+        const currentData = queryClient.getQueryData<CurriculumPlan>([`/api/curriculum-plans/${planId}`]);
+        
+        // Если есть текущие данные и ответ от сервера, обновляем кэш вручную
+        if (currentData && data) {
+          // Объединяем полученные данные с существующими в кэше,
+          // сохраняя при этом последнее состояние calendarData и yearsOfStudy
+          const updatedCache = { 
+            ...currentData, 
+            ...data,
+            // Сохраняем актуальные данные календаря из памяти, если они есть
+            calendarData: Object.keys(calendarDataRef.current).length > 0 
+              ? JSON.stringify(calendarDataRef.current) 
+              : data.calendarData || currentData.calendarData,
+            // Используем актуальное значение лет обучения
+            yearsOfStudy: planYearsOfStudy
+          };
+          
+          // Обновляем кэш напрямую, чтобы избежать дополнительных запросов
+          queryClient.setQueryData([`/api/curriculum-plans/${planId}`], updatedCache);
+          console.log('[updateMutation] Обновлен кэш с новыми данными:', updatedCache);
+        } else {
+          // Если нет данных в кэше, делаем полную перезагрузку
+          queryClient.invalidateQueries({ queryKey: [`/api/curriculum-plans/${planId}`] });
+        }
+      } catch (e) {
+        console.error('Ошибка при обновлении кэша:', e);
+        // В случае ошибки, делаем полную перезагрузку данных
+        queryClient.invalidateQueries({ queryKey: [`/api/curriculum-plans/${planId}`] });
+      }
+      
+      // Также инвалидируем список планов
       queryClient.invalidateQueries({ queryKey: ['/api/curriculum-plans'] });
+      
       // Обновляем счетчик для принудительного обновления всех компонентов
       setCalendarUpdateCount(prev => prev + 1);
     },
@@ -328,7 +371,7 @@ function EditCurriculumPlanContent() {
         console.log("[EditCurriculumPlan] Leaving title tab, saving form data...");
         const formData = form.getValues();
         
-        // Проверяем, изменилось ли количество лет обучения
+        // Проверяем, изменилось ли количество лет обучения и сразу обновляем состояние
         if (formData.yearsOfStudy !== planYearsOfStudy) {
           console.log(`[EditCurriculumPlan] Years of study changed in form before tab change: ${planYearsOfStudy} -> ${formData.yearsOfStudy}`);
           setPlanYearsOfStudy(formData.yearsOfStudy);
@@ -337,7 +380,18 @@ function EditCurriculumPlanContent() {
         // Проверяем, были ли изменения в форме
         if (form.formState.isDirty) {
           console.log("[EditCurriculumPlan] Form is dirty, submitting...");
-          await updateMutation.mutateAsync({ ...formData, id: planId });
+          // Подготавливаем данные для сохранения, включая календарные данные если они есть
+          const dataToSave = { 
+            ...formData, 
+            id: planId,
+            // Важно: включаем текущие данные календаря, если они есть
+            calendarData: Object.keys(calendarDataRef.current).length > 0 
+              ? JSON.stringify(calendarDataRef.current) 
+              : undefined
+          };
+          
+          // Сохраняем данные формы, ожидая завершения операции
+          await updateMutation.mutateAsync(dataToSave);
         }
       }
       
@@ -418,13 +472,29 @@ function EditCurriculumPlanContent() {
   
   // Обработчик отправки формы титульного листа
   const onSubmit = (data: CurriculumFormValues) => {
+    console.log('[EditCurriculumPlan] Submitting form data:', data);
+    
     // Если количество лет обучения изменилось, обновляем локальное состояние
     if (data.yearsOfStudy !== planYearsOfStudy) {
       console.log(`[EditCurriculumPlan] yearsOfStudy changed in form submit: ${planYearsOfStudy} -> ${data.yearsOfStudy}`);
+      // Обновляем локальное состояние
       setPlanYearsOfStudy(data.yearsOfStudy);
     }
     
-    updateMutation.mutate({ ...data, id: planId });
+    // Собираем все необходимые данные для сохранения
+    const formDataToSave = { 
+      ...data, 
+      id: planId,
+      // Включаем текущие данные календаря, если они есть
+      calendarData: Object.keys(calendarDataRef.current).length > 0 
+        ? JSON.stringify(calendarDataRef.current) 
+        : undefined
+    };
+    
+    console.log('[EditCurriculumPlan] Sending data to update mutation:', formDataToSave);
+    
+    // Отправляем запрос на сохранение
+    updateMutation.mutate(formDataToSave);
   };
   
   // Возвращаемся к списку учебных планов
