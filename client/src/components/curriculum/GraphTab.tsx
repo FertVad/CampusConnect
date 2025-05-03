@@ -38,39 +38,43 @@ export default function GraphTab({
   const effectivePlanId = planId || urlPlanId;
   console.log('[GraphTab] Plan ID from props:', planId, 'from URL:', urlPlanId, 'effective:', effectivePlanId);
   
-  // Используем ссылку для хранения первоначальных данных
-  const initialDataRef = useRef(initialData);
+  // Используем значение initialDataHash для сравнения изменений,
+  // а не пересоздаем объект при каждом рендере
+  const initialDataHash = useMemo(() => JSON.stringify(initialData), [initialData]);
   
-  // Локальное состояние для хранения данных календаря
-  const [calendarData, setCalendarData] = useState<Record<string, string>>(() => {
-    // Создаем глубокую копию начальных данных
-    return JSON.parse(JSON.stringify(initialData));
-  });
+  // Используем ссылку для хранения предыдущего хеша данных
+  const lastInitialDataHashRef = useRef<string>(initialDataHash);
   
   // Используем ссылку для хранения актуальных данных календаря
   const calendarDataRef = useRef<Record<string, string>>(initialData);
   
-  // Эффект для отслеживания изменений yearsOfStudy
+  // Используем useMemo вместо useState для создания стабильной ссылки на calendarData
+  // Пересоздаем только при фактическом изменении данных (не при каждом рендере)
+  const calendarData = useMemo(() => {
+    // Если хеш данных не изменился, возвращаем ту же ссылку из ref
+    if (lastInitialDataHashRef.current === initialDataHash) {
+      console.log('[GraphTab] Хеш данных не изменился, возвращаем существующий объект');
+      return calendarDataRef.current;
+    }
+    
+    console.log('[GraphTab] Хеш данных изменился, создаем новый объект');
+    
+    // Обновляем хеш для последующих сравнений
+    lastInitialDataHashRef.current = initialDataHash;
+    
+    // Создаем новый объект только при реальном изменении данных
+    const newData = JSON.parse(JSON.stringify(initialData));
+    
+    // Обновляем ссылку для использования в других местах
+    calendarDataRef.current = newData;
+    
+    return newData;
+  }, [initialDataHash]);
+  
+  // Логирование для отладки
   useEffect(() => {
     console.log(`[GraphTab] yearsOfStudy изменилось: ${yearsOfStudy}`);
   }, [yearsOfStudy]);
-  
-  // Обновляем локальное состояние при изменении initialData
-  useEffect(() => {
-    console.log('[GraphTab] initialData изменилось:', initialData);
-    
-    // Проверяем, действительно ли изменились данные
-    if (JSON.stringify(initialDataRef.current) !== JSON.stringify(initialData)) {
-      console.log('[GraphTab] Applying new initialData');
-      
-      // Обновляем ссылку
-      initialDataRef.current = initialData;
-      
-      // Создаем глубокую копию initialData и обновляем состояние
-      const newData = JSON.parse(JSON.stringify(initialData));
-      setCalendarData(newData);
-    }
-  }, [initialData]);
   // Создаем массив курсов в зависимости от yearsOfStudy
   const courses = useMemo(() => {
     console.log(`[GraphTab] Пересоздание списка курсов, количество: ${yearsOfStudy}`);
@@ -130,22 +134,28 @@ export default function GraphTab({
     console.log('[GraphTab] Calendar data changed, cells count:', Object.keys(data).length);
     
     try {
+      // Проверяем, действительно ли изменились данные (для предотвращения циклов)
+      const dataStr = JSON.stringify(data);
+      const currentDataStr = JSON.stringify(calendarDataRef.current);
+      
+      if (dataStr === currentDataStr) {
+        console.log('[GraphTab] Данные календаря не изменились, пропускаем обновление');
+        return;
+      }
+      
       // Создаем глубокую копию объекта для предотвращения мутаций
       const newData = JSON.parse(JSON.stringify(data));
       
-      // Обновляем локальное состояние
-      setCalendarData(newData);
-      
-      // Также обновляем ссылку, чтобы данные были всегда актуальны
+      // Обновляем ссылку, чтобы данные были всегда актуальны
       calendarDataRef.current = newData;
+      
+      // Сохраняем хеш обновленных данных для предотвращения лишних обновлений
+      lastInitialDataHashRef.current = dataStr;
       
       // Вызываем колбэк onChange, если он предоставлен
       if (onChange) {
         console.log('[GraphTab] Calling parent onChange with updated data');
-        
-        // Создаем еще одну копию для передачи родителю
-        const dataCopy = JSON.parse(JSON.stringify(newData));
-        onChange(dataCopy);
+        onChange(newData);
       }
     } catch (error) {
       console.error('[GraphTab] Error updating calendar data:', error);
