@@ -88,6 +88,10 @@ function EditCurriculumPlanContent() {
   const [calendarData, setCalendarData] = useState<Record<string, string>>({});
   // Счетчик обновлений для принудительного обновления SummaryTable
   const [calendarUpdateCount, setCalendarUpdateCount] = useState<number>(0);
+  // Флаг для отслеживания изменений в форме титульного листа
+  const [isDirty, setIsDirty] = useState<boolean>(false);
+  // Единый объект planForm для всех вкладок
+  const [planForm, setPlanForm] = useState<CurriculumFormValues | null>(null);
   // Используем глобальное хранилище для yearsOfStudy и monthsOfStudy
   const { 
     yearsOfStudy: planYearsOfStudy, 
@@ -216,6 +220,62 @@ function EditCurriculumPlanContent() {
   });
   
   // Обновляем значения формы при получении данных о плане
+  // Функция для сохранения данных формы титульного листа
+  const savePlan = async () => {
+    try {
+      // Принудительно вызываем валидацию формы для обновления isDirty и ошибок
+      await form.trigger();
+      
+      // Проверяем на ошибки валидации
+      if (Object.keys(form.formState.errors).length > 0) {
+        console.error("[EditCurriculumPlan] Form has validation errors, cannot save:", form.formState.errors);
+        toast({
+          title: "Ошибка сохранения",
+          description: "Пожалуйста, исправьте ошибки в форме перед сохранением",
+          variant: "destructive",
+        });
+        return false;
+      }
+      
+      const formData = form.getValues();
+      
+      // Сохраняем данные формы в общем объекте planForm
+      setPlanForm(formData);
+      
+      // Подготавливаем данные для сохранения
+      const dataToSave = { 
+        ...formData, 
+        id: planId,
+        // Включаем календарные данные, если они есть
+        calendarData: Object.keys(calendarDataRef.current).length > 0 
+          ? JSON.stringify(calendarDataRef.current) 
+          : undefined
+      };
+      
+      // Сохраняем данные формы
+      await updateMutation.mutateAsync(dataToSave);
+      
+      // После успешного сохранения сбрасываем флаг isDirty
+      setIsDirty(false);
+      
+      return true;
+    } catch (error) {
+      console.error("[EditCurriculumPlan] Error saving plan:", error);
+      return false;
+    }
+  };
+
+  // Эффект для отслеживания изменений в форме
+  useEffect(() => {
+    // Устанавливаем флаг isDirty при изменении формы
+    const subscription = form.watch(() => {
+      setIsDirty(true);
+    });
+    
+    // Очищаем подписку при размонтировании
+    return () => subscription.unsubscribe();
+  }, [form]);
+
   // Эффект для автоматического расчета года окончания
   useEffect(() => {
     // Получаем текущие значения из формы

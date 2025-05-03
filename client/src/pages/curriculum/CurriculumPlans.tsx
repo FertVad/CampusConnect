@@ -254,10 +254,10 @@ export default function CurriculumPlans() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredPlans.map((plan: CurriculumPlan) => (
-                <Card key={plan.id} className="overflow-hidden relative group hover:shadow-md transition-shadow duration-200">
+                <Card key={plan.id} className="overflow-hidden relative group hover:shadow-sm transition-shadow duration-150">
                   {/* Кликабельная область карточки, кроме footer с кнопками */}
                   <div 
-                    className="cursor-pointer group-hover:bg-slate-50 transition-colors duration-200"
+                    className="cursor-pointer group-hover:bg-slate-100 dark:group-hover:bg-white/5 transition-colors duration-150"
                     onClick={() => navigate(`/curriculum-plans/${plan.id}/edit`)}
                   >
                     <CardHeader className="pb-2">
