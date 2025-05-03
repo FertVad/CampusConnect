@@ -60,6 +60,21 @@ function formatStudyDuration(years: number, months: number = 0): string {
   return result || "0 лет";
 }
 
+// Функция расчета года окончания на основе года начала и длительности обучения
+function calcEndYear(startYear: number, years: number, months: number = 0): number {
+  // Если начало 1 сентября start_year
+  const end = new Date(startYear, 8, 1); // 1 сентября startYear (месяцы с 0)
+  
+  // Добавляем годы
+  end.setFullYear(end.getFullYear() + years);
+  
+  // Добавляем месяцы
+  end.setMonth(end.getMonth() + months);
+  
+  // Возвращаем год окончания
+  return end.getFullYear();
+}
+
 // Компонент редактирования учебного плана
 function EditCurriculumPlanContent() {
   const { id } = useParams();
@@ -185,6 +200,21 @@ function EditCurriculumPlanContent() {
   });
   
   // Обновляем значения формы при получении данных о плане
+  // Эффект для автоматического расчета года окончания
+  useEffect(() => {
+    // Получаем текущие значения из формы
+    const startYear = form.watch('startYear');
+    const years = form.watch('yearsOfStudy');
+    const months = form.watch('monthsOfStudy');
+    
+    // Если есть год начала, рассчитываем год окончания
+    if (startYear) {
+      const result = calcEndYear(startYear, years, months);
+      console.log(`[EndYearCalc] startYear=${startYear}, years=${years}, months=${months} => endYear=${result}`);
+      form.setValue('endYear', result);
+    }
+  }, [form.watch('startYear'), form.watch('yearsOfStudy'), form.watch('monthsOfStudy')]);
+  
   useEffect(() => {
     if (plan) {
       console.log("[EditCurriculumPlan] Обновление данных плана из API:", plan);
@@ -892,8 +922,13 @@ function EditCurriculumPlanContent() {
                               {...field}
                               value={field.value || ''}
                               onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                              readOnly={true} // Делаем поле только для чтения
+                              className="bg-slate-50 dark:bg-slate-900 cursor-not-allowed" // Стили для Read-only поля
                             />
                           </FormControl>
+                          <FormDescription>
+                            Рассчитывается автоматически на основе года начала и срока обучения
+                          </FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
