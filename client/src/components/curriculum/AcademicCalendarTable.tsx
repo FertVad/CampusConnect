@@ -11,8 +11,7 @@ import CourseRow from "./CourseRow";
 import { X } from "lucide-react";
 import clsx from "clsx";
 
-// Количество курсов
-const NUMBER_OF_COURSES = 4;
+// Количество курсов определяется из yearsOfStudy в props
 
 // Тип для всех данных таблицы
 type CalendarData = Record<string, ActivityType>;
@@ -456,8 +455,11 @@ export function AcademicCalendarTable({
     // Создаем данные курсов для каждого года обучения
     const courses: Course[] = [];
     
+    // Логируем количество лет обучения для отладки
+    console.log(`[AcademicCalendarTable] Создание ${yearsOfStudy} курсов на основе yearsOfStudy`);
+    
     // Для каждого курса генерируем отдельный набор недель
-    for (let courseIdx = 0; courseIdx < NUMBER_OF_COURSES; courseIdx++) {
+    for (let courseIdx = 0; courseIdx < yearsOfStudy; courseIdx++) {
       const courseId = courseIdx + 1;
       const courseIdStr = courseId.toString();
       
