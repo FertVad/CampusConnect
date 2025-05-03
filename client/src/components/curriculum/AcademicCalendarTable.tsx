@@ -10,6 +10,7 @@ import { SaveButton } from "@/components/ui/save-button";
 import CourseRow from "./CourseRow";
 import { X } from "lucide-react";
 import clsx from "clsx";
+import { useCurriculum } from "@/lib/curriculumStore";
 
 // Количество курсов определяется из yearsOfStudy в props
 
@@ -46,13 +47,60 @@ interface AcademicCalendarTableProps {
 
 export function AcademicCalendarTable({ 
   weeks,
-  yearsOfStudy = 4, 
+  yearsOfStudy = 4, // Оставляем для обратной совместимости, но будет перезаписано из глобального хранилища
   onChange,
   initialData = {},
   startDates = {},
   planId = '',
   autosavePaused = false
 }: AcademicCalendarTableProps) {
+  // Получаем количество лет обучения из глобального хранилища
+  const { yearsOfStudy: storeYearsOfStudy } = useCurriculum();
+  
+  // Используем значение из глобального хранилища, но если там 0, используем из пропсов для безопасности
+  const effectiveYearsOfStudy = storeYearsOfStudy > 0 ? storeYearsOfStudy : yearsOfStudy;
+  
+  // Эффект для очистки неиспользуемых данных курсов при уменьшении yearsOfStudy
+  useEffect(() => {
+    console.log(`[AcademicCalendarTable] Используем ${effectiveYearsOfStudy} лет обучения из глобального хранилища`);
+    
+    // Проверка на изменение количества лет
+    const prevYearsRef = useRef<number>(effectiveYearsOfStudy);
+    
+    // Если количество лет уменьшилось, удаляем данные для лишних курсов
+    if (prevYearsRef.current > effectiveYearsOfStudy && Object.keys(tableDataRef.current).length > 0) {
+      console.log(`[AcademicCalendarTable] Очистка данных для неиспользуемых курсов (${prevYearsRef.current} -> ${effectiveYearsOfStudy})`);
+      
+      // Копируем данные
+      const newData = JSON.parse(JSON.stringify(tableDataRef.current));
+      let keysRemoved = 0;
+      
+      // Удаляем записи для курсов, которые больше не используются
+      for (const key of Object.keys(newData)) {
+        // Проверяем формат ключа: courseX_weekY
+        const courseMatch = key.match(/^course(\d+)_week\d+$/);
+        if (courseMatch) {
+          const courseId = parseInt(courseMatch[1]);
+          
+          // Если ID курса больше текущего количества лет, удаляем запись
+          if (courseId > effectiveYearsOfStudy) {
+            delete newData[key];
+            keysRemoved++;
+          }
+        }
+      }
+      
+      if (keysRemoved > 0) {
+        console.log(`[AcademicCalendarTable] Удалено ${keysRemoved} записей для неиспользуемых курсов`);
+        // Обновляем данные и принудительно сохраняем
+        updateTableData(newData);
+        setTimeout(() => forceSave(), 100);
+      }
+    }
+    
+    // Обновляем ref для будущих сравнений
+    prevYearsRef.current = effectiveYearsOfStudy;
+  }, [effectiveYearsOfStudy]);
   // Используем useMemo для хранения и стабилизации tableData 
   // вместо useState для предотвращения лишних рендеров
   const lastInitialDataHashRef = useRef<string>("");
@@ -469,10 +517,10 @@ export function AcademicCalendarTable({
     const courses: Course[] = [];
     
     // Логируем количество лет обучения для отладки
-    console.log(`[AcademicCalendarTable] Создание ${yearsOfStudy} курсов на основе yearsOfStudy`);
+    console.log(`[AcademicCalendarTable] Создание ${effectiveYearsOfStudy} курсов на основе глобального хранилища`);
     
     // Для каждого курса генерируем отдельный набор недель
-    for (let courseIdx = 0; courseIdx < yearsOfStudy; courseIdx++) {
+    for (let courseIdx = 0; courseIdx < effectiveYearsOfStudy; courseIdx++) {
       const courseId = courseIdx + 1;
       const courseIdStr = courseId.toString();
       

@@ -18,6 +18,7 @@ import GraphTab, { CalendarData } from "@/components/curriculum/GraphTab";
 import { SummaryTable } from "@/components/curriculum/SummaryTable";
 import { SummaryTab } from "@/components/curriculum/SummaryTab";
 import { buildSummary } from "@/utils/buildSummary";
+import { useCurriculum } from "@/lib/curriculumStore";
 
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -87,8 +88,8 @@ function EditCurriculumPlanContent() {
   const [calendarData, setCalendarData] = useState<Record<string, string>>({});
   // Счетчик обновлений для принудительного обновления SummaryTable
   const [calendarUpdateCount, setCalendarUpdateCount] = useState<number>(0);
-  // Храним текущее количество лет обучения для синхронизации между компонентами
-  const [planYearsOfStudy, setPlanYearsOfStudy] = useState<number>(4);
+  // Используем глобальное хранилище для yearsOfStudy
+  const { yearsOfStudy: planYearsOfStudy, setYearsOfStudy: setPlanYearsOfStudy } = useCurriculum();
   // Ссылка на текущие данные календаря
   const calendarDataRef = useRef<Record<string, string>>({});
   // Флаг для паузы автосохранения во время ручного сохранения
