@@ -262,9 +262,41 @@ function CourseRow({
 }
 
 // Оптимизируем компонент с помощью React.memo для предотвращения лишних рендеров
-// Экспортируем обернутую версию с функцией сравнения, которая проверяет только tableData и selectedCells
+// Экспортируем обернутую версию с расширенной функцией сравнения
 export default React.memo(CourseRow, 
-  (prev, next) => 
-    prev.tableData === next.tableData && 
-    prev.selectedCells === next.selectedCells
+  (prev, next) => {
+    // Основные критерии - объекты должны быть равны по ссылке
+    if (
+      prev.tableData !== next.tableData || 
+      prev.selectedCells !== next.selectedCells
+    ) {
+      return false; // Гарантированно должны перерендерить
+    }
+    
+    // Проверяем изменились ли важные внутренние свойства курса
+    if (
+      prev.course.id !== next.course.id ||
+      prev.startDate.getTime() !== next.startDate.getTime()
+    ) {
+      return false;
+    }
+    
+    // Проверка на изменение в выделении, которое затрагивает этот курс
+    const prevSelectedKeys = Array.from(prev.selectedCells || [])
+      .filter(key => key.includes(`course${prev.course.id}`));
+    const nextSelectedKeys = Array.from(next.selectedCells || [])
+      .filter(key => key.includes(`course${next.course.id}`));
+    
+    if (prevSelectedKeys.length !== nextSelectedKeys.length) {
+      return false;
+    }
+    
+    // Проверяем количество недель - это важно для корректного отображения
+    if (prev.courseWeeks.length !== next.courseWeeks.length) {
+      return false;
+    }
+    
+    // Если все проверки пройдены - можно пропустить ререндер
+    return true;
+  }
 );

@@ -42,16 +42,28 @@ export function useAutoSave<T>(data: T, options: AutoSaveOptions) {
   // Флаг для предотвращения параллельных сохранений
   const savingRef = useRef(false);
   
+  // Ведение логирования количества вызовов
+  const callCountRef = useRef(0);
+  
   // Сравнение данных чтобы узнать, изменились ли они
   const isDataChanged = (oldData: T | null, newData: T): boolean => {
-    if (!oldData) return true;
+    // Увеличиваем счетчик вызовов
+    callCountRef.current += 1;
+    
+    // Логируем только каждый 10-й вызов чтобы не засорять консоль
+    const shouldLog = callCountRef.current % 10 === 0;
+    
+    if (!oldData) {
+      if (shouldLog) console.log('[useAutoSave] No previous data reference, treating as changed');
+      return true;
+    }
     
     // Предотвращаем сравнение слишком частых вызовов
     const now = Date.now();
-    const MIN_INTERVAL_MS = 500; // Минимальный интервал между сравнениями
+    const MIN_INTERVAL_MS = 1000; // Увеличенный минимальный интервал между сравнениями (1 секунда)
     
     if (now - lastCheckTimeRef.current < MIN_INTERVAL_MS) {
-      console.log('[useAutoSave] Skipping comparison - too frequent calls');
+      if (shouldLog) console.log(`[useAutoSave] Throttling - ${now - lastCheckTimeRef.current}ms since last check`);
       return false;
     }
     lastCheckTimeRef.current = now;
@@ -60,11 +72,24 @@ export function useAutoSave<T>(data: T, options: AutoSaveOptions) {
       // Сравниваем текущую JSON строку с сохраненной ранее
       // Это оптимальнее, чем создавать JSON строку для oldData каждый раз
       if (lastDataStringRef.current === currentDataString) {
-        console.log('[useAutoSave] No changes detected (string comparison)');
+        if (shouldLog) console.log('[useAutoSave] No changes detected (string comparison)');
         return false;
       }
       
-      console.log('[useAutoSave] Data changed (string comparison)');
+      // Дополнительная проверка на существенность изменений - сравниваем размеры строк
+      // Слишком маленькие изменения могут быть результатом перестановки полей или изменения форматирования
+      const lengthDiff = Math.abs(
+        (lastDataStringRef.current?.length || 0) - currentDataString.length
+      );
+      
+      // Если разница менее 1% и строки достаточно длинные, считаем это несущественным изменением
+      const minLength = Math.min((lastDataStringRef.current?.length || 0), currentDataString.length);
+      if (minLength > 100 && lengthDiff < minLength * 0.01) {
+        console.log(`[useAutoSave] Changes too small (${lengthDiff} chars diff, ${(lengthDiff/minLength*100).toFixed(2)}%), ignoring`);
+        return false;
+      }
+      
+      console.log('[useAutoSave] Significant data change detected, length diff:', lengthDiff);
       return true;
     } catch (err) {
       console.error('[useAutoSave] Error comparing data:', err);
@@ -170,6 +195,49 @@ export function useAutoSave<T>(data: T, options: AutoSaveOptions) {
   // Отслеживаем изменения в состоянии паузы
   const pausedRef = useRef(paused);
   const pauseTimeRef = useRef<number | null>(null);
+  // Флаг для отслеживания видимости вкладки
+  const isDocumentVisibleRef = useRef(
+    typeof document !== 'undefined' ? document.visibilityState === 'visible' : true
+  );
+  
+  // Обработчик изменения видимости документа
+  useEffect(() => {
+    // Обработчик смены видимости вкладки
+    const handleVisibilityChange = () => {
+      const isVisible = document.visibilityState === 'visible';
+      isDocumentVisibleRef.current = isVisible;
+      
+      console.log(`[useAutoSave] Document visibility changed to: ${isVisible ? 'visible' : 'hidden'}`);
+      
+      // Если вкладка стала видимой, а у нас есть изменения - планируем отложенное сохранение
+      if (isVisible && currentDataString !== lastDataStringRef.current && !pausedRef.current) {
+        console.log('[useAutoSave] Document became visible with pending changes, scheduling delayed save');
+        
+        // Отменяем существующий таймаут
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current);
+        }
+        
+        // Планируем новое сохранение с небольшой задержкой
+        timeoutRef.current = setTimeout(() => {
+          if (!pausedRef.current) {
+            console.log('[useAutoSave] Executing delayed save after tab became visible');
+            saveData(data);
+          }
+        }, 2000);
+      }
+    };
+    
+    // Добавляем слушатель только для браузерной среды
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+      
+      // Возвращаем функцию очистки
+      return () => {
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+      };
+    }
+  }, [currentDataString]);
   
   // Обновляем ссылку при изменении флага paused
   useEffect(() => {
@@ -222,13 +290,40 @@ export function useAutoSave<T>(data: T, options: AutoSaveOptions) {
     
     console.log('[useAutoSave] Scheduling auto-save in', debounceMs, 'ms');
     
-    // Устанавливаем новый таймаут для сохранения с увеличенным интервалом
-    const effectiveDebounceMs = Math.max(debounceMs, 2000); // Минимум 2 секунды
+    // Увеличиваем интервал сохранения пропорционально размеру данных для предотвращения слишком частых сохранений больших объектов
+    // Это помогает предотвратить перегрузку сервера при работе с большими планами
+    const dataSize = currentDataString.length;
+    let effectiveDebounceMs = Math.max(debounceMs, 2000); // Минимум 2 секунды
+
+    // Если данные больше определенного порога, увеличиваем задержку
+    // Используем логарифмическую шкалу для предотвращения слишком больших задержек
+    if (dataSize > 5000) { // Если больше 5KB
+      const scaleFactor = Math.log10(dataSize / 1000);
+      const additionalDelay = scaleFactor * 500; // Дополнительная задержка пропорциональна логарифму размера
+      effectiveDebounceMs += Math.min(additionalDelay, 3000); // Но не более 3 секунд дополнительной задержки
+      console.log(`[useAutoSave] Large data (${dataSize} bytes), increasing debounce to ${effectiveDebounceMs}ms`);
+    }
     
+    // Отложенный автосэйв с учетом пауз
     timeoutRef.current = setTimeout(() => {
       // Повторная проверка на паузу прямо перед сохранением
       if (pausedRef.current) {
         console.log('[useAutoSave] Auto-save cancelled - paused flag active');
+        return;
+      }
+      
+      // Дополнительная проверка на состояние документа
+      // Не сохраняем если браузер неактивен (пользователь переключился на другую вкладку)
+      if (typeof document !== 'undefined' && document.visibilityState === 'hidden') {
+        console.log('[useAutoSave] Auto-save cancelled - document not visible');
+        
+        // Планируем перепроверку позже, когда пользователь вернется
+        setTimeout(() => {
+          if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+            console.log('[useAutoSave] Document became visible again, scheduling save');
+            saveData(data);
+          }
+        }, 500);
         return;
       }
       

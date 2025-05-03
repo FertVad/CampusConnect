@@ -137,9 +137,22 @@ export function AcademicCalendarTable({
   // Состояние для отслеживания последней выбранной ячейки (для Shift+клик)
   const [lastSelectedCell, setLastSelectedCell] = useState<string | null>(null);
   
-  // Функция для генерации ключа ячейки
+  // Кеш для уже созданных ключей ячеек
+  const cellKeysCacheRef = useRef<Record<string, string>>({});
+
+  // Функция для генерации ключа ячейки с кешированием
   const getCellKey = (courseId: number, weekNumber: number): string => {
-    return `course${courseId}_week${weekNumber}`;
+    const cacheKey = `${courseId}:${weekNumber}`; // Меньше памяти чем полный ключ
+    
+    // Если ключ уже есть в кеше, возвращаем его
+    if (cellKeysCacheRef.current[cacheKey]) {
+      return cellKeysCacheRef.current[cacheKey];
+    }
+    
+    // Иначе создаем новый и сохраняем в кеше
+    const newKey = `course${courseId}_week${weekNumber}`;
+    cellKeysCacheRef.current[cacheKey] = newKey;
+    return newKey;
   };
   
   // Функция парсинга ключа ячейки в компоненты (для Shift+клик)
