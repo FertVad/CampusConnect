@@ -60,12 +60,12 @@ export function AcademicCalendarTable({
   // Используем значение из глобального хранилища, но если там 0, используем из пропсов для безопасности
   const effectiveYearsOfStudy = storeYearsOfStudy > 0 ? storeYearsOfStudy : yearsOfStudy;
   
+  // Создаем ref для отслеживания предыдущего значения yearsOfStudy
+  const prevYearsRef = useRef<number>(effectiveYearsOfStudy);
+  
   // Эффект для очистки неиспользуемых данных курсов при уменьшении yearsOfStudy
   useEffect(() => {
     console.log(`[AcademicCalendarTable] Используем ${effectiveYearsOfStudy} лет обучения из глобального хранилища`);
-    
-    // Проверка на изменение количества лет
-    const prevYearsRef = useRef<number>(effectiveYearsOfStudy);
     
     // Если количество лет уменьшилось, удаляем данные для лишних курсов
     if (prevYearsRef.current > effectiveYearsOfStudy && Object.keys(tableDataRef.current).length > 0) {
