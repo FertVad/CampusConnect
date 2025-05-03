@@ -548,9 +548,9 @@ function EditCurriculumPlanContent() {
     }
     
     try {
-      // Если мы уходим с вкладки "title", сохраняем данные формы
+      // Если мы уходим с вкладки "title", проверяем, есть ли несохраненные изменения
       if (activeTab === "title" && value !== "title") {
-        console.log("[EditCurriculumPlan] Leaving title tab, saving form data...");
+        console.log("[EditCurriculumPlan] Leaving title tab, checking for unsaved changes...");
         
         // Принудительно вызываем валидацию формы для обновления isDirty и ошибок
         await form.trigger();
@@ -566,38 +566,43 @@ function EditCurriculumPlanContent() {
           return; // Не позволяем переключить вкладку, если есть ошибки
         }
         
-        const formData = form.getValues();
-        
-        // Проверяем, изменилось ли количество лет обучения и сразу обновляем состояние
-        if (formData.yearsOfStudy !== planYearsOfStudy) {
-          console.log(`[EditCurriculumPlan] Years of study changed in form before tab change: ${planYearsOfStudy} -> ${formData.yearsOfStudy}`);
-          setPlanYearsOfStudy(formData.yearsOfStudy);
+        // Если есть несохраненные изменения, спрашиваем пользователя о сохранении
+        if (isDirty) {
+          const shouldSave = window.confirm("Сохранить изменения титульного листа?");
+          
+          if (shouldSave) {
+            // Пользователь подтвердил сохранение
+            console.log("[EditCurriculumPlan] User confirmed saving changes");
+            const saveResult = await savePlan();
+            if (!saveResult) {
+              console.error("[EditCurriculumPlan] Failed to save form data");
+              return; // Не переключаем вкладку, если сохранение не удалось
+            }
+          } else {
+            // Пользователь отказался от сохранения, откатываем изменения в форме
+            console.log("[EditCurriculumPlan] User declined saving changes, reverting form data");
+            if (plan) {
+              form.reset({
+                specialtyName: plan.specialtyName,
+                specialtyCode: plan.specialtyCode,
+                yearsOfStudy: plan.yearsOfStudy,
+                monthsOfStudy: plan.monthsOfStudy || 0,
+                startYear: plan.startYear || undefined,
+                endYear: plan.endYear || undefined,
+                educationForm: plan.educationForm || undefined,
+                educationLevel: plan.educationLevel,
+                description: plan.description || "",
+              });
+              
+              // Сбрасываем флаг isDirty, так как мы отменили изменения
+              setIsDirty(false);
+            }
+          }
         }
-        
-        // Аналогично для месяцев обучения
-        if (formData.monthsOfStudy !== planMonthsOfStudy) {
-          console.log(`[EditCurriculumPlan] Months of study changed in form before tab change: ${planMonthsOfStudy} -> ${formData.monthsOfStudy}`);
-          setPlanMonthsOfStudy(formData.monthsOfStudy);
-        }
-        
-        // Сохраняем даже если форма не помечена как "грязная", так как изменения могли быть не отслежены
-        console.log("[EditCurriculumPlan] Submitting form data...");
-        // Подготавливаем данные для сохранения, включая календарные данные если они есть
-        const dataToSave = { 
-          ...formData, 
-          id: planId,
-          // Важно: включаем текущие данные календаря, если они есть
-          calendarData: Object.keys(calendarDataRef.current).length > 0 
-            ? JSON.stringify(calendarDataRef.current) 
-            : undefined
-        };
-        
-        // Сохраняем данные формы, ожидая завершения операции
-        await updateMutation.mutateAsync(dataToSave);
       }
       
       // Если мы уходим с вкладки "schedule", сохраняем данные календаря
-      if (activeTab === "schedule" && value !== "schedule") {
+      if (activeTab === "schedule" && value !== activeTab) {
         console.log("[EditCurriculumPlan] Leaving schedule tab, saving calendar data...");
         // Дожидаемся завершения сохранения
         const saveResult = await saveCalendarData();
