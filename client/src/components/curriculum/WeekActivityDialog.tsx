@@ -312,9 +312,9 @@ export function WeekActivityDialog({
       {open && weekInfo && (
         <DialogContent
           key={`dialog-week-${weekInfo.courseId}-${weekInfo.weekNumber}`}
-          className="max-h-[90vh] w-full max-w-md overflow-hidden rounded-lg bg-slate-900/95 p-6"
+          className="sm:max-w-md w-[90vw] max-h-[85vh] rounded-lg bg-slate-900/95 p-4 md:p-6 overflow-visible flex flex-col"
         >
-          <DialogHeader className="mb-4">
+          <DialogHeader className="mb-2">
             <DialogTitle className="text-lg font-bold">
               Учебная неделя {weekInfo.weekNumber}
             </DialogTitle>
@@ -332,8 +332,8 @@ export function WeekActivityDialog({
             </DialogDescription>
           </DialogHeader>
 
-          <div className="flex flex-col gap-6 overflow-y-auto pr-3"
-               style={{maxHeight: 'calc(90vh - 112px)'}}>
+          <div className="flex flex-col gap-4 overflow-y-auto pr-2 dialog-body"
+               style={{maxHeight: 'calc(70vh)'}}>
             <div className="py-4 bg-slate-50 dark:bg-slate-900 rounded-md border border-slate-200 dark:border-slate-700 my-4"
                 onDoubleClick={(e) => {
                   // Обработка двойного клика по всей области
