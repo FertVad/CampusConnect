@@ -307,11 +307,11 @@ function EditCurriculumPlanContent() {
       });
       return false;
     } finally {
-      // Возобновляем автосохранение после завершения ручного сохранения
+      // Возобновляем автосохранение после завершения ручного сохранения с увеличенной задержкой
       setTimeout(() => {
         setAutosavePaused(false);
         console.log("[EditCurriculumPlan] Auto-save resumed after manual save");
-      }, 500); // Небольшая задержка чтобы гарантировать, что другие операции завершатся
+      }, 3000); // Увеличенная задержка (3 секунды) для защиты от частого повторного автосохранения
     }
   };
   
@@ -471,8 +471,18 @@ function EditCurriculumPlanContent() {
             calendarDataRef.current = newData;
             setCalendarData(newData);
             
+            // Устанавливаем паузу автосохранения при переключении на вкладку графика
+            // чтобы избежать немедленного тригера автосохранения при загрузке данных
+            setAutosavePaused(true);
+            
             // Форсируем обновление дочерних компонентов
             setCalendarUpdateCount(prev => prev + 1);
+            
+            // Снимаем паузу через 3 секунды, чтобы компоненты успели отрендериться
+            setTimeout(() => {
+              setAutosavePaused(false);
+              console.log("[EditCurriculumPlan] Auto-save re-enabled after schedule tab switch");
+            }, 3000);
           } catch (e) {
             console.error("Ошибка при парсинге данных календаря:", e);
           }
@@ -583,11 +593,11 @@ function EditCurriculumPlanContent() {
       console.error('[EditCurriculumPlan] Error saving form data:', error);
       // Ошибка обрабатывается внутри мутации, дополнительно ничего не делаем
     } finally {
-      // Возобновляем автосохранение после завершения ручного сохранения
+      // Возобновляем автосохранение после завершения ручного сохранения с увеличенной задержкой
       setTimeout(() => {
         setAutosavePaused(false);
         console.log("[EditCurriculumPlan] Auto-save resumed after manual form save");
-      }, 500); // Небольшая задержка чтобы гарантировать, что другие операции завершатся
+      }, 3000); // Увеличенная задержка (3 секунды) для предотвращения немедленного возобновления автосохранения
     }
   };
   

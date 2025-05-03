@@ -167,6 +167,23 @@ export function useAutoSave<T>(data: T, options: AutoSaveOptions) {
     return success;
   };
   
+  // Отслеживаем изменения в состоянии паузы
+  const pausedRef = useRef(paused);
+  const pauseTimeRef = useRef<number | null>(null);
+  
+  // Обновляем ссылку при изменении флага paused
+  useEffect(() => {
+    pausedRef.current = paused;
+    if (paused) {
+      // Запоминаем время активации паузы
+      pauseTimeRef.current = Date.now();
+      console.log('[useAutoSave] Pause activated, time:', new Date().toISOString());
+    } else {
+      pauseTimeRef.current = null;
+      console.log('[useAutoSave] Pause deactivated');
+    }
+  }, [paused]);
+  
   // Эффект для автоматического сохранения с дебаунсом
   useEffect(() => {
     // Если нет изменений в данных (проверяем через глубокое сравнение), пропускаем
@@ -174,8 +191,21 @@ export function useAutoSave<T>(data: T, options: AutoSaveOptions) {
       return;
     }
     
+    // Проверка на таймаут паузы - если пауза активна более 10 секунд, сбрасываем её
+    // (защита от "застревания" в состоянии паузы)
+    if (pausedRef.current && pauseTimeRef.current) {
+      const pauseDuration = Date.now() - pauseTimeRef.current;
+      const MAX_PAUSE_DURATION = 10000; // 10 секунд
+      
+      if (pauseDuration > MAX_PAUSE_DURATION) {
+        console.log(`[useAutoSave] Pause timeout exceeded (${pauseDuration}ms > ${MAX_PAUSE_DURATION}ms), resetting pause state`);
+        pausedRef.current = false;
+        pauseTimeRef.current = null;
+      }
+    }
+    
     // Если автосохранение отключено или поставлено на паузу - выходим сразу
-    if (!enabled || paused) {
+    if (!enabled || pausedRef.current) {
       console.log(`[useAutoSave] Auto-save skipped - ${!enabled ? 'disabled' : 'paused'}`);
       return;
     }
@@ -192,17 +222,19 @@ export function useAutoSave<T>(data: T, options: AutoSaveOptions) {
     
     console.log('[useAutoSave] Scheduling auto-save in', debounceMs, 'ms');
     
-    // Устанавливаем новый таймаут для сохранения 
+    // Устанавливаем новый таймаут для сохранения с увеличенным интервалом
+    const effectiveDebounceMs = Math.max(debounceMs, 2000); // Минимум 2 секунды
+    
     timeoutRef.current = setTimeout(() => {
       // Повторная проверка на паузу прямо перед сохранением
-      if (paused) {
+      if (pausedRef.current) {
         console.log('[useAutoSave] Auto-save cancelled - paused flag active');
         return;
       }
       
       console.log('[useAutoSave] Auto-save triggered');
       saveData(data);
-    }, debounceMs);
+    }, effectiveDebounceMs);
     
     // Очистка таймаута при размонтировании компонента или перед новым рендером
     return () => {
