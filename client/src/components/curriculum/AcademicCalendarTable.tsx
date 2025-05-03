@@ -173,10 +173,26 @@ export function AcademicCalendarTable({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [clearSelection]);
   
+  // Функция для обновления tableData
+  const updateTableData = (newData: CalendarData) => {
+    // Обновляем ref для хранения последней версии данных
+    tableDataRef.current = newData;
+    
+    // Обновляем хеш для последующего сравнения
+    lastInitialDataHashRef.current = JSON.stringify(newData);
+    
+    // Вызываем колбэк
+    if (onChange) {
+      onChange({...newData});
+    }
+    
+    return newData;
+  };
+  
   // Обработчик изменения значения ячейки или группы ячеек
   const handleCellChange = (activity: ActivityType, applyToSelection: boolean = false) => {
     // Создаем глубокую копию объекта для полной защиты от мутаций
-    const newData = JSON.parse(JSON.stringify(tableData));
+    const newData = JSON.parse(JSON.stringify(tableDataRef.current));
     
     // Если применяем к выделению и есть выделенные ячейки
     if (applyToSelection && selectedCells.size > 0) {
@@ -195,13 +211,9 @@ export function AcademicCalendarTable({
     }
     
     console.log('Обновляем данные таблицы:', newData);
-    setTableData(newData);
     
-    // Вызов колбэка при изменении данных - всегда создаем новую копию
-    // для родительского компонента
-    if (onChange) {
-      onChange({...newData});
-    }
+    // Обновляем данные через нашу новую функцию
+    updateTableData(newData);
     
     // Принудительное сохранение после изменений
     forceSave();
