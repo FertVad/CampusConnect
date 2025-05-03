@@ -277,14 +277,32 @@ function EditCurriculumPlanContent(): React.ReactNode {
 
   // Эффект для отслеживания изменений в форме
   useEffect(() => {
-    // Устанавливаем флаг isDirty при изменении формы
+    // Отслеживаем реальные изменения в форме по сравнению с исходными данными
     const subscription = form.watch(() => {
-      setIsDirty(true);
+      // Проверяем, действительно ли форма изменилась по сравнению с исходными данными
+      if (plan) {
+        const currentValues = form.getValues();
+        const hasRealChanges = 
+          currentValues.specialtyName !== plan.specialtyName ||
+          currentValues.specialtyCode !== plan.specialtyCode ||
+          currentValues.yearsOfStudy !== plan.yearsOfStudy ||
+          currentValues.monthsOfStudy !== (plan.monthsOfStudy || 0) ||
+          currentValues.startYear !== plan.startYear ||
+          currentValues.educationForm !== plan.educationForm ||
+          currentValues.educationLevel !== plan.educationLevel ||
+          currentValues.description !== (plan.description || "");
+          
+        console.log("[EditCurriculumPlan] Form change detected, real changes:", hasRealChanges);
+        setIsDirty(hasRealChanges);
+      } else {
+        // Если нет данных плана для сравнения, просто устанавливаем флаг
+        setIsDirty(form.formState.isDirty);
+      }
     });
     
     // Очищаем подписку при размонтировании
     return () => subscription.unsubscribe();
-  }, [form]);
+  }, [form, plan]);
 
   // Эффект для автоматического расчета года окончания
   useEffect(() => {
@@ -576,37 +594,57 @@ function EditCurriculumPlanContent(): React.ReactNode {
           return; // Не позволяем переключить вкладку, если есть ошибки
         }
         
-        // Если есть несохраненные изменения, спрашиваем пользователя о сохранении
+        // Проверяем еще раз, есть ли несохраненные изменения по состоянию isDirty
         if (isDirty) {
-          const shouldSave = window.confirm("Сохранить изменения титульного листа?");
+          // Дополнительно проверяем, действительно ли есть реальные изменения
+          const currentValues = form.getValues();
+          const hasRealChanges = plan && (
+            currentValues.specialtyName !== plan.specialtyName ||
+            currentValues.specialtyCode !== plan.specialtyCode ||
+            currentValues.yearsOfStudy !== plan.yearsOfStudy ||
+            currentValues.monthsOfStudy !== (plan.monthsOfStudy || 0) ||
+            currentValues.startYear !== plan.startYear ||
+            currentValues.educationForm !== plan.educationForm ||
+            currentValues.educationLevel !== plan.educationLevel ||
+            currentValues.description !== (plan.description || "")
+          );
           
-          if (shouldSave) {
-            // Пользователь подтвердил сохранение
-            console.log("[EditCurriculumPlan] User confirmed saving changes");
-            const saveResult = await savePlan();
-            if (!saveResult) {
-              console.error("[EditCurriculumPlan] Failed to save form data");
-              return; // Не переключаем вкладку, если сохранение не удалось
+          // Показываем диалог только если есть реальные изменения
+          if (hasRealChanges) {
+            const shouldSave = window.confirm("Сохранить изменения титульного листа?");
+            
+            if (shouldSave) {
+              // Пользователь подтвердил сохранение
+              console.log("[EditCurriculumPlan] User confirmed saving changes");
+              const saveResult = await savePlan();
+              if (!saveResult) {
+                console.error("[EditCurriculumPlan] Failed to save form data");
+                return; // Не переключаем вкладку, если сохранение не удалось
+              }
+            } else {
+              // Пользователь отказался от сохранения, откатываем изменения в форме
+              console.log("[EditCurriculumPlan] User declined saving changes, reverting form data");
+              if (plan) {
+                form.reset({
+                  specialtyName: plan.specialtyName,
+                  specialtyCode: plan.specialtyCode,
+                  yearsOfStudy: plan.yearsOfStudy,
+                  monthsOfStudy: plan.monthsOfStudy || 0,
+                  startYear: plan.startYear || undefined,
+                  endYear: plan.endYear || undefined,
+                  educationForm: plan.educationForm || undefined,
+                  educationLevel: plan.educationLevel,
+                  description: plan.description || "",
+                });
+                
+                // Сбрасываем флаг isDirty, так как мы отменили изменения
+                setIsDirty(false);
+              }
             }
           } else {
-            // Пользователь отказался от сохранения, откатываем изменения в форме
-            console.log("[EditCurriculumPlan] User declined saving changes, reverting form data");
-            if (plan) {
-              form.reset({
-                specialtyName: plan.specialtyName,
-                specialtyCode: plan.specialtyCode,
-                yearsOfStudy: plan.yearsOfStudy,
-                monthsOfStudy: plan.monthsOfStudy || 0,
-                startYear: plan.startYear || undefined,
-                endYear: plan.endYear || undefined,
-                educationForm: plan.educationForm || undefined,
-                educationLevel: plan.educationLevel,
-                description: plan.description || "",
-              });
-              
-              // Сбрасываем флаг isDirty, так как мы отменили изменения
-              setIsDirty(false);
-            }
+            // Хотя isDirty=true, но реальных изменений нет, сбрасываем флаг
+            console.log("[EditCurriculumPlan] No real changes detected despite isDirty flag");
+            setIsDirty(false);
           }
         }
       }
