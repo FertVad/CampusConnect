@@ -235,15 +235,7 @@ export default function GraphTab({
         </div>
       </div>
       
-      {effectiveMonthsOfStudy > 0 && (
-        <div className="text-sm px-2 py-1 bg-yellow-50 border border-yellow-200 rounded-md">
-          Обучение: {effectiveYearsOfStudy} {effectiveYearsOfStudy === 1 ? 'год' : 
-            effectiveYearsOfStudy < 5 ? 'года' : 'лет'} и {effectiveMonthsOfStudy} {
-              effectiveMonthsOfStudy === 1 ? 'месяц' : 
-              effectiveMonthsOfStudy < 5 ? 'месяца' : 'месяцев'
-            }
-        </div>
-      )}
+      {/* Убрали желтую плашку с информацией о сроке обучения по запросу пользователя */}
       
       <AcademicCalendarTable 
         weeks={weeks} 
