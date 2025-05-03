@@ -134,6 +134,16 @@ function EditCurriculumPlanContent(): React.ReactNode {
         }, 0);
       }
       
+      // Явно убедимся, что образовательные параметры включены
+      // Это критично для правильного сохранения и отображения после повторного открытия плана
+      if (!planData.educationLevel && plan?.educationLevel) {
+        planData.educationLevel = plan.educationLevel;
+      }
+      
+      if (!planData.educationForm && plan?.educationForm) {
+        planData.educationForm = plan.educationForm;
+      }
+      
       // Включаем текущие данные календаря, если они есть и не были переданы явно
       if (!planData.calendarData && Object.keys(calendarDataRef.current).length > 0) {
         planData.calendarData = JSON.stringify(calendarDataRef.current);
@@ -707,10 +717,14 @@ function EditCurriculumPlanContent(): React.ReactNode {
         setPlanMonthsOfStudy(data.monthsOfStudy);
       }
       
-      // Собираем все необходимые данные для сохранения
+      // Важно: убедимся, что educationLevel и educationForm явно включены 
+      // в данные, отправляемые на сервер
       const formDataToSave = { 
         ...data, 
         id: planId,
+        // Явно включаем образовательные параметры, чтобы гарантировать их отправку
+        educationLevel: data.educationLevel, 
+        educationForm: data.educationForm,
         // Включаем текущие данные календаря, если они есть
         calendarData: Object.keys(calendarDataRef.current).length > 0 
           ? JSON.stringify(calendarDataRef.current) 
@@ -731,6 +745,9 @@ function EditCurriculumPlanContent(): React.ReactNode {
         const updatedPlan = { 
           ...plan, 
           ...data,
+          // Явно включаем образовательные параметры в обновленный план
+          educationLevel: data.educationLevel,
+          educationForm: data.educationForm,
           calendarData: Object.keys(calendarDataRef.current).length > 0 
             ? JSON.stringify(calendarDataRef.current) 
             : plan.calendarData,
@@ -930,7 +947,7 @@ function EditCurriculumPlanContent(): React.ReactNode {
                           <FormLabel>Уровень образования</FormLabel>
                           <Select
                             onValueChange={field.onChange}
-                            defaultValue={field.value}
+                            value={field.value}
                           >
                             <FormControl>
                               <SelectTrigger>
@@ -956,7 +973,7 @@ function EditCurriculumPlanContent(): React.ReactNode {
                           <FormLabel>Форма обучения</FormLabel>
                           <Select
                             onValueChange={field.onChange}
-                            defaultValue={field.value}
+                            value={field.value}
                           >
                             <FormControl>
                               <SelectTrigger>
