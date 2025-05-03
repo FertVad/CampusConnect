@@ -271,7 +271,7 @@ export function WeekActivityDialog({
 
   // Стиль для дня недели в зависимости от активности и выбранности
   const getDayStyle = (day: WeekDay) => {
-    console.log('getDayStyle вызван для дня:', day);
+    // Удалены многочисленные логи, которые засоряли консоль
     let baseStyle = "";
 
     // Установка базового стиля для дня
@@ -279,42 +279,29 @@ export function WeekActivityDialog({
       // Если нет активности и день не выбран - стандартный фон
       baseStyle =
         "bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-white";
-      console.log('Нет активности и не выбран:', baseStyle);
     } else if (day.selected) {
       // Если день выбран - показываем прозрачным цветом активности или предварительный выбор
       if (selectedActivity && selectedActivity in ACTIVITY_COLORS) {
         // Используем цвет выбранной активности для предпросмотра
-        console.log('Выбранная активность:', selectedActivity);
-        console.log('ACTIVITY_COLORS доступны:', typeof ACTIVITY_COLORS !== 'undefined');
-        
         const previewColorStyle =
           ACTIVITY_COLORS[selectedActivity as Exclude<ActivityType, "">];
-        console.log('previewColorStyle:', previewColorStyle);
         
         baseStyle = `${previewColorStyle.bg} text-slate-800 ring-2 ring-blue-600 dark:ring-blue-400`;
-        console.log('Итоговый стиль:', baseStyle);
       } else {
         // Если активность не выбрана, но день выделен
         baseStyle =
           "bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-white ring-2 ring-blue-600 dark:ring-blue-400";
-        console.log('Выбран без активности:', baseStyle);
       }
     } else if (day.activity && day.activity in ACTIVITY_COLORS) {
       // Если у дня есть активность и он не выбран
-      console.log('День с активностью:', day.activity);
-      console.log('ACTIVITY_COLORS доступен:', typeof ACTIVITY_COLORS !== 'undefined');
-      
       const colorStyle =
         ACTIVITY_COLORS[day.activity as Exclude<ActivityType, "">];
-      console.log('colorStyle:', colorStyle);
       
       baseStyle = `${colorStyle.bg} text-slate-800`;
-      console.log('Итоговый стиль для дня с активностью:', baseStyle);
     } else if (day.activity) {
       // Если у дня активность не из предопределенных - используем нейтральный цвет
       baseStyle =
         "bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-white";
-      console.log('Неизвестная активность:', day.activity, 'стиль:', baseStyle);
     }
 
     return baseStyle;
@@ -325,8 +312,8 @@ export function WeekActivityDialog({
       {open && weekInfo && (
         <DialogContent
           key={`dialog-week-${weekInfo.courseId}-${weekInfo.weekNumber}`}
-          className="w-[420px] max-w-[95vw] p-0 rounded-lg shadow-xl top-8"
-          style={{ inset: '32px auto auto 50%', transform: 'translateX(-50%)' }}
+          className="w-[420px] max-w-[95vw] p-0 rounded-lg shadow-xl"
+          style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}
         >
           <div className="flex flex-col max-h-[calc(100vh-64px)] md:max-h-[calc(100vh-96px)] w-full overflow-hidden">
             <header className="px-6 pt-6 pb-4 shrink-0 border-b">

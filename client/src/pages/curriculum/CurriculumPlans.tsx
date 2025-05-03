@@ -254,42 +254,59 @@ export default function CurriculumPlans() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredPlans.map((plan: CurriculumPlan) => (
-                <Card key={plan.id} className="overflow-hidden">
-                  <CardHeader className="pb-2">
-                    <div className="flex justify-between items-start">
-                      <Badge className={`${getEducationLevelColor(plan.educationLevel)}`}>
-                        {plan.educationLevel}
-                      </Badge>
-                      <span className="text-muted-foreground text-sm">{plan.specialtyCode}</span>
-                    </div>
-                    <CardTitle className="line-clamp-2 text-lg mt-2">{plan.specialtyName}</CardTitle>
-                    <CardDescription className="line-clamp-3">
-                      {plan.description || "Нет описания"}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="pb-2">
-                    <div className="flex items-center justify-between text-sm text-muted-foreground">
-                      <div className="flex items-center">
-                        <Book className="h-4 w-4 mr-1" />
-                        <span>{plan.yearsOfStudy} {plan.yearsOfStudy === 1 ? "год" : 
-                               plan.yearsOfStudy < 5 ? "года" : "лет"}</span>
+                <Card key={plan.id} className="overflow-hidden relative group hover:shadow-md transition-shadow duration-200">
+                  {/* Кликабельная область карточки, кроме footer с кнопками */}
+                  <div 
+                    className="cursor-pointer group-hover:bg-slate-50 transition-colors duration-200"
+                    onClick={() => navigate(`/curriculum-plans/${plan.id}/edit`)}
+                  >
+                    <CardHeader className="pb-2">
+                      <div className="flex justify-between items-start">
+                        <Badge className={`${getEducationLevelColor(plan.educationLevel)}`}>
+                          {plan.educationLevel}
+                        </Badge>
+                        <span className="text-muted-foreground text-sm">{plan.specialtyCode}</span>
                       </div>
-                      <div>
-                        Создан: {plan.createdAt ? new Date(plan.createdAt).toLocaleDateString() : '-'}
+                      <CardTitle className="line-clamp-2 text-lg mt-2">{plan.specialtyName}</CardTitle>
+                      <CardDescription className="line-clamp-3">
+                        {plan.description || "Нет описания"}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="pb-2">
+                      <div className="flex items-center justify-between text-sm text-muted-foreground">
+                        <div className="flex items-center">
+                          <Book className="h-4 w-4 mr-1" />
+                          <span>{plan.yearsOfStudy} {plan.yearsOfStudy === 1 ? "год" : 
+                                plan.yearsOfStudy < 5 ? "года" : "лет"}</span>
+                        </div>
+                        <div>
+                          Создан: {plan.createdAt ? new Date(plan.createdAt).toLocaleDateString() : '-'}
+                        </div>
                       </div>
-                    </div>
-                  </CardContent>
-                  <Separator />
+                    </CardContent>
+                    <Separator />
+                  </div>
+                  {/* Некликабельный footer с кнопками */}
                   <CardFooter className="pt-4 flex justify-between">
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      onClick={() => navigate(`/curriculum-plans/${plan.id}/edit`)}
+                      onClick={(e) => {
+                        e.stopPropagation(); // Предотвращаем всплытие события
+                        navigate(`/curriculum-plans/${plan.id}/edit`);
+                      }}
                     >
                       <Edit className="h-4 w-4 mr-2" />
                       Редактировать
                     </Button>
-                    <Button variant="destructive" size="sm" onClick={() => handleDeleteClick(plan)}>
+                    <Button 
+                      variant="destructive" 
+                      size="sm" 
+                      onClick={(e) => {
+                        e.stopPropagation(); // Предотвращаем всплытие события
+                        handleDeleteClick(plan);
+                      }}
+                    >
                       <Trash2 className="h-4 w-4 mr-2" />
                       Удалить
                     </Button>
