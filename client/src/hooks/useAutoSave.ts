@@ -30,9 +30,24 @@ export function useAutoSave<T>(data: T, options: AutoSaveOptions) {
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
   
+  // Флаг для отслеживания быстрых последовательных вызовов сравнения данных
+  const lastCheckTimeRef = useRef<number>(0);
+  const MIN_INTERVAL_MS = 3000; // Минимальный интервал между сравнениями (3 секунды)
+  
   // Сравнение данных чтобы узнать, изменились ли они
   const isDataChanged = (oldData: T | null, newData: T): boolean => {
     if (!oldData) return true;
+    
+    // Если прошло меньше MIN_INTERVAL_MS с момента последнего сравнения,
+    // не считаем данные изменившимися, чтобы избежать частых сохранений
+    const now = Date.now();
+    if (now - lastCheckTimeRef.current < MIN_INTERVAL_MS) {
+      console.log('[useAutoSave] Skipping comparison - too frequent calls');
+      return false;
+    }
+    
+    // Обновляем время последней проверки
+    lastCheckTimeRef.current = now;
     
     // Более детальная проверка для объектов с calendarData
     if (typeof oldData === 'object' && oldData !== null && 
@@ -42,21 +57,19 @@ export function useAutoSave<T>(data: T, options: AutoSaveOptions) {
       const oldCalendarData = (oldData as any).calendarData;
       const newCalendarData = (newData as any).calendarData;
       
-      // Если количество ключей разное, данные изменились
-      const oldKeys = Object.keys(oldCalendarData || {});
-      const newKeys = Object.keys(newCalendarData || {});
-      
-      if (oldKeys.length !== newKeys.length) {
-        console.log('[useAutoSave] Different number of keys:', oldKeys.length, newKeys.length);
-        return true;
-      }
-      
-      // Проверяем, есть ли изменения в значениях
-      for (const key of newKeys) {
-        if (oldCalendarData[key] !== newCalendarData[key]) {
-          console.log('[useAutoSave] Value changed for key:', key, oldCalendarData[key], newCalendarData[key]);
+      // Глубокое сравнение объектов calendarData вместо простого сравнения ссылок
+      try {
+        const oldJsonStr = JSON.stringify(oldCalendarData);
+        const newJsonStr = JSON.stringify(newCalendarData);
+        
+        if (oldJsonStr !== newJsonStr) {
+          console.log('[useAutoSave] Calendar data changed (deep comparison)');
           return true;
         }
+      } catch (err) {
+        console.error('[useAutoSave] Error comparing calendar data:', err);
+        // В случае ошибки считаем, что данные изменились
+        return true;
       }
       
       console.log('[useAutoSave] No changes detected in calendar data');
@@ -64,17 +77,23 @@ export function useAutoSave<T>(data: T, options: AutoSaveOptions) {
     }
     
     // Для других типов данных используем простое сравнение строк JSON
-    const oldJson = JSON.stringify(oldData);
-    const newJson = JSON.stringify(newData);
-    const changed = oldJson !== newJson;
-    
-    if (changed) {
-      console.log('[useAutoSave] Data changed (JSON comparison)');
-    } else {
-      console.log('[useAutoSave] No changes detected (JSON comparison)');
+    try {
+      const oldJson = JSON.stringify(oldData);
+      const newJson = JSON.stringify(newData);
+      const changed = oldJson !== newJson;
+      
+      if (changed) {
+        console.log('[useAutoSave] Data changed (JSON comparison)');
+      } else {
+        console.log('[useAutoSave] No changes detected (JSON comparison)');
+      }
+      
+      return changed;
+    } catch (err) {
+      console.error('[useAutoSave] Error stringifying data:', err);
+      // В случае ошибки считаем, что данные изменились
+      return true;
     }
-    
-    return changed;
   };
   
   // Флаг для предотвращения параллельных сохранений
