@@ -91,6 +91,7 @@
     
     --card: 240 10% 12%;
     --card-foreground: 0 0% 90%;
+    --card-hover: rgba(255,255,255,0.06);
     
     --popover: 240 10% 12%;
     --popover-foreground: 0 0% 90%;
@@ -401,7 +402,8 @@
 }
 
 .dark .card-hover {
-  @apply hover:bg-white/5;
+  @apply hover:bg-opacity-60;
+  background-color: var(--card-hover, rgba(255,255,255,0.06));
 }
 
 /* Enhanced focus styles for form elements */
