@@ -190,12 +190,32 @@ export function AcademicCalendarTable({
   
   // Группируем недели только по месяцам (без учета года)
   const monthGroups = useMemo(() => {
-    return weeks.reduce((acc, w) => {
+    // Порядок месяцев учебного года, начиная с сентября
+    const academicMonthOrder = [
+      "сентябрь", "октябрь", "ноябрь", "декабрь", 
+      "январь", "февраль", "март", "апрель", 
+      "май", "июнь", "июль", "август"
+    ];
+    
+    // Сначала группируем по месяцам обычным способом
+    const grouped = weeks.reduce((acc, w) => {
       // Используем только название месяца без года
       const key = format(w.startDate, "LLLL", { locale: ru }); // «сентябрь»
       (acc[key] ||= []).push(w);
       return acc;
     }, {} as Record<string, WeekCell[]>);
+    
+    // Затем создаем новый отсортированный объект
+    const sortedGroups = {} as Record<string, WeekCell[]>;
+    
+    // Добавляем месяцы в правильном порядке (начиная с сентября)
+    academicMonthOrder.forEach(month => {
+      if (grouped[month]) {
+        sortedGroups[month] = grouped[month];
+      }
+    });
+    
+    return sortedGroups;
   }, [weeks]);
   
   // Состояние для модального окна и выбранной ячейки
@@ -432,14 +452,35 @@ export function AcademicCalendarTable({
     const firstCourseWeeks = buildAcademicWeeks(weeks[0].startDate);
     console.log(`[AcademicCalendarTable] Сгенерировано ${firstCourseWeeks.length} недель для отображения`);
     
-    // Группируем недели только по месяцам
+    // Группируем недели только по месяцам и сортируем, чтобы начинать с сентября
     const monthGroups = useMemo(() => {
-      return firstCourseWeeks.reduce((acc, w) => {
+      // Порядок месяцев учебного года, начиная с сентября
+      const academicMonthOrder = [
+        "сентябрь", "октябрь", "ноябрь", "декабрь", 
+        "январь", "февраль", "март", "апрель", 
+        "май", "июнь", "июль", "август"
+      ];
+      
+      // Сначала группируем по месяцам как обычно
+      const grouped = firstCourseWeeks.reduce((acc, w) => {
         // Используем только название месяца без года
         const key = format(w.startDate, "LLLL", { locale: ru }); // «сентябрь»
         (acc[key] ||= []).push(w);
         return acc;
       }, {} as Record<string, WeekCell[]>);
+      
+      // Затем создаем новый отсортированный объект
+      const sortedGroups = {} as Record<string, WeekCell[]>;
+      
+      // Добавляем месяцы в правильном порядке (начиная с сентября)
+      academicMonthOrder.forEach(month => {
+        if (grouped[month]) {
+          sortedGroups[month] = grouped[month];
+        }
+      });
+      
+      console.log('[AcademicCalendarTable] Отсортированные месяцы:', Object.keys(sortedGroups));
+      return sortedGroups;
     }, [firstCourseWeeks]);
     
     // Заголовок "Месяцы"
