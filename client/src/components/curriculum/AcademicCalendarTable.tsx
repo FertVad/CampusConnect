@@ -537,13 +537,71 @@ export function AcademicCalendarTable({
   
   // Создание строк для курсов с учетом дат из startDates
   const renderCourseRows = () => {
-    // Создаем данные курсов для каждого года обучения
-    const courses: Course[] = [];
+    // Если предоставлены курсы через props, используем их
+    if (courses && courses.length > 0) {
+      console.log(`[AcademicCalendarTable] Использование ${courses.length} предопределенных курсов из props`);
+      
+      // Преобразуем курсы из props в формат Course
+      const mappedCourses: Course[] = courses.map(course => {
+        const courseId = parseInt(course.id);
+        const courseIdStr = course.id;
+        
+        // Используем дату из startDates или дефолтную дату
+        const courseStartDate = startDates[courseIdStr] || 
+          (courseId === 1 ? weeks[0].startDate : getFirstWorkdayOfSeptember(weeks[0].startDate.getFullYear() + courseId - 1));
+        
+        // Генерируем недели в зависимости от того, полный это курс или хвостовой
+        let courseWeeks;
+        if (course.isFullYear !== false) {
+          // Для полных курсов генерируем все недели года
+          courseWeeks = buildAcademicWeeks(courseStartDate);
+        } else {
+          // Для хвостового курса с месяцами используем специальную функцию
+          const months = course.months || effectiveMonthsOfStudy;
+          courseWeeks = buildAcademicWeeks(
+            courseStartDate,
+            1,  // Один год
+            months // Количество месяцев для хвостового курса
+          );
+          // Ограничиваем количество недель для хвостового курса в зависимости от месяцев
+          const weeksInMonths = Math.ceil(months * 4.35); // примерное количество недель в месяцах
+          courseWeeks = courseWeeks.slice(0, weeksInMonths);
+        }
+        
+        console.log(`[AcademicCalendarTable] Курс ${courseId} (${course.name}): сгенерировано ${courseWeeks.length} недель`);
+        
+        return {
+          id: courseId,
+          name: course.name,
+          startDate: courseStartDate,
+          weeks: courseWeeks, // Сохраняем недели, специфичные для этого курса
+        };
+      });
+      
+      // Рендерим компонент CourseRow для каждого курса
+      return mappedCourses.map(course => (
+        <CourseRow
+          key={`course-row-${course.id}`}
+          course={course}
+          weeks={weeks} // Передаем базовые недели для заголовков (используемые для отображения)
+          courseWeeks={course.weeks} // Передаем недели специфичные для этого курса (для расчета смещения)
+          tableData={tableData}
+          selectedCellKey={selectedCellKey}
+          selectedCells={selectedCells}
+          onCellClick={handleCellClick}
+          isLastDayOfMonth={isLastDayOfMonth}
+          startDate={startDates && startDates[course.id] ? startDates[course.id] : course.startDate}
+        />
+      ));
+    }
     
-    // Логируем количество лет обучения для отладки
-    console.log(`[AcademicCalendarTable] Создание ${effectiveYearsOfStudy} курсов на основе глобального хранилища`);
+    // Если не предоставлены курсы через props, создаем их на основе effectiveYearsOfStudy и effectiveMonthsOfStudy
+    const generatedCourses: Course[] = [];
     
-    // Для каждого курса генерируем отдельный набор недель
+    // Логируем количество курсов для отладки
+    console.log(`[AcademicCalendarTable] Создание курсов: ${effectiveYearsOfStudy} лет + ${effectiveMonthsOfStudy > 0 ? effectiveMonthsOfStudy + ' мес' : ''}`);
+    
+    // Создаем полные курсы (по годам)
     for (let courseIdx = 0; courseIdx < effectiveYearsOfStudy; courseIdx++) {
       const courseId = courseIdx + 1;
       const courseIdStr = courseId.toString();
@@ -556,7 +614,7 @@ export function AcademicCalendarTable({
       const courseWeeks = buildAcademicWeeks(courseStartDate);
       console.log(`[AcademicCalendarTable] Курс ${courseId}: сгенерировано ${courseWeeks.length} недель`);
       
-      courses.push({
+      generatedCourses.push({
         id: courseId,
         name: `Курс ${courseId}`,
         startDate: courseStartDate,
@@ -564,8 +622,34 @@ export function AcademicCalendarTable({
       });
     }
     
+    // Добавляем хвостовой курс, если есть месяцы
+    if (effectiveMonthsOfStudy > 0) {
+      const tailCourseId = effectiveYearsOfStudy + 1;
+      const tailCourseIdStr = tailCourseId.toString();
+      
+      // Дата начала хвостового курса
+      const tailStartDate = startDates[tailCourseIdStr] || 
+        getFirstWorkdayOfSeptember(weeks[0].startDate.getFullYear() + effectiveYearsOfStudy);
+      
+      // Генерируем недели только на указанное количество месяцев
+      // Ограничиваем количество недель для хвостового курса в зависимости от месяцев
+      const weeksInMonths = Math.ceil(effectiveMonthsOfStudy * 4.35); // примерное количество недель в месяцах
+      
+      // Генерируем все недели года и берем только нужное количество
+      const tailWeeks = buildAcademicWeeks(tailStartDate).slice(0, weeksInMonths);
+      
+      console.log(`[AcademicCalendarTable] Хвостовой курс ${tailCourseId}: ${effectiveMonthsOfStudy} мес., ${tailWeeks.length} недель`);
+      
+      generatedCourses.push({
+        id: tailCourseId,
+        name: `Курс ${tailCourseId} (${effectiveMonthsOfStudy} мес)`,
+        startDate: tailStartDate,
+        weeks: tailWeeks,
+      });
+    }
+    
     // Рендерим компонент CourseRow для каждого курса
-    return courses.map(course => (
+    return generatedCourses.map(course => (
       <CourseRow
         key={`course-row-${course.id}`}
         course={course}

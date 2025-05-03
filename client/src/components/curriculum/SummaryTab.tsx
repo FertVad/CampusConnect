@@ -4,39 +4,62 @@ import { SummaryTable } from './SummaryTable';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
+import { useCurriculum } from '@/lib/curriculumStore';
 
 interface SummaryTabProps {
   calendarData: Record<string, string>;
   yearsOfStudy: number;
+  monthsOfStudy?: number;  // Количество дополнительных месяцев обучения
+  effectiveCourseCount?: number; // Эффективное количество курсов (полные годы + хвостовой курс)
   updateCounter?: number; // Счетчик для принудительного обновления
 }
 
 export const SummaryTab: React.FC<SummaryTabProps> = ({ 
   calendarData, 
   yearsOfStudy,
+  monthsOfStudy = 0,
+  effectiveCourseCount,
   updateCounter = 0
 }) => {
-  console.log('[SummaryTab] Render with data:', calendarData, 'updateCounter:', updateCounter);
+  console.log('[SummaryTab] Render with data:', calendarData, 'years:', yearsOfStudy, 'months:', monthsOfStudy, 'updateCounter:', updateCounter);
+  
+  // Получаем значения из глобального хранилища
+  const { 
+    yearsOfStudy: storeYearsOfStudy, 
+    monthsOfStudy: storeMonthsOfStudy,
+    getEffectiveCourseCount 
+  } = useCurriculum();
+  
+  // Приоритет: props > глобальное хранилище > дефолты
+  const effectiveYearsOfStudy = yearsOfStudy > 0 ? yearsOfStudy : (storeYearsOfStudy > 0 ? storeYearsOfStudy : 4);
+  const effectiveMonthsOfStudy = monthsOfStudy >= 0 ? monthsOfStudy : (storeMonthsOfStudy >= 0 ? storeMonthsOfStudy : 0);
+  
+  // Определяем реальное количество курсов с учетом хвостового курса
+  const actualCourseCount = effectiveCourseCount !== undefined 
+    ? effectiveCourseCount 
+    : getEffectiveCourseCount();
   
   // Создаем локальную копию данных календаря
   const [localData, setLocalData] = useState<Record<string, string>>({});
   
-  // Эффект для отслеживания изменений yearsOfStudy
+  // Эффект для отслеживания изменений yearsOfStudy и monthsOfStudy
   useEffect(() => {
-    console.log(`[SummaryTab] yearsOfStudy изменилось: ${yearsOfStudy}`);
-  }, [yearsOfStudy]);
+    console.log(`[SummaryTab] Параметры изменились: ${effectiveYearsOfStudy} лет, ${effectiveMonthsOfStudy} мес., ${actualCourseCount} курсов`);
+  }, [effectiveYearsOfStudy, effectiveMonthsOfStudy, actualCourseCount]);
   
-  // Обновляем локальные данные при изменении calendarData или yearsOfStudy
+  // Обновляем локальные данные при изменении calendarData или параметров
   useEffect(() => {
     console.log('[SummaryTab] Data changed:', { 
       dataKeys: Object.keys(calendarData || {}).length,
-      yearsOfStudy, 
+      years: effectiveYearsOfStudy,
+      months: effectiveMonthsOfStudy,
+      courses: actualCourseCount,
       updateCounter 
     });
     // Создаем глубокую копию данных
     const dataCopy = JSON.parse(JSON.stringify(calendarData || {}));
     setLocalData(dataCopy);
-  }, [calendarData, yearsOfStudy, updateCounter]);
+  }, [calendarData, effectiveYearsOfStudy, effectiveMonthsOfStudy, actualCourseCount, updateCounter]);
   
   // Вычисляем итоговые данные на основе полученных данных
   const summary = useMemo(() => {
@@ -46,8 +69,9 @@ export const SummaryTab: React.FC<SummaryTabProps> = ({
       return [];
     }
     
-    return buildSummary(localData, yearsOfStudy);
-  }, [localData, yearsOfStudy]);
+    // Передаем effectiveCourseCount вместо yearsOfStudy для учета хвостового курса
+    return buildSummary(localData, actualCourseCount);
+  }, [localData, actualCourseCount]);
   
   // Если данных нет, показываем предупреждение
   if (Object.keys(localData).length === 0) {
@@ -69,7 +93,7 @@ export const SummaryTab: React.FC<SummaryTabProps> = ({
           <CardTitle>Итоговая таблица учебных мероприятий</CardTitle>
         </CardHeader>
         <CardContent className="overflow-auto">
-          <SummaryTable summary={summary} courses={yearsOfStudy} />
+          <SummaryTable summary={summary} courses={actualCourseCount} />
         </CardContent>
       </Card>
     </div>

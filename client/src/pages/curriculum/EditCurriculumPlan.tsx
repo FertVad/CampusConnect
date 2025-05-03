@@ -88,8 +88,13 @@ function EditCurriculumPlanContent() {
   const [calendarData, setCalendarData] = useState<Record<string, string>>({});
   // Счетчик обновлений для принудительного обновления SummaryTable
   const [calendarUpdateCount, setCalendarUpdateCount] = useState<number>(0);
-  // Используем глобальное хранилище для yearsOfStudy
-  const { yearsOfStudy: planYearsOfStudy, setYearsOfStudy: setPlanYearsOfStudy } = useCurriculum();
+  // Используем глобальное хранилище для yearsOfStudy и monthsOfStudy
+  const { 
+    yearsOfStudy: planYearsOfStudy, 
+    setYearsOfStudy: setPlanYearsOfStudy,
+    monthsOfStudy: planMonthsOfStudy,
+    setMonthsOfStudy: setPlanMonthsOfStudy
+  } = useCurriculum();
   // Ссылка на текущие данные календаря
   const calendarDataRef = useRef<Record<string, string>>({});
   // Флаг для паузы автосохранения во время ручного сохранения
@@ -113,6 +118,15 @@ function EditCurriculumPlanContent() {
         // Обновляем в следующем цикле рендеринга, чтобы избежать состояния гонки
         setTimeout(() => {
           setPlanYearsOfStudy(planData.yearsOfStudy as number);
+        }, 0);
+      }
+      
+      // Также обновляем месяцы обучения в глобальном хранилище
+      if (planData.monthsOfStudy !== undefined && planData.monthsOfStudy !== planMonthsOfStudy) {
+        console.log(`[updateMutation] Обновляем planMonthsOfStudy: ${planMonthsOfStudy} -> ${planData.monthsOfStudy}`);
+        // Обновляем в следующем цикле рендеринга
+        setTimeout(() => {
+          setPlanMonthsOfStudy(planData.monthsOfStudy as number);
         }, 0);
       }
       
