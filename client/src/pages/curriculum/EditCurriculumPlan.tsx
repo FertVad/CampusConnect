@@ -365,10 +365,31 @@ function EditCurriculumPlanContent() {
   const handleTabChange = async (value: string) => {
     console.log(`[EditCurriculumPlan] Tab change: ${activeTab} -> ${value}`);
     
+    // Предотвращаем бесполезные переключения на ту же вкладку
+    if (activeTab === value) {
+      console.log("[EditCurriculumPlan] Already on this tab, skipping...");
+      return;
+    }
+    
     try {
       // Если мы уходим с вкладки "title", сохраняем данные формы
       if (activeTab === "title" && value !== "title") {
         console.log("[EditCurriculumPlan] Leaving title tab, saving form data...");
+        
+        // Принудительно вызываем валидацию формы для обновления isDirty и ошибок
+        await form.trigger();
+        
+        // Проверяем на ошибки валидации
+        if (Object.keys(form.formState.errors).length > 0) {
+          console.error("[EditCurriculumPlan] Form has validation errors, cannot save:", form.formState.errors);
+          toast({
+            title: "Ошибка сохранения",
+            description: "Пожалуйста, исправьте ошибки в форме перед переключением вкладок",
+            variant: "destructive",
+          });
+          return; // Не позволяем переключить вкладку, если есть ошибки
+        }
+        
         const formData = form.getValues();
         
         // Проверяем, изменилось ли количество лет обучения и сразу обновляем состояние
@@ -377,22 +398,20 @@ function EditCurriculumPlanContent() {
           setPlanYearsOfStudy(formData.yearsOfStudy);
         }
         
-        // Проверяем, были ли изменения в форме
-        if (form.formState.isDirty) {
-          console.log("[EditCurriculumPlan] Form is dirty, submitting...");
-          // Подготавливаем данные для сохранения, включая календарные данные если они есть
-          const dataToSave = { 
-            ...formData, 
-            id: planId,
-            // Важно: включаем текущие данные календаря, если они есть
-            calendarData: Object.keys(calendarDataRef.current).length > 0 
-              ? JSON.stringify(calendarDataRef.current) 
-              : undefined
-          };
-          
-          // Сохраняем данные формы, ожидая завершения операции
-          await updateMutation.mutateAsync(dataToSave);
-        }
+        // Сохраняем даже если форма не помечена как "грязная", так как изменения могли быть не отслежены
+        console.log("[EditCurriculumPlan] Submitting form data...");
+        // Подготавливаем данные для сохранения, включая календарные данные если они есть
+        const dataToSave = { 
+          ...formData, 
+          id: planId,
+          // Важно: включаем текущие данные календаря, если они есть
+          calendarData: Object.keys(calendarDataRef.current).length > 0 
+            ? JSON.stringify(calendarDataRef.current) 
+            : undefined
+        };
+        
+        // Сохраняем данные формы, ожидая завершения операции
+        await updateMutation.mutateAsync(dataToSave);
       }
       
       // Если мы уходим с вкладки "schedule", сохраняем данные календаря
@@ -409,11 +428,13 @@ function EditCurriculumPlanContent() {
         }
       }
       
-      // Если мы переходим на вкладку графика, обновляем данные календаря
+      // Перезагружаем данные из сервера перед переключением на любую вкладку
+      // Это гарантирует, что у нас всегда свежие данные
+      await queryClient.invalidateQueries({ queryKey: [`/api/curriculum-plans/${planId}`] });
+      
+      // Специфичная обработка для каждой вкладки при переходе на неё
       if (value === "schedule") {
         console.log("[EditCurriculumPlan] Switching to schedule tab...");
-        // Перезагружаем данные из сервера перед переключением
-        await queryClient.invalidateQueries({ queryKey: [`/api/curriculum-plans/${planId}`] });
         
         // Обновляем календарные данные из плана
         if (plan && plan.calendarData) {
@@ -435,13 +456,8 @@ function EditCurriculumPlanContent() {
             console.error("Ошибка при парсинге данных календаря:", e);
           }
         }
-      }
-      
-      // Если мы переходим на вкладку "summary", обновляем данные перед отображением
-      if (value === "summary") {
+      } else if (value === "summary") {
         console.log("[EditCurriculumPlan] Switching to summary tab, refreshing data...");
-        // Перезагружаем данные из сервера
-        await queryClient.invalidateQueries({ queryKey: [`/api/curriculum-plans/${planId}`] });
         
         // Проверяем, есть ли актуальные данные и соответствует ли количество лет обучения текущему значению
         if (plan && plan.yearsOfStudy !== planYearsOfStudy) {
@@ -471,7 +487,7 @@ function EditCurriculumPlanContent() {
   };
   
   // Обработчик отправки формы титульного листа
-  const onSubmit = (data: CurriculumFormValues) => {
+  const onSubmit = async (data: CurriculumFormValues) => {
     console.log('[EditCurriculumPlan] Submitting form data:', data);
     
     // Если количество лет обучения изменилось, обновляем локальное состояние
@@ -493,8 +509,24 @@ function EditCurriculumPlanContent() {
     
     console.log('[EditCurriculumPlan] Sending data to update mutation:', formDataToSave);
     
-    // Отправляем запрос на сохранение
-    updateMutation.mutate(formDataToSave);
+    try {
+      // Отправляем запрос на сохранение и ждем результата
+      await updateMutation.mutateAsync(formDataToSave);
+      
+      // Сбрасываем состояние "грязной" формы, указывая что изменения сохранены
+      form.reset(data);
+      
+      // Сообщаем об успехе, если сообщение не было показано внутри мутации
+      if (!updateMutation.isSuccess) {
+        toast({
+          title: "Сохранено",
+          description: "Данные формы успешно сохранены",
+        });
+      }
+    } catch (error) {
+      console.error('[EditCurriculumPlan] Error saving form data:', error);
+      // Ошибка обрабатывается внутри мутации, дополнительно ничего не делаем
+    }
   };
   
   // Возвращаемся к списку учебных планов
@@ -576,7 +608,7 @@ function EditCurriculumPlanContent() {
         </div>
         <Button 
           onClick={form.handleSubmit(onSubmit)} 
-          disabled={updateMutation.isPending || !form.formState.isDirty}
+          disabled={updateMutation.isPending}
         >
           <Save className="mr-2 h-4 w-4" />
           Сохранить изменения
@@ -820,7 +852,7 @@ function EditCurriculumPlanContent() {
                     </Button>
                     <Button 
                       type="submit" 
-                      disabled={updateMutation.isPending || !form.formState.isDirty}
+                      disabled={updateMutation.isPending}
                     >
                       {updateMutation.isPending ? "Сохранение..." : "Сохранить"}
                     </Button>
