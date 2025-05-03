@@ -3,18 +3,13 @@ import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { createPortal } from "react-dom";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
 
 // Импортируем типы из общего модуля
 import { 
   ActivityType, 
   ACTIVITY_TYPES, 
-  ACTIVITY_COLORS, 
-  weekGradient 
+  ACTIVITY_COLORS
 } from "./ActivityTypes";
-
-// Функция weekGradient теперь импортируется из ActivityTypes.ts
 
 // Интерфейс для дня недели
 interface WeekDay {
@@ -47,15 +42,10 @@ export function WeekActivityDialog({
   currentActivity,
   onActivityChange,
 }: WeekActivityDialogProps) {
-  // Не используем раннее возвращение null, так как это вызывает проблемы с состоянием
-  // вместо этого используем условный рендеринг в JSX
-
   // Дни недели с числами календаря
   const [weekDays, setWeekDays] = useState<WeekDay[]>([]);
   // Выбранная активность
-  const [selectedActivity, setSelectedActivity] = useState<ActivityType>(
-    currentActivity || "",
-  );
+  const [selectedActivity, setSelectedActivity] = useState<ActivityType>("");
   // Отслеживаем клики для определения двойного клика
   const [lastClickTime, setLastClickTime] = useState<number>(0);
   // Отслеживаем, есть ли выбранные дни
@@ -63,9 +53,8 @@ export function WeekActivityDialog({
 
   // Инициализируем дни недели при открытии модального окна
   useLayoutEffect(() => {
-    if (weekInfo) {
+    if (weekInfo && open) {
       // Используем даты начала и конца недели из параметра weekInfo
-      // Неделя может начинаться с любого дня недели (не обязательно с понедельника)
       const { startDate, endDate } = weekInfo;
       
       // Создаем массив дней между startDate и endDate (включительно)
@@ -75,10 +64,7 @@ export function WeekActivityDialog({
       const daysOfWeekNames = ["Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"];
       
       // Разбиваем текущую активность на символы для определения активности по дням
-      let dailyActivities: ActivityType[] = [];
-
-      // Инициализируем массив пустыми значениями (для 7 дней)
-      dailyActivities = Array(7).fill("") as ActivityType[];
+      let dailyActivities: ActivityType[] = Array(7).fill("") as ActivityType[];
 
       // Определяем активности по дням
       if (currentActivity) {
@@ -87,8 +73,6 @@ export function WeekActivityDialog({
           dailyActivities = Array(7).fill(currentActivity) as ActivityType[];
         } else {
           // Если активность - строка символов, распределяем их по дням
-          // Если символов меньше 7, оставшиеся дни будут пустыми
-          // Если символов больше 7, используем только первые 7
           const chars = currentActivity.split("");
           for (let i = 0; i < Math.min(chars.length, 7); i++) {
             if (chars[i] && chars[i].trim() !== "") {
@@ -112,9 +96,7 @@ export function WeekActivityDialog({
         days.push({
           name: dayName,
           date: date.getDate(), // число месяца
-          // При открытии диалога дни НЕ выбраны
           selected: false,
-          // Устанавливаем активность из разобранной строки или пустую
           activity: dailyActivities[i] || "",
         });
         
@@ -124,7 +106,7 @@ export function WeekActivityDialog({
 
       setWeekDays(days);
 
-      // Определяем преобладающую активность для выбора в RadioGroup
+      // Определяем преобладающую активность
       const activityCounts = new Map<ActivityType, number>();
       days.forEach((day) => {
         if (day.activity) {
@@ -148,17 +130,9 @@ export function WeekActivityDialog({
 
       // Устанавливаем преобладающую активность как выбранную
       setSelectedActivity(predominantActivity);
-      // При открытии диалога дни не выбраны
       setHasSelectedDays(false);
     }
-  }, [weekInfo, currentActivity]);
-
-  // Удаляем обработчик клика вне области - используем только двойной клик
-  // для сброса выделения
-  const handleContainerClick = (e: React.MouseEvent) => {
-    // Оставляем пустую функцию, чтобы не было ошибок
-    // Сброс делаем только по двойному клику
-  };
+  }, [weekInfo, currentActivity, open]);
 
   // Обработчик клика по дню недели
   const handleDayClick = (index: number) => {
@@ -175,7 +149,7 @@ export function WeekActivityDialog({
         .slice(0, 5)
         .every((day) => day.selected);
 
-      // Если все рабочие дни выбраны, снима �м выбор, иначе выбираем все
+      // Если все рабочие дни выбраны, снимаем выбор, иначе выбираем все
       for (let i = 0; i < 5; i++) {
         // Пн-Пт (индексы 0-4)
         newDays[i].selected = !allWorkdaysSelected;
@@ -197,11 +171,9 @@ export function WeekActivityDialog({
         // Если выбрана активность, сразу же применяем её к выбранному дню
         if (selectedActivity) {
           newDays[index].activity = selectedActivity;
-
-          // убираем подсветку // флаг выделения = false        // Radio‑кнопка — в "ничего"
-              newDays[index].selected = false;   
-              setHasSelectedDays(false);         
-              setSelectedActivity("");          
+          newDays[index].selected = false;   
+          setHasSelectedDays(false);         
+          setSelectedActivity("");          
         }
       }
 
@@ -213,11 +185,6 @@ export function WeekActivityDialog({
   };
 
   // Обработчик выбора активности
-  // helper — снимает выделение со всех дней
-  const clearSelection = (days: WeekDay[]) =>
-    days.map((d) => ({ ...d, selected: false }));
-
-  // ===== 1. handleActivitySelect =====
   const handleActivitySelect = (value: string) => {
     const activityValue = value as ActivityType;
 
@@ -237,7 +204,7 @@ export function WeekActivityDialog({
     setSelectedActivity(""); // сброс выбранной активности
   };
 
-  // ===== 2. handleSave =====
+  // Обработчик сохранения
   const handleSave = () => {
     let finalDays = weekDays;
 
@@ -264,79 +231,55 @@ export function WeekActivityDialog({
     setSelectedActivity("");
   };
 
-  // Стиль для дня недели в зависимости от активности и выбранности
+  // Стиль для дня недели
   const getDayStyle = (day: WeekDay) => {
-    // Удалены многочисленные логи, которые засоряли консоль
     let baseStyle = "";
 
     // Установка базового стиля для дня
     if (!day.activity && !day.selected) {
       // Если нет активности и день не выбран - стандартный фон
-      baseStyle =
-        "bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-white";
+      baseStyle = "bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-white";
     } else if (day.selected) {
-      // Если день выбран - показываем прозрачным цветом активности или предварительный выбор
+      // Если день выбран - показываем прозрачным цветом активности
       if (selectedActivity && selectedActivity in ACTIVITY_COLORS) {
         // Используем цвет выбранной активности для предпросмотра
-        const previewColorStyle =
-          ACTIVITY_COLORS[selectedActivity as Exclude<ActivityType, "">];
-        
+        const previewColorStyle = ACTIVITY_COLORS[selectedActivity as Exclude<ActivityType, "">];
         baseStyle = `${previewColorStyle.bg} text-slate-800 ring-2 ring-blue-600 dark:ring-blue-400`;
       } else {
         // Если активность не выбрана, но день выделен
-        baseStyle =
-          "bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-white ring-2 ring-blue-600 dark:ring-blue-400";
+        baseStyle = "bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-white ring-2 ring-blue-600 dark:ring-blue-400";
       }
     } else if (day.activity && day.activity in ACTIVITY_COLORS) {
       // Если у дня есть активность и он не выбран
-      const colorStyle =
-        ACTIVITY_COLORS[day.activity as Exclude<ActivityType, "">];
-      
+      const colorStyle = ACTIVITY_COLORS[day.activity as Exclude<ActivityType, "">];
       baseStyle = `${colorStyle.bg} text-slate-800`;
     } else if (day.activity) {
       // Если у дня активность не из предопределенных - используем нейтральный цвет
-      baseStyle =
-        "bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-white";
+      baseStyle = "bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-white";
     }
 
     return baseStyle;
   };
-
-  // Используем кастомный диалог, отображаемый через портал
-  const [dialogRef, setDialogRef] = useState<HTMLDivElement | null>(null);
   
-  useEffect(() => {
-    // Создаем новый div для размещения диалога
-    if (!dialogRef && open) {
-      const div = document.createElement('div');
-      div.className = 'custom-dialog-container';
-      document.body.appendChild(div);
-      setDialogRef(div);
-      
-      // Функция очистки при закрытии
-      return () => {
-        document.body.removeChild(div);
-        setDialogRef(null);
-      };
-    }
-  }, [open, dialogRef]);
+  // Если диалог закрыт или нет данных, ничего не рендерим
+  if (!open || !weekInfo) return null;
   
-  // Рендерим диалог через портал
-  if (!open || !weekInfo || !dialogRef) return null;
-  
-  return createPortal(
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80"
-         onClick={(e) => {
-           if (e.target === e.currentTarget) {
-             onOpenChange(false);
-           }
-         }}>
+  // Рендерим содержимое диалога
+  return (
+    <div 
+      className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          onOpenChange(false);
+        }
+      }}
+    >
       <div 
-        className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-lg shadow-xl max-h-[90vh] overflow-y-auto flex flex-col"
+        className="relative bg-white dark:bg-slate-900 rounded-lg shadow-lg max-h-[90vh] overflow-hidden w-full max-w-md flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         <button 
-          className="absolute right-4 top-4 w-8 h-8 flex items-center justify-center rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200"
+          className="absolute right-4 top-4 z-10 w-6 h-6 flex items-center justify-center rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200"
           onClick={() => onOpenChange(false)}
         >
           ×
@@ -360,69 +303,39 @@ export function WeekActivityDialog({
               {", курс "}{weekInfo.courseId}
             </p>
           </div>
+          
+          <div className="overflow-y-auto max-h-[60vh] pr-2 pb-2">
+            <div className="py-4 bg-slate-50 dark:bg-slate-800 rounded-md border border-slate-200 dark:border-slate-700 mb-4"
+              onDoubleClick={(e) => {
+                e.preventDefault();
+                const hasSelected = weekDays.some((day) => day.selected);
 
-          <div className="flex flex-col gap-4 overflow-y-auto dialog-body"
-               style={{maxHeight: 'calc(70vh)'}}>
-            <div className="py-4 bg-slate-50 dark:bg-slate-900 rounded-md border border-slate-200 dark:border-slate-700 my-4"
-                onDoubleClick={(e) => {
-                  // Обработка двойного клика по всей области
-                  e.preventDefault(); // Предотвращаем выделение текста
-
-                  // Проверяем наличие выбранных дней
-                  const hasSelected = weekDays.some((day) => day.selected);
-
-                  if (hasSelected) {
-                    // Если есть выбранные дни - сбрасываем все выделения
-                    const updatedDays = weekDays.map((day) => ({
-                      ...day,
-                      selected: false,
-                    }));
-                    setWeekDays(updatedDays);
-                    setHasSelectedDays(false);
-                  } else {
-                    // Если выделенных дней нет - проверяем состояние рабочих дней
-                    const newDays = [...weekDays];
-
-                    // Проверяем, все ли рабочие дни (Пн-Пт) имеют одинаковую активность
-                    const workdays = newDays.slice(0, 5);
-                    const firstActivity = workdays[0].activity;
-                    const allHaveSameActivity =
-                      firstActivity &&
-                      workdays.every((day) => day.activity === firstActivity);
-
-                    // Если все рабочие дни имеют одинаковую непустую активность,
-                    // то при двойном клике очищаем их активность
-                    if (allHaveSameActivity) {
-                      for (let i = 0; i < 5; i++) {
-                        // Пн-Пт (индексы 0-4)
-                        newDays[i].selected = true;
-                        newDays[i].activity = ""; // Очищаем активность
-                      }
-                    } else {
-                      // Иначе выбираем все рабочие дни и устанавливаем им текущую активность
-                      for (let i = 0; i < 5; i++) {
-                        // Пн-Пт (индексы 0-4)
-                        newDays[i].selected = true;
-
-                        // Если выбрана активность, применяем её
-                        if (selectedActivity) {
-                          newDays[i].activity = selectedActivity;
-                        }
-                      }
-                    }
-
-                    setWeekDays(newDays);
-                    setHasSelectedDays(true);
+                if (hasSelected) {
+                  // Сбрасываем все выделения
+                  const updatedDays = weekDays.map((day) => ({...day, selected: false}));
+                  setWeekDays(updatedDays);
+                  setHasSelectedDays(false);
+                } else {
+                  // Выбираем рабочие дни (Пн-Пт)
+                  const newDays = [...weekDays];
+                  
+                  // Выбираем все рабочие дни
+                  for (let i = 0; i < 5; i++) {
+                    newDays[i].selected = true;
                   }
-                }}
+                  
+                  setWeekDays(newDays);
+                  setHasSelectedDays(true);
+                }
+              }}
             >
-              <div className="grid grid-cols-7 gap-2 week-days-grid px-4">
+              <div className="grid grid-cols-7 gap-2 px-4">
                 {weekDays.map((day, i) => (
                   <div
                     key={i}
                     className={`flex flex-col items-center justify-center p-2 rounded cursor-pointer transition-all ${getDayStyle(day)}`}
                     onClick={(e) => {
-                      e.stopPropagation(); // Останавливаем всплытие события
+                      e.stopPropagation();
                       handleDayClick(i);
                     }}
                   >
@@ -443,8 +356,7 @@ export function WeekActivityDialog({
                 className="grid grid-cols-1 gap-2"
               >
                 {Object.entries(ACTIVITY_TYPES).map(([code, description]) => {
-                  const colorStyle =
-                    ACTIVITY_COLORS[code as Exclude<ActivityType, "">];
+                  const colorStyle = ACTIVITY_COLORS[code as Exclude<ActivityType, "">];
                   return (
                     <div
                       key={code}
@@ -480,13 +392,12 @@ export function WeekActivityDialog({
               </RadioGroup>
             </div>
 
-            <div className="pt-4 border-t mt-4 mb-4">
+            <div className="pt-4 border-t mt-4">
               <div className="flex justify-center">
                 <Button 
                   variant={selectedActivity ? "default" : "secondary"}
                   onClick={() => {
                     // Создаем строку из 7 одинаковых символов выбранной активности
-                    // или пустой строки, если выбрано "Нет активности"
                     const activityValue = selectedActivity || "";
                     const fullWeekActivity = activityValue.repeat(7);
                     
@@ -505,8 +416,8 @@ export function WeekActivityDialog({
             </div>
           </div>
           
-          <div className="mt-auto pt-4 border-t">
-            <div className="flex justify-between sm:justify-between items-center">
+          <div className="mt-4 pt-4 border-t">
+            <div className="flex justify-between items-center">
               <Button 
                 variant="outline" 
                 onClick={() => onOpenChange(false)}
@@ -517,9 +428,7 @@ export function WeekActivityDialog({
               <Button
                 onClick={handleSave}
                 className="bg-primary hover:bg-primary/90 text-primary-foreground"
-                disabled={
-                  weekDays.every((day) => !day.activity) && !hasSelectedDays
-                }
+                disabled={weekDays.every((day) => !day.activity) && !hasSelectedDays}
               >
                 Сохранить
               </Button>
@@ -527,7 +436,6 @@ export function WeekActivityDialog({
           </div>
         </div>
       </div>
-    </div>,
-    dialogRef
+    </div>
   );
 }

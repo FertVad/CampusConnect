@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback, useRef, useEffect } from "react";
-import { WeekActivityDialog, WeekInfo } from "./WeekActivityDialog";
+import { WeekActivityDialog, WeekInfo } from "./CustomWeekActivityDialog";
 import { ActivityType, ACTIVITY_TYPES, ACTIVITY_COLORS, getActivityStyle } from "./ActivityTypes";
 import { Tooltip } from 'react-tooltip'; // Возвращаемся к react-tooltip, так как он проще в использовании
 import { WeekCell, getFirstWorkdayOfSeptember, buildAcademicWeeks } from "@/utils/calendar";
