@@ -9,6 +9,7 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
+import { useCurriculum } from "@/lib/curriculumStore";
 
 // Тип для данных календаря
 export type CalendarData = Record<string, string>;
@@ -25,12 +26,17 @@ interface GraphTabProps {
 
 export default function GraphTab({ 
   planYear = 2025, 
-  yearsOfStudy = 4,
+  yearsOfStudy = 4, // По умолчанию, будет заменено значением из глобального хранилища
   initialData = {},
   onChange,
   planId,
   autosavePaused = false
 }: GraphTabProps) {
+  // Получаем количество лет обучения из глобального хранилища
+  const { yearsOfStudy: storeYearsOfStudy } = useCurriculum();
+  
+  // Используем значение из хранилища, но если оно 0, то используем переданное в пропсах
+  const effectiveYearsOfStudy = storeYearsOfStudy > 0 ? storeYearsOfStudy : yearsOfStudy;
   // Получаем planId из пропсов, если передано, иначе из URL для обратной совместимости
   const urlParams = new URLSearchParams(window.location.search);
   const urlPlanId = urlParams.get('id') || '';
@@ -73,13 +79,13 @@ export default function GraphTab({
   
   // Логирование для отладки
   useEffect(() => {
-    console.log(`[GraphTab] yearsOfStudy изменилось: ${yearsOfStudy}`);
-  }, [yearsOfStudy]);
-  // Создаем массив курсов в зависимости от yearsOfStudy
+    console.log(`[GraphTab] effectiveYearsOfStudy изменилось: ${effectiveYearsOfStudy}`);
+  }, [effectiveYearsOfStudy]);
+  // Создаем массив курсов в зависимости от effectiveYearsOfStudy
   const courses = useMemo(() => {
-    console.log(`[GraphTab] Пересоздание списка курсов, количество: ${yearsOfStudy}`);
+    console.log(`[GraphTab] Пересоздание списка курсов, количество: ${effectiveYearsOfStudy}`);
     const result = [];
-    for (let i = 1; i <= yearsOfStudy; i++) {
+    for (let i = 1; i <= effectiveYearsOfStudy; i++) {
       result.push({
         id: i.toString(),
         name: `Курс ${i}`,
@@ -87,7 +93,7 @@ export default function GraphTab({
       });
     }
     return result;
-  }, [planYear, yearsOfStudy]);
+  }, [planYear, effectiveYearsOfStudy]);
   
   // Создаем дефолтный объект с датами старта для каждого курса
   const defaultStartDates = useMemo(() => {
@@ -169,8 +175,8 @@ export default function GraphTab({
 
   // Генерируем недели на основе даты старта первого курса (для заголовков)
   const weeks = useMemo(() => 
-    buildAcademicWeeks(startDates["1"], yearsOfStudy), 
-    [startDates, yearsOfStudy]
+    buildAcademicWeeks(startDates["1"], effectiveYearsOfStudy), 
+    [startDates, effectiveYearsOfStudy]
   );
 
   return (
@@ -205,7 +211,7 @@ export default function GraphTab({
       
       <AcademicCalendarTable 
         weeks={weeks} 
-        yearsOfStudy={yearsOfStudy}
+        yearsOfStudy={effectiveYearsOfStudy}
         initialData={calendarData}
         onChange={handleCalendarChange}
         startDates={startDates}
