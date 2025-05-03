@@ -681,6 +681,25 @@
   appearance: textfield; 
 }
 
+/* Стили для зебры в таблице учебного плана */
+.curr-plan tbody tr:nth-child(odd) { 
+  @apply bg-slate-50 dark:bg-slate-800/40; 
+}
+
+/* Стиль для тонкого скроллбара */
+.plan-wrapper::-webkit-scrollbar {
+  height: 6px;
+  width: 6px;
+}
+
+.plan-wrapper::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.plan-wrapper::-webkit-scrollbar-thumb {
+  @apply bg-slate-500/40 rounded;
+}
+
 /* Стили для summary-table */
 .summary-table th {
   padding: 0.5rem;
