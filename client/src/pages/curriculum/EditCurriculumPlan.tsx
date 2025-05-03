@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useCallback } from "react";
+import React, { useEffect, useState, useRef, useCallback, ReactNode } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useParams, useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
@@ -77,7 +77,7 @@ function calcEndYear(startYear: number, years: number, months: number = 0): numb
 }
 
 // Компонент редактирования учебного плана
-function EditCurriculumPlanContent() {
+function EditCurriculumPlanContent(): React.ReactNode {
   const { id } = useParams();
   const planId = id ? parseInt(id) : NaN;
   const [, navigate] = useLocation();
@@ -1249,5 +1249,6 @@ function EditCurriculumPlanContent() {
 
 // Экспортируем непосредственно компонент, так как маршрутизация уже защищена через ProtectedRoute
 export default function EditCurriculumPlan() {
+  // Используем JSX для возврата содержимого компонента
   return <EditCurriculumPlanContent />;
 }
