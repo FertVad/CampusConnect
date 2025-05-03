@@ -37,7 +37,16 @@ interface Course {
 
 interface AcademicCalendarTableProps {
   weeks: WeekCell[];            // Массив недель для отображения
-  yearsOfStudy: number;
+  yearsOfStudy: number;         // Количество лет обучения
+  monthsOfStudy?: number;       // Количество дополнительных месяцев
+  effectiveCourseCount?: number; // Эффективное количество курсов (yearsOfStudy + monthsOfStudy > 0 ? 1 : 0)
+  courses?: Array<{              // Массив курсов для отображения
+    id: string;
+    name: string;
+    year: number;
+    isFullYear?: boolean;
+    months?: number;
+  }>;
   onChange?: (data: CalendarData) => void;
   initialData?: CalendarData;
   startDates?: Record<string, Date>; // Даты начала для каждого курса
@@ -48,17 +57,32 @@ interface AcademicCalendarTableProps {
 export function AcademicCalendarTable({ 
   weeks,
   yearsOfStudy = 4, // Оставляем для обратной совместимости, но будет перезаписано из глобального хранилища
+  monthsOfStudy = 0, // Дополнительные месяцы
+  effectiveCourseCount,
+  courses = [],
   onChange,
   initialData = {},
   startDates = {},
   planId = '',
   autosavePaused = false
 }: AcademicCalendarTableProps) {
-  // Получаем количество лет обучения из глобального хранилища
-  const { yearsOfStudy: storeYearsOfStudy } = useCurriculum();
+  // Получаем количество лет и месяцев обучения из глобального хранилища
+  const { 
+    yearsOfStudy: storeYearsOfStudy, 
+    monthsOfStudy: storeMonthsOfStudy,
+    getEffectiveCourseCount 
+  } = useCurriculum();
   
-  // Используем значение из глобального хранилища, но если там 0, используем из пропсов для безопасности
+  // Используем значения из глобального хранилища, но если там 0, используем из пропсов для безопасности
   const effectiveYearsOfStudy = storeYearsOfStudy > 0 ? storeYearsOfStudy : yearsOfStudy;
+  const effectiveMonthsOfStudy = storeMonthsOfStudy >= 0 ? storeMonthsOfStudy : monthsOfStudy;
+  
+  // Рассчитываем эффективное количество курсов с учетом месяцев, если не передано явно
+  const actualCourseCount = effectiveCourseCount !== undefined 
+    ? effectiveCourseCount 
+    : getEffectiveCourseCount();
+  
+  console.log('[AcademicCalendarTable] Годы:', effectiveYearsOfStudy, 'Месяцы:', effectiveMonthsOfStudy, 'Курсов:', actualCourseCount);
   
   // Создаем ref для отслеживания предыдущего значения yearsOfStudy
   const prevYearsRef = useRef<number>(effectiveYearsOfStudy);

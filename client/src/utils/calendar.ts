@@ -1,4 +1,4 @@
-import { addWeeks, isBefore, format, addDays, addYears, getDay, setDate } from "date-fns";
+import { addWeeks, isBefore, format, addDays, addYears, getDay, setDate, addMonths, eachWeekOfInterval, startOfWeek } from "date-fns";
 import { ru } from "date-fns/locale/ru";
 import { getWeeksInYear } from "./getWeeksInYear";
 
@@ -44,7 +44,8 @@ export const getFirstWorkdayOfSeptember = (year: number): Date => {
  */
 export const buildAcademicWeeks = (
   startDate: Date,
-  totalYears = 4 // параметр сохранен для совместимости
+  totalYears = 4, // параметр сохранен для совместимости
+  totalMonths = 0 // дополнительные месяцы (для хвостового курса)
 ): WeekCell[] => {
   const weeks: WeekCell[] = [];
   let curr = new Date(startDate);          // неделя №1: старт ≡ выбранная дата (первый рабочий день сентября)
@@ -90,4 +91,78 @@ export const buildAcademicWeeks = (
   }
   
   return weeks;
+};
+
+/**
+ * Строит массив недель для всех курсов, включая частичный (хвостовой) курс при наличии дополнительных месяцев
+ * @param startDate Дата начала первого курса
+ * @param years Количество полных лет обучения
+ * @param months Количество дополнительных месяцев для частичного курса
+ * @returns Массив объектов WeekCell для всех курсов
+ */
+export const buildWeeksWithMonths = (
+  startDate: Date,
+  years: number,
+  months: number
+): WeekCell[] => {
+  const allWeeks: WeekCell[] = [];
+  let weekIndex = 1;
+  
+  // Генерируем недели для полных курсов (по годам)
+  for (let yearIndex = 0; yearIndex < years; yearIndex++) {
+    // Дата начала текущего курса
+    const courseStartDate = yearIndex === 0 
+      ? startDate 
+      : getFirstWorkdayOfSeptember(startDate.getFullYear() + yearIndex);
+    
+    // Дата окончания - 31 августа следующего года
+    const courseEndDate = new Date(courseStartDate.getFullYear() + 1, 7, 31);
+    
+    // Получаем все недели для этого курса
+    const weeksInCourse = eachWeekOfInterval(
+      { start: courseStartDate, end: courseEndDate },
+      { weekStartsOn: 1 } // Начинаем недели с понедельника
+    );
+    
+    // Преобразуем в формат WeekCell
+    for (const weekStart of weeksInCourse) {
+      const weekEnd = addDays(weekStart, 6);
+      allWeeks.push({
+        startDate: weekStart,
+        endDate: weekEnd,
+        month: format(weekStart, "LLLL", { locale: ru }),
+        index: weekIndex++
+      });
+    }
+  }
+  
+  // Если есть дополнительные месяцы, добавляем недели для хвостового курса
+  if (months > 0) {
+    // Дата начала хвостового курса
+    const tailStartDate = getFirstWorkdayOfSeptember(startDate.getFullYear() + years);
+    
+    // Дата окончания хвостового курса - через указанное количество месяцев
+    const tailEndDate = addMonths(tailStartDate, months);
+    
+    console.log(`[buildWeeksWithMonths] Хвостовой курс: ${format(tailStartDate, 'yyyy-MM-dd')} - ${format(tailEndDate, 'yyyy-MM-dd')}`);
+    
+    // Получаем все недели для хвостового курса
+    const weeksInTailCourse = eachWeekOfInterval(
+      { start: tailStartDate, end: tailEndDate },
+      { weekStartsOn: 1 } // Начинаем недели с понедельника
+    );
+    
+    // Преобразуем в формат WeekCell
+    for (const weekStart of weeksInTailCourse) {
+      const weekEnd = addDays(weekStart, 6);
+      allWeeks.push({
+        startDate: weekStart,
+        endDate: weekEnd,
+        month: format(weekStart, "LLLL", { locale: ru }),
+        index: weekIndex++
+      });
+    }
+  }
+  
+  return allWeeks;
 };
