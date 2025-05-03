@@ -671,6 +671,16 @@
 
 /* конец календарного блока */
 
+/* Стили для учебного плана */
+.curr-plan input::-webkit-outer-spin-button,
+.curr-plan input::-webkit-inner-spin-button { 
+  -webkit-appearance: none; 
+  margin: 0; 
+}
+.curr-plan input[type=number] { 
+  appearance: textfield; 
+}
+
 /* Стили для summary-table */
 .summary-table th {
   padding: 0.5rem;

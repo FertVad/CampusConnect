@@ -17,6 +17,7 @@ import { AlertCircle, Save, ArrowLeft, FileText, CalendarClock, BookOpen, BarCha
 import GraphTab, { CalendarData } from "@/components/curriculum/GraphTab";
 import { SummaryTable } from "@/components/curriculum/SummaryTable";
 import { SummaryTab } from "@/components/curriculum/SummaryTab";
+import { CurriculumPlanTable } from "@/components/curriculum/CurriculumPlanTable";
 import { buildSummary } from "@/utils/buildSummary";
 import { useCurriculum } from "@/lib/curriculumStore";
 
@@ -1284,15 +1285,25 @@ function EditCurriculumPlanContent(): React.ReactNode {
             </TabsContent>
             
             <TabsContent value="plan">
-              <div className="bg-muted/30 rounded-lg p-8 text-center">
-                <BookOpen className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                <h3 className="text-xl font-medium mb-2">Учебный план</h3>
-                <p className="text-muted-foreground max-w-md mx-auto mb-4">
-                  Здесь будет располагаться интерактивная таблица дисциплин учебного плана с часами по семестрам.
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  Функционал в разработке
-                </p>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-xl font-medium">Учебный план</h3>
+                  <div className="flex gap-2">
+                    <Button 
+                      variant="outline" 
+                      className="gap-1"
+                      onClick={() => setAutosavePaused(true)}
+                    >
+                      <Save className="h-4 w-4" />
+                      Сохранить
+                    </Button>
+                  </div>
+                </div>
+                
+                <CurriculumPlanTable 
+                  courses={planYearsOfStudy} 
+                  extraMonths={planMonthsOfStudy} 
+                />
               </div>
             </TabsContent>
           </Tabs>
