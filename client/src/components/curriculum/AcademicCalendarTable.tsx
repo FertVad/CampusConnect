@@ -7,7 +7,7 @@ import { format } from "date-fns";
 import { ru } from "date-fns/locale/ru";
 import { useAutoSave } from "@/hooks/useAutoSave";
 import { SaveButton } from "@/components/ui/save-button";
-import { CourseRow } from "./CourseRow";
+import CourseRow from "./CourseRow";
 import { X } from "lucide-react";
 import clsx from "clsx";
 

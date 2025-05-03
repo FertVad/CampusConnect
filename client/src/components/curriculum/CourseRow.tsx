@@ -35,7 +35,8 @@ interface CourseRowProps {
   startDate: Date; // Дата начала для этого курса
 }
 
-export function CourseRow({
+// Функция для внутреннего использования
+function CourseRow({
   course,
   weeks,
   courseWeeks,
@@ -107,16 +108,17 @@ export function CourseRow({
       let backgroundStyle = '';
       
       if (activity) {
-        console.log(`Ячейка ${cellKey} с активностью ${activity}`);
+        // Убираем лишние логи или оборачиваем их проверкой окружения
+        if (process.env.NODE_ENV === "development" && false) { // Отключаем все логи
+          console.log(`Ячейка ${cellKey} с активностью ${activity}`);
+        }
         
         if (activity.length === 1 && activity in ACTIVITY_COLORS) {
           // Для одиночной активности используем сплошной цвет
           backgroundStyle = ACTIVITY_COLORS[activity as keyof typeof ACTIVITY_COLORS].color;
-          console.log(`[${cellKey}] Цвет для активности ${activity}: ${backgroundStyle}`);
         } else if (activity.length > 1) {
           // Для комбинированных активностей используем градиент
           backgroundStyle = weekGradient(activity);
-          console.log(`[${cellKey}] Градиент для комбо-активности ${activity}: ${backgroundStyle}`);
         }
       } else if (crossMonth) {
         // Для пустых ячеек, пересекающих месяцы, создаем плавный градиент
@@ -146,14 +148,15 @@ export function CourseRow({
           ${nextMonthColor} ${Math.min(100, firstMonthPercent+width)}%,
           ${nextMonthColor} 100%)`;
           
-        console.log(`[${cellKey}] Многоточечный плавный градиент: ${backgroundStyle}, дней: ${daysInCurrentMonth}/${daysInNextMonth} (${firstMonthPercent}%)`);
+        if (process.env.NODE_ENV === "development" && false) { // Отключаем все логи
+          console.log(`[${cellKey}] Многоточечный плавный градиент: ${backgroundStyle}, дней: ${daysInCurrentMonth}/${daysInNextMonth} (${firstMonthPercent}%)`);
+        }
       }
       
-      // Создаем стиль для ячейки и логируем значение
+      // Создаем стиль для ячейки без логирования
       const style = backgroundStyle ? 
         { background: backgroundStyle } 
         : undefined;
-      console.log(`Стиль для ${cellKey}: `, style);
       
       cells.push(
         <td 
@@ -257,3 +260,11 @@ export function CourseRow({
     </tr>
   );
 }
+
+// Оптимизируем компонент с помощью React.memo для предотвращения лишних рендеров
+// Экспортируем обернутую версию с функцией сравнения, которая проверяет только tableData и selectedCells
+export default React.memo(CourseRow, 
+  (prev, next) => 
+    prev.tableData === next.tableData && 
+    prev.selectedCells === next.selectedCells
+);
