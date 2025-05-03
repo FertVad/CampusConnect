@@ -165,8 +165,9 @@ function EditCurriculumPlanContent() {
             calendarData: Object.keys(calendarDataRef.current).length > 0 
               ? JSON.stringify(calendarDataRef.current) 
               : data.calendarData || currentData.calendarData,
-            // Используем актуальное значение лет обучения
-            yearsOfStudy: planYearsOfStudy
+            // Используем актуальное значение лет обучения и месяцев
+            yearsOfStudy: planYearsOfStudy,
+            monthsOfStudy: planMonthsOfStudy
           };
           
           // Обновляем кэш напрямую, чтобы избежать дополнительных запросов
@@ -274,6 +275,20 @@ function EditCurriculumPlanContent() {
         // Форсируем обновление дочерних компонентов
         setCalendarUpdateCount(prev => prev + 1);
       }
+      
+      // Аналогично для месяцев
+      const planMonths = plan.monthsOfStudy || 0;
+      if (planMonths !== planMonthsOfStudy) {
+        console.log(`[EditCurriculumPlan] Количество месяцев изменилось: ${planMonthsOfStudy} -> ${planMonths}`);
+        
+        // Устанавливаем новое значение
+        setPlanMonthsOfStudy(planMonths);
+        
+        // Форсируем обновление дочерних компонентов, если еще не форсировали
+        if (plan.yearsOfStudy === planYearsOfStudy) {
+          setCalendarUpdateCount(prev => prev + 1);
+        }
+      }
     }
   }, [plan, form, planYearsOfStudy]);
   
@@ -315,11 +330,12 @@ function EditCurriculumPlanContent() {
         
         // Если у нас есть план, обновляем его кэш принудительно чтобы все компоненты получили свежие данные
         if (plan) {
-          // Создаем обновленный план с актуальными данными календаря и yearsOfStudy
+          // Создаем обновленный план с актуальными данными календаря, yearsOfStudy и monthsOfStudy
           const updatedPlan = { 
             ...plan, 
             calendarData: calendarDataString,
-            yearsOfStudy: planYearsOfStudy // Важно: используем текущее значение planYearsOfStudy
+            yearsOfStudy: planYearsOfStudy, // Важно: используем текущее значение planYearsOfStudy
+            monthsOfStudy: planMonthsOfStudy // Также используем текущее значение месяцев обучения
           };
           
           // Обновляем данные в кэше
@@ -386,9 +402,10 @@ function EditCurriculumPlanContent() {
     }
   }, [plan]);
   
-  // Добавляем ref для отслеживания первого рендера и предыдущего значения
+  // Добавляем ref для отслеживания первого рендера и предыдущих значений
   const isFirstRenderRef = useRef(true);
   const prevYearsOfStudyRef = useRef<number | null>(null);
+  const prevMonthsOfStudyRef = useRef<number | null>(null);
   
   // Эффект для сохранения данных при изменении yearsOfStudy
   useEffect(() => {
@@ -398,6 +415,7 @@ function EditCurriculumPlanContent() {
       isFirstRenderRef.current = false;
       if (plan) {
         prevYearsOfStudyRef.current = plan.yearsOfStudy;
+        prevMonthsOfStudyRef.current = plan.monthsOfStudy || 0;
       }
       return;
     }
@@ -426,6 +444,38 @@ function EditCurriculumPlanContent() {
       }
     }
   }, [planYearsOfStudy, plan, form]);
+  
+  // Аналогичный эффект для monthsOfStudy
+  useEffect(() => {
+    // Пропускаем первый рендер
+    if (isFirstRenderRef.current) {
+      return; // Уже инициализировали в предыдущем эффекте
+    }
+    
+    // Проверяем, действительно ли изменилось значение по сравнению с предыдущим
+    if (prevMonthsOfStudyRef.current !== planMonthsOfStudy && plan) {
+      console.log(`[EditCurriculumPlan] monthsOfStudy changed: ${prevMonthsOfStudyRef.current} -> ${planMonthsOfStudy}`);
+      
+      // Обновляем данные формы
+      form.setValue('monthsOfStudy', planMonthsOfStudy);
+      
+      // Обновляем предыдущее значение
+      prevMonthsOfStudyRef.current = planMonthsOfStudy;
+      
+      // Если есть данные календаря, сохраняем их с новым planMonthsOfStudy
+      if (Object.keys(calendarDataRef.current).length > 0) {
+        console.log("[EditCurriculumPlan] Auto-saving calendar data after monthsOfStudy change");
+        
+        // Используем debounce вместо setTimeout для предотвращения множественных вызовов
+        const timeoutId = setTimeout(() => {
+          saveCalendarData();
+        }, 500);
+        
+        // Очищаем таймаут при размонтировании компонента
+        return () => clearTimeout(timeoutId);
+      }
+    }
+  }, [planMonthsOfStudy, plan, form]);
 
   // Обработчик смены вкладок
   const handleTabChange = async (value: string) => {
@@ -462,6 +512,12 @@ function EditCurriculumPlanContent() {
         if (formData.yearsOfStudy !== planYearsOfStudy) {
           console.log(`[EditCurriculumPlan] Years of study changed in form before tab change: ${planYearsOfStudy} -> ${formData.yearsOfStudy}`);
           setPlanYearsOfStudy(formData.yearsOfStudy);
+        }
+        
+        // Аналогично для месяцев обучения
+        if (formData.monthsOfStudy !== planMonthsOfStudy) {
+          console.log(`[EditCurriculumPlan] Months of study changed in form before tab change: ${planMonthsOfStudy} -> ${formData.monthsOfStudy}`);
+          setPlanMonthsOfStudy(formData.monthsOfStudy);
         }
         
         // Сохраняем даже если форма не помечена как "грязная", так как изменения могли быть не отслежены
@@ -536,8 +592,9 @@ function EditCurriculumPlanContent() {
         console.log("[EditCurriculumPlan] Switching to summary tab, refreshing data...");
         
         // Проверяем, есть ли актуальные данные и соответствует ли количество лет обучения текущему значению
-        if (plan && plan.yearsOfStudy !== planYearsOfStudy) {
-          console.log(`[EditCurriculumPlan] Years of study mismatch before summary tab: plan=${plan.yearsOfStudy}, current=${planYearsOfStudy}`);
+        const planMonths = plan?.monthsOfStudy || 0;
+        if (plan && (plan.yearsOfStudy !== planYearsOfStudy || planMonths !== planMonthsOfStudy)) {
+          console.log(`[EditCurriculumPlan] Study duration mismatch before summary tab: plan=[${plan.yearsOfStudy}y, ${planMonths}m], current=[${planYearsOfStudy}y, ${planMonthsOfStudy}m]`);
           
           // Сначала пробуем сохранить актуальные данные
           if (Object.keys(calendarDataRef.current).length > 0) {
@@ -578,6 +635,13 @@ function EditCurriculumPlanContent() {
         setPlanYearsOfStudy(data.yearsOfStudy);
       }
       
+      // Аналогично для количества месяцев обучения
+      if (data.monthsOfStudy !== planMonthsOfStudy) {
+        console.log(`[EditCurriculumPlan] monthsOfStudy changed in form submit: ${planMonthsOfStudy} -> ${data.monthsOfStudy}`);
+        // Обновляем локальное состояние
+        setPlanMonthsOfStudy(data.monthsOfStudy);
+      }
+      
       // Собираем все необходимые данные для сохранения
       const formDataToSave = { 
         ...data, 
@@ -605,7 +669,8 @@ function EditCurriculumPlanContent() {
           calendarData: Object.keys(calendarDataRef.current).length > 0 
             ? JSON.stringify(calendarDataRef.current) 
             : plan.calendarData,
-          yearsOfStudy: data.yearsOfStudy
+          yearsOfStudy: data.yearsOfStudy,
+          monthsOfStudy: data.monthsOfStudy
         };
         
         queryClient.setQueryData([`/api/curriculum-plans/${planId}`], updatedPlan);
