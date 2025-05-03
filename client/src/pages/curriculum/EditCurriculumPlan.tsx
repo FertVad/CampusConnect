@@ -981,8 +981,41 @@ function EditCurriculumPlanContent() {
                             // Обновляем счетчик для принудительного обновления SummaryTable
                             setCalendarUpdateCount(prev => prev + 1);
                             
-                            // Немедленно выполняем сохранение, чтобы убедиться, что данные не потеряются
-                            saveCalendarData();
+                            // Устанавливаем паузу для автосохранения перед запуском ручного сохранения
+                            setAutosavePaused(true);
+                            
+                            // Выполняем сохранение с небольшой задержкой, чтобы состояние успело обновиться
+                            setTimeout(async () => {
+                              try {
+                                // Сохраняем данные
+                                await saveCalendarData();
+                                
+                                // После успешного сохранения - обновляем данные во всех компонентах
+                                if (plan) {
+                                  const updatedPlanData = {
+                                    ...plan,
+                                    calendarData: JSON.stringify(dataCopy),
+                                    yearsOfStudy: planYearsOfStudy 
+                                  };
+                                  
+                                  // Обновляем кэши для всех компонентов
+                                  queryClient.setQueryData([`/api/curriculum-plans/${planId}`], updatedPlanData);
+                                  
+                                  // Обновляем список планов
+                                  const plansCache = queryClient.getQueryData<CurriculumPlan[]>(['/api/curriculum-plans']);
+                                  if (plansCache) {
+                                    const updatedPlans = plansCache.map(p => 
+                                      p.id === planId ? updatedPlanData : p);
+                                    queryClient.setQueryData(['/api/curriculum-plans'], updatedPlans);
+                                  }
+                                }
+                              } finally {
+                                // Возобновляем автосохранение после завершения ручного
+                                setTimeout(() => {
+                                  setAutosavePaused(false);
+                                }, 500);
+                              }
+                            }, 100);
                           }}
                         />
                       </div>

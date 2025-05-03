@@ -36,6 +36,9 @@ export function useAutoSave<T>(data: T, options: AutoSaveOptions) {
   const lastDataStringRef = useRef<string | null>(null);
   const currentDataString = JSON.stringify(data);
   
+  // Для защиты от слишком частых вызовов
+  const lastCheckTimeRef = useRef<number>(0);
+  
   // Флаг для предотвращения параллельных сохранений
   const savingRef = useRef(false);
   
@@ -43,19 +46,26 @@ export function useAutoSave<T>(data: T, options: AutoSaveOptions) {
   const isDataChanged = (oldData: T | null, newData: T): boolean => {
     if (!oldData) return true;
     
+    // Предотвращаем сравнение слишком частых вызовов
+    const now = Date.now();
+    const MIN_INTERVAL_MS = 500; // Минимальный интервал между сравнениями
+    
+    if (now - lastCheckTimeRef.current < MIN_INTERVAL_MS) {
+      console.log('[useAutoSave] Skipping comparison - too frequent calls');
+      return false;
+    }
+    lastCheckTimeRef.current = now;
+    
     try {
-      // Используем глубокое сравнение для всех типов данных через JSON строки
-      const oldJson = JSON.stringify(oldData);
-      const newJson = JSON.stringify(newData);
-      const changed = oldJson !== newJson;
-      
-      if (changed) {
-        console.log('[useAutoSave] Data changed (deep comparison)');
-      } else {
-        console.log('[useAutoSave] No changes detected (deep comparison)');
+      // Сравниваем текущую JSON строку с сохраненной ранее
+      // Это оптимальнее, чем создавать JSON строку для oldData каждый раз
+      if (lastDataStringRef.current === currentDataString) {
+        console.log('[useAutoSave] No changes detected (string comparison)');
+        return false;
       }
       
-      return changed;
+      console.log('[useAutoSave] Data changed (string comparison)');
+      return true;
     } catch (err) {
       console.error('[useAutoSave] Error comparing data:', err);
       // В случае ошибки возвращаем false, чтобы не срабатывало автосохранение из-за ошибки
@@ -158,38 +168,48 @@ export function useAutoSave<T>(data: T, options: AutoSaveOptions) {
   };
   
   // Эффект для автоматического сохранения с дебаунсом
-  // Используем только строковое представление объекта данных в качестве зависимости
   useEffect(() => {
-    // Если строковое представление не изменилось, ничего не делаем
+    // Если нет изменений в данных (проверяем через глубокое сравнение), пропускаем
     if (currentDataString === lastDataStringRef.current) {
       return;
     }
     
-    // Не запускаем автосохранение при отключенных флагах или активной паузе
+    // Если автосохранение отключено или поставлено на паузу - выходим сразу
     if (!enabled || paused) {
       console.log(`[useAutoSave] Auto-save skipped - ${!enabled ? 'disabled' : 'paused'}`);
       return;
     }
     
-    // Обновляем ссылку на текущее строковое представление
-    lastDataStringRef.current = currentDataString;
-    
     // Отменяем предыдущий таймаут, если он был
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
     }
+    
+    // Обновляем ссылку на текущее строковое представление ПЕРЕД установкой нового таймаута
+    // Это позволяет другим вызовам useEffect видеть актуальное состояние
+    lastDataStringRef.current = currentDataString;
     
     console.log('[useAutoSave] Scheduling auto-save in', debounceMs, 'ms');
     
-    // Устанавливаем новый таймаут для сохранения
+    // Устанавливаем новый таймаут для сохранения 
     timeoutRef.current = setTimeout(() => {
+      // Повторная проверка на паузу прямо перед сохранением
+      if (paused) {
+        console.log('[useAutoSave] Auto-save cancelled - paused flag active');
+        return;
+      }
+      
       console.log('[useAutoSave] Auto-save triggered');
       saveData(data);
     }, debounceMs);
     
+    // Очистка таймаута при размонтировании компонента или перед новым рендером
     return () => {
       if (timeoutRef.current) {
+        console.log('[useAutoSave] Cleaning up timeout on unmount/re-render');
         clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
       }
     };
   }, [currentDataString, debounceMs, enabled, paused]);
