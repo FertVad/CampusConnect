@@ -587,7 +587,7 @@ export function AcademicCalendarTable({
           </div>
           
           <div className="text-xs text-slate-500 mt-1">
-            * Курс 2, 3, 4 начинаются с первого рабочего дня сентября (+1, +2, +3 года от начала обучения)
+            * Курсы начинаются с первого рабочего дня сентября (+N лет от начала обучения)
           </div>
           
           <div className="text-xs text-slate-500 mt-1">
