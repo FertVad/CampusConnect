@@ -54,27 +54,33 @@ export function AcademicCalendarTable({
   planId = '',
   autosavePaused = false
 }: AcademicCalendarTableProps) {
-  // Состояние для хранения данных таблицы
-  const [tableData, setTableData] = useState<CalendarData>(initialData);
+  // Используем useMemo для хранения и стабилизации tableData 
+  // вместо useState для предотвращения лишних рендеров
+  const lastInitialDataHashRef = useRef<string>("");
+  const initialDataHash = useMemo(() => JSON.stringify(initialData), [initialData]);
   
-  // Обновляем локальное состояние только при существенных изменениях initialData
-  // Используем useRef для хранения предыдущего значения initialData
-  const lastInitialDataRef = useRef<string>("");
+  // Стабильная ссылка на tableData
+  const tableDataRef = useRef<CalendarData>({...initialData});
   
-  useEffect(() => {
-    // Преобразуем в строку для глубокого сравнения
-    const currentInitialDataStr = JSON.stringify(initialData);
-    
-    // Проверяем, отличается ли текущее значение от предыдущего
-    if (lastInitialDataRef.current !== currentInitialDataStr) {
-      console.log('[AcademicCalendarTable] initialData changed, updating state');
-      // Обновляем состояние и запоминаем новое значение
-      setTableData({...initialData});
-      lastInitialDataRef.current = currentInitialDataStr;
-    } else {
-      console.log('[AcademicCalendarTable] initialData not changed, skipping update');
+  // Используем useMemo для создания стабильной ссылки на tableData
+  const tableData = useMemo(() => {
+    // Проверяем, изменились ли данные с помощью хеша
+    if (lastInitialDataHashRef.current !== initialDataHash) {
+      console.log('[AcademicCalendarTable] initialData hash changed, creating new tableData');
+      
+      // Сохраняем новый хеш
+      lastInitialDataHashRef.current = initialDataHash;
+      
+      // Создаем новую версию объекта
+      const newData = JSON.parse(JSON.stringify(initialData));
+      tableDataRef.current = newData;
+      return newData;
     }
-  }, [initialData]);
+    
+    // Возвращаем текущую ссылку, если хеш не изменился
+    console.log('[AcademicCalendarTable] initialData hash unchanged, reusing tableData');
+    return tableDataRef.current;
+  }, [initialDataHash]);
   
   // Используем planId из props или извлекаем из URL если он не был передан
   const urlParams = new URLSearchParams(window.location.search);

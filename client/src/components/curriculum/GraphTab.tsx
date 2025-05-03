@@ -162,9 +162,9 @@ export default function GraphTab({
     }
   };
   
-  // Возвращает текущие данные календаря - только для внутреннего использования
+  // Возвращает текущие данные календаря из ref - только для внутреннего использования
   const getCalendarData = (): CalendarData => {
-    return calendarData;
+    return calendarDataRef.current;
   };
 
   // Генерируем недели на основе даты старта первого курса (для заголовков)
