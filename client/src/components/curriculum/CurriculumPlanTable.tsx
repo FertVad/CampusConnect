@@ -424,33 +424,140 @@ export const CurriculumPlanTable = React.forwardRef<{ forceUpdate: () => void },
     });
   }, [createNewNode]);
 
+  // Обработчик множественного выбора элементов
+  const handleSelectNode = useCallback((nodeId: string, ctrlKey: boolean) => {
+    // Если нажат Ctrl, добавляем/убираем из выделения
+    if (ctrlKey) {
+      setSelectedNodes(prev => {
+        const newSelection = new Set(prev);
+        if (newSelection.has(nodeId)) {
+          newSelection.delete(nodeId);
+        } else {
+          newSelection.add(nodeId);
+        }
+        return newSelection;
+      });
+
+      // Если выделение стало пустым, выходим из режима множественного выбора
+      setSelectedNodes(prev => {
+        if (prev.size === 0) {
+          setIsMultiSelectMode(false);
+        } else {
+          setIsMultiSelectMode(true);
+        }
+        return prev;
+      });
+    } else {
+      // Если Ctrl не нажат, сбрасываем множественное выделение
+      // и выбираем текущий элемент
+      if (isMultiSelectMode) {
+        // Если уже в режиме множественного выбора и элемент выбран
+        if (selectedNodes.has(nodeId)) {
+          setSelectedNodes(prev => {
+            const newSelection = new Set(prev);
+            newSelection.delete(nodeId);
+            if (newSelection.size === 0) {
+              setIsMultiSelectMode(false);
+            }
+            return newSelection;
+          });
+        } else {
+          // Добавляем элемент в выделение
+          setSelectedNodes(prev => {
+            const newSelection = new Set(prev);
+            newSelection.add(nodeId);
+            return newSelection;
+          });
+        }
+      } else {
+        // Обычный выбор элемента
+        setSelectedNodeId(nodeId);
+      }
+    }
+  }, [isMultiSelectMode, selectedNodes]);
+
+  // Функция для очистки множественного выбора
+  const clearSelection = useCallback(() => {
+    setSelectedNodes(new Set());
+    setIsMultiSelectMode(false);
+  }, []);
+
+  // Функция для активации режима множественного выбора
+  const enableMultiSelectMode = useCallback(() => {
+    setIsMultiSelectMode(true);
+    // Если есть выбранный узел, добавляем его в множественное выделение
+    if (selectedNodeId) {
+      setSelectedNodes(new Set([selectedNodeId]));
+    }
+  }, [selectedNodeId]);
+
   // Обработчик удаления узла (и всех его потомков)
   const handleDeleteNode = useCallback((nodeId: string) => {
-    setPlanData(prevData => {
-      // Создаем копию для обновления
-      const newData = [...prevData];
+    // Если включен режим множественного выбора и есть выбранные узлы, удаляем их все
+    if (isMultiSelectMode && selectedNodes.size > 0) {
+      // Если текущий узел не находится в выбранных, добавляем его
+      if (!selectedNodes.has(nodeId)) {
+        selectedNodes.add(nodeId);
+      }
       
-      // Находим узлы для удаления (сам узел и все его дочерние, рекурсивно)
-      const nodesToDelete = new Set<string>();
-      
-      // Рекурсивная функция для поиска всех дочерних узлов
-      const findChildren = (id: string) => {
-        nodesToDelete.add(id);
+      setPlanData(prevData => {
+        // Создаем копию для обновления
+        const newData = [...prevData];
         
-        // Находим прямых потомков
-        const children = newData.filter(node => node.parentId === id);
+        // Находим узлы для удаления (сам узел и все его дочерние, рекурсивно)
+        const nodesToDelete = new Set<string>();
         
-        // Рекурсивно добавляем их детей
-        children.forEach(child => findChildren(child.id));
-      };
-      
-      // Начинаем с указанного узла
-      findChildren(nodeId);
-      
-      // Отфильтровываем все помеченные для удаления узлы
-      return newData.filter(node => !nodesToDelete.has(node.id));
-    });
-  }, []);
+        // Рекурсивная функция для поиска всех дочерних узлов
+        const findChildren = (id: string) => {
+          nodesToDelete.add(id);
+          
+          // Находим прямых потомков
+          const children = newData.filter(node => node.parentId === id);
+          
+          // Рекурсивно добавляем их детей
+          children.forEach(child => findChildren(child.id));
+        };
+        
+        // Удаляем все выбранные узлы
+        selectedNodes.forEach(id => {
+          findChildren(id);
+        });
+        
+        // Очищаем выбранные узлы после удаления
+        setSelectedNodes(new Set());
+        setIsMultiSelectMode(false);
+        
+        // Отфильтровываем все помеченные для удаления узлы
+        return newData.filter(node => !nodesToDelete.has(node.id));
+      });
+    } else {
+      // Обычное удаление одного узла
+      setPlanData(prevData => {
+        // Создаем копию для обновления
+        const newData = [...prevData];
+        
+        // Находим узлы для удаления (сам узел и все его дочерние, рекурсивно)
+        const nodesToDelete = new Set<string>();
+        
+        // Рекурсивная функция для поиска всех дочерних узлов
+        const findChildren = (id: string) => {
+          nodesToDelete.add(id);
+          
+          // Находим прямых потомков
+          const children = newData.filter(node => node.parentId === id);
+          
+          // Рекурсивно добавляем их детей
+          children.forEach(child => findChildren(child.id));
+        };
+        
+        // Начинаем с указанного узла
+        findChildren(nodeId);
+        
+        // Отфильтровываем все помеченные для удаления узлы
+        return newData.filter(node => !nodesToDelete.has(node.id));
+      });
+    }
+  }, [isMultiSelectMode, selectedNodes]);
 
   // Обработчик изменения значения часов для дисциплины
   const handleValueChange = useCallback((nodeId: string, semesterIndex: number, value: number) => {
@@ -593,50 +700,123 @@ export const CurriculumPlanTable = React.forwardRef<{ forceUpdate: () => void },
           isDraggingOperation.current = true;
           
           setPlanData(prevData => {
-            // Находим оригинальный индекс активного узла
-            const activeIndex = prevData.findIndex(n => n.id === active.id);
+            // Проверяем, перетаскиваем ли мы выбранные узлы
+            const isMovingSelection = isMultiSelectMode && selectedNodes.has(active.id as string);
             
-            // Находим индекс узла "над" которым мы перетаскиваем
-            const overIndex = prevData.findIndex(n => n.id === over.id);
-            
-            // Проверка на валидные индексы
-            if (activeIndex === -1 || overIndex === -1) {
-              console.log("[CurriculumPlanTable] Invalid indices:", { activeIndex, overIndex });
-              return prevData; // Ничего не меняем
-            }
-            
-            // Создаем копию массива
-            const newItems = [...prevData];
-            
-            // Вынимаем активный узел
-            const [activeNode] = newItems.splice(activeIndex, 1);
-            
-            // Вставляем его на новую позицию
-            newItems.splice(overIndex, 0, activeNode);
-            
-            // Обновляем orderIndex для всех узлов с тем же родителем
-            const parentId = activeNode.parentId;
-            const siblings = newItems.filter(n => n.parentId === parentId);
-            
-            siblings.forEach((node, index) => {
-              // Находим этот узел в массиве и обновляем его orderIndex
-              const nodeIndex = newItems.findIndex(n => n.id === node.id);
-              if (nodeIndex !== -1) {
-                newItems[nodeIndex] = {
-                  ...newItems[nodeIndex],
-                  orderIndex: index
-                };
+            if (isMovingSelection && selectedNodes.size > 1) {
+              // Перемещение нескольких выбранных элементов
+              console.log("[CurriculumPlanTable] Moving multiple selected nodes");
+              
+              // Создаем копию массива
+              let newItems = [...prevData];
+              
+              // Получаем список всех выбранных элементов
+              const selectedItemsData = prevData.filter(node => selectedNodes.has(node.id));
+              
+              // Сортируем элементы по их текущим индексам
+              selectedItemsData.sort((a, b) => {
+                const indexA = prevData.findIndex(n => n.id === a.id);
+                const indexB = prevData.findIndex(n => n.id === b.id);
+                return indexA - indexB;
+              });
+              
+              // Находим индекс узла "над" которым мы перетаскиваем
+              const overIndex = newItems.findIndex(n => n.id === over.id);
+              
+              // Удаляем все выбранные элементы из массива (в порядке от большего индекса к меньшему)
+              const selectedIndices = selectedItemsData
+                .map(node => newItems.findIndex(n => n.id === node.id))
+                .sort((a, b) => b - a); // Сортируем в обратном порядке
+              
+              // Удаляем выбранные элементы из массива
+              const removedItems: PlanNode[] = [];
+              selectedIndices.forEach(index => {
+                if (index !== -1) {
+                  const [removed] = newItems.splice(index, 1);
+                  removedItems.unshift(removed); // Добавляем в начало, чтобы сохранить порядок
+                }
+              });
+              
+              // Вставляем все выбранные элементы на новую позицию
+              let insertIndex = overIndex;
+              // Если перетаскиваем ниже, корректируем позицию с учетом удаленных элементов
+              if (insertIndex > selectedIndices[selectedIndices.length - 1]) {
+                insertIndex -= selectedIndices.filter(i => i < insertIndex).length;
               }
-            });
-            
-            // Завершаем операцию перетаскивания
-            setTimeout(() => {
-              isDraggingOperation.current = false;
-            }, 100);
-            
-            // Не вызываем onPlanChange напрямую, т.к. это вызовет эффект выше
-            // Он сам обнаружит изменения и вызовет сохранение
-            return newItems;
+              
+              newItems.splice(insertIndex, 0, ...removedItems);
+              
+              // Обновляем orderIndex для всех узлов с тем же родителем
+              const parentId = activeParentId;
+              const siblings = newItems.filter(n => n.parentId === parentId);
+              
+              siblings.forEach((node, index) => {
+                // Находим этот узел в массиве и обновляем его orderIndex
+                const nodeIndex = newItems.findIndex(n => n.id === node.id);
+                if (nodeIndex !== -1) {
+                  newItems[nodeIndex] = {
+                    ...newItems[nodeIndex],
+                    orderIndex: index
+                  };
+                }
+              });
+              
+              // Очищаем выбранные узлы после перемещения
+              // Оставляем режим множественного выбора активным
+              
+              // Завершаем операцию перетаскивания
+              setTimeout(() => {
+                isDraggingOperation.current = false;
+              }, 100);
+              
+              return newItems;
+            } else {
+              // Обычное перемещение одного узла
+              // Находим оригинальный индекс активного узла
+              const activeIndex = prevData.findIndex(n => n.id === active.id);
+              
+              // Находим индекс узла "над" которым мы перетаскиваем
+              const overIndex = prevData.findIndex(n => n.id === over.id);
+              
+              // Проверка на валидные индексы
+              if (activeIndex === -1 || overIndex === -1) {
+                console.log("[CurriculumPlanTable] Invalid indices:", { activeIndex, overIndex });
+                return prevData; // Ничего не меняем
+              }
+              
+              // Создаем копию массива
+              const newItems = [...prevData];
+              
+              // Вынимаем активный узел
+              const [activeNode] = newItems.splice(activeIndex, 1);
+              
+              // Вставляем его на новую позицию
+              newItems.splice(overIndex, 0, activeNode);
+              
+              // Обновляем orderIndex для всех узлов с тем же родителем
+              const parentId = activeNode.parentId;
+              const siblings = newItems.filter(n => n.parentId === parentId);
+              
+              siblings.forEach((node, index) => {
+                // Находим этот узел в массиве и обновляем его orderIndex
+                const nodeIndex = newItems.findIndex(n => n.id === node.id);
+                if (nodeIndex !== -1) {
+                  newItems[nodeIndex] = {
+                    ...newItems[nodeIndex],
+                    orderIndex: index
+                  };
+                }
+              });
+              
+              // Завершаем операцию перетаскивания
+              setTimeout(() => {
+                isDraggingOperation.current = false;
+              }, 100);
+              
+              // Не вызываем onPlanChange напрямую, т.к. это вызовет эффект выше
+              // Он сам обнаружит изменения и вызовет сохранение
+              return newItems;
+            }
           });
         }
       }
@@ -916,8 +1096,45 @@ export const CurriculumPlanTable = React.forwardRef<{ forceUpdate: () => void },
 
   return (
     <div className="space-y-4">
-      {/* Кнопка добавления нового элемента в верхней части */}
-      <div className="flex justify-end mb-2">
+      {/* Панель инструментов в верхней части */}
+      <div className="flex justify-between items-center mb-2">
+        {/* Кнопки для работы с выделением */}
+        <div className="flex items-center gap-2">
+          {isMultiSelectMode ? (
+            <>
+              <Button 
+                variant="destructive" 
+                size="sm" 
+                className="gap-2"
+                onClick={() => {
+                  // Удаляем все выбранные элементы
+                  if (selectedNodes.size > 0) {
+                    handleDeleteNode(Array.from(selectedNodes)[0]);
+                  }
+                }}
+              >
+                <Trash size={16} /> Удалить выбранные ({selectedNodes.size})
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={clearSelection}
+              >
+                Отменить выбор
+              </Button>
+            </>
+          ) : (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={enableMultiSelectMode}
+            >
+              Выбрать несколько
+            </Button>
+          )}
+        </div>
+        
+        {/* Кнопка добавления нового элемента */}
         <Popover>
           <PopoverTrigger asChild>
             <Button className="gap-2">
@@ -1162,10 +1379,13 @@ export const CurriculumPlanTable = React.forwardRef<{ forceUpdate: () => void },
                         node={node as Subject}
                         semesters={semesters}
                         isActive={node.id === selectedNodeId}
+                        isSelected={selectedNodes.has(node.id)}
+                        isMultiSelectMode={isMultiSelectMode}
                         depth={node.depth || 0}
                         onValueChange={handleValueChange}
                         onRename={handleRename}
                         onDelete={handleDeleteNode}
+                        onSelect={handleSelectNode}
                       />
                     );
                   } else {
@@ -1175,6 +1395,8 @@ export const CurriculumPlanTable = React.forwardRef<{ forceUpdate: () => void },
                         node={node}
                         semesters={semesters}
                         isActive={node.id === selectedNodeId}
+                        isSelected={selectedNodes.has(node.id)}
+                        isMultiSelectMode={isMultiSelectMode}
                         hasChildren={hasChildren}
                         isSection={node.type === 'section'}
                         depth={node.depth || 0}
@@ -1183,6 +1405,7 @@ export const CurriculumPlanTable = React.forwardRef<{ forceUpdate: () => void },
                         onAddChild={(parentId, type) => handleAddNode(type, parentId)}
                         onRename={handleRename}
                         onDelete={handleDeleteNode}
+                        onSelect={handleSelectNode}
                       />
                     );
                   }
