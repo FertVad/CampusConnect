@@ -905,17 +905,9 @@ export const CurriculumPlanTable = React.forwardRef<{ forceUpdate: () => void },
                 variant="ghost" 
                 className="justify-start gap-2 rounded-none"
                 onClick={() => {
-                  // Если выбран узел, добавляем на том же уровне
-                  if (selectedNodeId) {
-                    const selectedNode = planData.find(n => n.id === selectedNodeId);
-                    if (selectedNode) {
-                      // Добавляем на том же уровне (с тем же родителем)
-                      addNode('section', selectedNode.parentId);
-                      return;
-                    }
-                  }
-                  // Иначе добавляем в корень
-                  addNode('section');
+                  // Всегда добавляем новый раздел только в корень (null parentId)
+                  // Разделы всегда должны быть на верхнем уровне
+                  addNode('section', null);
                 }}
               >
                 <Plus size={16} /> Раздел
@@ -924,22 +916,53 @@ export const CurriculumPlanTable = React.forwardRef<{ forceUpdate: () => void },
                 variant="ghost" 
                 className="justify-start gap-2 rounded-none"
                 onClick={() => {
-                  // Если выбран узел, добавляем на том же уровне или внутри него
+                  // Группы должны добавляться только внутри разделов
                   if (selectedNodeId) {
                     const selectedNode = planData.find(n => n.id === selectedNodeId);
                     if (selectedNode) {
                       if (selectedNode.type === 'section') {
                         // Если выбран раздел, добавляем группу внутрь него
                         addNode('group', selectedNode.id);
-                      } else {
-                        // Иначе добавляем на том же уровне
+                        return;
+                      } else if (selectedNode.type === 'group') {
+                        // Если выбрана группа, добавляем группу на том же уровне (у того же родителя)
                         addNode('group', selectedNode.parentId);
+                        return;
+                      } else if (selectedNode.type === 'subject') {
+                        // Если выбран предмет, находим его родителя (группу) и добавляем группу на этом же уровне
+                        const parentId = selectedNode.parentId;
+                        if (parentId) {
+                          const parentNode = planData.find(n => n.id === parentId);
+                          if (parentNode && parentNode.type === 'group') {
+                            addNode('group', parentNode.parentId);
+                            return;
+                          }
+                        }
                       }
-                      return;
                     }
                   }
-                  // Иначе добавляем в корень
-                  addNode('group');
+                  
+                  // Если ничего не выбрано или неправильный выбор, ищем первый раздел
+                  const firstSection = planData.find(n => n.type === 'section');
+                  if (firstSection) {
+                    // Если есть хотя бы один раздел, добавляем группу в него
+                    addNode('group', firstSection.id);
+                  } else {
+                    // Если нет разделов, создаем сначала раздел, а потом группу
+                    const newSectionId = uuidv4();
+                    const newSection = {
+                      id: newSectionId,
+                      title: 'Новый раздел',
+                      parentId: null,
+                      type: 'section' as const,
+                      orderIndex: 0,
+                      isCollapsed: false
+                    };
+                    setPlanData(prev => [...prev, newSection]);
+                    
+                    // Добавляем группу в новый раздел
+                    addNode('group', newSectionId);
+                  }
                 }}
               >
                 <Plus size={16} /> Группа
@@ -948,16 +971,18 @@ export const CurriculumPlanTable = React.forwardRef<{ forceUpdate: () => void },
                 variant="ghost" 
                 className="justify-start gap-2 rounded-none"
                 onClick={() => {
-                  // Если выбран узел, добавляем на том же уровне или внутри него
+                  // Дисциплины должны добавляться только внутри групп
                   if (selectedNodeId) {
                     const selectedNode = planData.find(n => n.id === selectedNodeId);
                     if (selectedNode) {
                       if (selectedNode.type === 'group') {
                         // Если выбрана группа, добавляем дисциплину внутрь нее
                         addNode('subject', selectedNode.id);
+                        return;
                       } else if (selectedNode.type === 'subject') {
-                        // Если выбрана дисциплина, добавляем на том же уровне
+                        // Если выбрана дисциплина, добавляем на том же уровне (в ту же группу)
                         addNode('subject', selectedNode.parentId);
+                        return;
                       } else if (selectedNode.type === 'section') {
                         // Если выбран раздел, ищем первую группу внутри него
                         const firstGroup = planData.find(n => n.parentId === selectedNode.id && n.type === 'group');
@@ -978,12 +1003,58 @@ export const CurriculumPlanTable = React.forwardRef<{ forceUpdate: () => void },
                           setPlanData(prev => [...prev, newGroup]);
                           addNode('subject', newGroupId);
                         }
+                        return;
                       }
-                      return;
                     }
                   }
-                  // Иначе добавляем в корень
-                  addNode('subject');
+                  
+                  // Если ничего не выбрано или неправильный выбор, ищем первую группу
+                  const firstGroup = planData.find(n => n.type === 'group');
+                  if (firstGroup) {
+                    // Если есть хотя бы одна группа, добавляем дисциплину в нее
+                    addNode('subject', firstGroup.id);
+                  } else {
+                    // Если нет групп, ищем первый раздел
+                    const firstSection = planData.find(n => n.type === 'section');
+                    if (firstSection) {
+                      // Если есть раздел, создаем в нем группу, а затем добавляем предмет
+                      const newGroupId = uuidv4();
+                      const newGroup = {
+                        id: newGroupId,
+                        title: 'Новая группа дисциплин',
+                        parentId: firstSection.id,
+                        type: 'group' as const,
+                        orderIndex: 0,
+                        isCollapsed: false
+                      };
+                      setPlanData(prev => [...prev, newGroup]);
+                      addNode('subject', newGroupId);
+                    } else {
+                      // Если нет ни разделов, ни групп, создаем цепочку раздел -> группа -> дисциплина
+                      const newSectionId = uuidv4();
+                      const newSection = {
+                        id: newSectionId,
+                        title: 'Новый раздел',
+                        parentId: null,
+                        type: 'section' as const,
+                        orderIndex: 0,
+                        isCollapsed: false
+                      };
+                      
+                      const newGroupId = uuidv4();
+                      const newGroup = {
+                        id: newGroupId,
+                        title: 'Новая группа дисциплин',
+                        parentId: newSectionId,
+                        type: 'group' as const,
+                        orderIndex: 0,
+                        isCollapsed: false
+                      };
+                      
+                      setPlanData(prev => [...prev, newSection, newGroup]);
+                      addNode('subject', newGroupId);
+                    }
+                  }
                 }}
               >
                 <Plus size={16} /> Дисциплина
