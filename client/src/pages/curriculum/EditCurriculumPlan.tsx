@@ -104,6 +104,8 @@ function EditCurriculumPlanContent(): React.ReactNode {
   } = useCurriculum();
   // Ссылка на текущие данные календаря
   const calendarDataRef = useRef<Record<string, string>>({});
+  // Таймеры для автосохранения и debounce
+  const saveTimeoutRef = useRef<number | null>(null);
   // Флаг для паузы автосохранения во время ручного сохранения
   const [autosavePaused, setAutosavePaused] = useState<boolean>(false);
   
@@ -299,9 +301,13 @@ function EditCurriculumPlanContent(): React.ReactNode {
       // Сохраняем данные формы в общем объекте planForm
       setPlanForm(formData);
       
-      // Получаем данные учебного плана (curriculumPlanData) из последнего состояния
-      // Используем данные плана, если они доступны из кэша
-      const planDataStr = plan?.curriculumPlanData || "";
+      // Получаем данные учебного плана (curriculumPlanData) из актуального состояния кэша
+      // Это гарантирует, что мы отправляем самую свежую версию данных плана
+      const currentPlan = queryClient.getQueryData<CurriculumPlan>([`/api/curriculum-plans/${planId}`]);
+      const planDataStr = currentPlan?.curriculumPlanData || "";
+      
+      // Выводим в лог информацию о сохраняемых данных плана
+      console.log(`[EditCurriculumPlan] Saving curriculum plan data: ${planDataStr.length} bytes`);
       
       // Подготавливаем данные для сохранения
       const dataToSave = { 
@@ -310,6 +316,8 @@ function EditCurriculumPlanContent(): React.ReactNode {
         // Объединяем все данные в один PATCH запрос
         calendarJson: JSON.stringify(calendarDataRef.current),
         planJson: planDataStr,
+        // Явно передаем curriculumPlanData как есть для обработки на сервере
+        curriculumPlanData: planDataStr
       };
       
       console.log("[EditCurriculumPlan] Saving all curriculum data in unified PATCH request:", {
@@ -1375,9 +1383,25 @@ function EditCurriculumPlanContent(): React.ReactNode {
                         planData 
                       });
                       
-                      // Сохраним планДату в свойство плана для unifiedSave
+                      // Обновляем план с новыми данными через queryClient
+                      // Это гарантирует что React узнает об изменении
                       if (plan) {
-                        plan.curriculumPlanData = planDataJson;
+                        const updatedPlan = {
+                          ...plan,
+                          curriculumPlanData: planDataJson
+                        };
+                        
+                        // Обновляем кэш queryClient напрямую
+                        queryClient.setQueryData([`/api/curriculum-plans/${planId}`], updatedPlan);
+                        
+                        // Также обновляем общий кэш со списком планов
+                        const plansCache = queryClient.getQueryData<CurriculumPlan[]>(['/api/curriculum-plans']);
+                        if (plansCache) {
+                          const updatedPlans = plansCache.map(p => p.id === planId ? updatedPlan : p);
+                          queryClient.setQueryData(['/api/curriculum-plans'], updatedPlans);
+                        }
+                        
+                        console.log("[EditCurriculumPlan] Updated plan data in cache:", updatedPlan.curriculumPlanData.length, "bytes");
                       }
                       
                       // Устанавливаем флаг dirty для плана
@@ -1386,11 +1410,17 @@ function EditCurriculumPlanContent(): React.ReactNode {
                         plan: true
                       }));
                       
-                      // Используем debounce для вызова saveCurriculum
-                      // Это предотвратит слишком частые сохранения
-                      const timeoutId = setTimeout(async () => {
+                      // Отменяем предыдущий таймер, если он есть
+                      if (saveTimeoutRef.current) {
+                        clearTimeout(saveTimeoutRef.current);
+                        saveTimeoutRef.current = null;
+                      }
+                      
+                      // Используем debounce для вызова saveCurriculum и сохраняем ID таймера
+                      saveTimeoutRef.current = window.setTimeout(async () => {
                         console.log("[EditCurriculumPlan] Saving plan data through unified save");
                         await saveCurriculum();
+                        saveTimeoutRef.current = null;
                       }, 1000);
                     }
                   }}
