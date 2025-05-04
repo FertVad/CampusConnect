@@ -1054,6 +1054,43 @@ export const CurriculumPlanTable = React.forwardRef<{ forceUpdate: () => void },
           </PopoverContent>
         </Popover>
       </div>
+      
+      {/* Диалог редактирования названия */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Редактирование названия</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="name" className="text-right">
+                Название
+              </Label>
+              <Input
+                id="name"
+                value={editNodeTitle}
+                onChange={(e) => setEditNodeTitle(e.target.value)}
+                className="col-span-3"
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    confirmEdit();
+                  }
+                }}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setShowEditDialog(false)}>
+              <X className="mr-2 h-4 w-4" /> Отмена
+            </Button>
+            <Button type="button" onClick={confirmEdit}>
+              <Check className="mr-2 h-4 w-4" /> Сохранить
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 });
