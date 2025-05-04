@@ -605,6 +605,9 @@ function EditCurriculumPlanContent(): React.ReactNode {
   const prevYearsOfStudyRef = useRef<number | null>(null);
   const prevMonthsOfStudyRef = useRef<number | null>(null);
   
+  // Создаем ref для таблицы учебного плана, чтобы иметь прямой доступ к её методам
+  const curriculumTableRef = useRef<any>(null);
+  
   // Эффект для сохранения данных при изменении yearsOfStudy
   useEffect(() => {
     // Пропускаем первый рендер
@@ -792,6 +795,13 @@ function EditCurriculumPlanContent(): React.ReactNode {
         const planIsDirty = formIsDirty.plan;
         console.log("[EditCurriculumPlan] Plan dirty state:", planIsDirty);
         
+        // КРИТИЧЕСКИ ВАЖНО: Проверяем наличие глобальных данных, которые могли быть созданы в CurriculumPlanTable
+        if (typeof window !== 'undefined' && window._lastPlanData) {
+          console.log("[EditCurriculumPlan] Found global plan data when leaving tab, length:", window._lastPlanData.length);
+        } else {
+          console.log("[EditCurriculumPlan] No global plan data found when leaving tab!");
+        }
+        
         // ВСЕГДА получаем и проверяем текущий план
         const currentPlan = queryClient.getQueryData<CurriculumPlan>([`/api/curriculum-plans/${planId}`]);
         console.log("[EditCurriculumPlan] Current plan data length:", currentPlan?.curriculumPlanData?.length || 0);
@@ -799,6 +809,16 @@ function EditCurriculumPlanContent(): React.ReactNode {
         // Принудительно сохраняем данные при переключении вкладки
         try {
           console.log("[EditCurriculumPlan] Plan data being saved FORCEFULLY when leaving tab");
+          
+          // ОЧЕНЬ ВАЖНО: Форсируем событие изменения плана из CurriculumPlanTable
+          // Это гарантирует, что самые последние изменения будут сохранены
+          if (curriculumTableRef.current && typeof curriculumTableRef.current.forceUpdate === "function") {
+            console.log("[EditCurriculumPlan] Forcing update on curriculum table before saving");
+            curriculumTableRef.current.forceUpdate();
+            
+            // Даем время на обновление данных
+            await new Promise(resolve => setTimeout(resolve, 300));
+          }
           
           // Сохраняем данные через унифицированную функцию
           const saveResult = await saveCurriculum();
@@ -1456,6 +1476,7 @@ function EditCurriculumPlanContent(): React.ReactNode {
                 </div>
                 
                 <CurriculumPlanTable 
+                  ref={curriculumTableRef}
                   courses={planYearsOfStudy} 
                   extraMonths={planMonthsOfStudy}
                   initialData={plan?.curriculumPlanData ? JSON.parse(plan.curriculumPlanData) : undefined}
