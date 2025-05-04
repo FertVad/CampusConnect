@@ -107,6 +107,21 @@ function EditCurriculumPlanContent(): React.ReactNode {
   // Флаг для паузы автосохранения во время ручного сохранения
   const [autosavePaused, setAutosavePaused] = useState<boolean>(false);
   
+  // Состояние для отслеживания изменений в разных вкладках
+  const [formIsDirty, setFormIsDirty] = useState<{
+    info: boolean;
+    plan: boolean;
+    calendar: boolean;
+    graph: boolean;
+    summary: boolean;
+  }>({
+    info: false,
+    plan: false,
+    calendar: false,
+    graph: false,
+    summary: false
+  });
+  
   // Получаем данные о учебном плане
   const { data: plan, isLoading, error } = useQuery<CurriculumPlan>({
     queryKey: [`/api/curriculum-plans/${planId}`],
