@@ -384,6 +384,8 @@ export const CurriculumPlanTable = React.forwardRef<{ forceUpdate: () => void },
   // Обработчик добавления нового узла
   // Оригинальный обработчик добавления узлов
   const addNode = useCallback((type: 'section' | 'group' | 'subject', parentId: string | null = null) => {
+    console.log(`[CurriculumPlanTable] Adding new node of type: ${type}, parentId: ${parentId}`);
+    
     setPlanData(prevData => {
       // Находим максимальный orderIndex для новых элементов с тем же родителем
       const siblingNodes = prevData.filter(node => node.parentId === parentId);
@@ -391,8 +393,12 @@ export const CurriculumPlanTable = React.forwardRef<{ forceUpdate: () => void },
         ? Math.max(...siblingNodes.map(node => node.orderIndex || 0))
         : -1;
       
+      const newIndex = maxOrderIndex + 1;
+      console.log(`[CurriculumPlanTable] New node will have orderIndex: ${newIndex}`);
+      
       // Создаем новый узел
-      const newNode = createNewNode(type, parentId, maxOrderIndex + 1);
+      const newNode = createNewNode(type, parentId, newIndex);
+      console.log(`[CurriculumPlanTable] Created new node:`, newNode);
       
       // Добавляем его в план
       return [...prevData, newNode];
@@ -971,26 +977,37 @@ export const CurriculumPlanTable = React.forwardRef<{ forceUpdate: () => void },
                 variant="ghost" 
                 className="justify-start gap-2 rounded-none"
                 onClick={() => {
+                  console.log("[CurriculumPlanTable] Добавить дисциплину - кнопка нажата");
+                  console.log("[CurriculumPlanTable] Текущий выбранный узел:", selectedNodeId);
+                  console.log("[CurriculumPlanTable] Доступные данные плана:", planData);
+                  
                   // Дисциплины должны добавляться только внутри групп
                   if (selectedNodeId) {
                     const selectedNode = planData.find(n => n.id === selectedNodeId);
+                    console.log("[CurriculumPlanTable] Выбранный узел:", selectedNode);
+                    
                     if (selectedNode) {
                       if (selectedNode.type === 'group') {
                         // Если выбрана группа, добавляем дисциплину внутрь нее
+                        console.log("[CurriculumPlanTable] Добавляем дисциплину в группу:", selectedNode.id);
                         addNode('subject', selectedNode.id);
                         return;
                       } else if (selectedNode.type === 'subject') {
                         // Если выбрана дисциплина, добавляем на том же уровне (в ту же группу)
+                        console.log("[CurriculumPlanTable] Добавляем дисциплину рядом с дисциплиной, parentId:", selectedNode.parentId);
                         addNode('subject', selectedNode.parentId);
                         return;
                       } else if (selectedNode.type === 'section') {
                         // Если выбран раздел, ищем первую группу внутри него
+                        console.log("[CurriculumPlanTable] Выбран раздел, ищем группу внутри него");
                         const firstGroup = planData.find(n => n.parentId === selectedNode.id && n.type === 'group');
                         if (firstGroup) {
                           // Если есть группа, добавляем в нее
+                          console.log("[CurriculumPlanTable] Найдена группа в разделе, добавляем в нее:", firstGroup.id);
                           addNode('subject', firstGroup.id);
                         } else {
                           // Если нет группы, создаем новую и добавляем в нее
+                          console.log("[CurriculumPlanTable] Группа в разделе не найдена, создаем новую");
                           const newGroupId = uuidv4();
                           const newGroup = {
                             id: newGroupId,
@@ -1000,24 +1017,36 @@ export const CurriculumPlanTable = React.forwardRef<{ forceUpdate: () => void },
                             orderIndex: 0,
                             isCollapsed: false
                           };
-                          setPlanData(prev => [...prev, newGroup]);
-                          addNode('subject', newGroupId);
+                          console.log("[CurriculumPlanTable] Созданная группа:", newGroup);
+                          setPlanData(prev => {
+                            console.log("[CurriculumPlanTable] Добавляем группу в данные плана, текущее количество узлов:", prev.length);
+                            return [...prev, newGroup]
+                          });
+                          setTimeout(() => {
+                            console.log("[CurriculumPlanTable] Добавляем дисциплину в новую группу:", newGroupId);
+                            addNode('subject', newGroupId);
+                          }, 50);
                         }
                         return;
                       }
                     }
                   }
                   
+                  console.log("[CurriculumPlanTable] Узел не выбран или некорректный тип, ищем подходящую группу");
+                  
                   // Если ничего не выбрано или неправильный выбор, ищем первую группу
                   const firstGroup = planData.find(n => n.type === 'group');
                   if (firstGroup) {
                     // Если есть хотя бы одна группа, добавляем дисциплину в нее
+                    console.log("[CurriculumPlanTable] Найдена группа в плане, добавляем в нее:", firstGroup.id);
                     addNode('subject', firstGroup.id);
                   } else {
                     // Если нет групп, ищем первый раздел
+                    console.log("[CurriculumPlanTable] Группы не найдены, ищем разделы");
                     const firstSection = planData.find(n => n.type === 'section');
                     if (firstSection) {
                       // Если есть раздел, создаем в нем группу, а затем добавляем предмет
+                      console.log("[CurriculumPlanTable] Найден раздел, создаем в нем группу:", firstSection.id);
                       const newGroupId = uuidv4();
                       const newGroup = {
                         id: newGroupId,
@@ -1027,10 +1056,18 @@ export const CurriculumPlanTable = React.forwardRef<{ forceUpdate: () => void },
                         orderIndex: 0,
                         isCollapsed: false
                       };
-                      setPlanData(prev => [...prev, newGroup]);
-                      addNode('subject', newGroupId);
+                      console.log("[CurriculumPlanTable] Новая группа:", newGroup);
+                      setPlanData(prev => {
+                        console.log("[CurriculumPlanTable] Добавляем группу в данные плана, текущее количество узлов:", prev.length);
+                        return [...prev, newGroup];
+                      });
+                      setTimeout(() => {
+                        console.log("[CurriculumPlanTable] Добавляем дисциплину в новую группу:", newGroupId);
+                        addNode('subject', newGroupId);
+                      }, 50);
                     } else {
                       // Если нет ни разделов, ни групп, создаем цепочку раздел -> группа -> дисциплина
+                      console.log("[CurriculumPlanTable] Разделы не найдены, создаем новую иерархию");
                       const newSectionId = uuidv4();
                       const newSection = {
                         id: newSectionId,
@@ -1051,8 +1088,15 @@ export const CurriculumPlanTable = React.forwardRef<{ forceUpdate: () => void },
                         isCollapsed: false
                       };
                       
-                      setPlanData(prev => [...prev, newSection, newGroup]);
-                      addNode('subject', newGroupId);
+                      console.log("[CurriculumPlanTable] Новый раздел и группа:", { newSection, newGroup });
+                      setPlanData(prev => {
+                        console.log("[CurriculumPlanTable] Добавляем раздел и группу в данные плана, текущее количество узлов:", prev.length);
+                        return [...prev, newSection, newGroup];
+                      });
+                      setTimeout(() => {
+                        console.log("[CurriculumPlanTable] Добавляем дисциплину в новую группу:", newGroupId);
+                        addNode('subject', newGroupId);
+                      }, 50);
                     }
                   }
                 }}
