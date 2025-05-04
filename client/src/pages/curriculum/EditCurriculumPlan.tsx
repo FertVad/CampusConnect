@@ -715,13 +715,30 @@ function EditCurriculumPlanContent(): React.ReactNode {
       
       // Если мы уходим с вкладки "plan", сохраняем данные учебного плана
       if (activeTab === "plan" && value !== activeTab) {
-        console.log("[EditCurriculumPlan] Leaving plan tab, checking if plan data needs saving...");
+        console.log("[EditCurriculumPlan] Leaving plan tab, checking if plan data needs saving...", {
+          formIsDirty,
+          activeTab,
+          newTab: value
+        });
+        
+        // ВАЖНО: Перед проверкой на unsaved changes, отменяем любой отложенный таймер сохранения
+        if (saveTimeoutRef.current) {
+          console.log("[EditCurriculumPlan] Canceling pending save timer before tab change");
+          clearTimeout(saveTimeoutRef.current);
+          saveTimeoutRef.current = null;
+        }
         
         // Проверяем, есть ли несохраненные изменения в учебном плане
         const planIsDirty = formIsDirty.plan;
+        console.log("[EditCurriculumPlan] Plan dirty state:", planIsDirty);
         
-        if (planIsDirty) {
-          console.log("[EditCurriculumPlan] Plan data has unsaved changes, saving...");
+        // ВСЕГДА получаем и проверяем текущий план
+        const currentPlan = queryClient.getQueryData<CurriculumPlan>([`/api/curriculum-plans/${planId}`]);
+        console.log("[EditCurriculumPlan] Current plan data length:", currentPlan?.curriculumPlanData?.length || 0);
+        
+        // Принудительно сохраняем данные при переключении вкладки
+        try {
+          console.log("[EditCurriculumPlan] Plan data being saved FORCEFULLY when leaving tab");
           
           // Сохраняем данные через унифицированную функцию
           const saveResult = await saveCurriculum();
@@ -738,6 +755,16 @@ function EditCurriculumPlanContent(): React.ReactNode {
             if (!shouldProceed) {
               return; // Не переключаем вкладку, если пользователь отказался продолжать
             }
+          }
+        } catch (error) {
+          console.error("[EditCurriculumPlan] ERROR saving data when leaving tab:", error);
+          
+          const shouldProceed = window.confirm(
+            "Произошла ошибка при сохранении данных учебного плана. Хотите продолжить без сохранения?"
+          );
+          
+          if (!shouldProceed) {
+            return; // Не переключаем вкладку при отказе
           }
         }
       }
