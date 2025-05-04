@@ -20,8 +20,11 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { PlusCircle, MoreVertical, ChevronRight, ChevronDown, Trash, Edit, Plus, GripVertical } from 'lucide-react';
+import { PlusCircle, MoreVertical, ChevronRight, ChevronDown, Trash, Edit, Plus, GripVertical, Check, X } from 'lucide-react';
 import { PlanNode, Subject, CurriculumPlan } from '@/types/curriculum';
 import sampleData from '@/data/sampleCurrPlan.json';
 
@@ -106,7 +109,12 @@ const SubjectRow: React.FC<{
           <span className="cursor-grab" {...attributes} {...listeners}>
             <GripVertical size={16} className="text-slate-400 mr-2 hover:text-blue-500 transition-colors" />
           </span>
-          <span className="font-normal text-blue-700 dark:text-blue-300">{node.title}</span>
+          <span 
+            className="font-normal text-blue-700 dark:text-blue-300 cursor-pointer" 
+            onDoubleClick={() => onRename(node.id)}
+          >
+            {node.title}
+          </span>
           <div className="ml-auto mr-2">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -222,7 +230,10 @@ const GroupRow: React.FC<{
             <GripVertical size={16} className="text-slate-400 mr-2 hover:text-blue-500 transition-colors" />
           </span>
           
-          <span className={`flex items-center gap-1 ${isSection ? 'font-semibold text-red-700 dark:text-red-400' : 'font-medium text-green-700 dark:text-green-400'}`}>
+          <span 
+            className={`flex items-center gap-1 ${isSection ? 'font-semibold text-red-700 dark:text-red-400' : 'font-medium text-green-700 dark:text-green-400'} cursor-pointer`}
+            onDoubleClick={() => onRename(node.id)}
+          >
             {node.title}
             {hasError && !isSection && (
               <span className="ml-2 text-red-600 dark:text-red-400 text-xs" title="Группа не содержит дисциплин">
@@ -310,6 +321,11 @@ export const CurriculumPlanTable = React.forwardRef<{ forceUpdate: () => void },
   
   // Состояние для узлов с ошибками (пустые группы)
   const [nodesWithErrors, setNodesWithErrors] = useState<string[]>([]);
+  
+  // Состояние для редактирования названия
+  const [editingNodeId, setEditingNodeId] = useState<string | null>(null);
+  const [editNodeTitle, setEditNodeTitle] = useState<string>('');
+  const [showEditDialog, setShowEditDialog] = useState<boolean>(false);
 
   // Датчики для drag & drop
   const sensors = useSensors(
@@ -446,25 +462,40 @@ export const CurriculumPlanTable = React.forwardRef<{ forceUpdate: () => void },
     });
   }, []);
 
-  // Обработчик переименования узла (заглушка, нужно реализовать диалог)
-  const handleRename = useCallback((nodeId: string) => {
-    // TODO: Добавить модальное окно для переименования
-    const newName = prompt('Введите новое название:');
-    
-    if (newName !== null && newName.trim() !== '') {
+  // Обработчик открытия диалога редактирования
+  const openEditDialog = useCallback((nodeId: string) => {
+    const node = planData.find(n => n.id === nodeId);
+    if (node) {
+      setEditingNodeId(nodeId);
+      setEditNodeTitle(node.title);
+      setShowEditDialog(true);
+    }
+  }, [planData]);
+  
+  // Обработчик подтверждения редактирования
+  const confirmEdit = useCallback(() => {
+    if (editingNodeId && editNodeTitle.trim() !== '') {
       setPlanData(prevData => {
         return prevData.map(node => {
-          if (node.id === nodeId) {
+          if (node.id === editingNodeId) {
             return {
               ...node,
-              title: newName.trim()
+              title: editNodeTitle.trim()
             };
           }
           return node;
         });
       });
+      setShowEditDialog(false);
+      setEditingNodeId(null);
+      setEditNodeTitle('');
     }
-  }, []);
+  }, [editingNodeId, editNodeTitle]);
+  
+  // Обработчик переименования узла
+  const handleRename = useCallback((nodeId: string) => {
+    openEditDialog(nodeId);
+  }, [openEditDialog]);
 
   // Адаптер для добавления нового узла, соответствующий интерфейсу GroupRow
   const handleAddNode = useCallback((type: 'section' | 'group' | 'subject', parentId: string | null = null) => {
@@ -934,21 +965,88 @@ export const CurriculumPlanTable = React.forwardRef<{ forceUpdate: () => void },
               <Button 
                 variant="ghost" 
                 className="justify-start gap-2 rounded-none"
-                onClick={() => addNode('section')}
+                onClick={() => {
+                  // Если выбран узел, добавляем на том же уровне
+                  if (selectedNodeId) {
+                    const selectedNode = planData.find(n => n.id === selectedNodeId);
+                    if (selectedNode) {
+                      // Добавляем на том же уровне (с тем же родителем)
+                      addNode('section', selectedNode.parentId);
+                      return;
+                    }
+                  }
+                  // Иначе добавляем в корень
+                  addNode('section');
+                }}
               >
                 <Plus size={16} /> Раздел
               </Button>
               <Button 
                 variant="ghost" 
                 className="justify-start gap-2 rounded-none"
-                onClick={() => addNode('group')}
+                onClick={() => {
+                  // Если выбран узел, добавляем на том же уровне или внутри него
+                  if (selectedNodeId) {
+                    const selectedNode = planData.find(n => n.id === selectedNodeId);
+                    if (selectedNode) {
+                      if (selectedNode.type === 'section') {
+                        // Если выбран раздел, добавляем группу внутрь него
+                        addNode('group', selectedNode.id);
+                      } else {
+                        // Иначе добавляем на том же уровне
+                        addNode('group', selectedNode.parentId);
+                      }
+                      return;
+                    }
+                  }
+                  // Иначе добавляем в корень
+                  addNode('group');
+                }}
               >
                 <Plus size={16} /> Группа дисциплин
               </Button>
               <Button 
                 variant="ghost" 
                 className="justify-start gap-2 rounded-none"
-                onClick={() => addNode('subject')}
+                onClick={() => {
+                  // Если выбран узел, добавляем на том же уровне или внутри него
+                  if (selectedNodeId) {
+                    const selectedNode = planData.find(n => n.id === selectedNodeId);
+                    if (selectedNode) {
+                      if (selectedNode.type === 'group') {
+                        // Если выбрана группа, добавляем дисциплину внутрь нее
+                        addNode('subject', selectedNode.id);
+                      } else if (selectedNode.type === 'subject') {
+                        // Если выбрана дисциплина, добавляем на том же уровне
+                        addNode('subject', selectedNode.parentId);
+                      } else if (selectedNode.type === 'section') {
+                        // Если выбран раздел, ищем первую группу внутри него
+                        const firstGroup = planData.find(n => n.parentId === selectedNode.id && n.type === 'group');
+                        if (firstGroup) {
+                          // Если есть группа, добавляем в нее
+                          addNode('subject', firstGroup.id);
+                        } else {
+                          // Если нет группы, создаем новую и добавляем в нее
+                          const newGroupId = uuidv4();
+                          const newGroup = {
+                            id: newGroupId,
+                            title: 'Новая группа дисциплин',
+                            parentId: selectedNode.id,
+                            type: 'group' as const,
+                            orderIndex: 0,
+                            isCollapsed: false
+                          };
+                          setPlanData(prev => [...prev, newGroup]);
+                          // Затем добавляем дисциплину в эту группу
+                          setTimeout(() => addNode('subject', newGroupId), 100);
+                        }
+                      }
+                      return;
+                    }
+                  }
+                  // Иначе добавляем в корень
+                  addNode('subject');
+                }}
               >
                 <Plus size={16} /> Дисциплина
               </Button>
