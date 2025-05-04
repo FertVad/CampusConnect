@@ -705,6 +705,35 @@ function EditCurriculumPlanContent(): React.ReactNode {
         }
       }
       
+      // Если мы уходим с вкладки "plan", сохраняем данные учебного плана
+      if (activeTab === "plan" && value !== activeTab) {
+        console.log("[EditCurriculumPlan] Leaving plan tab, checking if plan data needs saving...");
+        
+        // Проверяем, есть ли несохраненные изменения в учебном плане
+        const planIsDirty = formIsDirty.plan;
+        
+        if (planIsDirty) {
+          console.log("[EditCurriculumPlan] Plan data has unsaved changes, saving...");
+          
+          // Сохраняем данные через унифицированную функцию
+          const saveResult = await saveCurriculum();
+          console.log("[EditCurriculumPlan] Plan data save result:", saveResult);
+          
+          if (!saveResult) {
+            console.warn("[EditCurriculumPlan] Failed to save plan data when leaving tab");
+            
+            // Спрашиваем пользователя, хочет ли он продолжить без сохранения
+            const shouldProceed = window.confirm(
+              "Не удалось сохранить изменения в учебном плане. Хотите продолжить без сохранения?"
+            );
+            
+            if (!shouldProceed) {
+              return; // Не переключаем вкладку, если пользователь отказался продолжать
+            }
+          }
+        }
+      }
+      
       // Перезагружаем данные из сервера перед переключением на любую вкладку
       // Это гарантирует, что у нас всегда свежие данные
       await queryClient.invalidateQueries({ queryKey: [`/api/curriculum-plans/${planId}`] });
