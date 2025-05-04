@@ -476,7 +476,7 @@ export const CurriculumPlanTable = React.forwardRef<{ forceUpdate: () => void },
   const confirmEdit = useCallback(() => {
     if (editingNodeId && editNodeTitle.trim() !== '') {
       setPlanData(prevData => {
-        return prevData.map(node => {
+        const updatedData = prevData.map(node => {
           if (node.id === editingNodeId) {
             return {
               ...node,
@@ -485,12 +485,34 @@ export const CurriculumPlanTable = React.forwardRef<{ forceUpdate: () => void },
           }
           return node;
         });
+        
+        // Принудительно сохраняем данные сразу после редактирования
+        if (onPlanChange) {
+          // Сделаем глубокую копию для избежания проблем с ссылками
+          const dataCopy = JSON.parse(JSON.stringify(updatedData));
+          
+          // Сохраняем в глобальной переменной
+          if (typeof window !== 'undefined') {
+            window._lastPlanData = JSON.stringify({ 
+              schemaVersion: 1, 
+              planData: dataCopy 
+            });
+          }
+          
+          // Вызываем колбэк для сохранения
+          setTimeout(() => {
+            onPlanChange(dataCopy);
+          }, 10);
+        }
+        
+        return updatedData;
       });
+      
       setShowEditDialog(false);
       setEditingNodeId(null);
       setEditNodeTitle('');
     }
-  }, [editingNodeId, editNodeTitle]);
+  }, [editingNodeId, editNodeTitle, onPlanChange]);
   
   // Обработчик переименования узла
   const handleRename = useCallback((nodeId: string) => {
@@ -869,6 +891,108 @@ export const CurriculumPlanTable = React.forwardRef<{ forceUpdate: () => void },
 
   return (
     <div className="space-y-4">
+      {/* Кнопка добавления нового элемента в верхней части */}
+      <div className="flex justify-end mb-2">
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button className="gap-2">
+              <PlusCircle size={16} /> Добавить
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-56 p-0" align="end">
+            <div className="flex flex-col">
+              <Button 
+                variant="ghost" 
+                className="justify-start gap-2 rounded-none"
+                onClick={() => {
+                  // Если выбран узел, добавляем на том же уровне
+                  if (selectedNodeId) {
+                    const selectedNode = planData.find(n => n.id === selectedNodeId);
+                    if (selectedNode) {
+                      // Добавляем на том же уровне (с тем же родителем)
+                      addNode('section', selectedNode.parentId);
+                      return;
+                    }
+                  }
+                  // Иначе добавляем в корень
+                  addNode('section');
+                }}
+              >
+                <Plus size={16} /> Раздел
+              </Button>
+              <Button 
+                variant="ghost" 
+                className="justify-start gap-2 rounded-none"
+                onClick={() => {
+                  // Если выбран узел, добавляем на том же уровне или внутри него
+                  if (selectedNodeId) {
+                    const selectedNode = planData.find(n => n.id === selectedNodeId);
+                    if (selectedNode) {
+                      if (selectedNode.type === 'section') {
+                        // Если выбран раздел, добавляем группу внутрь него
+                        addNode('group', selectedNode.id);
+                      } else {
+                        // Иначе добавляем на том же уровне
+                        addNode('group', selectedNode.parentId);
+                      }
+                      return;
+                    }
+                  }
+                  // Иначе добавляем в корень
+                  addNode('group');
+                }}
+              >
+                <Plus size={16} /> Группа
+              </Button>
+              <Button 
+                variant="ghost" 
+                className="justify-start gap-2 rounded-none"
+                onClick={() => {
+                  // Если выбран узел, добавляем на том же уровне или внутри него
+                  if (selectedNodeId) {
+                    const selectedNode = planData.find(n => n.id === selectedNodeId);
+                    if (selectedNode) {
+                      if (selectedNode.type === 'group') {
+                        // Если выбрана группа, добавляем дисциплину внутрь нее
+                        addNode('subject', selectedNode.id);
+                      } else if (selectedNode.type === 'subject') {
+                        // Если выбрана дисциплина, добавляем на том же уровне
+                        addNode('subject', selectedNode.parentId);
+                      } else if (selectedNode.type === 'section') {
+                        // Если выбран раздел, ищем первую группу внутри него
+                        const firstGroup = planData.find(n => n.parentId === selectedNode.id && n.type === 'group');
+                        if (firstGroup) {
+                          // Если есть группа, добавляем в нее
+                          addNode('subject', firstGroup.id);
+                        } else {
+                          // Если нет группы, создаем новую и добавляем в нее
+                          const newGroupId = uuidv4();
+                          const newGroup = {
+                            id: newGroupId,
+                            title: 'Новая группа дисциплин',
+                            parentId: selectedNode.id,
+                            type: 'group' as const,
+                            orderIndex: 0,
+                            isCollapsed: false
+                          };
+                          setPlanData(prev => [...prev, newGroup]);
+                          addNode('subject', newGroupId);
+                        }
+                      }
+                      return;
+                    }
+                  }
+                  // Иначе добавляем в корень
+                  addNode('subject');
+                }}
+              >
+                <Plus size={16} /> Дисциплина
+              </Button>
+            </div>
+          </PopoverContent>
+        </Popover>
+      </div>
+      
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
