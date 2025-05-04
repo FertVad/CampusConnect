@@ -652,6 +652,7 @@ export function CurriculumPlanTable({ courses, extraMonths, initialData, onPlanC
         collisionDetection={closestCenter}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
+        modifiers={[]}
       >
         <div className="overflow-auto border rounded-lg curr-plan plan-wrapper max-h-[70vh]">
           <table className="w-full table-fixed border-collapse select-none">
@@ -714,12 +715,14 @@ export function CurriculumPlanTable({ courses, extraMonths, initialData, onPlanC
         <DragOverlay>
           {activeId && activeNode && (
             activeNode.type === 'subject' ? (
-              <div className="bg-white dark:bg-slate-800 rounded shadow-lg border p-2">
-                {activeNode.title}
+              <div className="bg-white dark:bg-slate-800 rounded shadow-lg border p-2 opacity-90 min-w-[200px] flex items-center gap-2">
+                <div className="h-3 w-3 rounded-full bg-blue-500 shrink-0"></div>
+                <span className="font-medium">{activeNode.title}</span>
               </div>
             ) : (
-              <div className="bg-white dark:bg-slate-800 rounded shadow-lg border p-2">
-                {activeNode.title}
+              <div className="bg-white dark:bg-slate-800 rounded shadow-lg border p-2 opacity-90 min-w-[200px] flex items-center gap-2">
+                <div className={`h-3 w-3 rounded-full ${activeNode.type === 'section' ? 'bg-red-500' : 'bg-green-500'} shrink-0`}></div>
+                <span className="font-medium">{activeNode.title}</span>
               </div>
             )
           )}

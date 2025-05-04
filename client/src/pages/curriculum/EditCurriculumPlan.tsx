@@ -174,7 +174,7 @@ function EditCurriculumPlanContent(): React.ReactNode {
         // Если есть текущие данные и ответ от сервера, обновляем кэш вручную
         if (currentData && data) {
           // Объединяем полученные данные с существующими в кэше,
-          // сохраняя при этом последнее состояние calendarData и yearsOfStudy
+          // сохраняя при этом последнее состояние calendarData, curriculumPlanData и yearsOfStudy
           const updatedCache = { 
             ...currentData, 
             ...data,
@@ -182,6 +182,8 @@ function EditCurriculumPlanContent(): React.ReactNode {
             calendarData: Object.keys(calendarDataRef.current).length > 0 
               ? JSON.stringify(calendarDataRef.current) 
               : data.calendarData || currentData.calendarData,
+            // Если были обновлены данные учебного плана, используем их
+            curriculumPlanData: data.curriculumPlanData || currentData.curriculumPlanData,
             // Используем актуальное значение лет обучения и месяцев
             yearsOfStudy: planYearsOfStudy,
             monthsOfStudy: planMonthsOfStudy
@@ -337,6 +339,7 @@ function EditCurriculumPlanContent(): React.ReactNode {
         educationForm: plan.educationForm || undefined,
         educationLevel: plan.educationLevel,
         description: plan.description || "",
+        // Не включаем curriculumPlanData, т.к. это поле не нужно в форме
       });
       
       // Инициализируем данные календаря из плана, если они есть
@@ -353,6 +356,15 @@ function EditCurriculumPlanContent(): React.ReactNode {
           console.error("Ошибка при парсинге данных календаря:", e);
           setCalendarData({});
           calendarDataRef.current = {};
+        }
+      }
+      
+      // Инициализируем данные учебного плана из плана, если они есть
+      if (plan.curriculumPlanData) {
+        try {
+          console.log("[EditCurriculumPlan] Данные учебного плана доступны:", plan.curriculumPlanData);
+        } catch (e) {
+          console.error("Ошибка при обработке данных учебного плана:", e);
         }
       }
       
@@ -1305,11 +1317,13 @@ function EditCurriculumPlanContent(): React.ReactNode {
                 <CurriculumPlanTable 
                   courses={planYearsOfStudy} 
                   extraMonths={planMonthsOfStudy}
-                  initialData={plan?.curriculumPlanData ? JSON.parse(plan.curriculumPlanData as string) : undefined}
+                  initialData={plan?.curriculumPlanData ? JSON.parse(plan.curriculumPlanData) : undefined}
                   onPlanChange={(planData) => {
                     // Сохраняем данные через мутацию
                     if (planId && !isNaN(planId)) {
+                      // Временно приостанавливаем автосохранение
                       setAutosavePaused(true);
+                      console.log("[EditCurriculumPlan] Saving curriculum plan data:", planData);
                       updateMutation.mutate({
                         id: planId,
                         curriculumPlanData: JSON.stringify({ 
