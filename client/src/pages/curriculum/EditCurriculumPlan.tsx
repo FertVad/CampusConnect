@@ -927,6 +927,16 @@ function EditCurriculumPlanContent(): React.ReactNode {
       setAutosavePaused(true);
       console.log("[EditCurriculumPlan] Auto-save paused for manual form save");
       
+      // ВАЖНО: Форсируем обновление данных из таблицы перед сохранением
+      // Это обеспечивает синхронизацию последних изменений в CurriculumPlanTable
+      if (curriculumTableRef.current && typeof curriculumTableRef.current.forceUpdate === "function") {
+        console.log("[EditCurriculumPlan] Forcing update on curriculum table before saving");
+        curriculumTableRef.current.forceUpdate();
+        
+        // Даем время на обновление данных
+        await new Promise(resolve => setTimeout(resolve, 300));
+      }
+      
       // Если количество лет обучения изменилось, обновляем локальное состояние
       if (data.yearsOfStudy !== planYearsOfStudy) {
         console.log(`[EditCurriculumPlan] yearsOfStudy changed in form submit: ${planYearsOfStudy} -> ${data.yearsOfStudy}`);
