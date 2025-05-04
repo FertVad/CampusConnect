@@ -2501,6 +2501,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // PUT обработчик для обновления учебного плана
   app.put('/api/curriculum-plans/:id', authenticateUser, requireRole(['admin']), updateCurriculumPlan);
   
+  // PATCH обработчик для унифицированного сохранения всех данных учебного плана
+  app.patch('/api/curriculum-plans/:id', authenticateUser, requireRole(['admin']), updateCurriculumPlan);
+  
   // POST обработчик как альтернатива PUT (для клиентов, где PUT не работает)
   app.post('/api/curriculum-plans/:id', authenticateUser, requireRole(['admin']), (req, res) => {
     // Проверяем, есть ли в теле запроса поле _method со значением PUT

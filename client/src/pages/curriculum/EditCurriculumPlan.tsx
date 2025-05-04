@@ -129,9 +129,16 @@ function EditCurriculumPlanContent(): React.ReactNode {
     refetchOnWindowFocus: false,
   });
   
-  // Мутация для обновления учебного плана
+  // Мутация для обновления учебного плана (унифицированная версия)
   const updateMutation = useMutation({
-    mutationFn: (updatedPlan: Partial<CurriculumFormValues> & { id: number, calendarData?: string, curriculumPlanData?: string }) => {
+    mutationFn: (updatedPlan: Partial<CurriculumFormValues> & { 
+      id: number, 
+      calendarData?: string, 
+      curriculumPlanData?: string,
+      // Новые поля для унифицированного сохранения
+      calendarJson?: string,
+      planJson?: string
+    }) => {
       const { id, ...planData } = updatedPlan;
       
       // Сохраняем текущие данные yearsOfStudy для синхронизации между компонентами
@@ -162,18 +169,35 @@ function EditCurriculumPlanContent(): React.ReactNode {
         planData.educationForm = plan.educationForm;
       }
       
-      // Включаем текущие данные календаря, если они есть и не были переданы явно
-      if (!planData.calendarData && Object.keys(calendarDataRef.current).length > 0) {
-        planData.calendarData = JSON.stringify(calendarDataRef.current);
+      // Проверка и логирование унифицированного запроса
+      if (planData.calendarJson || planData.planJson) {
+        console.log('[updateMutation] Отправка унифицированных данных:', {
+          formFieldsCount: Object.keys(planData).length,
+          hasCalendarJson: !!planData.calendarJson,
+          hasPlanJson: !!planData.planJson,
+        });
+        
+        // Преобразуем новые поля в стандартные для бэкенда если они есть
+        if (planData.calendarJson) {
+          planData.calendarData = planData.calendarJson;
+          delete planData.calendarJson;
+        }
+        
+        if (planData.planJson) {
+          planData.curriculumPlanData = planData.planJson;
+          delete planData.planJson;
+        }
+      } else {
+        // Стандартная обработка - включаем текущие данные календаря, если они есть
+        if (!planData.calendarData && Object.keys(calendarDataRef.current).length > 0) {
+          planData.calendarData = JSON.stringify(calendarDataRef.current);
+        }
+        
+        console.log('[updateMutation] Отправка стандартных данных:', planData);
       }
       
-      console.log('[updateMutation] Отправка данных:', planData);
-      
-      // Используем POST вместо PUT, так как с PUT были проблемы
-      return apiRequest(`/api/curriculum-plans/${id}`, 'POST', JSON.stringify({
-        ...planData,
-        _method: 'PUT' // Этот параметр указывает серверу, что это на самом деле PUT-запрос
-      }));
+      // Используем PATCH метод для унифицированного сохранения
+      return apiRequest(`/api/curriculum-plans/${id}`, 'PATCH', JSON.stringify(planData));
     },
     onSuccess: (data) => {
       toast({
@@ -441,7 +465,7 @@ function EditCurriculumPlanContent(): React.ReactNode {
     }
   }, [plan, form, planYearsOfStudy]);
   
-  // Функция сохранения данных календаря
+  // Функция сохранения данных календаря - теперь использует общую функцию saveCurriculum
   const saveCalendarData = async () => {
     if (Object.keys(calendarDataRef.current).length === 0) {
       console.log("[EditCurriculumPlan] No calendar data to save");
@@ -449,65 +473,28 @@ function EditCurriculumPlanContent(): React.ReactNode {
     }
     
     try {
-      // Приостанавливаем автосохранение на время ручного сохранения
-      setAutosavePaused(true);
-      console.log("[EditCurriculumPlan] Auto-save paused for manual save");
+      console.log("[EditCurriculumPlan] Calendar data changed, saving through unified save function");
       
-      console.log("[EditCurriculumPlan] Saving calendar data:", calendarDataRef.current);
-      
-      // Создаем глубокую копию объекта перед преобразованием в строку
-      const calendarDataCopy = JSON.parse(JSON.stringify(calendarDataRef.current));
-      const calendarDataString = JSON.stringify(calendarDataCopy);
-      
-      // Используем POST-запрос к /api/curriculum/weeks, который, как мы видели, работает
-      const response = await apiRequest(`/api/curriculum/weeks`, 'POST', JSON.stringify({
-        planId: planId.toString(),
-        calendarData: calendarDataCopy
+      // Устанавливаем флаг dirty для календаря
+      setFormIsDirty(prev => ({
+        ...prev,
+        calendar: true
       }));
       
-      console.log("[EditCurriculumPlan] Save response:", response);
+      // Используем общую функцию для сохранения всех данных
+      const result = await saveCurriculum();
       
-      if (response && response.success) {
+      if (result) {
+        // Увеличиваем счетчик обновлений, чтобы принудительно обновить SummaryTable
+        setCalendarUpdateCount(prev => prev + 1);
+        
         toast({
           title: "График обновлен",
           description: "Данные графика успешно сохранены",
         });
-        
-        // Обновляем глобальный кэш для всех компонентов
-        // Инвалидируем сначала чтобы быть уверенными в актуальности данных
-        await queryClient.invalidateQueries({ queryKey: [`/api/curriculum-plans/${planId}`] });
-        
-        // Если у нас есть план, обновляем его кэш принудительно чтобы все компоненты получили свежие данные
-        if (plan) {
-          // Создаем обновленный план с актуальными данными календаря, yearsOfStudy и monthsOfStudy
-          const updatedPlan = { 
-            ...plan, 
-            calendarData: calendarDataString,
-            yearsOfStudy: planYearsOfStudy, // Важно: используем текущее значение planYearsOfStudy
-            monthsOfStudy: planMonthsOfStudy // Также используем текущее значение месяцев обучения
-          };
-          
-          // Обновляем данные в кэше
-          queryClient.setQueryData([`/api/curriculum-plans/${planId}`], updatedPlan);
-          
-          console.log("[EditCurriculumPlan] Updated plan cache with new data:", updatedPlan);
-          
-          // Обновляем данные в общем кэше планов
-          const plansCache = queryClient.getQueryData<CurriculumPlan[]>(['/api/curriculum-plans']);
-          if (plansCache) {
-            const updatedPlans = plansCache.map(p => p.id === planId ? updatedPlan : p);
-            queryClient.setQueryData(['/api/curriculum-plans'], updatedPlans);
-            console.log("[EditCurriculumPlan] Updated plans list cache with new data");
-          }
-        }
-        
-        // Увеличиваем счетчик обновлений, чтобы принудительно обновить SummaryTable
-        setCalendarUpdateCount(prev => prev + 1);
-        
-        return true;
-      } else {
-        throw new Error("Save operation failed");
       }
+      
+      return result;
     } catch (error) {
       console.error("Ошибка при сохранении графика:", error);
       toast({
@@ -516,12 +503,6 @@ function EditCurriculumPlanContent(): React.ReactNode {
         variant: "destructive",
       });
       return false;
-    } finally {
-      // Возобновляем автосохранение после завершения ручного сохранения с увеличенной задержкой
-      setTimeout(() => {
-        setAutosavePaused(false);
-        console.log("[EditCurriculumPlan] Auto-save resumed after manual save");
-      }, 3000); // Увеличенная задержка (3 секунды) для защиты от частого повторного автосохранения
     }
   };
   
@@ -1355,19 +1336,33 @@ function EditCurriculumPlanContent(): React.ReactNode {
                   extraMonths={planMonthsOfStudy}
                   initialData={plan?.curriculumPlanData ? JSON.parse(plan.curriculumPlanData) : undefined}
                   onPlanChange={(planData) => {
-                    // Сохраняем данные через мутацию
+                    // Сохраняем данные через единую функцию saveCurriculum
                     if (planId && !isNaN(planId)) {
-                      // Временно приостанавливаем автосохранение
-                      setAutosavePaused(true);
-                      console.log("[EditCurriculumPlan] Saving curriculum plan data:", planData);
-                      updateMutation.mutate({
-                        id: planId,
-                        curriculumPlanData: JSON.stringify({ 
-                          schemaVersion: 1,
-                          planData 
-                        })
+                      console.log("[EditCurriculumPlan] Plan data changed, setting dirty state");
+                      
+                      // Обновляем planDataRef для единого сохранения
+                      const planDataJson = JSON.stringify({ 
+                        schemaVersion: 1,
+                        planData 
                       });
-                      setTimeout(() => setAutosavePaused(false), 1000);
+                      
+                      // Сохраним планДату в свойство плана для unifiedSave
+                      if (plan) {
+                        plan.curriculumPlanData = planDataJson;
+                      }
+                      
+                      // Устанавливаем флаг dirty для плана
+                      setFormIsDirty(prev => ({
+                        ...prev,
+                        plan: true
+                      }));
+                      
+                      // Используем debounce для вызова saveCurriculum
+                      // Это предотвратит слишком частые сохранения
+                      const timeoutId = setTimeout(async () => {
+                        console.log("[EditCurriculumPlan] Saving plan data through unified save");
+                        await saveCurriculum();
+                      }, 1000);
                     }
                   }}
                   onDirtyChange={(isDirty) => {
