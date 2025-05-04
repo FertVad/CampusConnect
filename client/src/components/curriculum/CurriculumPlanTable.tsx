@@ -270,6 +270,8 @@ export function CurriculumPlanTable({ courses, extraMonths, initialData, onPlanC
   const lastChangeTime = useRef<number>(0);
   // Идентификатор таймера автосохранения
   const saveTimeoutRef = useRef<number | null>(null);
+  // Флаг для предотвращения повторных операций перетаскивания
+  const isDraggingOperation = useRef<boolean>(false);
   
   // Подсчет числа семестров
   const semesters = useMemo(() => {
@@ -487,12 +489,26 @@ export function CurriculumPlanTable({ courses, extraMonths, initialData, onPlanC
         );
         
         if (canDrop) {
+          // Защита от повторных вызовов - если уже идет операция, не начинаем новую
+          if (isDraggingOperation.current) {
+            console.log("[CurriculumPlanTable] Drag operation already in progress, skipping...");
+            return;
+          }
+          
+          isDraggingOperation.current = true;
+          
           setPlanData(prevData => {
             // Находим оригинальный индекс активного узла
             const activeIndex = prevData.findIndex(n => n.id === active.id);
             
             // Находим индекс узла "над" которым мы перетаскиваем
             const overIndex = prevData.findIndex(n => n.id === over.id);
+            
+            // Проверка на валидные индексы
+            if (activeIndex === -1 || overIndex === -1) {
+              console.log("[CurriculumPlanTable] Invalid indices:", { activeIndex, overIndex });
+              return prevData; // Ничего не меняем
+            }
             
             // Создаем копию массива
             const newItems = [...prevData];
@@ -517,6 +533,11 @@ export function CurriculumPlanTable({ courses, extraMonths, initialData, onPlanC
                 };
               }
             });
+            
+            // Завершаем операцию перетаскивания
+            setTimeout(() => {
+              isDraggingOperation.current = false;
+            }, 100);
             
             // Не вызываем onPlanChange напрямую, т.к. это вызовет эффект выше
             // Он сам обнаружит изменения и вызовет сохранение
@@ -635,26 +656,65 @@ export function CurriculumPlanTable({ courses, extraMonths, initialData, onPlanC
     // - структура дерева (id, parentId, type)
     // - orderIndex для порядка элементов
     // - hours для предметов
+    // - убираем из сравнения isCollapsed (т.к. это UI-состояние)
     
-    if (previousPlanDataRef.current.length !== planData.length) return true;
+    // Быстрая проверка количества элементов
+    if (previousPlanDataRef.current.length !== planData.length) {
+      console.log("[CurriculumPlanTable] Change detected: different number of nodes");
+      return true;
+    }
     
-    for (let i = 0; i < planData.length; i++) {
-      const current = planData[i];
-      const prev = previousPlanDataRef.current.find(item => item.id === current.id);
-      
-      if (!prev) return true; // Новый элемент
-      
-      if (
-        prev.parentId !== current.parentId ||
-        prev.type !== current.type ||
-        prev.orderIndex !== current.orderIndex ||
-        (prev.type === 'subject' && 
-          JSON.stringify((prev as Subject).hours) !== 
-          JSON.stringify((current as Subject).hours)
-        )
-      ) {
-        return true;
+    // Проверяем порядок и структуру, собирая снимки содержимого
+    const prevSnapshot = previousPlanDataRef.current.map(node => {
+      if (node.type === 'subject') {
+        // Для дисциплин - ID, родитель, тип, orderIndex и массив часов
+        const subject = node as Subject;
+        return {
+          id: node.id,
+          parentId: node.parentId,
+          type: node.type,
+          orderIndex: node.orderIndex,
+          hours: [...subject.hours]
+        };
+      } else {
+        // Для разделов и групп - только ID, родитель, тип и orderIndex
+        // isCollapsed не учитываем, т.к. это влияет только на отображение
+        return {
+          id: node.id,
+          parentId: node.parentId,
+          type: node.type,
+          orderIndex: node.orderIndex
+        };
       }
+    });
+    
+    const currentSnapshot = planData.map(node => {
+      if (node.type === 'subject') {
+        const subject = node as Subject;
+        return {
+          id: node.id,
+          parentId: node.parentId,
+          type: node.type,
+          orderIndex: node.orderIndex,
+          hours: [...subject.hours]
+        };
+      } else {
+        return {
+          id: node.id,
+          parentId: node.parentId,
+          type: node.type,
+          orderIndex: node.orderIndex
+        };
+      }
+    });
+    
+    // Строковое сравнение снимков
+    const prevString = JSON.stringify(prevSnapshot);
+    const currentString = JSON.stringify(currentSnapshot);
+    
+    if (prevString !== currentString) {
+      console.log("[CurriculumPlanTable] Change detected in nodes data structure");
+      return true;
     }
     
     return false;
@@ -665,7 +725,7 @@ export function CurriculumPlanTable({ courses, extraMonths, initialData, onPlanC
     // Пропускаем эффект при первом рендере
     if (isInitialMount.current) {
       isInitialMount.current = false;
-      previousPlanDataRef.current = planData;
+      previousPlanDataRef.current = JSON.parse(JSON.stringify(planData));
       return;
     }
     
@@ -688,8 +748,8 @@ export function CurriculumPlanTable({ courses, extraMonths, initialData, onPlanC
         saveTimeoutRef.current = null;
       }, 1000);
       
-      // Обновляем предыдущее состояние
-      previousPlanDataRef.current = planData;
+      // Обновляем предыдущее состояние (глубокая копия)
+      previousPlanDataRef.current = JSON.parse(JSON.stringify(planData));
     }
     
     // Отменяем таймер при размонтировании компонента
