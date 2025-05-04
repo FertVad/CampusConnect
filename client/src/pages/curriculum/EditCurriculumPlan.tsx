@@ -250,9 +250,12 @@ function EditCurriculumPlanContent(): React.ReactNode {
   });
   
   // Обновляем значения формы при получении данных о плане
-  // Функция для сохранения данных формы титульного листа
-  const savePlan = async () => {
+  // Функция для объединенного сохранения всех данных учебного плана (форма + календарь + учебный план)
+  const saveCurriculum = async () => {
     try {
+      // Приостанавливаем автосохранение на время ручного сохранения
+      setAutosavePaused(true);
+      
       // Принудительно вызываем валидацию формы для обновления isDirty и ошибок
       await form.trigger();
       
@@ -272,27 +275,55 @@ function EditCurriculumPlanContent(): React.ReactNode {
       // Сохраняем данные формы в общем объекте planForm
       setPlanForm(formData);
       
+      // Получаем данные учебного плана (curriculumPlanData) из последнего состояния
+      // Используем данные плана, если они доступны из кэша
+      const planDataStr = plan?.curriculumPlanData || "";
+      
       // Подготавливаем данные для сохранения
       const dataToSave = { 
         ...formData, 
         id: planId,
-        // Включаем календарные данные, если они есть
-        calendarData: Object.keys(calendarDataRef.current).length > 0 
-          ? JSON.stringify(calendarDataRef.current) 
-          : undefined
+        // Объединяем все данные в один PATCH запрос
+        calendarJson: JSON.stringify(calendarDataRef.current),
+        planJson: planDataStr,
       };
       
-      // Сохраняем данные формы
+      console.log("[EditCurriculumPlan] Saving all curriculum data in unified PATCH request:", {
+        formFields: Object.keys(formData),
+        calendarFields: Object.keys(calendarDataRef.current).length,
+        planDataLength: planDataStr.length
+      });
+      
+      // Сохраняем все данные формы через единый PATCH запрос
       await updateMutation.mutateAsync(dataToSave);
       
-      // После успешного сохранения сбрасываем флаг isDirty
+      // После успешного сохранения сбрасываем флаги dirty
       setIsDirty(false);
+      setFormIsDirty({
+        info: false,
+        plan: false,
+        calendar: false,
+        graph: false,
+        summary: false
+      });
+      
+      // Возобновляем автосохранение
+      setAutosavePaused(false);
       
       return true;
     } catch (error) {
-      console.error("[EditCurriculumPlan] Error saving plan:", error);
+      console.error("[EditCurriculumPlan] Error saving curriculum:", error);
+      
+      // В случае ошибки также возобновляем автосохранение
+      setAutosavePaused(false);
+      
       return false;
     }
+  };
+  
+  // Функция для сохранения данных формы титульного листа (обертка над saveCurriculum)
+  const savePlan = async () => {
+    return await saveCurriculum();
   };
 
   // Эффект для отслеживания изменений в форме
