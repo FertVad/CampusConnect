@@ -1341,8 +1341,8 @@ function EditCurriculumPlanContent(): React.ReactNode {
                   }}
                   onDirtyChange={(isDirty) => {
                     // Устанавливаем состояние наличия изменений для родительского компонента
-                    setFormIsDirty(prev => ({
-                      ...prev,
+                    setFormIsDirty(prevState => ({
+                      ...prevState,
                       plan: isDirty
                     }));
                   }}
