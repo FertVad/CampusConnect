@@ -341,7 +341,8 @@ export function CurriculumPlanTable({ courses, extraMonths, initialData, onPlanC
   }, [semesters.length]);
 
   // Обработчик добавления нового узла
-  const handleAddNode = useCallback((type: 'section' | 'group' | 'subject', parentId: string | null = null) => {
+  // Оригинальный обработчик добавления узлов
+  const addNode = useCallback((type: 'section' | 'group' | 'subject', parentId: string | null = null) => {
     setPlanData(prevData => {
       // Находим максимальный orderIndex для новых элементов с тем же родителем
       const siblingNodes = prevData.filter(node => node.parentId === parentId);
@@ -439,6 +440,11 @@ export function CurriculumPlanTable({ courses, extraMonths, initialData, onPlanC
       });
     }
   }, []);
+
+  // Адаптер для добавления нового узла, соответствующий интерфейсу GroupRow
+  const handleAddNode = useCallback((type: 'section' | 'group' | 'subject', parentId: string | null = null) => {
+    addNode(type, parentId);
+  }, [addNode]);
 
   // Обработчик начала перетаскивания
   const handleDragStart = (event: DragStartEvent) => {
@@ -733,14 +739,14 @@ export function CurriculumPlanTable({ courses, extraMonths, initialData, onPlanC
               <Button 
                 variant="ghost" 
                 className="justify-start gap-2 rounded-none"
-                onClick={() => handleAddNode('section')}
+                onClick={() => addNode('section')}
               >
                 <Plus size={16} /> Раздел
               </Button>
               <Button 
                 variant="ghost" 
                 className="justify-start gap-2 rounded-none"
-                onClick={() => handleAddNode('group')}
+                onClick={() => addNode('group')}
               >
                 <Plus size={16} /> Группа дисциплин
               </Button>

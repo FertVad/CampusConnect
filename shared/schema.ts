@@ -236,6 +236,7 @@ export const curriculumPlans = pgTable("curriculum_plans", {
   educationLevel: educationLevelEnum("education_level").notNull(), // Уровень образования (СПО, ВО и т.д.)
   description: text("description"), // Описание учебного плана
   calendarData: text("calendar_data"), // Данные календаря (JSON-строка)
+  curriculumPlanData: text("curriculum_plan_data"), // Данные учебного плана (JSON-строка)
   createdBy: integer("created_by").references(() => users.id), // Кто создал план
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
