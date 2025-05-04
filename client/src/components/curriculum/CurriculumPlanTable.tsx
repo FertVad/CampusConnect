@@ -278,7 +278,8 @@ const GroupRow: React.FC<{
 };
 
 // Главный компонент таблицы учебного плана
-export function CurriculumPlanTable({ courses, extraMonths, initialData, onPlanChange, onDirtyChange }: Props) {
+export const CurriculumPlanTable = React.forwardRef<{ forceUpdate: () => void }, Props>((props, ref) => {
+  const { courses, extraMonths, initialData, onPlanChange, onDirtyChange } = props;
   // Состояние для времени последнего изменения (для debounce)
   const lastChangeTime = useRef<number>(0);
   // Идентификатор таймера автосохранения
@@ -796,6 +797,40 @@ export function CurriculumPlanTable({ courses, extraMonths, initialData, onPlanC
     };
   }, [planData, hasPlanDataChanged, onPlanChange]);
 
+  // Метод forceUpdate для принудительного обновления данных из родительского компонента
+  // Это решает проблему потери данных при переключении вкладок
+  useEffect(() => {
+    if (!ref) return;
+    
+    // Экспортируем метод forceUpdate через ref интерфейс
+    // Родительский компонент может вызвать его, чтобы принудительно сохранить последние изменения
+    (ref as any).current = {
+      forceUpdate: () => {
+        console.log("[CurriculumPlanTable] forceUpdate called from parent component");
+        
+        // Делаем глубокую копию данных
+        const planDataCopy = JSON.parse(JSON.stringify(planData));
+        
+        // Обновляем глобальную переменную в window
+        if (typeof window !== 'undefined') {
+          // Сохраняем данные в глобальной переменной для доступа из других компонентов
+          window._lastPlanData = JSON.stringify({ 
+            schemaVersion: 1, 
+            planData: planDataCopy,
+            timestamp: Date.now()
+          });
+          console.log("[CurriculumPlanTable] Global data updated in forceUpdate, length:", window._lastPlanData?.length || 0);
+        }
+        
+        // Вызываем родительский обработчик изменений, если он предоставлен
+        if (onPlanChange) {
+          onPlanChange(planDataCopy);
+          console.log("[CurriculumPlanTable] Parent onPlanChange triggered from forceUpdate");
+        }
+      }
+    };
+  }, [ref, planData, onPlanChange]);
+
   // Сортированные ID для SortableContext
   const sortedIds = useMemo(() => {
     return flattenedData.map(node => node.id);
@@ -923,4 +958,7 @@ export function CurriculumPlanTable({ courses, extraMonths, initialData, onPlanC
       </div>
     </div>
   );
-}
+});
+
+// Экспортируем тип для использования в других частях приложения
+export type CurriculumPlanTableRef = { forceUpdate: () => void };

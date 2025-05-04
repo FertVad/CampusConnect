@@ -606,7 +606,7 @@ function EditCurriculumPlanContent(): React.ReactNode {
   const prevMonthsOfStudyRef = useRef<number | null>(null);
   
   // Создаем ref для таблицы учебного плана, чтобы иметь прямой доступ к её методам
-  const curriculumTableRef = useRef<any>(null);
+  const curriculumTableRef = useRef<{ forceUpdate: () => void }>(null);
   
   // Эффект для сохранения данных при изменении yearsOfStudy
   useEffect(() => {
