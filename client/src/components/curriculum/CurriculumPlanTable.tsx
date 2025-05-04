@@ -150,6 +150,7 @@ const GroupRow: React.FC<{
   hasChildren: boolean;
   isSection: boolean;
   depth: number;
+  hasError?: boolean; // Флаг ошибки (например, пустая группа)
   onToggleCollapse: (id: string) => void;
   onAddChild: (parentId: string, type: 'section' | 'group' | 'subject') => void;
   onRename: (id: string) => void;
@@ -161,6 +162,7 @@ const GroupRow: React.FC<{
   hasChildren, 
   isSection, 
   depth, 
+  hasError,
   onToggleCollapse, 
   onAddChild, 
   onRename, 
@@ -183,10 +185,15 @@ const GroupRow: React.FC<{
   // Расчет отступа в зависимости от глубины
   const paddingLeft = 8 + depth * 20;
 
-  // Стиль для фона в зависимости от типа узла
-  const bgClass = isSection ? 
+  // Стиль для фона в зависимости от типа узла и наличия ошибки
+  let bgClass = isSection ? 
     'bg-slate-100 dark:bg-slate-800' : 
     'bg-emerald-50 dark:bg-emerald-900/20';
+  
+  // Если есть ошибка, применяем стиль ошибки
+  if (hasError && !isSection) {
+    bgClass = 'bg-red-100 dark:bg-red-900/20';
+  }
 
   return (
     <tr
@@ -215,8 +222,13 @@ const GroupRow: React.FC<{
             <GripVertical size={16} className="text-slate-400 mr-2 hover:text-blue-500 transition-colors" />
           </span>
           
-          <span className={`${isSection ? 'font-semibold text-red-700 dark:text-red-400' : 'font-medium text-green-700 dark:text-green-400'}`}>
+          <span className={`flex items-center gap-1 ${isSection ? 'font-semibold text-red-700 dark:text-red-400' : 'font-medium text-green-700 dark:text-green-400'}`}>
             {node.title}
+            {hasError && !isSection && (
+              <span className="ml-2 text-red-600 dark:text-red-400 text-xs" title="Группа не содержит дисциплин">
+                (пустая группа)
+              </span>
+            )}
           </span>
           
           <div className="ml-auto mr-2 flex">
@@ -851,6 +863,7 @@ export function CurriculumPlanTable({ courses, extraMonths, initialData, onPlanC
                         hasChildren={hasChildren}
                         isSection={node.type === 'section'}
                         depth={node.depth || 0}
+                        hasError={node.type === 'group' && nodesWithErrors.includes(node.id)}
                         onToggleCollapse={handleToggleCollapse}
                         onAddChild={(parentId, type) => handleAddNode(type, parentId)}
                         onRename={handleRename}

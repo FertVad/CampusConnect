@@ -1324,6 +1324,13 @@ function EditCurriculumPlanContent(): React.ReactNode {
                       setTimeout(() => setAutosavePaused(false), 1000);
                     }
                   }}
+                  onDirtyChange={(isDirty) => {
+                    // Устанавливаем состояние наличия изменений для родительского компонента
+                    setFormIsDirty(prev => ({
+                      ...prev,
+                      plan: isDirty
+                    }));
+                  }}
                 />
               </div>
             </TabsContent>
