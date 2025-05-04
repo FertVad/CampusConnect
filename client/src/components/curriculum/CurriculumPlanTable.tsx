@@ -518,11 +518,8 @@ export function CurriculumPlanTable({ courses, extraMonths, initialData, onPlanC
               }
             });
             
-            // Уведомляем об изменении данных после порядка
-            if (onPlanChange) {
-              setTimeout(() => onPlanChange(newItems), 0);
-            }
-            
+            // Не вызываем onPlanChange напрямую, т.к. это вызовет эффект выше
+            // Он сам обнаружит изменения и вызовет сохранение
             return newItems;
           });
         }
@@ -625,9 +622,57 @@ export function CurriculumPlanTable({ courses, extraMonths, initialData, onPlanC
     return { hierarchicalData: withSums, flattenedData: flattened };
   }, [planData, semesters.length]);
 
+  // Отслеживаем изменения данных и сохраняем только при явных изменениях
+  // Вместо постоянного автосохранения при каждом изменении planData
+  const isInitialMount = useRef(true);
+  const previousPlanDataRef = useRef<CurriculumPlan | null>(null);
+  
+  // Функция для сравнения предыдущих и текущих данных
+  const hasPlanDataChanged = useCallback(() => {
+    if (!previousPlanDataRef.current) return false;
+    
+    // Сравниваем только по существенным свойствам:
+    // - структура дерева (id, parentId, type)
+    // - orderIndex для порядка элементов
+    // - hours для предметов
+    
+    if (previousPlanDataRef.current.length !== planData.length) return true;
+    
+    for (let i = 0; i < planData.length; i++) {
+      const current = planData[i];
+      const prev = previousPlanDataRef.current.find(item => item.id === current.id);
+      
+      if (!prev) return true; // Новый элемент
+      
+      if (
+        prev.parentId !== current.parentId ||
+        prev.type !== current.type ||
+        prev.orderIndex !== current.orderIndex ||
+        (prev.type === 'subject' && 
+          JSON.stringify((prev as Subject).hours) !== 
+          JSON.stringify((current as Subject).hours)
+        )
+      ) {
+        return true;
+      }
+    }
+    
+    return false;
+  }, [planData]);
+  
   // Отложенное сохранение при изменении данных
   useEffect(() => {
-    if (onPlanChange) {
+    // Пропускаем эффект при первом рендере
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      previousPlanDataRef.current = planData;
+      return;
+    }
+    
+    // Проверяем, действительно ли данные изменились
+    if (onPlanChange && hasPlanDataChanged()) {
+      console.log("[CurriculumPlanTable] Detected real changes in plan data, scheduling save...");
+      
       // Отменяем предыдущий таймер, если он есть
       if (saveTimeoutRef.current !== null) {
         window.clearTimeout(saveTimeoutRef.current);
@@ -636,11 +681,15 @@ export function CurriculumPlanTable({ courses, extraMonths, initialData, onPlanC
       // Запоминаем время последнего изменения
       lastChangeTime.current = Date.now();
       
-      // Устанавливаем новый таймер для сохранения через 500 мс
+      // Устанавливаем новый таймер для сохранения через 1000 мс (увеличиваем время)
       saveTimeoutRef.current = window.setTimeout(() => {
+        console.log("[CurriculumPlanTable] Saving plan data...");
         onPlanChange(planData);
         saveTimeoutRef.current = null;
-      }, 500);
+      }, 1000);
+      
+      // Обновляем предыдущее состояние
+      previousPlanDataRef.current = planData;
     }
     
     // Отменяем таймер при размонтировании компонента
@@ -649,7 +698,7 @@ export function CurriculumPlanTable({ courses, extraMonths, initialData, onPlanC
         window.clearTimeout(saveTimeoutRef.current);
       }
     };
-  }, [planData, onPlanChange]);
+  }, [planData, onPlanChange, hasPlanDataChanged]);
 
   // Сортированные ID для SortableContext
   const sortedIds = useMemo(() => {
