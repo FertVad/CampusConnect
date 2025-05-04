@@ -1302,16 +1302,6 @@ function EditCurriculumPlanContent(): React.ReactNode {
               <div className="space-y-4">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-xl font-medium">Учебный план</h3>
-                  <div className="flex gap-2">
-                    <Button 
-                      variant="outline" 
-                      className="gap-1"
-                      onClick={() => setAutosavePaused(true)}
-                    >
-                      <Save className="h-4 w-4" />
-                      Сохранить
-                    </Button>
-                  </div>
                 </div>
                 
                 <CurriculumPlanTable 

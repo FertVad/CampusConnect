@@ -31,6 +31,7 @@ interface Props {
   extraMonths: number;
   initialData?: any;
   onPlanChange?: (planData: CurriculumPlan) => void;
+  onDirtyChange?: (isDirty: boolean) => void; // Колбэк для отслеживания изменений в данных
 }
 
 // Интерфейс для узла с вычисленными суммами по семестрам
@@ -265,7 +266,7 @@ const GroupRow: React.FC<{
 };
 
 // Главный компонент таблицы учебного плана
-export function CurriculumPlanTable({ courses, extraMonths, initialData, onPlanChange }: Props) {
+export function CurriculumPlanTable({ courses, extraMonths, initialData, onPlanChange, onDirtyChange }: Props) {
   // Состояние для времени последнего изменения (для debounce)
   const lastChangeTime = useRef<number>(0);
   // Идентификатор таймера автосохранения
@@ -293,6 +294,9 @@ export function CurriculumPlanTable({ courses, extraMonths, initialData, onPlanC
   // Состояние для узла, который перетаскивается (drag & drop)
   const [activeId, setActiveId] = useState<string | null>(null);
   const [activeNode, setActiveNode] = useState<PlanNode | null>(null);
+  
+  // Состояние для узлов с ошибками (пустые группы)
+  const [nodesWithErrors, setNodesWithErrors] = useState<string[]>([]);
 
   // Датчики для drag & drop
   const sensors = useSensors(
@@ -552,6 +556,29 @@ export function CurriculumPlanTable({ courses, extraMonths, initialData, onPlanC
     setActiveNode(null);
   };
 
+  // Функция для проверки пустых групп
+  const validateEmptyGroups = useCallback(() => {
+    // Находим все группы (не секции), у которых нет дочерних элементов
+    const emptyGroups = planData.filter(node => {
+      // Только для группы (не секции и не дисциплины)
+      if (node.type !== 'group') return false;
+      
+      // Проверяем наличие дочерних элементов
+      const hasChildren = planData.some(child => child.parentId === node.id);
+      return !hasChildren;
+    });
+    
+    // Обновляем список узлов с ошибками
+    setNodesWithErrors(emptyGroups.map(node => node.id));
+    
+    return emptyGroups.length > 0;
+  }, [planData]);
+  
+  // Запускаем валидацию при изменении данных
+  useEffect(() => {
+    validateEmptyGroups();
+  }, [validateEmptyGroups]);
+
   // Подготовка иерархии и расчет сумм часов
   const { hierarchicalData, flattenedData } = useMemo(() => {
     // Сортируем узлы по orderIndex
@@ -661,6 +688,8 @@ export function CurriculumPlanTable({ courses, extraMonths, initialData, onPlanC
     // Быстрая проверка количества элементов
     if (previousPlanDataRef.current.length !== planData.length) {
       console.log("[CurriculumPlanTable] Change detected: different number of nodes");
+      // Оповещаем о состоянии "dirty"
+      if (onDirtyChange) onDirtyChange(true);
       return true;
     }
     
@@ -714,11 +743,15 @@ export function CurriculumPlanTable({ courses, extraMonths, initialData, onPlanC
     
     if (prevString !== currentString) {
       console.log("[CurriculumPlanTable] Change detected in nodes data structure");
+      // Оповещаем о состоянии "dirty"
+      if (onDirtyChange) onDirtyChange(true);
       return true;
     }
     
+    // Данные не изменились, оповещаем о "чистом" состоянии
+    if (onDirtyChange) onDirtyChange(false);
     return false;
-  }, [planData]);
+  }, [planData, onDirtyChange]);
   
   // Отложенное сохранение при изменении данных
   useEffect(() => {
