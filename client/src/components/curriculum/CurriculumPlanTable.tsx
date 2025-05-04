@@ -98,14 +98,14 @@ const SubjectRow: React.FC<{
     <tr
       ref={setNodeRef}
       style={style}
-      className={`${isActive ? 'bg-blue-50 dark:bg-blue-900/20' : ''} hover:bg-indigo-50/40 dark:hover:bg-indigo-600/10`}
+      className={`${isActive ? 'bg-blue-50 dark:bg-blue-900/20' : ''} hover:bg-indigo-50/40 dark:hover:bg-indigo-600/10 transition-colors`}
     >
       <td className="sticky left-0 bg-inherit border-t border-slate-700/20 dark:border-slate-600/40 z-10">
         <div className="flex items-center" style={{ paddingLeft: `${paddingLeft}px` }}>
           <span className="cursor-grab" {...attributes} {...listeners}>
-            <GripVertical size={16} className="text-slate-400 mr-2" />
+            <GripVertical size={16} className="text-slate-400 mr-2 hover:text-blue-500 transition-colors" />
           </span>
-          <span className="font-normal">{node.title}</span>
+          <span className="font-normal text-blue-700 dark:text-blue-300">{node.title}</span>
           <div className="ml-auto mr-2">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -130,7 +130,7 @@ const SubjectRow: React.FC<{
           <input
             type="number"
             min={0}
-            className="w-full bg-transparent text-center outline-none tabular-nums"
+            className="w-full bg-transparent text-center outline-none hover:bg-blue-50 dark:hover:bg-blue-900/20 focus:bg-blue-100 dark:focus:bg-blue-900/40 tabular-nums transition-colors rounded py-1"
             value={node.hours[index] ?? 0}
             onChange={(e) => handleHoursChange(index, e.target.value)}
             onBlur={(e) => handleBlur(e, index)}
@@ -191,14 +191,14 @@ const GroupRow: React.FC<{
     <tr
       ref={setNodeRef}
       style={style}
-      className={`${isActive ? 'bg-blue-50 dark:bg-blue-900/20' : bgClass} hover:bg-indigo-50/40 dark:hover:bg-indigo-600/10`}
+      className={`${isActive ? 'bg-blue-50 dark:bg-blue-900/20' : bgClass} hover:bg-indigo-50/40 dark:hover:bg-indigo-600/10 transition-colors`}
     >
       <td className="sticky left-0 bg-inherit border-t border-slate-700/20 dark:border-slate-600/40 z-10">
         <div className="flex items-center" style={{ paddingLeft: `${paddingLeft}px` }}>
           {hasChildren ? (
             <button
               onClick={() => onToggleCollapse(node.id)}
-              className="p-1 rounded-md hover:bg-slate-200 dark:hover:bg-slate-700"
+              className="p-1 rounded-md hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
             >
               {node.isCollapsed ? (
                 <ChevronRight size={16} className="text-slate-500" />
@@ -211,10 +211,10 @@ const GroupRow: React.FC<{
           )}
           
           <span className="cursor-grab ml-1" {...attributes} {...listeners}>
-            <GripVertical size={16} className="text-slate-400 mr-2" />
+            <GripVertical size={16} className="text-slate-400 mr-2 hover:text-blue-500 transition-colors" />
           </span>
           
-          <span className={`${isSection ? 'font-semibold' : 'font-medium'}`}>
+          <span className={`${isSection ? 'font-semibold text-red-700 dark:text-red-400' : 'font-medium text-green-700 dark:text-green-400'}`}>
             {node.title}
           </span>
           
@@ -249,9 +249,15 @@ const GroupRow: React.FC<{
       {semesters.map((s, index) => (
         <td 
           key={s} 
-          className="w-16 p-1 border-l border-t border-slate-700/20 dark:border-slate-600/40 text-center font-medium tabular-nums"
+          className={`w-16 p-1 border-l border-t border-slate-700/20 dark:border-slate-600/40 text-center font-medium tabular-nums ${
+            isSection ? 'bg-red-50/50 dark:bg-red-950/20' : 'bg-green-50/50 dark:bg-green-950/20'
+          }`}
         >
-          {node.sums?.[index] || 0}
+          <span className={`${
+            node.sums && node.sums[index] > 0 ? (isSection ? 'text-red-700 dark:text-red-400' : 'text-green-700 dark:text-green-400') : 'text-slate-400 dark:text-slate-600'
+          }`}>
+            {node.sums?.[index] || 0}
+          </span>
         </td>
       ))}
     </tr>
