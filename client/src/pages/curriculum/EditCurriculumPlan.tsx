@@ -288,13 +288,14 @@ function EditCurriculumPlanContent(): React.ReactNode {
     try {
       // Приостанавливаем автосохранение на время ручного сохранения
       setAutosavePaused(true);
+      console.log("[saveCurriculum] Начало сохранения учебного плана");
       
       // Принудительно вызываем валидацию формы для обновления isDirty и ошибок
       await form.trigger();
       
       // Проверяем на ошибки валидации
       if (Object.keys(form.formState.errors).length > 0) {
-        console.error("[EditCurriculumPlan] Form has validation errors, cannot save:", form.formState.errors);
+        console.error("[saveCurriculum] Form has validation errors, cannot save:", form.formState.errors);
         toast({
           title: "Ошибка сохранения",
           description: "Пожалуйста, исправьте ошибки в форме перед сохранением",
@@ -308,33 +309,72 @@ function EditCurriculumPlanContent(): React.ReactNode {
       // Сохраняем данные формы в общем объекте planForm
       setPlanForm(formData);
       
-      // Получаем данные учебного плана (curriculumPlanData) из актуального состояния кэша
-      // Это гарантирует, что мы отправляем самую свежую версию данных плана
-      const currentPlan = queryClient.getQueryData<CurriculumPlan>([`/api/curriculum-plans/${planId}`]);
-      const planDataStr = currentPlan?.curriculumPlanData || "";
+      // Получаем данные учебного плана из самых актуальных источников
+      // 1. Сначала проверяем, есть ли данные в глобальной переменной (наиболее свежие)
+      // 2. Затем смотрим кэш queryClient
+      // 3. В крайнем случае берем из текущего плана
+      
+      let planDataStr: string = "";
+      
+      // Проверяем сначала глобальную переменную, затем кэш, затем текущие данные
+      if (window._lastPlanData) {
+        planDataStr = window._lastPlanData;
+        console.log("[saveCurriculum] Using plan data from global variable:", planDataStr.length, "bytes");
+      } else {
+        // Получаем данные из кэша
+        const currentPlan = queryClient.getQueryData<CurriculumPlan>([`/api/curriculum-plans/${planId}`]);
+        
+        if (currentPlan?.curriculumPlanData) {
+          planDataStr = currentPlan.curriculumPlanData;
+          console.log("[saveCurriculum] Using plan data from queryClient cache:", planDataStr.length, "bytes");
+        } else if (plan?.curriculumPlanData) {
+          planDataStr = plan.curriculumPlanData;
+          console.log("[saveCurriculum] Using plan data from component state:", planDataStr.length, "bytes");
+        } else {
+          console.warn("[saveCurriculum] No plan data found in any source");
+        }
+      }
+      
+      // КРИТИЧЕСКИ ВАЖНО: Проверяем, что план не пустой и имеет корректную структуру
+      if (planDataStr) {
+        try {
+          const parsedPlan = JSON.parse(planDataStr);
+          console.log("[saveCurriculum] Plan data validation:", {
+            hasSchemaVersion: !!parsedPlan.schemaVersion,
+            hasPlanData: !!parsedPlan.planData,
+            planDataLength: parsedPlan.planData?.length || 0
+          });
+        } catch (e) {
+          console.error("[saveCurriculum] Error parsing plan data:", e);
+        }
+      }
       
       // Выводим в лог информацию о сохраняемых данных плана
-      console.log(`[EditCurriculumPlan] Saving curriculum plan data: ${planDataStr.length} bytes`);
+      console.log(`[saveCurriculum] Curriculum plan data found: ${planDataStr.length} bytes`);
+      
+      // Подготавливаем данные календаря
+      const calendarDataJson = JSON.stringify(calendarDataRef.current);
       
       // Подготавливаем данные для сохранения
       const dataToSave = { 
         ...formData, 
         id: planId,
         // Объединяем все данные в один PATCH запрос
-        calendarJson: JSON.stringify(calendarDataRef.current),
+        calendarJson: calendarDataJson,
         planJson: planDataStr,
         // Явно передаем curriculumPlanData как есть для обработки на сервере
         curriculumPlanData: planDataStr
       };
       
-      console.log("[EditCurriculumPlan] Saving all curriculum data in unified PATCH request:", {
-        formFields: Object.keys(formData),
+      console.log("[saveCurriculum] Sending data in unified PATCH request:", {
+        formFields: Object.keys(formData).length,
         calendarFields: Object.keys(calendarDataRef.current).length,
         planDataLength: planDataStr.length
       });
       
       // Сохраняем все данные формы через единый PATCH запрос
       await updateMutation.mutateAsync(dataToSave);
+      console.log("[saveCurriculum] Request to server completed successfully");
       
       // После успешного сохранения сбрасываем флаги dirty
       setIsDirty(false);
@@ -346,15 +386,28 @@ function EditCurriculumPlanContent(): React.ReactNode {
         summary: false
       });
       
-      // Возобновляем автосохранение
-      setAutosavePaused(false);
+      // Возобновляем автосохранение с небольшой задержкой
+      setTimeout(() => {
+        setAutosavePaused(false);
+        console.log("[saveCurriculum] Autosave re-enabled after manual save");
+      }, 500);
       
       return true;
     } catch (error) {
-      console.error("[EditCurriculumPlan] Error saving curriculum:", error);
+      console.error("[saveCurriculum] Error while saving curriculum plan:", error);
       
-      // В случае ошибки также возобновляем автосохранение
-      setAutosavePaused(false);
+      // Показываем toast с ошибкой
+      toast({
+        title: "Ошибка сохранения",
+        description: "Не удалось сохранить учебный план. Пожалуйста, попробуйте снова.",
+        variant: "destructive",
+      });
+      
+      // Возобновляем автосохранение
+      setTimeout(() => {
+        setAutosavePaused(false);
+        console.log("[saveCurriculum] Autosave re-enabled after error");
+      }, 500);
       
       return false;
     }
