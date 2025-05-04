@@ -1,4 +1,11 @@
 import React, { useEffect, useState, useRef, useCallback, ReactNode } from "react";
+
+// Объявление типа для глобального объекта window
+declare global {
+  interface Window {
+    _lastPlanData?: string;
+  }
+}
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useParams, useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
@@ -1402,33 +1409,48 @@ function EditCurriculumPlanContent(): React.ReactNode {
                   onPlanChange={(planData) => {
                     // Сохраняем данные через единую функцию saveCurriculum
                     if (planId && !isNaN(planId)) {
-                      console.log("[EditCurriculumPlan] Plan data changed, setting dirty state");
-                      
-                      // Обновляем planDataRef для единого сохранения
-                      const planDataJson = JSON.stringify({ 
-                        schemaVersion: 1,
-                        planData 
+                      console.log("[EditCurriculumPlan] Plan data changed, setting dirty state", {
+                        nodesCount: planData.length,
+                        firstNode: planData[0]?.title || 'unknown'
                       });
                       
+                      // Создаем четкую, структурированную копию данных для JSON
+                      const dataForSaving = {
+                        schemaVersion: 1,
+                        planData: planData,
+                        timestamp: Date.now() // Добавляем временную метку для трассировки версий
+                      };
+                      
+                      // Сериализуем данные в JSON
+                      const planDataJson = JSON.stringify(dataForSaving);
+                      
+                      console.log(`[EditCurriculumPlan] Serialized plan data: ${planDataJson.length} bytes`);
+                      
                       // Обновляем план с новыми данными через queryClient
-                      // Это гарантирует что React узнает об изменении
                       if (plan) {
+                        // Создаем новый объект плана с обновленными данными
                         const updatedPlan = {
                           ...plan,
                           curriculumPlanData: planDataJson
                         };
                         
-                        // Обновляем кэш queryClient напрямую
-                        queryClient.setQueryData([`/api/curriculum-plans/${planId}`], updatedPlan);
+                        // ОЧЕНЬ ВАЖНО: сохраняем эти данные в глобальном контексте
+                        if (window._lastPlanData !== planDataJson) {
+                          window._lastPlanData = planDataJson;
+                          console.log("[EditCurriculumPlan] Updated global reference to plan data");
+                        }
                         
-                        // Также обновляем общий кэш со списком планов
+                        // Обновляем кэш queryClient напрямую - это гарантирует реактивность
+                        queryClient.setQueryData([`/api/curriculum-plans/${planId}`], updatedPlan);
+                        console.log("[EditCurriculumPlan] Updated plan data in queryClient cache");
+                        
+                        // Также обновляем общий кэш со списком планов для согласованности
                         const plansCache = queryClient.getQueryData<CurriculumPlan[]>(['/api/curriculum-plans']);
                         if (plansCache) {
                           const updatedPlans = plansCache.map(p => p.id === planId ? updatedPlan : p);
                           queryClient.setQueryData(['/api/curriculum-plans'], updatedPlans);
+                          console.log("[EditCurriculumPlan] Updated plans list cache");
                         }
-                        
-                        console.log("[EditCurriculumPlan] Updated plan data in cache:", updatedPlan.curriculumPlanData.length, "bytes");
                       }
                       
                       // Устанавливаем флаг dirty для плана
@@ -1441,12 +1463,14 @@ function EditCurriculumPlanContent(): React.ReactNode {
                       if (saveTimeoutRef.current) {
                         clearTimeout(saveTimeoutRef.current);
                         saveTimeoutRef.current = null;
+                        console.log("[EditCurriculumPlan] Cleared previous save timer");
                       }
                       
                       // Используем debounce для вызова saveCurriculum и сохраняем ID таймера
                       saveTimeoutRef.current = window.setTimeout(async () => {
-                        console.log("[EditCurriculumPlan] Saving plan data through unified save");
-                        await saveCurriculum();
+                        console.log("[EditCurriculumPlan] Timer elapsed, saving plan data to server");
+                        const saveSuccessful = await saveCurriculum();
+                        console.log("[EditCurriculumPlan] Plan data save result:", saveSuccessful);
                         saveTimeoutRef.current = null;
                       }, 1000);
                     }

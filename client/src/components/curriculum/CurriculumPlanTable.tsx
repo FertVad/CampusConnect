@@ -759,10 +759,18 @@ export function CurriculumPlanTable({ courses, extraMonths, initialData, onPlanC
       
       // Устанавливаем новый таймер для сохранения через 1000 мс
       saveTimeoutRef.current = window.setTimeout(() => {
-        console.log("[CurriculumPlanTable] Saving plan data...");
-        onPlanChange(planData);
+        // Делаем глубокую копию данных для сохранения, чтобы избежать проблем с ссылками
+        const planDataCopy = JSON.parse(JSON.stringify(planData));
+        console.log("[CurriculumPlanTable] Saving plan data...", {
+          nodesCount: planDataCopy.length,
+          firstNode: planDataCopy[0]?.title || 'unknown'
+        });
+        
+        // Вызываем родительский обработчик с копией данных
+        onPlanChange(planDataCopy);
+        
         // Обновляем предыдущее состояние после сохранения
-        previousPlanDataRef.current = JSON.parse(JSON.stringify(planData));
+        previousPlanDataRef.current = planDataCopy;
         saveTimeoutRef.current = null;
       }, 1000);
     }
