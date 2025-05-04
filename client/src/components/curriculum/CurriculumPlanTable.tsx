@@ -62,11 +62,14 @@ const SubjectRow: React.FC<{
   node: Subject;
   semesters: number[];
   isActive?: boolean;
+  isSelected?: boolean; // Флаг для множественного выделения
   depth: number;
+  isMultiSelectMode?: boolean; // Режим множественного выбора
   onValueChange: (id: string, semesterIndex: number, value: number) => void;
   onRename: (id: string) => void;
   onDelete: (id: string) => void;
-}> = ({ node, semesters, isActive, depth, onValueChange, onRename, onDelete }) => {
+  onSelect?: (id: string, ctrlKey: boolean) => void; // Обработчик выбора элемента
+}> = ({ node, semesters, isActive, isSelected, depth, isMultiSelectMode, onValueChange, onRename, onDelete, onSelect }) => {
   // Настройка сортировки элемента (для drag & drop)
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: node.id,
@@ -102,7 +105,9 @@ const SubjectRow: React.FC<{
     <tr
       ref={setNodeRef}
       style={style}
-      className={`${isActive ? 'bg-blue-50 dark:bg-blue-900/20' : ''} hover:bg-indigo-50/40 dark:hover:bg-indigo-600/10 transition-colors`}
+      className={`${isSelected ? 'bg-blue-100 dark:bg-blue-900/40' : (isActive ? 'bg-blue-50 dark:bg-blue-900/20' : '')} 
+        hover:bg-indigo-50/40 dark:hover:bg-indigo-600/10 transition-colors cursor-pointer`}
+      onClick={(e) => onSelect && onSelect(node.id, e.ctrlKey)}
     >
       <td className="sticky left-0 bg-inherit border-t border-slate-700/20 dark:border-slate-600/40 z-10">
         <div className="flex items-center" style={{ paddingLeft: `${paddingLeft}px` }}>
@@ -155,26 +160,32 @@ const GroupRow: React.FC<{
   node: NodeWithSums;
   semesters: number[];
   isActive?: boolean;
+  isSelected?: boolean; // Флаг для множественного выделения
   hasChildren: boolean;
   isSection: boolean;
   depth: number;
   hasError?: boolean; // Флаг ошибки (например, пустая группа)
+  isMultiSelectMode?: boolean; // Режим множественного выбора
   onToggleCollapse: (id: string) => void;
   onAddChild: (parentId: string, type: 'section' | 'group' | 'subject') => void;
   onRename: (id: string) => void;
   onDelete: (id: string) => void;
+  onSelect?: (id: string, ctrlKey: boolean) => void; // Обработчик выбора элемента
 }> = ({ 
   node, 
   semesters, 
   isActive, 
+  isSelected,
   hasChildren, 
   isSection, 
   depth, 
   hasError,
+  isMultiSelectMode,
   onToggleCollapse, 
   onAddChild, 
   onRename, 
-  onDelete 
+  onDelete,
+  onSelect
 }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: node.id,
@@ -207,7 +218,9 @@ const GroupRow: React.FC<{
     <tr
       ref={setNodeRef}
       style={style}
-      className={`${isActive ? 'bg-blue-50 dark:bg-blue-900/20' : bgClass} hover:bg-indigo-50/40 dark:hover:bg-indigo-600/10 transition-colors`}
+      className={`${isSelected ? 'bg-blue-100 dark:bg-blue-900/40' : (isActive ? 'bg-blue-50 dark:bg-blue-900/20' : bgClass)} 
+        hover:bg-indigo-50/40 dark:hover:bg-indigo-600/10 transition-colors cursor-pointer`}
+      onClick={(e) => onSelect && onSelect(node.id, e.ctrlKey)}
     >
       <td className="sticky left-0 bg-inherit border-t border-slate-700/20 dark:border-slate-600/40 z-10">
         <div className="flex items-center" style={{ paddingLeft: `${paddingLeft}px` }}>
@@ -314,6 +327,12 @@ export const CurriculumPlanTable = React.forwardRef<{ forceUpdate: () => void },
 
   // Выбранный узел (для контекстных операций)
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  
+  // Состояние для множественного выбора узлов
+  const [selectedNodes, setSelectedNodes] = useState<Set<string>>(new Set());
+  
+  // Флаг множественного выбора (режим выбора нескольких элементов)
+  const [isMultiSelectMode, setIsMultiSelectMode] = useState<boolean>(false);
   
   // Состояние для узла, который перетаскивается (drag & drop)
   const [activeId, setActiveId] = useState<string | null>(null);
