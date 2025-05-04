@@ -1,0 +1,107 @@
+        </DragOverlay>
+      </DndContext>
+      
+      {/* Кнопка добавления нового элемента */}
+      <div className="flex justify-end">
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button className="gap-2">
+              <PlusCircle size={16} /> Добавить
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-56 p-0" align="end">
+            <div className="flex flex-col">
+              <Button 
+                variant="ghost" 
+                className="justify-start gap-2 rounded-none"
+                onClick={() => {
+                  // Если выбран узел, добавляем на том же уровне
+                  if (selectedNodeId) {
+                    const selectedNode = planData.find(n => n.id === selectedNodeId);
+                    if (selectedNode) {
+                      // Добавляем на том же уровне (с тем же родителем)
+                      addNode('section', selectedNode.parentId);
+                      return;
+                    }
+                  }
+                  // Иначе добавляем в корень
+                  addNode('section');
+                }}
+              >
+                <Plus size={16} /> Раздел
+              </Button>
+              <Button 
+                variant="ghost" 
+                className="justify-start gap-2 rounded-none"
+                onClick={() => {
+                  // Если выбран узел, добавляем на том же уровне или внутри него
+                  if (selectedNodeId) {
+                    const selectedNode = planData.find(n => n.id === selectedNodeId);
+                    if (selectedNode) {
+                      if (selectedNode.type === 'section') {
+                        // Если выбран раздел, добавляем группу внутрь него
+                        addNode('group', selectedNode.id);
+                      } else {
+                        // Иначе добавляем на том же уровне
+                        addNode('group', selectedNode.parentId);
+                      }
+                      return;
+                    }
+                  }
+                  // Иначе добавляем в корень
+                  addNode('group');
+                }}
+              >
+                <Plus size={16} /> Группа дисциплин
+              </Button>
+              <Button 
+                variant="ghost" 
+                className="justify-start gap-2 rounded-none"
+                onClick={() => {
+                  // Если выбран узел, добавляем на том же уровне или внутри него
+                  if (selectedNodeId) {
+                    const selectedNode = planData.find(n => n.id === selectedNodeId);
+                    if (selectedNode) {
+                      if (selectedNode.type === 'group') {
+                        // Если выбрана группа, добавляем дисциплину внутрь нее
+                        addNode('subject', selectedNode.id);
+                      } else if (selectedNode.type === 'subject') {
+                        // Если выбрана дисциплина, добавляем на том же уровне
+                        addNode('subject', selectedNode.parentId);
+                      } else if (selectedNode.type === 'section') {
+                        // Если выбран раздел, ищем первую группу внутри него
+                        const firstGroup = planData.find(n => n.parentId === selectedNode.id && n.type === 'group');
+                        if (firstGroup) {
+                          // Если есть группа, добавляем в нее
+                          addNode('subject', firstGroup.id);
+                        } else {
+                          // Если нет группы, создаем новую и добавляем в нее
+                          const newGroupId = uuidv4();
+                          const newGroup = {
+                            id: newGroupId,
+                            title: 'Новая группа дисциплин',
+                            parentId: selectedNode.id,
+                            type: 'group' as const,
+                            orderIndex: 0,
+                            isCollapsed: false
+                          };
+                          setPlanData(prev => [...prev, newGroup]);
+                          // Затем добавляем дисциплину в эту группу
+                          setTimeout(() => addNode('subject', newGroupId), 100);
+                        }
+                      }
+                      return;
+                    }
+                  }
+                  // Иначе добавляем в корень
+                  addNode('subject');
+                }}
+              >
+                <Plus size={16} /> Дисциплина
+              </Button>
+            </div>
+          </PopoverContent>
+        </Popover>
+      </div>
+      
+      {/* Диалог редактирования названия */}
