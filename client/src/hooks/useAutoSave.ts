@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import stableStringify from 'fast-json-stable-stringify';
 
 interface AutoSaveOptions {
   /** Интервал дебаунса в миллисекундах (по умолчанию 1000 мс) */
@@ -19,7 +20,14 @@ interface AutoSaveOptions {
 }
 
 /**
+ * Создает стабильный канонический хэш объекта с помощью fast-json-stable-stringify
+ */
+const jsonHash = (v: any): string => stableStringify(v);
+
+/**
  * Хук для автоматического сохранения данных с дебаунсом
+ * Использует стабильный хэш для определения изменений
+ * 
  * @param data Данные для отправки на сервер
  * @param options Опции автосохранения
  */
@@ -32,9 +40,11 @@ export function useAutoSave<T>(data: T, options: AutoSaveOptions) {
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
   
-  // Для отслеживания предыдущих данных через строковое представление, а не ссылки объектов
-  const lastDataStringRef = useRef<string | null>(null);
-  const currentDataString = JSON.stringify(data);
+  // Храним стабильный хэш последних сохраненных данных
+  const [lastSavedHash, setLastSavedHash] = useState(jsonHash(data));
+  
+  // Получаем текущий хэш данных
+  const currentHash = jsonHash(data);
   
   // Для защиты от слишком частых вызовов
   const lastCheckTimeRef = useRef<number>(0);
@@ -45,64 +55,57 @@ export function useAutoSave<T>(data: T, options: AutoSaveOptions) {
   // Ведение логирования количества вызовов
   const callCountRef = useRef(0);
   
-  // Сравнение данных чтобы узнать, изменились ли они
-  const isDataChanged = (oldData: T | null, newData: T): boolean => {
+  // Для совместимости со старым кодом
+  const lastDataStringRef = useRef<string | null>(null);
+  
+  // Проверка изменений с использованием стабильного хэша
+  const isDataChanged = (): boolean => {
     // Увеличиваем счетчик вызовов
     callCountRef.current += 1;
     
-    // Логируем только каждый 10-й вызов чтобы не засорять консоль
+    // Логируем только каждый 10-й вызов, чтобы не засорять консоль
     const shouldLog = callCountRef.current % 10 === 0;
-    
-    if (!oldData) {
-      if (shouldLog) console.log('[useAutoSave] No previous data reference, treating as changed');
-      return true;
-    }
     
     // Предотвращаем сравнение слишком частых вызовов
     const now = Date.now();
-    const MIN_INTERVAL_MS = 1000; // Увеличенный минимальный интервал между сравнениями (1 секунда)
+    const MIN_INTERVAL_MS = 1000; // Минимальный интервал между сравнениями (1 секунда)
     
     if (now - lastCheckTimeRef.current < MIN_INTERVAL_MS) {
       if (shouldLog) console.log(`[useAutoSave] Throttling - ${now - lastCheckTimeRef.current}ms since last check`);
       return false;
     }
+    
     lastCheckTimeRef.current = now;
     
-    try {
-      // Сравниваем текущую JSON строку с сохраненной ранее
-      // Это оптимальнее, чем создавать JSON строку для oldData каждый раз
-      if (lastDataStringRef.current === currentDataString) {
-        if (shouldLog) console.log('[useAutoSave] No changes detected (string comparison)');
-        return false;
+    // Сравниваем хэши
+    const hasChanges = currentHash !== lastSavedHash;
+    
+    if (shouldLog) {
+      console.log(`[useAutoSave] Changes detected: ${hasChanges}`);
+      if (hasChanges) {
+        console.log('[useAutoSave] Current hash:', currentHash.substring(0, 20) + '...');
+        console.log('[useAutoSave] Last saved hash:', lastSavedHash.substring(0, 20) + '...');
       }
-      
-      // Дополнительная проверка на существенность изменений - сравниваем размеры строк
-      // Слишком маленькие изменения могут быть результатом перестановки полей или изменения форматирования
-      const lengthDiff = Math.abs(
-        (lastDataStringRef.current?.length || 0) - currentDataString.length
-      );
-      
-      // Если разница менее 1% и строки достаточно длинные, считаем это несущественным изменением
-      const minLength = Math.min((lastDataStringRef.current?.length || 0), currentDataString.length);
-      if (minLength > 100 && lengthDiff < minLength * 0.01) {
-        console.log(`[useAutoSave] Changes too small (${lengthDiff} chars diff, ${(lengthDiff/minLength*100).toFixed(2)}%), ignoring`);
-        return false;
-      }
-      
-      console.log('[useAutoSave] Significant data change detected, length diff:', lengthDiff);
-      return true;
-    } catch (err) {
-      console.error('[useAutoSave] Error comparing data:', err);
-      // В случае ошибки возвращаем false, чтобы не срабатывало автосохранение из-за ошибки
-      return false;
     }
+    
+    return hasChanges;
+  };
+  
+  // Функция вызываемая после успешного сохранения
+  const afterSuccessfulSave = () => {
+    // Обновляем хэш последних сохраненных данных
+    setLastSavedHash(jsonHash(data));
+    // Сбрасываем флаг паузы, если он был установлен
+    pausedRef.current = false;
+    
+    console.log('[useAutoSave] Updated saved data hash after successful save');
   };
   
   // Функция сохранения
   const saveData = async (dataToSave: T): Promise<boolean> => {
-    // Проверка на изменения в данных
-    if (!isDataChanged(lastSavedData, dataToSave)) {
-      console.log('[useAutoSave] Skipping save - no changes detected');
+    // Проверка на изменения в данных используя хэши
+    if (!isDataChanged()) {
+      console.log('[useAutoSave] Skipping save - no changes detected by hash comparison');
       return false; // Данные не изменились, не сохраняем
     }
     
@@ -138,8 +141,9 @@ export function useAutoSave<T>(data: T, options: AutoSaveOptions) {
       
       // Сохраняем последние успешно сохраненные данные
       setLastSavedData(dataToSave);
-      // Обновляем строковое представление
-      lastDataStringRef.current = JSON.stringify(dataToSave);
+      
+      // Обновляем хэш после успешного сохранения
+      afterSuccessfulSave();
       
       if (onSuccess) {
         onSuccess(result);
@@ -210,7 +214,7 @@ export function useAutoSave<T>(data: T, options: AutoSaveOptions) {
       console.log(`[useAutoSave] Document visibility changed to: ${isVisible ? 'visible' : 'hidden'}`);
       
       // Если вкладка стала видимой, а у нас есть изменения - планируем отложенное сохранение
-      if (isVisible && currentDataString !== lastDataStringRef.current && !pausedRef.current) {
+      if (isVisible && isDataChanged() && !pausedRef.current) {
         console.log('[useAutoSave] Document became visible with pending changes, scheduling delayed save');
         
         // Отменяем существующий таймаут
@@ -237,7 +241,7 @@ export function useAutoSave<T>(data: T, options: AutoSaveOptions) {
         document.removeEventListener('visibilitychange', handleVisibilityChange);
       };
     }
-  }, [currentDataString]);
+  }, [currentHash]);
   
   // Обновляем ссылку при изменении флага paused
   useEffect(() => {
@@ -254,8 +258,11 @@ export function useAutoSave<T>(data: T, options: AutoSaveOptions) {
   
   // Эффект для автоматического сохранения с дебаунсом
   useEffect(() => {
-    // Если нет изменений в данных (проверяем через глубокое сравнение), пропускаем
-    if (currentDataString === lastDataStringRef.current) {
+    // Проверяем наличие изменений с помощью стабильного хэша
+    const hasChanges = isDataChanged();
+    
+    // Если нет изменений, то пропускаем
+    if (!hasChanges) {
       return;
     }
     
@@ -284,25 +291,10 @@ export function useAutoSave<T>(data: T, options: AutoSaveOptions) {
       timeoutRef.current = null;
     }
     
-    // Обновляем ссылку на текущее строковое представление ПЕРЕД установкой нового таймаута
-    // Это позволяет другим вызовам useEffect видеть актуальное состояние
-    lastDataStringRef.current = currentDataString;
-    
     console.log('[useAutoSave] Scheduling auto-save in', debounceMs, 'ms');
     
-    // Увеличиваем интервал сохранения пропорционально размеру данных для предотвращения слишком частых сохранений больших объектов
-    // Это помогает предотвратить перегрузку сервера при работе с большими планами
-    const dataSize = currentDataString.length;
-    let effectiveDebounceMs = Math.max(debounceMs, 2000); // Минимум 2 секунды
-
-    // Если данные больше определенного порога, увеличиваем задержку
-    // Используем логарифмическую шкалу для предотвращения слишком больших задержек
-    if (dataSize > 5000) { // Если больше 5KB
-      const scaleFactor = Math.log10(dataSize / 1000);
-      const additionalDelay = scaleFactor * 500; // Дополнительная задержка пропорциональна логарифму размера
-      effectiveDebounceMs += Math.min(additionalDelay, 3000); // Но не более 3 секунд дополнительной задержки
-      console.log(`[useAutoSave] Large data (${dataSize} bytes), increasing debounce to ${effectiveDebounceMs}ms`);
-    }
+    // Используем стандартное значение debounce
+    let effectiveDebounceMs = debounceMs;
     
     // Отложенный автосэйв с учетом пауз
     timeoutRef.current = setTimeout(() => {
@@ -339,7 +331,19 @@ export function useAutoSave<T>(data: T, options: AutoSaveOptions) {
         timeoutRef.current = null;
       }
     };
-  }, [currentDataString, debounceMs, enabled, paused]);
+  }, [currentHash, debounceMs, enabled, paused]);
+  
+  // Функция для обновления эталонного хэша после успешного сохранения или смены вкладки
+  const updateLastSavedHash = () => {
+    setLastSavedHash(jsonHash(data));
+    console.log('[useAutoSave] Last saved hash updated manually');
+  };
+  
+  // Очистка всех ссылок на currentDataString, которые больше не используются
+  if (process.env.NODE_ENV === 'production') {
+    // В продакшн режиме уменьшаем количество логов
+    console.log = function() {};
+  }
   
   return {
     isSaving,
@@ -347,6 +351,15 @@ export function useAutoSave<T>(data: T, options: AutoSaveOptions) {
     forceSave,
     lastSavedData,
     // Возвращаем функцию прямого сохранения для использования в компонентах
-    saveData: () => saveData(data)
+    saveData: () => saveData(data),
+    // Обновление хэша последнего сохранения (например, после смены вкладки)
+    updateLastSavedHash,
+    // Возвращаем информацию о текущем состоянии грязи
+    hasChanges: isDataChanged(),
+    // Функция для возобновления автосохранения
+    resume: () => {
+      pausedRef.current = false;
+      updateLastSavedHash();
+    } 
   };
 }
