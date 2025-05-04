@@ -17,7 +17,18 @@ interface AutoSaveOptions {
   enabled?: boolean;
   /** Флаг для приостановки автосохранения во время ручного сохранения */
   paused?: boolean;
+  /** Родительский путь для логирования (используется для фильтрации логов) */
+  logParent?: string;
 }
+
+// В продакшн режиме уменьшаем количество логов
+const consoleLogger = (message: string, ...args: any[]) => {
+  // В продакшн режиме не выводим логи
+  if (process.env.NODE_ENV === 'production') {
+    return;
+  }
+  console.log(message, ...args);
+};
 
 /**
  * Создает стабильный канонический хэш объекта с помощью fast-json-stable-stringify
@@ -32,7 +43,7 @@ const jsonHash = (v: any): string => stableStringify(v);
  * @param options Опции автосохранения
  */
 export function useAutoSave<T>(data: T, options: AutoSaveOptions) {
-  const { debounceMs = 1000, url, method = 'POST', onError, onSuccess, enabled = true, paused = false } = options;
+  const { debounceMs = 1000, url, method = 'POST', onError, onSuccess, enabled = true, paused = false, logParent = 'useAutoSave' } = options;
   
   const [isSaving, setIsSaving] = useState(false);
   const [lastSavedData, setLastSavedData] = useState<T | null>(null);
@@ -71,7 +82,7 @@ export function useAutoSave<T>(data: T, options: AutoSaveOptions) {
     const MIN_INTERVAL_MS = 1000; // Минимальный интервал между сравнениями (1 секунда)
     
     if (now - lastCheckTimeRef.current < MIN_INTERVAL_MS) {
-      if (shouldLog) console.log(`[useAutoSave] Throttling - ${now - lastCheckTimeRef.current}ms since last check`);
+      if (shouldLog) consoleLogger(`[${logParent}] Throttling - ${now - lastCheckTimeRef.current}ms since last check`);
       return false;
     }
     
@@ -81,10 +92,10 @@ export function useAutoSave<T>(data: T, options: AutoSaveOptions) {
     const hasChanges = currentHash !== lastSavedHash;
     
     if (shouldLog) {
-      console.log(`[useAutoSave] Changes detected: ${hasChanges}`);
+      consoleLogger(`[${logParent}] Changes detected: ${hasChanges}`);
       if (hasChanges) {
-        console.log('[useAutoSave] Current hash:', currentHash.substring(0, 20) + '...');
-        console.log('[useAutoSave] Last saved hash:', lastSavedHash.substring(0, 20) + '...');
+        consoleLogger(`[${logParent}] Current hash: ${currentHash.substring(0, 20)}...`);
+        consoleLogger(`[${logParent}] Last saved hash: ${lastSavedHash.substring(0, 20)}...`);
       }
     }
     
@@ -339,11 +350,14 @@ export function useAutoSave<T>(data: T, options: AutoSaveOptions) {
     console.log('[useAutoSave] Last saved hash updated manually');
   };
   
-  // Очистка всех ссылок на currentDataString, которые больше не используются
-  if (process.env.NODE_ENV === 'production') {
-    // В продакшн режиме уменьшаем количество логов
-    console.log = function() {};
-  }
+  // В продакшн режиме уменьшаем количество логов
+  const consoleLogger = (message: string, ...args: any[]) => {
+    // В продакшн режиме не выводим логи
+    if (process.env.NODE_ENV === 'production') {
+      return;
+    }
+    console.log(message, ...args);
+  };
   
   return {
     isSaving,
