@@ -687,101 +687,69 @@ export function CurriculumPlanTable({ courses, extraMonths, initialData, onPlanC
   const isInitialMount = useRef(true);
   const previousPlanDataRef = useRef<CurriculumPlan | null>(null);
   
+  // Упрощенное локальное состояние для отслеживания грязных данных
+  const [localIsDirty, setLocalIsDirty] = useState(false);
+  // Таймер для debounce вызова onDirtyChange
+  const dirtyTimeoutRef = useRef<number | null>(null);
+  
   // Функция для сравнения предыдущих и текущих данных
   const hasPlanDataChanged = useCallback(() => {
     if (!previousPlanDataRef.current) return false;
     
-    // Сравниваем только по существенным свойствам:
-    // - структура дерева (id, parentId, type)
-    // - orderIndex для порядка элементов
-    // - hours для предметов
-    // - убираем из сравнения isCollapsed (т.к. это UI-состояние)
-    
     // Быстрая проверка количества элементов
     if (previousPlanDataRef.current.length !== planData.length) {
-      console.log("[CurriculumPlanTable] Change detected: different number of nodes");
       return true;
     }
     
-    // Проверяем порядок и структуру, собирая снимки содержимого
-    const prevSnapshot = previousPlanDataRef.current.map(node => {
-      if (node.type === 'subject') {
-        // Для дисциплин - ID, родитель, тип, orderIndex и массив часов
-        const subject = node as Subject;
-        return {
-          id: node.id,
-          parentId: node.parentId,
-          type: node.type,
-          orderIndex: node.orderIndex,
-          hours: [...subject.hours]
-        };
-      } else {
-        // Для разделов и групп - только ID, родитель, тип и orderIndex
-        // isCollapsed не учитываем, т.к. это влияет только на отображение
-        return {
-          id: node.id,
-          parentId: node.parentId,
-          type: node.type,
-          orderIndex: node.orderIndex
-        };
-      }
+    // Сравниваем только основные свойства, исключая UI-состояния
+    const prevFiltered = previousPlanDataRef.current.map(node => {
+      const { isCollapsed, ...rest } = node as any;
+      return rest;
     });
     
-    const currentSnapshot = planData.map(node => {
-      if (node.type === 'subject') {
-        const subject = node as Subject;
-        return {
-          id: node.id,
-          parentId: node.parentId,
-          type: node.type,
-          orderIndex: node.orderIndex,
-          hours: [...subject.hours]
-        };
-      } else {
-        return {
-          id: node.id,
-          parentId: node.parentId,
-          type: node.type,
-          orderIndex: node.orderIndex
-        };
-      }
+    const currentFiltered = planData.map(node => {
+      const { isCollapsed, ...rest } = node as any;
+      return rest;
     });
     
-    // Строковое сравнение снимков
-    const prevString = JSON.stringify(prevSnapshot);
-    const currentString = JSON.stringify(currentSnapshot);
+    // Строковое сравнение только необходимых свойств
+    const prevString = JSON.stringify(prevFiltered);
+    const currentString = JSON.stringify(currentFiltered);
     
     return prevString !== currentString;
   }, [planData]);
-  
-  // Отдельный эффект для обновления состояния "dirty"
-  useEffect(() => {
-    // Пропускаем первый рендер, чтобы не считать начальную загрузку как "dirty"
-    if (isInitialMount.current) return;
-    
-    // Проверяем, действительно ли данные изменились
-    const isDirty = hasPlanDataChanged();
-    
-    // Только если у нас есть колбэк для изменений, вызываем его
-    if (onDirtyChange) {
-      onDirtyChange(isDirty);
-    }
-  }, [hasPlanDataChanged, onDirtyChange]);
 
-  // Отложенное сохранение при изменении данных
+  // Эффект для обновления локального isDirty состояния
   useEffect(() => {
-    // Пропускаем эффект при первом рендере
+    // Пропускаем первый рендер
     if (isInitialMount.current) {
       isInitialMount.current = false;
       previousPlanDataRef.current = JSON.parse(JSON.stringify(planData));
       return;
     }
     
-    // Проверяем, действительно ли данные изменились
-    if (onPlanChange && hasPlanDataChanged()) {
-      console.log("[CurriculumPlanTable] Detected real changes in plan data, scheduling save...");
-      
-      // Отменяем предыдущий таймер, если он есть
+    // Проверяем наличие изменений
+    const isDirty = hasPlanDataChanged();
+    
+    // Обновляем локальное состояние
+    setLocalIsDirty(isDirty);
+    
+    // Используем debounce для вызова onDirtyChange, чтобы не вызывать его слишком часто
+    if (dirtyTimeoutRef.current) {
+      window.clearTimeout(dirtyTimeoutRef.current);
+    }
+    
+    dirtyTimeoutRef.current = window.setTimeout(() => {
+      // Вызываем колбэк только если он существует
+      if (onDirtyChange) {
+        onDirtyChange(isDirty);
+      }
+      dirtyTimeoutRef.current = null;
+    }, 300); // 300ms debounce
+    
+    // Если есть реальные изменения, обрабатываем их для автосохранения
+    if (isDirty && onPlanChange) {
+      // Отменяем предыдущий таймер сохранения, если он есть
       if (saveTimeoutRef.current !== null) {
         window.clearTimeout(saveTimeoutRef.current);
       }
@@ -789,24 +757,26 @@ export function CurriculumPlanTable({ courses, extraMonths, initialData, onPlanC
       // Запоминаем время последнего изменения
       lastChangeTime.current = Date.now();
       
-      // Устанавливаем новый таймер для сохранения через 1000 мс (увеличиваем время)
+      // Устанавливаем новый таймер для сохранения через 1000 мс
       saveTimeoutRef.current = window.setTimeout(() => {
         console.log("[CurriculumPlanTable] Saving plan data...");
         onPlanChange(planData);
+        // Обновляем предыдущее состояние после сохранения
+        previousPlanDataRef.current = JSON.parse(JSON.stringify(planData));
         saveTimeoutRef.current = null;
       }, 1000);
-      
-      // Обновляем предыдущее состояние (глубокая копия)
-      previousPlanDataRef.current = JSON.parse(JSON.stringify(planData));
     }
     
-    // Отменяем таймер при размонтировании компонента
+    // Очищаем таймеры при размонтировании
     return () => {
       if (saveTimeoutRef.current !== null) {
         window.clearTimeout(saveTimeoutRef.current);
       }
+      if (dirtyTimeoutRef.current !== null) {
+        window.clearTimeout(dirtyTimeoutRef.current);
+      }
     };
-  }, [planData, onPlanChange, hasPlanDataChanged]);
+  }, [planData, hasPlanDataChanged, onPlanChange]);
 
   // Сортированные ID для SortableContext
   const sortedIds = useMemo(() => {
