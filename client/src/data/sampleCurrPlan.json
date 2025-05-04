@@ -1,9 +1,85 @@
 {
-  "disciplines": [
-    {"id": 1, "name": "Дисциплина 1"},
-    {"id": 2, "name": "Дисциплина 2"},
-    {"id": 3, "name": "Дисциплина 3"},
-    {"id": 4, "name": "Дисциплина 4"},
-    {"id": 5, "name": "Дисциплина 5"}
+  "schemaVersion": 1,
+  "planData": [
+    {
+      "id": "section-1",
+      "title": "Общеобразовательный цикл",
+      "parentId": null,
+      "type": "section",
+      "orderIndex": 0,
+      "isCollapsed": false
+    },
+    {
+      "id": "group-1",
+      "title": "Базовые дисциплины",
+      "parentId": "section-1",
+      "type": "group",
+      "orderIndex": 0,
+      "isCollapsed": false
+    },
+    {
+      "id": "subject-1",
+      "title": "Математика",
+      "parentId": "group-1",
+      "type": "subject",
+      "orderIndex": 0,
+      "hours": [36, 32, 0, 0, 0, 0, 0, 0]
+    },
+    {
+      "id": "subject-2",
+      "title": "Информатика",
+      "parentId": "group-1",
+      "type": "subject",
+      "orderIndex": 1,
+      "hours": [18, 24, 32, 0, 0, 0, 0, 0]
+    },
+    {
+      "id": "group-2",
+      "title": "Профильные дисциплины",
+      "parentId": "section-1",
+      "type": "group",
+      "orderIndex": 1,
+      "isCollapsed": false
+    },
+    {
+      "id": "subject-3",
+      "title": "Физика",
+      "parentId": "group-2",
+      "type": "subject",
+      "orderIndex": 0,
+      "hours": [24, 30, 42, 36, 0, 0, 0, 0]
+    },
+    {
+      "id": "section-2",
+      "title": "Профессиональный цикл",
+      "parentId": null,
+      "type": "section",
+      "orderIndex": 1,
+      "isCollapsed": false
+    },
+    {
+      "id": "group-3",
+      "title": "Общепрофессиональные дисциплины",
+      "parentId": "section-2",
+      "type": "group",
+      "orderIndex": 0,
+      "isCollapsed": false
+    },
+    {
+      "id": "subject-4",
+      "title": "Инженерная графика",
+      "parentId": "group-3",
+      "type": "subject",
+      "orderIndex": 0,
+      "hours": [0, 0, 36, 42, 30, 0, 0, 0]
+    },
+    {
+      "id": "subject-5",
+      "title": "Техническая механика",
+      "parentId": "group-3",
+      "type": "subject",
+      "orderIndex": 1,
+      "hours": [0, 0, 0, 36, 48, 42, 0, 0]
+    }
   ]
 }

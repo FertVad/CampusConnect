@@ -1302,7 +1302,22 @@ function EditCurriculumPlanContent(): React.ReactNode {
                 
                 <CurriculumPlanTable 
                   courses={planYearsOfStudy} 
-                  extraMonths={planMonthsOfStudy} 
+                  extraMonths={planMonthsOfStudy}
+                  initialData={plan?.curriculumPlanData ? JSON.parse(plan.curriculumPlanData as string) : undefined}
+                  onPlanChange={(planData) => {
+                    // Сохраняем данные через мутацию
+                    if (planId && !isNaN(planId)) {
+                      setAutosavePaused(true);
+                      updateMutation.mutate({
+                        id: planId,
+                        curriculumPlanData: JSON.stringify({ 
+                          schemaVersion: 1,
+                          planData 
+                        })
+                      });
+                      setTimeout(() => setAutosavePaused(false), 1000);
+                    }
+                  }}
                 />
               </div>
             </TabsContent>
