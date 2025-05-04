@@ -766,6 +766,16 @@ export function CurriculumPlanTable({ courses, extraMonths, initialData, onPlanC
           firstNode: planDataCopy[0]?.title || 'unknown'
         });
         
+        // КРИТИЧЕСКИ ВАЖНО: Сохраняем копию данных в глобальной переменной для надежного доступа
+        if (typeof window !== 'undefined') {
+          // @ts-ignore Добавляем глобальную переменную для сохранения последних данных
+          window._lastPlanData = JSON.stringify({ 
+            schemaVersion: 1, 
+            planData: planDataCopy 
+          });
+          console.log("[CurriculumPlanTable] Global data backup saved, length:", window._lastPlanData?.length || 0);
+        }
+        
         // Вызываем родительский обработчик с копией данных
         onPlanChange(planDataCopy);
         
