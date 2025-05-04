@@ -753,7 +753,7 @@ export function CurriculumPlanTable({ courses, extraMonths, initialData, onPlanC
               <Button 
                 variant="ghost" 
                 className="justify-start gap-2 rounded-none"
-                onClick={() => handleAddNode('subject')}
+                onClick={() => addNode('subject')}
               >
                 <Plus size={16} /> Дисциплина
               </Button>

@@ -41,6 +41,8 @@ const curriculumFormSchema = z.object({
     required_error: "Выберите уровень образования",
   }),
   description: z.string().optional(),
+  calendarData: z.string().optional(),
+  curriculumPlanData: z.string().optional(),
 });
 
 // Тип для данных формы
@@ -114,7 +116,7 @@ function EditCurriculumPlanContent(): React.ReactNode {
   
   // Мутация для обновления учебного плана
   const updateMutation = useMutation({
-    mutationFn: (updatedPlan: Partial<CurriculumFormValues> & { id: number, calendarData?: string }) => {
+    mutationFn: (updatedPlan: Partial<CurriculumFormValues> & { id: number, calendarData?: string, curriculumPlanData?: string }) => {
       const { id, ...planData } = updatedPlan;
       
       // Сохраняем текущие данные yearsOfStudy для синхронизации между компонентами
