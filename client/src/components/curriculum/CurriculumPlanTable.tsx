@@ -700,8 +700,6 @@ export function CurriculumPlanTable({ courses, extraMonths, initialData, onPlanC
     // Быстрая проверка количества элементов
     if (previousPlanDataRef.current.length !== planData.length) {
       console.log("[CurriculumPlanTable] Change detected: different number of nodes");
-      // Оповещаем о состоянии "dirty"
-      if (onDirtyChange) onDirtyChange(true);
       return true;
     }
     
@@ -753,18 +751,23 @@ export function CurriculumPlanTable({ courses, extraMonths, initialData, onPlanC
     const prevString = JSON.stringify(prevSnapshot);
     const currentString = JSON.stringify(currentSnapshot);
     
-    if (prevString !== currentString) {
-      console.log("[CurriculumPlanTable] Change detected in nodes data structure");
-      // Оповещаем о состоянии "dirty"
-      if (onDirtyChange) onDirtyChange(true);
-      return true;
-    }
-    
-    // Данные не изменились, оповещаем о "чистом" состоянии
-    if (onDirtyChange) onDirtyChange(false);
-    return false;
-  }, [planData, onDirtyChange]);
+    return prevString !== currentString;
+  }, [planData]);
   
+  // Отдельный эффект для обновления состояния "dirty"
+  useEffect(() => {
+    // Пропускаем первый рендер, чтобы не считать начальную загрузку как "dirty"
+    if (isInitialMount.current) return;
+    
+    // Проверяем, действительно ли данные изменились
+    const isDirty = hasPlanDataChanged();
+    
+    // Только если у нас есть колбэк для изменений, вызываем его
+    if (onDirtyChange) {
+      onDirtyChange(isDirty);
+    }
+  }, [hasPlanDataChanged, onDirtyChange]);
+
   // Отложенное сохранение при изменении данных
   useEffect(() => {
     // Пропускаем эффект при первом рендере

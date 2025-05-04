@@ -1,0 +1,502 @@
+[Log] [EditCurriculumPlan] Parsed calendar data from plan: – {course1_week1: "У", course1_week9: "У", course1_week2: "У", …} (EditCurriculumPlan.tsx, line 361)
+{course1_week1: "У", course1_week9: "У", course1_week2: "У", course1_week3: "У", course1_week4: "У", …}Object
+[Error] Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.
+PopperAnchor@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-TJLBKCNO.js:419:64
+MenuAnchor@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-dropdown-menu.js:144:50
+DropdownMenuTrigger@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-dropdown-menu.js:942:77
+MenuProvider@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-JJS7DLG7.js:38:52
+MenuProvider@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-JJS7DLG7.js:38:52
+PopperProvider@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-TJLBKCNO.js:354:52
+Popper@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-TJLBKCNO.js:411:44
+Menu@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-dropdown-menu.js:98:89
+DropdownMenuProvider@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-JJS7DLG7.js:38:52
+DropdownMenu@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-dropdown-menu.js:915:12
+div
+div
+td
+tr
+GroupRow@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/components/curriculum/CurriculumPlanTable.tsx:195:7
+SortableContext@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@dnd-kit_sortable.js:266:11
+tbody
+table
+div
+DndContext2@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-AUXFV7YD.js:2530:11
+div
+CurriculumPlanTable@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/components/curriculum/CurriculumPlanTable.tsx:410:46
+div
+div
+Primitive.div@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-VZNMAICS.js:41:49
+Presence@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-S7EWQZ7Q.js:24:38
+TabsContent@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tabs.js:175:80
+_c5@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/components/ui/tabs.tsx:72:21
+div
+Primitive.div@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-VZNMAICS.js:41:49
+TabsProvider@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-JJS7DLG7.js:38:52
+Tabs@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tabs.js:61:14
+div
+_c9@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/components/ui/card.tsx:114:21
+div
+_c@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/components/ui/card.tsx:20:20
+div
+EditCurriculumPlanContent@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/pages/curriculum/EditCurriculumPlan.tsx:76:27
+EditCurriculumPlan
+main
+div
+div
+MainLayout@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/components/layout/main-layout.tsx:21:38
+ProtectedEditCurriculumPlan
+Route@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js:323:20
+ProtectedRoute@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/lib/protected-route.tsx:23:38
+Switch@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js:379:25
+App@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/App.tsx:213:38
+AuthProvider@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/hooks/use-auth.tsx:37:40
+QueryClientProvider@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js:2805:9
+ThemeProvider@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/components/theme/theme-provider.tsx:23:11
+AppWithErrorHandling@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/main.tsx:30:37
+	printWarning (chunk-RPCDYKBN.js:521)
+	error (chunk-RPCDYKBN.js:505)
+	checkForNestedUpdates (chunk-RPCDYKBN.js:19665)
+	scheduleUpdateOnFiber (chunk-RPCDYKBN.js:18533)
+	dispatchSetState (chunk-RPCDYKBN.js:12403)
+	(анонимная функция) (chunk-TJLBKCNO.js:424)
+	commitHookEffectListMount (chunk-RPCDYKBN.js:16915)
+	commitPassiveMountOnFiber (chunk-RPCDYKBN.js:18156)
+	commitPassiveMountEffects_complete (chunk-RPCDYKBN.js:18129)
+	commitPassiveMountEffects_begin (chunk-RPCDYKBN.js:18119)
+	commitPassiveMountEffects (chunk-RPCDYKBN.js:18109)
+	flushPassiveEffectsImpl (chunk-RPCDYKBN.js:19490)
+	flushPassiveEffects (chunk-RPCDYKBN.js:19447)
+	(анонимная функция) (chunk-RPCDYKBN.js:19328)
+	workLoop (chunk-RPCDYKBN.js:197)
+	flushWork (chunk-RPCDYKBN.js:176)
+	performWorkUntilDeadline (chunk-RPCDYKBN.js:384)
+[Error] Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.
+DndContext2@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-AUXFV7YD.js:2530:11
+div
+CurriculumPlanTable@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/components/curriculum/CurriculumPlanTable.tsx:410:46
+div
+div
+Primitive.div@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-VZNMAICS.js:41:49
+Presence@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-S7EWQZ7Q.js:24:38
+TabsContent@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tabs.js:175:80
+_c5@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/components/ui/tabs.tsx:72:21
+div
+Primitive.div@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-VZNMAICS.js:41:49
+TabsProvider@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-JJS7DLG7.js:38:52
+Tabs@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tabs.js:61:14
+div
+_c9@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/components/ui/card.tsx:114:21
+div
+_c@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/components/ui/card.tsx:20:20
+div
+EditCurriculumPlanContent@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/pages/curriculum/EditCurriculumPlan.tsx:76:27
+EditCurriculumPlan
+main
+div
+div
+MainLayout@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/components/layout/main-layout.tsx:21:38
+ProtectedEditCurriculumPlan
+Route@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js:323:20
+ProtectedRoute@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/lib/protected-route.tsx:23:38
+Switch@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js:379:25
+App@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/App.tsx:213:38
+AuthProvider@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/hooks/use-auth.tsx:37:40
+QueryClientProvider@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js:2805:9
+ThemeProvider@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/components/theme/theme-provider.tsx:23:11
+AppWithErrorHandling@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/main.tsx:30:37
+	printWarning (chunk-RPCDYKBN.js:521)
+	error (chunk-RPCDYKBN.js:505)
+	checkForNestedUpdates (chunk-RPCDYKBN.js:19665)
+	scheduleUpdateOnFiber (chunk-RPCDYKBN.js:18533)
+	dispatchSetState (chunk-RPCDYKBN.js:12403)
+	measureRects (chunk-AUXFV7YD.js:2102)
+	(анонимная функция) (chunk-AUXFV7YD.js:2114)
+	commitHookEffectListMount (chunk-RPCDYKBN.js:16915)
+	commitLayoutEffectOnFiber (chunk-RPCDYKBN.js:17002)
+	commitLayoutMountEffects_complete (chunk-RPCDYKBN.js:17980)
+	commitLayoutEffects_begin (chunk-RPCDYKBN.js:17969)
+	commitLayoutEffects (chunk-RPCDYKBN.js:17920)
+	commitRootImpl (chunk-RPCDYKBN.js:19353)
+	commitRoot (chunk-RPCDYKBN.js:19277)
+	performSyncWorkOnRoot (chunk-RPCDYKBN.js:18895)
+	flushSyncCallbacks (chunk-RPCDYKBN.js:9119)
+	commitRootImpl (chunk-RPCDYKBN.js:19432)
+	commitRoot (chunk-RPCDYKBN.js:19277)
+	finishConcurrentRender (chunk-RPCDYKBN.js:18805)
+	performConcurrentWorkOnRoot (chunk-RPCDYKBN.js:18718)
+	workLoop (chunk-RPCDYKBN.js:197)
+	flushWork (chunk-RPCDYKBN.js:176)
+	performWorkUntilDeadline (chunk-RPCDYKBN.js:384)
+[Error] Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.
+PopperAnchor@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-TJLBKCNO.js:419:64
+MenuAnchor@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-dropdown-menu.js:144:50
+DropdownMenuTrigger@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-dropdown-menu.js:942:77
+MenuProvider@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-JJS7DLG7.js:38:52
+MenuProvider@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-JJS7DLG7.js:38:52
+PopperProvider@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-TJLBKCNO.js:354:52
+Popper@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-TJLBKCNO.js:411:44
+Menu@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-dropdown-menu.js:98:89
+DropdownMenuProvider@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-JJS7DLG7.js:38:52
+DropdownMenu@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-dropdown-menu.js:915:12
+div
+div
+td
+tr
+GroupRow@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/components/curriculum/CurriculumPlanTable.tsx:195:7
+SortableContext@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@dnd-kit_sortable.js:266:11
+tbody
+table
+div
+DndContext2@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-AUXFV7YD.js:2530:11
+div
+CurriculumPlanTable@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/components/curriculum/CurriculumPlanTable.tsx:410:46
+div
+div
+Primitive.div@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-VZNMAICS.js:41:49
+Presence@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-S7EWQZ7Q.js:24:38
+TabsContent@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tabs.js:175:80
+_c5@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/components/ui/tabs.tsx:72:21
+div
+Primitive.div@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-VZNMAICS.js:41:49
+TabsProvider@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-JJS7DLG7.js:38:52
+Tabs@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tabs.js:61:14
+div
+_c9@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/components/ui/card.tsx:114:21
+div
+_c@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/components/ui/card.tsx:20:20
+div
+EditCurriculumPlanContent@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/pages/curriculum/EditCurriculumPlan.tsx:76:27
+EditCurriculumPlan
+main
+div
+div
+MainLayout@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/components/layout/main-layout.tsx:21:38
+ProtectedEditCurriculumPlan
+Route@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js:323:20
+ProtectedRoute@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/lib/protected-route.tsx:23:38
+Switch@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js:379:25
+App@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/App.tsx:213:38
+AuthProvider@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/hooks/use-auth.tsx:37:40
+QueryClientProvider@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js:2805:9
+ThemeProvider@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/components/theme/theme-provider.tsx:23:11
+AppWithErrorHandling@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/main.tsx:30:37
+	printWarning (chunk-RPCDYKBN.js:521)
+	error (chunk-RPCDYKBN.js:505)
+	checkForNestedUpdates (chunk-RPCDYKBN.js:19665)
+	scheduleUpdateOnFiber (chunk-RPCDYKBN.js:18533)
+	dispatchSetState (chunk-RPCDYKBN.js:12403)
+	(анонимная функция) (chunk-TJLBKCNO.js:424)
+	commitHookEffectListMount (chunk-RPCDYKBN.js:16915)
+	commitPassiveMountOnFiber (chunk-RPCDYKBN.js:18156)
+	commitPassiveMountEffects_complete (chunk-RPCDYKBN.js:18129)
+	commitPassiveMountEffects_begin (chunk-RPCDYKBN.js:18119)
+	commitPassiveMountEffects (chunk-RPCDYKBN.js:18109)
+	flushPassiveEffectsImpl (chunk-RPCDYKBN.js:19490)
+	flushPassiveEffects (chunk-RPCDYKBN.js:19447)
+	(анонимная функция) (chunk-RPCDYKBN.js:19328)
+	workLoop (chunk-RPCDYKBN.js:197)
+	flushWork (chunk-RPCDYKBN.js:176)
+	performWorkUntilDeadline (chunk-RPCDYKBN.js:384)
+[Error] Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.
+	printWarning (chunk-RPCDYKBN.js:521)
+	error (chunk-RPCDYKBN.js:505)
+	checkForNestedUpdates (chunk-RPCDYKBN.js:19665)
+	scheduleUpdateOnFiber (chunk-RPCDYKBN.js:18533)
+	dispatchReducerAction (chunk-RPCDYKBN.js:12351)
+	onMove (chunk-AUXFV7YD.js:2746)
+	handleMove (chunk-AUXFV7YD.js:1378)
+[Error] Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.
+PopperAnchor@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-TJLBKCNO.js:419:64
+MenuAnchor@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-dropdown-menu.js:144:50
+DropdownMenuTrigger@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-dropdown-menu.js:942:77
+MenuProvider@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-JJS7DLG7.js:38:52
+MenuProvider@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-JJS7DLG7.js:38:52
+PopperProvider@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-TJLBKCNO.js:354:52
+Popper@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-TJLBKCNO.js:411:44
+Menu@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-dropdown-menu.js:98:89
+DropdownMenuProvider@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-JJS7DLG7.js:38:52
+DropdownMenu@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-dropdown-menu.js:915:12
+div
+div
+td
+tr
+GroupRow@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/components/curriculum/CurriculumPlanTable.tsx:195:7
+SortableContext@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@dnd-kit_sortable.js:266:11
+tbody
+table
+div
+DndContext2@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-AUXFV7YD.js:2530:11
+div
+CurriculumPlanTable@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/components/curriculum/CurriculumPlanTable.tsx:410:46
+div
+div
+Primitive.div@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-VZNMAICS.js:41:49
+Presence@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-S7EWQZ7Q.js:24:38
+TabsContent@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tabs.js:175:80
+_c5@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/components/ui/tabs.tsx:72:21
+div
+Primitive.div@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-VZNMAICS.js:41:49
+TabsProvider@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-JJS7DLG7.js:38:52
+Tabs@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tabs.js:61:14
+div
+_c9@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/components/ui/card.tsx:114:21
+div
+_c@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/components/ui/card.tsx:20:20
+div
+EditCurriculumPlanContent@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/pages/curriculum/EditCurriculumPlan.tsx:76:27
+EditCurriculumPlan
+main
+div
+div
+MainLayout@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/components/layout/main-layout.tsx:21:38
+ProtectedEditCurriculumPlan
+Route@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js:323:20
+ProtectedRoute@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/lib/protected-route.tsx:23:38
+Switch@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js:379:25
+App@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/App.tsx:213:38
+AuthProvider@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/hooks/use-auth.tsx:37:40
+QueryClientProvider@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js:2805:9
+ThemeProvider@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/components/theme/theme-provider.tsx:23:11
+AppWithErrorHandling@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/main.tsx:30:37
+	printWarning (chunk-RPCDYKBN.js:521)
+	error (chunk-RPCDYKBN.js:505)
+	checkForNestedUpdates (chunk-RPCDYKBN.js:19665)
+	scheduleUpdateOnFiber (chunk-RPCDYKBN.js:18533)
+	dispatchSetState (chunk-RPCDYKBN.js:12403)
+	(анонимная функция) (chunk-TJLBKCNO.js:424)
+	commitHookEffectListMount (chunk-RPCDYKBN.js:16915)
+	commitPassiveMountOnFiber (chunk-RPCDYKBN.js:18156)
+	commitPassiveMountEffects_complete (chunk-RPCDYKBN.js:18129)
+	commitPassiveMountEffects_begin (chunk-RPCDYKBN.js:18119)
+	commitPassiveMountEffects (chunk-RPCDYKBN.js:18109)
+	flushPassiveEffectsImpl (chunk-RPCDYKBN.js:19490)
+	flushPassiveEffects (chunk-RPCDYKBN.js:19447)
+	(анонимная функция) (chunk-RPCDYKBN.js:19328)
+	workLoop (chunk-RPCDYKBN.js:197)
+	flushWork (chunk-RPCDYKBN.js:176)
+	performWorkUntilDeadline (chunk-RPCDYKBN.js:384)
+[Error] Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.
+AnimationManager@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-AUXFV7YD.js:3212:11
+NullifiedContextProvider@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-AUXFV7YD.js:3246:11
+@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-AUXFV7YD.js:3501:11
+DndContext2@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-AUXFV7YD.js:2530:11
+div
+CurriculumPlanTable@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/components/curriculum/CurriculumPlanTable.tsx:410:46
+div
+div
+Primitive.div@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-VZNMAICS.js:41:49
+Presence@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-S7EWQZ7Q.js:24:38
+TabsContent@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tabs.js:175:80
+_c5@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/components/ui/tabs.tsx:72:21
+div
+Primitive.div@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-VZNMAICS.js:41:49
+TabsProvider@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-JJS7DLG7.js:38:52
+Tabs@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tabs.js:61:14
+div
+_c9@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/components/ui/card.tsx:114:21
+div
+_c@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/components/ui/card.tsx:20:20
+div
+EditCurriculumPlanContent@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/pages/curriculum/EditCurriculumPlan.tsx:76:27
+EditCurriculumPlan
+main
+div
+div
+MainLayout@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/components/layout/main-layout.tsx:21:38
+ProtectedEditCurriculumPlan
+Route@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js:323:20
+ProtectedRoute@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/lib/protected-route.tsx:23:38
+Switch@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js:379:25
+App@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/App.tsx:213:38
+AuthProvider@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/hooks/use-auth.tsx:37:40
+QueryClientProvider@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js:2805:9
+ThemeProvider@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/components/theme/theme-provider.tsx:23:11
+AppWithErrorHandling@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/main.tsx:30:37
+	printWarning (chunk-RPCDYKBN.js:521)
+	error (chunk-RPCDYKBN.js:505)
+	checkForNestedUpdates (chunk-RPCDYKBN.js:19665)
+	scheduleUpdateOnFiber (chunk-RPCDYKBN.js:18533)
+	dispatchSetState (chunk-RPCDYKBN.js:12403)
+	safelyDetachRef (chunk-RPCDYKBN.js:16726)
+	commitDeletionEffectsOnFiber (chunk-RPCDYKBN.js:17495)
+	recursivelyTraverseDeletionEffects (chunk-RPCDYKBN.js:17486)
+	commitDeletionEffectsOnFiber (chunk-RPCDYKBN.js:17577)
+	commitDeletionEffects (chunk-RPCDYKBN.js:17477)
+	recursivelyTraverseMutationEffects (chunk-RPCDYKBN.js:17674)
+	commitMutationEffectsOnFiber (chunk-RPCDYKBN.js:17699)
+	recursivelyTraverseMutationEffects (chunk-RPCDYKBN.js:17685)
+	commitMutationEffectsOnFiber (chunk-RPCDYKBN.js:17896)
+	recursivelyTraverseMutationEffects (chunk-RPCDYKBN.js:17685)
+	commitMutationEffectsOnFiber (chunk-RPCDYKBN.js:17896)
+	recursivelyTraverseMutationEffects (chunk-RPCDYKBN.js:17685)
+	commitMutationEffectsOnFiber (chunk-RPCDYKBN.js:17699)
+	recursivelyTraverseMutationEffects (chunk-RPCDYKBN.js:17685)
+	commitMutationEffectsOnFiber (chunk-RPCDYKBN.js:17699)
+	recursivelyTraverseMutationEffects (chunk-RPCDYKBN.js:17685)
+	commitMutationEffectsOnFiber (chunk-RPCDYKBN.js:17896)
+	recursivelyTraverseMutationEffects (chunk-RPCDYKBN.js:17685)
+	commitMutationEffectsOnFiber (chunk-RPCDYKBN.js:17896)
+	recursivelyTraverseMutationEffects (chunk-RPCDYKBN.js:17685)
+	commitMutationEffectsOnFiber (chunk-RPCDYKBN.js:17896)
+	recursivelyTraverseMutationEffects (chunk-RPCDYKBN.js:17685)
+	commitMutationEffectsOnFiber (chunk-RPCDYKBN.js:17896)
+	recursivelyTraverseMutationEffects (chunk-RPCDYKBN.js:17685)
+	commitMutationEffectsOnFiber (chunk-RPCDYKBN.js:17699)
+	recursivelyTraverseMutationEffects (chunk-RPCDYKBN.js:17685)
+	commitMutationEffectsOnFiber (chunk-RPCDYKBN.js:17737)
+	recursivelyTraverseMutationEffects (chunk-RPCDYKBN.js:17685)
+	commitMutationEffectsOnFiber (chunk-RPCDYKBN.js:17699)
+	recursivelyTraverseMutationEffects (chunk-RPCDYKBN.js:17685)
+	commitMutationEffectsOnFiber (chunk-RPCDYKBN.js:17737)
+	recursivelyTraverseMutationEffects (chunk-RPCDYKBN.js:17685)
+	commitMutationEffectsOnFiber (chunk-RPCDYKBN.js:17737)
+	recursivelyTraverseMutationEffects (chunk-RPCDYKBN.js:17685)
+	commitMutationEffectsOnFiber (chunk-RPCDYKBN.js:17699)
+	recursivelyTraverseMutationEffects (chunk-RPCDYKBN.js:17685)
+	commitMutationEffectsOnFiber (chunk-RPCDYKBN.js:17699)
+	recursivelyTraverseMutationEffects (chunk-RPCDYKBN.js:17685)
+	commitMutationEffectsOnFiber (chunk-RPCDYKBN.js:17699)
+	recursivelyTraverseMutationEffects (chunk-RPCDYKBN.js:17685)
+	commitMutationEffectsOnFiber (chunk-RPCDYKBN.js:17699)
+	recursivelyTraverseMutationEffects (chunk-RPCDYKBN.js:17685)
+	commitMutationEffectsOnFiber (chunk-RPCDYKBN.js:17737)
+	recursivelyTraverseMutationEffects (chunk-RPCDYKBN.js:17685)
+	commitMutationEffectsOnFiber (chunk-RPCDYKBN.js:17699)
+	recursivelyTraverseMutationEffects (chunk-RPCDYKBN.js:17685)
+	commitMutationEffectsOnFiber (chunk-RPCDYKBN.js:17896)
+	recursivelyTraverseMutationEffects (chunk-RPCDYKBN.js:17685)
+	commitMutationEffectsOnFiber (chunk-RPCDYKBN.js:17699)
+	recursivelyTraverseMutationEffects (chunk-RPCDYKBN.js:17685)
+	commitMutationEffectsOnFiber (chunk-RPCDYKBN.js:17699)
+	recursivelyTraverseMutationEffects (chunk-RPCDYKBN.js:17685)
+	commitMutationEffectsOnFiber (chunk-RPCDYKBN.js:17737)
+	recursivelyTraverseMutationEffects (chunk-RPCDYKBN.js:17685)
+	commitMutationEffectsOnFiber (chunk-RPCDYKBN.js:17699)
+	recursivelyTraverseMutationEffects (chunk-RPCDYKBN.js:17685)
+	commitMutationEffectsOnFiber (chunk-RPCDYKBN.js:17737)
+	recursivelyTraverseMutationEffects (chunk-RPCDYKBN.js:17685)
+	commitMutationEffectsOnFiber (chunk-RPCDYKBN.js:17699)
+	recursivelyTraverseMutationEffects (chunk-RPCDYKBN.js:17685)
+	commitMutationEffectsOnFiber (chunk-RPCDYKBN.js:17737)
+	recursivelyTraverseMutationEffects (chunk-RPCDYKBN.js:17685)
+	commitMutationEffectsOnFiber (chunk-RPCDYKBN.js:17699)
+	recursivelyTraverseMutationEffects (chunk-RPCDYKBN.js:17685)
+	commitMutationEffectsOnFiber (chunk-RPCDYKBN.js:17699)
+	recursivelyTraverseMutationEffects (chunk-RPCDYKBN.js:17685)
+	commitMutationEffectsOnFiber (chunk-RPCDYKBN.js:17737)
+	recursivelyTraverseMutationEffects (chunk-RPCDYKBN.js:17685)
+	commitMutationEffectsOnFiber (chunk-RPCDYKBN.js:17737)
+	recursivelyTraverseMutationEffects (chunk-RPCDYKBN.js:17685)
+	commitMutationEffectsOnFiber (chunk-RPCDYKBN.js:17737)
+	recursivelyTraverseMutationEffects (chunk-RPCDYKBN.js:17685)
+	commitMutationEffectsOnFiber (chunk-RPCDYKBN.js:17699)
+	recursivelyTraverseMutationEffects (chunk-RPCDYKBN.js:17685)
+	commitMutationEffectsOnFiber (chunk-RPCDYKBN.js:17699)
+	recursivelyTraverseMutationEffects (chunk-RPCDYKBN.js:17685)
+	commitMutationEffectsOnFiber (chunk-RPCDYKBN.js:17896)
+	recursivelyTraverseMutationEffects (chunk-RPCDYKBN.js:17685)
+	commitMutationEffectsOnFiber (chunk-RPCDYKBN.js:17699)
+	recursivelyTraverseMutationEffects (chunk-RPCDYKBN.js:17685)
+	commitMutationEffectsOnFiber (chunk-RPCDYKBN.js:17699)
+	recursivelyTraverseMutationEffects (chunk-RPCDYKBN.js:17685)
+	commitMutationEffectsOnFiber (chunk-RPCDYKBN.js:17699)
+	recursivelyTraverseMutationEffects (chunk-RPCDYKBN.js:17685)
+	commitMutationEffectsOnFiber (chunk-RPCDYKBN.js:17699)
+	recursivelyTraverseMutationEffects (chunk-RPCDYKBN.js:17685)
+	commitMutationEffectsOnFiber (chunk-RPCDYKBN.js:17896)
+	recursivelyTraverseMutationEffects (chunk-RPCDYKBN.js:17685)
+	commitMutationEffectsOnFiber (chunk-RPCDYKBN.js:17699)
+	recursivelyTraverseMutationEffects (chunk-RPCDYKBN.js:17685)
+	commitMutationEffectsOnFiber (chunk-RPCDYKBN.js:17896)
+	recursivelyTraverseMutationEffects (chunk-RPCDYKBN.js:17685)
+	commitMutationEffectsOnFiber (chunk-RPCDYKBN.js:17699)
+	recursivelyTraverseMutationEffects (chunk-RPCDYKBN.js:17685)
+	commitMutationEffectsOnFiber (chunk-RPCDYKBN.js:17896)
+	recursivelyTraverseMutationEffects (chunk-RPCDYKBN.js:17685)
+	commitMutationEffectsOnFiber (chunk-RPCDYKBN.js:17699)
+	recursivelyTraverseMutationEffects (chunk-RPCDYKBN.js:17685)
+	commitMutationEffectsOnFiber (chunk-RPCDYKBN.js:17896)
+	recursivelyTraverseMutationEffects (chunk-RPCDYKBN.js:17685)
+	commitMutationEffectsOnFiber (chunk-RPCDYKBN.js:17699)
+	recursivelyTraverseMutationEffects (chunk-RPCDYKBN.js:17685)
+	commitMutationEffectsOnFiber (chunk-RPCDYKBN.js:17896)
+	recursivelyTraverseMutationEffects (chunk-RPCDYKBN.js:17685)
+	commitMutationEffectsOnFiber (chunk-RPCDYKBN.js:17794)
+	commitMutationEffects (chunk-RPCDYKBN.js:17663)
+	commitRootImpl (chunk-RPCDYKBN.js:19347)
+	commitRoot (chunk-RPCDYKBN.js:19277)
+	finishConcurrentRender (chunk-RPCDYKBN.js:18805)
+	performConcurrentWorkOnRoot (chunk-RPCDYKBN.js:18718)
+	workLoop (chunk-RPCDYKBN.js:197)
+	flushWork (chunk-RPCDYKBN.js:176)
+	performWorkUntilDeadline (chunk-RPCDYKBN.js:384)
+[Error] Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.
+PopperAnchor@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-TJLBKCNO.js:419:64
+MenuAnchor@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-dropdown-menu.js:144:50
+DropdownMenuTrigger@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-dropdown-menu.js:942:77
+MenuProvider@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-JJS7DLG7.js:38:52
+MenuProvider@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-JJS7DLG7.js:38:52
+PopperProvider@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-TJLBKCNO.js:354:52
+Popper@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-TJLBKCNO.js:411:44
+Menu@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-dropdown-menu.js:98:89
+DropdownMenuProvider@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-JJS7DLG7.js:38:52
+DropdownMenu@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-dropdown-menu.js:915:12
+div
+div
+td
+tr
+GroupRow@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/components/curriculum/CurriculumPlanTable.tsx:195:7
+SortableContext@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@dnd-kit_sortable.js:266:11
+tbody
+table
+div
+DndContext2@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-AUXFV7YD.js:2530:11
+div
+CurriculumPlanTable@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/components/curriculum/CurriculumPlanTable.tsx:410:46
+div
+div
+Primitive.div@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-VZNMAICS.js:41:49
+Presence@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-S7EWQZ7Q.js:24:38
+TabsContent@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tabs.js:175:80
+_c5@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/components/ui/tabs.tsx:72:21
+div
+Primitive.div@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-VZNMAICS.js:41:49
+TabsProvider@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-JJS7DLG7.js:38:52
+Tabs@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tabs.js:61:14
+div
+_c9@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/components/ui/card.tsx:114:21
+div
+_c@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/components/ui/card.tsx:20:20
+div
+EditCurriculumPlanContent@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/pages/curriculum/EditCurriculumPlan.tsx:76:27
+EditCurriculumPlan
+main
+div
+div
+MainLayout@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/components/layout/main-layout.tsx:21:38
+ProtectedEditCurriculumPlan
+Route@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js:323:20
+ProtectedRoute@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/lib/protected-route.tsx:23:38
+Switch@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js:379:25
+App@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/App.tsx:213:38
+AuthProvider@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/hooks/use-auth.tsx:37:40
+QueryClientProvider@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js:2805:9
+ThemeProvider@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/components/theme/theme-provider.tsx:23:11
+AppWithErrorHandling@https://c9bfb32b-e295-4ba7-bf98-bf0029282e34-00-3s76ojkhx28ml.worf.replit.dev/src/main.tsx:30:37
+	printWarning (chunk-RPCDYKBN.js:521)
+	error (chunk-RPCDYKBN.js:505)
+	checkForNestedUpdates (chunk-RPCDYKBN.js:19665)
+	scheduleUpdateOnFiber (chunk-RPCDYKBN.js:18533)
+	dispatchSetState (chunk-RPCDYKBN.js:12403)
+	(анонимная функция) (chunk-TJLBKCNO.js:424)
+	commitHookEffectListMount (chunk-RPCDYKBN.js:16915)
+	commitPassiveMountOnFiber (chunk-RPCDYKBN.js:18156)
+	commitPassiveMountEffects_complete (chunk-RPCDYKBN.js:18129)
+	commitPassiveMountEffects_begin (chunk-RPCDYKBN.js:18119)
+	commitPassiveMountEffects (chunk-RPCDYKBN.js:18109)
+	flushPassiveEffectsImpl (chunk-RPCDYKBN.js:19490)
+	flushPassiveEffects (chunk-RPCDYKBN.js:19447)
+	(анонимная функция) (chunk-RPCDYKBN.js:19328)
+	workLoop (chunk-RPCDYKBN.js:197)
+	flushWork (chunk-RPCDYKBN.js:176)
+	performWorkUntilDeadline (chunk-RPCDYKBN.js:384)
