@@ -512,6 +512,11 @@ export function CurriculumPlanTable({ courses, extraMonths, initialData, onPlanC
               }
             });
             
+            // Уведомляем об изменении данных после порядка
+            if (onPlanChange) {
+              setTimeout(() => onPlanChange(newItems), 0);
+            }
+            
             return newItems;
           });
         }
@@ -655,14 +660,14 @@ export function CurriculumPlanTable({ courses, extraMonths, initialData, onPlanC
         modifiers={[]}
       >
         <div className="overflow-auto border rounded-lg curr-plan plan-wrapper max-h-[70vh]">
-          <table className="w-full table-fixed border-collapse select-none">
+          <table className="w-full table-fixed border-collapse select-none text-sm">
             <thead className="bg-slate-800 text-white">
               <tr>
-                <th className="sticky left-0 top-0 bg-slate-800 p-2 z-30 w-[260px]">Дисциплины</th>
+                <th className="sticky left-0 top-0 bg-slate-800 p-2 z-30 w-[280px] text-left">Дисциплины</th>
                 {semesters.map(s => (
                   <th 
                     key={s} 
-                    className="sticky top-0 z-20 w-16 px-2 py-1 text-center border-l border-slate-700/20 dark:border-slate-600/40"
+                    className="sticky top-0 z-20 w-16 px-2 py-1 text-center border-l border-slate-700/20 dark:border-slate-600/40 font-semibold text-xs"
                   >
                     {s}
                   </th>
