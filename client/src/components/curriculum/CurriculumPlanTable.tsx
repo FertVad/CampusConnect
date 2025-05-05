@@ -139,18 +139,111 @@ const SubjectRow: React.FC<{
           </div>
         </div>
       </td>
-      {semesters.map((s, index) => (
-        <td key={s} className="w-16 p-1 border-l border-t border-slate-700/20 dark:border-slate-600/40 text-center">
-          <input
-            type="number"
-            min={0}
-            className="w-full bg-transparent text-center outline-none hover:bg-blue-50 dark:hover:bg-blue-900/20 focus:bg-blue-100 dark:focus:bg-blue-900/40 tabular-nums transition-colors rounded py-1"
-            value={node.hours[index] ?? 0}
-            onChange={(e) => handleHoursChange(index, e.target.value)}
-            onBlur={(e) => handleBlur(e, index)}
-          />
-        </td>
-      ))}
+      {/* Ячейка формы контроля */}
+      <td className="p-1 border-l border-t border-slate-700/20 dark:border-slate-600/40 text-center">
+        <select
+          className="w-full bg-transparent text-center outline-none hover:bg-blue-50 dark:hover:bg-blue-900/20 focus:bg-blue-100 dark:focus:bg-blue-900/40 transition-colors rounded py-1"
+          value={node.controlType?.[0] || 'credit'}
+          onChange={(e) => {
+            // Обработчик изменения формы контроля
+            // Здесь можно добавить логику сохранения выбранной формы контроля
+            console.log("Форма контроля:", e.target.value);
+          }}
+        >
+          <option value="exam">Экзамен</option>
+          <option value="credit">Зачет</option>
+          <option value="differentiated_credit">Дифф.зачет</option>
+          <option value="coursework">Курсовая</option>
+        </select>
+      </td>
+      
+      {/* Ячейка общего количества часов */}
+      <td className="w-16 p-1 border-l border-t border-slate-700/20 dark:border-slate-600/40 text-center">
+        <input
+          type="number"
+          min={0}
+          className="w-full bg-transparent text-center outline-none hover:bg-blue-50 dark:hover:bg-blue-900/20 focus:bg-blue-100 dark:focus:bg-blue-900/40 tabular-nums transition-colors rounded py-1"
+          value={node.totalHours ?? 0}
+          onChange={(e) => {
+            // Обработчик изменения общего числа часов
+            console.log("Общее число часов:", e.target.value);
+          }}
+        />
+      </td>
+      
+      {/* Ячейка зачетных единиц */}
+      <td className="w-16 p-1 border-l border-t border-slate-700/20 dark:border-slate-600/40 text-center">
+        <input
+          type="number"
+          min={0}
+          step="0.5"
+          className="w-full bg-transparent text-center outline-none hover:bg-blue-50 dark:hover:bg-blue-900/20 focus:bg-blue-100 dark:focus:bg-blue-900/40 tabular-nums transition-colors rounded py-1"
+          value={node.creditUnits ?? 0}
+          onChange={(e) => {
+            // Обработчик изменения зачетных единиц
+            console.log("Зачетные единицы:", e.target.value);
+          }}
+        />
+      </td>
+      
+      {/* Для каждого семестра выводим ячейки с типами занятий */}
+      {semesters.map((s, semesterIndex) => {
+        // Получаем данные о часах для текущего семестра
+        const activityData = node.activityHours?.[semesterIndex] || {
+          lectures: 0,
+          practice: 0,
+          laboratory: 0,
+          selfStudy: 0,
+          courseProject: 0,
+          consultation: 0,
+          total: node.hours[semesterIndex] || 0
+        };
+        
+        // Создаем массив для всех типов занятий
+        const activityTypes = [
+          { key: 'lectures', label: 'Лек' },
+          { key: 'practice', label: 'Пр' },
+          { key: 'laboratory', label: 'Лаб' },
+          { key: 'selfStudy', label: 'СП' },
+          { key: 'courseProject', label: 'КРП' },
+          { key: 'consultation', label: 'Конс' },
+          { key: 'total', label: 'Итого' }
+        ];
+        
+        // Возвращаем ячейки для каждого типа занятий
+        return activityTypes.map((activity, activityIndex) => (
+          <td 
+            key={`${s}-${activity.key}`} 
+            className="w-14 p-1 border-l border-t border-slate-700/20 dark:border-slate-600/40 text-center"
+          >
+            <input
+              type="number"
+              min={0}
+              className="w-full bg-transparent text-center outline-none hover:bg-blue-50 dark:hover:bg-blue-900/20 focus:bg-blue-100 dark:focus:bg-blue-900/40 tabular-nums transition-colors rounded py-1"
+              value={activityData[activity.key as keyof typeof activityData] || 0}
+              onChange={(e) => {
+                // Если это итоговая сумма, то обновляем старое поле hours для обратной совместимости
+                if (activity.key === 'total') {
+                  handleHoursChange(semesterIndex, e.target.value);
+                } else {
+                  // Здесь можно добавить логику обновления структуры activityHours
+                  console.log(`Семестр ${semesterIndex+1}, ${activity.key}:`, e.target.value);
+                }
+              }}
+              onBlur={(e) => {
+                if (activity.key === 'total') {
+                  handleBlur(e, semesterIndex);
+                }
+              }}
+              // Делаем поле "Итого" выделенным
+              style={{
+                fontWeight: activity.key === 'total' ? 'bold' : 'normal',
+                backgroundColor: activity.key === 'total' ? 'rgba(100, 116, 139, 0.1)' : 'transparent'
+              }}
+            />
+          </td>
+        ));
+      })}
     </tr>
   );
 };
@@ -281,19 +374,49 @@ const GroupRow: React.FC<{
           </div>
         </div>
       </td>
-      {semesters.map((s, index) => (
-        <td 
-          key={s} 
-          className={`w-16 p-1 border-l border-t border-slate-700/20 dark:border-slate-600/40 text-center font-medium tabular-nums 
-            bg-inherit`}
-        >
-          <span className={`${
-            node.sums && node.sums[index] > 0 ? (isSection ? 'text-red-700 dark:text-red-400' : 'text-green-700 dark:text-green-400') : 'text-slate-400 dark:text-slate-600'
-          }`}>
-            {node.sums?.[index] || 0}
-          </span>
-        </td>
-      ))}
+      {/* Колонки формы контроля, общих часов и зачетных единиц (пустые для разделов и групп) */}
+      <td className="border-l border-t border-slate-700/20 dark:border-slate-600/40"></td>
+      <td className="border-l border-t border-slate-700/20 dark:border-slate-600/40"></td>
+      <td className="border-l border-t border-slate-700/20 dark:border-slate-600/40"></td>
+      
+      {/* Для каждого семестра выводим ячейки с суммами по типам занятий */}
+      {semesters.map((s, semesterIndex) => {
+        // Создаем массив для всех типов занятий
+        const activityTypes = [
+          { key: 'lectures', label: 'Лек' },
+          { key: 'practice', label: 'Пр' },
+          { key: 'laboratory', label: 'Лаб' },
+          { key: 'selfStudy', label: 'СП' },
+          { key: 'courseProject', label: 'КРП' },
+          { key: 'consultation', label: 'Конс' },
+          { key: 'total', label: 'Итого' }
+        ];
+        
+        // Для каждого типа занятий выводим сумму
+        return activityTypes.map((activity, activityIndex) => {
+          // Используем единую сумму для всех типов (пока нет детализации по типам для групп и разделов)
+          const sum = node.sums?.[semesterIndex] || 0;
+          
+          return (
+            <td 
+              key={`${s}-${activity.key}`} 
+              className="w-14 p-1 border-l border-t border-slate-700/20 dark:border-slate-600/40 text-center font-medium tabular-nums bg-inherit"
+            >
+              <span 
+                className={`${
+                  sum > 0 ? (isSection ? 'text-red-700 dark:text-red-400' : 'text-green-700 dark:text-green-400') : 'text-slate-400 dark:text-slate-600'
+                }`}
+                style={{
+                  fontWeight: activity.key === 'total' ? 'bold' : 'normal'
+                }}
+              >
+                {/* Отображаем сумму только в колонке "Итого" */}
+                {activity.key === 'total' ? sum : ''}
+              </span>
+            </td>
+          );
+        });
+      })}
     </tr>
   );
 };
@@ -508,18 +631,72 @@ export const CurriculumPlanTable = React.forwardRef<{ forceUpdate: () => void },
   }, [isMultiSelectMode, selectedNodes]);
 
   // Обработчик изменения значения часов для дисциплины
-  const handleValueChange = useCallback((nodeId: string, semesterIndex: number, value: number) => {
+  const handleValueChange = useCallback((
+    nodeId: string, 
+    semesterIndex: number, 
+    value: number, 
+    activityType: keyof ActivityHours = 'total'
+  ) => {
     setPlanData(prevData => {
       return prevData.map(node => {
         if (node.id === nodeId && node.type === 'subject') {
-          // Создаем новый массив часов с обновленным значением
-          const newHours = [...(node as Subject).hours];
-          newHours[semesterIndex] = value;
+          const subject = node as Subject;
           
-          // Возвращаем обновленный узел
+          // Создаем новый массив часов с обновленным значением (для обратной совместимости)
+          const newHours = [...subject.hours];
+          
+          // Новая структура активностей для всех семестров
+          const newActivityHours = subject.activityHours 
+            ? [...subject.activityHours] 
+            : Array(newHours.length).fill(null).map((_, i) => ({
+                lectures: 0,
+                practice: 0,
+                laboratory: 0,
+                selfStudy: 0,
+                courseProject: 0,
+                consultation: 0,
+                total: subject.hours[i] || 0
+              }));
+          
+          // Если семестра нет в массиве, расширяем массив
+          while (newActivityHours.length <= semesterIndex) {
+            newActivityHours.push({
+              lectures: 0,
+              practice: 0,
+              laboratory: 0,
+              selfStudy: 0,
+              courseProject: 0,
+              consultation: 0,
+              total: 0
+            });
+          }
+          
+          // Обновляем значение для указанного типа активности
+          if (activityType === 'total') {
+            // Если обновляем общую сумму, обновляем также и старое поле hours
+            newHours[semesterIndex] = value;
+            newActivityHours[semesterIndex].total = value;
+          } else {
+            // Если обновляем конкретный тип активности
+            newActivityHours[semesterIndex] = {
+              ...newActivityHours[semesterIndex],
+              [activityType]: value
+            };
+            
+            // Пересчитываем общую сумму
+            const total = Object.entries(newActivityHours[semesterIndex])
+              .filter(([key]) => key !== 'total')
+              .reduce((sum, [_, val]) => sum + (val as number), 0);
+              
+            newActivityHours[semesterIndex].total = total;
+            newHours[semesterIndex] = total;
+          }
+          
+          // Возвращаем обновленный узел с расширенными данными
           return {
-            ...node,
-            hours: newHours
+            ...subject,
+            hours: newHours,
+            activityHours: newActivityHours
           } as Subject;
         }
         return node;
@@ -1394,16 +1571,93 @@ export const CurriculumPlanTable = React.forwardRef<{ forceUpdate: () => void },
         <div className="overflow-auto border rounded-lg curr-plan plan-wrapper max-h-[70vh]">
           <table className="w-full table-fixed border-collapse select-none text-sm">
             <thead className="bg-slate-800 text-white">
+              {/* Первый уровень заголовка: Дисциплины и курсы */}
               <tr>
-                <th className="sticky left-0 top-0 bg-slate-800 p-2 z-30 w-[280px] text-left">Дисциплины</th>
-                {semesters.map(s => (
-                  <th 
-                    key={s} 
-                    className="sticky top-0 z-20 w-16 px-2 py-1 text-center border-l border-slate-700/20 dark:border-slate-600/40 font-semibold text-xs"
-                  >
-                    {s}
-                  </th>
-                ))}
+                <th 
+                  className="sticky left-0 top-0 bg-slate-800 p-2 z-30 w-[280px] text-left"
+                  rowSpan={3}
+                >
+                  Дисциплины
+                </th>
+                <th 
+                  className="sticky top-0 z-20 px-2 py-1 text-center border-l border-slate-700/20 dark:border-slate-600/40 font-semibold text-xs"
+                  rowSpan={3}
+                >
+                  Форма контроля
+                </th>
+                <th 
+                  className="sticky top-0 z-20 px-2 py-1 text-center border-l border-slate-700/20 dark:border-slate-600/40 font-semibold text-xs"
+                  rowSpan={3}
+                >
+                  Итого акад.часов
+                </th>
+                <th 
+                  className="sticky top-0 z-20 px-2 py-1 text-center border-l border-slate-700/20 dark:border-slate-600/40 font-semibold text-xs"
+                  rowSpan={3}
+                >
+                  Объем ОП
+                </th>
+                
+                {/* Блок курсов */}
+                {Array.from({ length: courses }, (_, i) => {
+                  const courseNum = i + 1;
+                  const startSemester = i * 2 + 1;
+                  const semestersInCourse = courseNum === courses && extraMonths > 0 ? 3 : 2;
+                  
+                  return (
+                    <th 
+                      key={`course-${courseNum}`}
+                      className="sticky top-0 z-20 px-2 py-1 text-center border-l border-slate-700/20 dark:border-slate-600/40 font-semibold"
+                      colSpan={semestersInCourse * 7} // 7 колонок для каждого семестра
+                    >
+                      Курс {courseNum}
+                    </th>
+                  );
+                })}
+              </tr>
+              
+              {/* Второй уровень заголовка: Семестры */}
+              <tr>
+                {Array.from({ length: courses }, (_, i) => {
+                  const courseNum = i + 1;
+                  const startSemester = i * 2 + 1;
+                  const semestersInCourse = courseNum === courses && extraMonths > 0 ? 3 : 2;
+                  
+                  // Создаем заголовки семестров для текущего курса
+                  return Array.from({ length: semestersInCourse }, (_, j) => {
+                    const semesterNum = startSemester + j;
+                    const weeksCount = 18; // Предположим, что в каждом семестре 18 недель
+                    
+                    return (
+                      <th 
+                        key={`semester-${semesterNum}`}
+                        className="sticky top-0 z-20 px-2 py-1 text-center border-l border-slate-700/20 dark:border-slate-600/40 font-semibold text-xs"
+                        colSpan={7} // 7 колонок типов занятий для каждого семестра
+                      >
+                        Семестр {semesterNum} ({weeksCount} нед.)
+                      </th>
+                    );
+                  });
+                })}
+              </tr>
+              
+              {/* Третий уровень заголовка: Типы занятий */}
+              <tr>
+                {Array.from({ length: semesters.length }, (_, i) => {
+                  const semesterNum = i + 1;
+                  
+                  // Для каждого семестра создаем 7 колонок типов занятий
+                  const activityTypes = ["Лек", "Пр", "Лаб", "СП", "КРП", "Конс", "Итого"];
+                  
+                  return activityTypes.map((activityType, j) => (
+                    <th 
+                      key={`semester-${semesterNum}-activity-${j}`}
+                      className="sticky top-0 z-20 w-16 px-2 py-1 text-center border-l border-slate-700/20 dark:border-slate-600/40 font-semibold text-xs"
+                    >
+                      {activityType}
+                    </th>
+                  ));
+                })}
               </tr>
             </thead>
             <tbody>
