@@ -1698,6 +1698,9 @@ export const CurriculumPlanTable = React.forwardRef<{ forceUpdate: () => void },
                         isMultiSelectMode={isMultiSelectMode}
                         depth={node.depth || 0}
                         onValueChange={handleValueChange}
+                        onControlTypeChange={handleControlTypeChange}
+                        onTotalHoursChange={handleTotalHoursChange}
+                        onCreditUnitsChange={handleCreditUnitsChange}
                         onRename={handleRename}
                         onDelete={handleDeleteNode}
                         onSelect={handleSelectNode}
