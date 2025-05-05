@@ -1046,6 +1046,96 @@ export const CurriculumPlanTable = React.forwardRef<{ forceUpdate: () => void },
   const sortedIds = useMemo(() => {
     return flattenedData.map(node => node.id);
   }, [flattenedData]);
+  
+  // Обработчик множественного выбора элементов
+  const handleSelectNode = useCallback((nodeId: string, ctrlKey: boolean, shiftKey: boolean) => {
+    // Если нажат Shift, выделяем диапазон
+    if (shiftKey && lastSelectedNodeRef.current) {
+      const lastSelectedNodeId = lastSelectedNodeRef.current;
+      
+      // Активируем режим множественного выбора, если он еще не активен
+      if (!isMultiSelectMode) {
+        setIsMultiSelectMode(true);
+      }
+      
+      // Получаем плоский список элементов для определения диапазона
+      const flatList = flattenedData;
+      const startIdx = flatList.findIndex((node) => node.id === lastSelectedNodeId);
+      const endIdx = flatList.findIndex((node) => node.id === nodeId);
+      
+      if (startIdx !== -1 && endIdx !== -1) {
+        // Определяем границы диапазона
+        const [minIdx, maxIdx] = startIdx < endIdx 
+          ? [startIdx, endIdx] 
+          : [endIdx, startIdx];
+        
+        // Создаем новый набор выделенных узлов с элементами из диапазона
+        const newSelection = new Set<string>();
+        
+        for (let i = minIdx; i <= maxIdx; i++) {
+          if (flatList[i]) {
+            newSelection.add(flatList[i].id);
+          }
+        }
+        
+        setSelectedNodes(newSelection);
+      }
+    }
+    // Если нажат Ctrl/Command, добавляем/убираем из выделения
+    else if (ctrlKey) {
+      setSelectedNodes(prev => {
+        const newSelection = new Set(prev);
+        if (newSelection.has(nodeId)) {
+          newSelection.delete(nodeId);
+        } else {
+          newSelection.add(nodeId);
+        }
+        return newSelection;
+      });
+
+      // Если выделение стало пустым, выходим из режима множественного выбора
+      setSelectedNodes(prev => {
+        if (prev.size === 0) {
+          setIsMultiSelectMode(false);
+        } else {
+          setIsMultiSelectMode(true);
+        }
+        return prev;
+      });
+      
+      // Обновляем последний выбранный элемент
+      lastSelectedNodeRef.current = nodeId;
+    } else {
+      // Если Ctrl не нажат и не Shift, работаем с одиночным выбором
+      if (isMultiSelectMode) {
+        // Если уже в режиме множественного выбора
+        if (selectedNodes.has(nodeId)) {
+          // Если элемент уже выбран, снимаем выделение
+          setSelectedNodes(prev => {
+            const newSelection = new Set(prev);
+            newSelection.delete(nodeId);
+            if (newSelection.size === 0) {
+              setIsMultiSelectMode(false);
+            }
+            return newSelection;
+          });
+        } else {
+          // Добавляем элемент в выделение
+          setSelectedNodes(prev => {
+            const newSelection = new Set(prev);
+            newSelection.add(nodeId);
+            return newSelection;
+          });
+        }
+      } else {
+        // Обычный выбор элемента
+        setSelectedNodeId(nodeId);
+      }
+      
+      // Обновляем последний выбранный элемент
+      lastSelectedNodeRef.current = nodeId;
+    }
+  }, [isMultiSelectMode, selectedNodes, flattenedData]);
 
   return (
     <div className="space-y-4">
