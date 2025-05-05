@@ -645,19 +645,43 @@
   border-radius: 4px;
 }
 
-/* Стиль для строки "Итого" в нижней части таблицы */
-.total-row {
-  position: sticky;
-  bottom: 0;
-  background-color: rgb(241 245 249); /* bg-slate-100 */
-  font-weight: 600;
-  z-index: 20;
-  box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.05);
+/* Стиль для тонкого скроллбара таблицы */
+.overflow-x-auto::-webkit-scrollbar {
+  height: 6px;
 }
 
-.dark .total-row {
-  background-color: rgb(30 41 59); /* dark:bg-slate-800 */
-  box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.2);
+.overflow-x-auto::-webkit-scrollbar-thumb {
+  @apply bg-slate-600 rounded-full;
+}
+
+.overflow-x-auto::-webkit-scrollbar-track {
+  background-color: transparent;
+}
+
+/* Стили для ячеек форм */
+.curr-plan td:focus-within {
+  @apply bg-blue-50 dark:bg-blue-900/30 ring-1 ring-primary;
+}
+
+.curr-plan input {
+  @apply w-full bg-transparent text-right px-1;
+}
+
+/* Стиль для иконок в таблице */
+.curr-plan .toggle-icon {
+  @apply w-5 h-5 text-slate-300 hover:text-slate-100 transition-colors;
+}
+
+/* Стиль для мобильной адаптивности */
+@media (max-width: 1024px) {
+  .activity-col {
+    @apply hidden lg:table-cell;
+  }
+}
+
+/* Стиль для строки "Итого" в нижней части таблицы */
+tfoot {
+  @apply shadow-[0_-2px_4px_rgba(0,0,0,0.1)] dark:shadow-[0_-2px_4px_rgba(0,0,0,0.3)];
 }
 
 .week-cell.selected::before {
@@ -758,7 +782,20 @@
 
 /* Стили для зебры в таблице учебного плана */
 .curr-plan tbody tr:nth-child(odd) { 
-  @apply bg-slate-50 dark:bg-slate-800/40; 
+  @apply bg-slate-100 dark:bg-slate-800; 
+}
+
+.curr-plan tbody tr:nth-child(even) { 
+  @apply bg-slate-50 dark:bg-slate-900; 
+}
+
+/* Стили для разделов и групп */
+.row-type-section {
+  @apply bg-slate-200 dark:bg-slate-700 font-medium;
+}
+
+.row-type-group {
+  @apply bg-slate-100 dark:bg-slate-800 font-medium;
 }
 
 /* Стиль для тонкого скроллбара */

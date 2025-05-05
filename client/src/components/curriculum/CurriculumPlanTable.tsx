@@ -1657,16 +1657,16 @@ export const CurriculumPlanTable = React.forwardRef<{ forceUpdate: () => void },
         onDragEnd={handleDragEnd}
         modifiers={[]}
       >
-        <div className="overflow-auto border border-slate-300 dark:border-slate-700 rounded-lg curr-plan plan-wrapper max-h-[70vh]">
+        <div className="overflow-x-auto border rounded-md curr-plan plan-wrapper max-h-[70vh]">
           <table className="w-full table-fixed border-collapse select-none text-sm">
-            <thead>
+            <thead className="sticky top-0 z-20">
               {/* Первый уровень заголовка: Дисциплины и курсы */}
-              <tr className="bg-gradient-to-b from-blue-800 to-blue-700 text-white border-b-2 border-white/20">
+              <tr className="bg-gradient-to-r from-slate-800 to-slate-700 text-white border-b border-slate-500">
                 <th 
-                  className="sticky left-0 top-0 bg-gradient-to-b from-blue-800 to-blue-700 p-4 z-30 w-[280px] text-left border-r-2 border-white/30"
+                  className="sticky left-0 top-0 bg-slate-900 p-3 z-30 min-w-[220px] text-left border-r shadow-[2px_0_4px_-2px_rgba(0,0,0,0.4)]"
                   rowSpan={3}
                 >
-                  <div className="text-lg font-bold">Дисциплины</div>
+                  <div className="text-base font-bold">Дисциплины</div>
                 </th>
                 <th 
                   className="sticky top-0 z-20 px-4 py-3 text-center border-r border-white/30 font-semibold text-base w-[100px]"
@@ -1706,7 +1706,7 @@ export const CurriculumPlanTable = React.forwardRef<{ forceUpdate: () => void },
               </tr>
               
               {/* Второй уровень заголовка: Семестры */}
-              <tr className="bg-gradient-to-b from-blue-700 to-blue-600 text-white border-b-2 border-white/20">
+              <tr className="bg-slate-700 text-white border-b border-slate-500">
                 {Array.from({ length: courses }, (_, i) => {
                   const courseNum = i + 1;
                   const startSemester = i * 2 + 1;
@@ -1720,7 +1720,7 @@ export const CurriculumPlanTable = React.forwardRef<{ forceUpdate: () => void },
                     return (
                       <th 
                         key={`semester-${semesterNum}`}
-                        className="sticky top-[calc(1rem+1px)] z-20 px-3 py-3 text-center border-l border-b-2 border-white/30 font-bold text-base"
+                        className="sticky top-[calc(1rem+1px)] z-20 px-3 py-2 text-center border-l border-white/20 font-semibold text-sm"
                         colSpan={4} // 4 колонки типов занятий для каждого семестра
                         title={`Семестр ${semesterNum} (${weeksCount} недель)`}
                       >
@@ -1732,7 +1732,7 @@ export const CurriculumPlanTable = React.forwardRef<{ forceUpdate: () => void },
               </tr>
               
               {/* Третий уровень заголовка: Типы занятий */}
-              <tr className="bg-gradient-to-b from-blue-600 to-blue-500 text-white">
+              <tr className="bg-slate-600 text-white">
                 {Array.from({ length: semesters.length }, (_, i) => {
                   const semesterNum = i + 1;
                   
@@ -1747,10 +1747,10 @@ export const CurriculumPlanTable = React.forwardRef<{ forceUpdate: () => void },
                   return activityTypes.map((activity, j) => (
                     <th 
                       key={`semester-${semesterNum}-activity-${j}`}
-                      className="sticky top-[calc(2rem+2px)] z-20 w-16 px-2 py-4 text-center border-l border-white/30 font-semibold text-xs"
+                      className="sticky top-[calc(2rem+2px)] z-20 w-14 px-2 py-3 text-center border-l border-white/20 font-semibold text-xs uppercase"
                       title={activity.full}
                     >
-                      <div className="writing-mode-vertical h-8">
+                      <div className="writing-mode-vertical h-6">
                         {activity.short}
                       </div>
                     </th>
@@ -1807,20 +1807,22 @@ export const CurriculumPlanTable = React.forwardRef<{ forceUpdate: () => void },
                 })}
               </SortableContext>
               
-              {/* Строка "Итого" в нижней части таблицы */}
-              <tr className="total-row bg-slate-100 dark:bg-slate-800/60">
-                <td className="sticky left-0 z-20 bg-inherit p-3 font-bold border-t-2 border-slate-700/60 dark:border-slate-600/70 text-base">
+              {/* Итого строка - размещаем в tfoot для лучшей семантики и фиксации */}
+            </tbody>
+            <tfoot className="sticky bottom-0 bg-slate-900 text-white z-10">
+              <tr>
+                <td className="sticky left-0 z-20 bg-slate-900 p-3 font-bold text-base">
                   Итого
                 </td>
                 {/* Пустые ячейки для формы контроля, часов и единиц */}
-                <td className="border-t-2 border-slate-700/60 dark:border-slate-600/70"></td>
-                <td className="border-t-2 border-slate-700/60 dark:border-slate-600/70 text-center p-2 font-semibold text-base">
+                <td></td>
+                <td className="text-center p-2 font-semibold text-base">
                   {/* Общее количество часов по всем предметам */}
                   {planData
                     .filter(node => node.type === 'subject')
                     .reduce((sum, node) => sum + ((node as Subject).totalHours || 0), 0)}
                 </td>
-                <td className="border-t-2 border-slate-700/60 dark:border-slate-600/70 text-center p-2 font-semibold text-base">
+                <td className="text-center p-2 font-semibold text-base">
                   {/* Общее количество зачетных единиц */}
                   {planData
                     .filter(node => node.type === 'subject')
@@ -1860,7 +1862,7 @@ export const CurriculumPlanTable = React.forwardRef<{ forceUpdate: () => void },
                     return (
                       <td 
                         key={`total-sem-${semIndex}-act-${actIndex}`}
-                        className="border-t-2 border-l border-slate-700/60 dark:border-slate-600/70 p-2 text-center font-semibold text-sm"
+                        className="p-2 text-center border-l border-white/20 font-semibold text-sm"
                       >
                         {sum > 0 ? sum : ''}
                       </td>
@@ -1868,7 +1870,7 @@ export const CurriculumPlanTable = React.forwardRef<{ forceUpdate: () => void },
                   });
                 })}
               </tr>
-            </tbody>
+            </tfoot>
           </table>
         </div>
         
