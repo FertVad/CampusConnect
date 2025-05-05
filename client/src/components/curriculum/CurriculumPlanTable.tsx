@@ -754,7 +754,7 @@ export const CurriculumPlanTable = React.forwardRef<{ forceUpdate: () => void },
     });
     
     // Помечаем, что данные были изменены
-    setIsDirty(true);
+    setLocalIsDirty(true);
   }, []);
   
   // Обработчик изменения общего количества часов
@@ -772,7 +772,7 @@ export const CurriculumPlanTable = React.forwardRef<{ forceUpdate: () => void },
     });
     
     // Помечаем, что данные были изменены
-    setIsDirty(true);
+    setLocalIsDirty(true);
   }, []);
   
   // Обработчик изменения зачетных единиц
@@ -790,7 +790,7 @@ export const CurriculumPlanTable = React.forwardRef<{ forceUpdate: () => void },
     });
     
     // Помечаем, что данные были изменены
-    setIsDirty(true);
+    setLocalIsDirty(true);
   }, []);
 
   // Обработчик сворачивания/разворачивания узла
@@ -1806,6 +1806,68 @@ export const CurriculumPlanTable = React.forwardRef<{ forceUpdate: () => void },
                   }
                 })}
               </SortableContext>
+              
+              {/* Строка "Итого" в нижней части таблицы */}
+              <tr className="total-row">
+                <td className="sticky left-0 z-20 bg-inherit p-2 font-semibold border-t border-slate-700/40 dark:border-slate-600/40">
+                  Итого
+                </td>
+                {/* Пустые ячейки для формы контроля, часов и единиц */}
+                <td className="border-t border-slate-700/40 dark:border-slate-600/40"></td>
+                <td className="border-t border-slate-700/40 dark:border-slate-600/40 text-center">
+                  {/* Общее количество часов по всем предметам */}
+                  {planData
+                    .filter(node => node.type === 'subject')
+                    .reduce((sum, node) => sum + ((node as Subject).totalHours || 0), 0)}
+                </td>
+                <td className="border-t border-slate-700/40 dark:border-slate-600/40 text-center">
+                  {/* Общее количество зачетных единиц */}
+                  {planData
+                    .filter(node => node.type === 'subject')
+                    .reduce((sum, node) => sum + ((node as Subject).creditUnits || 0), 0)}
+                </td>
+                
+                {/* Общие суммы по семестрам и типам занятий */}
+                {Array.from({ length: semesters.length }, (_, semIndex) => {
+                  // Типы активностей
+                  const activityTypes = [
+                    'lectures',
+                    'laboratory',
+                    'practice',
+                    'courseProject'
+                  ];
+                  
+                  // Для каждого типа активности выводим сумму по всем предметам
+                  return activityTypes.map((activityType, actIndex) => {
+                    // Вычисляем сумму для данного типа активности в данном семестре
+                    const sum = planData
+                      .filter(node => node.type === 'subject')
+                      .reduce((total, node) => {
+                        const subject = node as Subject;
+                        if (!subject.activityHours || !subject.activityHours[semIndex]) {
+                          return total;
+                        }
+                        
+                        let value = 0;
+                        if (activityType === 'lectures') value = subject.activityHours[semIndex].lectures || 0;
+                        else if (activityType === 'laboratory') value = subject.activityHours[semIndex].laboratory || 0;
+                        else if (activityType === 'practice') value = subject.activityHours[semIndex].practice || 0;
+                        else if (activityType === 'courseProject') value = subject.activityHours[semIndex].courseProject || 0;
+                        
+                        return total + value;
+                      }, 0);
+                    
+                    return (
+                      <td 
+                        key={`total-sem-${semIndex}-act-${actIndex}`}
+                        className="border-t border-l border-slate-700/40 dark:border-slate-600/40 p-1 text-center font-semibold text-[0.75rem]"
+                      >
+                        {sum > 0 ? sum : ''}
+                      </td>
+                    );
+                  });
+                })}
+              </tr>
             </tbody>
           </table>
         </div>
