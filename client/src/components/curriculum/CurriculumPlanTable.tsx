@@ -725,6 +725,72 @@ export const CurriculumPlanTable = React.forwardRef<{ forceUpdate: () => void },
     });
   }, []);
 
+  // Обработчик изменения формы контроля
+  const handleControlTypeChange = useCallback((
+    nodeId: string,
+    controlType: 'exam' | 'credit' | 'differentiated_credit' | 'coursework',
+    semesterIndex: number
+  ) => {
+    setPlanData(prevData => {
+      return prevData.map(node => {
+        if (node.id === nodeId && node.type === 'subject') {
+          const subject = node as Subject;
+          
+          // Создаем новый массив форм контроля или используем существующий
+          const newControlType = subject.controlType ? [...subject.controlType] : [];
+          
+          // Обновляем значение для указанного семестра
+          newControlType[semesterIndex] = controlType;
+          
+          return {
+            ...subject,
+            controlType: newControlType
+          };
+        }
+        return node;
+      });
+    });
+    
+    // Помечаем, что данные были изменены
+    setIsDirty(true);
+  }, []);
+  
+  // Обработчик изменения общего количества часов
+  const handleTotalHoursChange = useCallback((nodeId: string, totalHours: number) => {
+    setPlanData(prevData => {
+      return prevData.map(node => {
+        if (node.id === nodeId && node.type === 'subject') {
+          return {
+            ...node,
+            totalHours
+          } as Subject;
+        }
+        return node;
+      });
+    });
+    
+    // Помечаем, что данные были изменены
+    setIsDirty(true);
+  }, []);
+  
+  // Обработчик изменения зачетных единиц
+  const handleCreditUnitsChange = useCallback((nodeId: string, creditUnits: number) => {
+    setPlanData(prevData => {
+      return prevData.map(node => {
+        if (node.id === nodeId && node.type === 'subject') {
+          return {
+            ...node,
+            creditUnits
+          } as Subject;
+        }
+        return node;
+      });
+    });
+    
+    // Помечаем, что данные были изменены
+    setIsDirty(true);
+  }, []);
+
   // Обработчик сворачивания/разворачивания узла
   const handleToggleCollapse = useCallback((nodeId: string) => {
     setPlanData(prevData => {
