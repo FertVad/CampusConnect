@@ -25,7 +25,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { PlusCircle, MoreVertical, ChevronRight, ChevronDown, Trash, Edit, Plus, GripVertical, Check, X } from 'lucide-react';
-import { PlanNode, Subject, CurriculumPlan } from '@/types/curriculum';
+import { PlanNode, Subject, CurriculumPlan, ActivityHours } from '@/types/curriculum';
 import sampleData from '@/data/sampleCurrPlan.json';
 
 // Тип для параметров компонента
@@ -65,7 +65,7 @@ const SubjectRow: React.FC<{
   isSelected?: boolean; // Флаг для множественного выделения
   depth: number;
   isMultiSelectMode?: boolean; // Режим множественного выбора
-  onValueChange: (id: string, semesterIndex: number, value: number) => void;
+  onValueChange: (id: string, semesterIndex: number, value: number, activityType?: keyof ActivityHours) => void;
   onRename: (id: string) => void;
   onDelete: (id: string) => void;
   onSelect?: (id: string, ctrlKey: boolean, shiftKey: boolean) => void; // Обработчик выбора элемента
@@ -87,12 +87,6 @@ const SubjectRow: React.FC<{
 
   // Расчет отступа в зависимости от глубины
   const paddingLeft = 8 + depth * 20;
-
-  // Обработчик изменения часов в ячейке
-  const handleHoursChange = (semesterIndex: number, value: string) => {
-    const intValue = parseInt(value) || 0;
-    onValueChange(node.id, semesterIndex, intValue);
-  };
 
   // Обработчик потери фокуса для пустого поля
   const handleBlur = (e: React.FocusEvent<HTMLInputElement>, semesterIndex: number) => {
@@ -145,9 +139,23 @@ const SubjectRow: React.FC<{
           className="w-full bg-transparent text-center outline-none hover:bg-blue-50 dark:hover:bg-blue-900/20 focus:bg-blue-100 dark:focus:bg-blue-900/40 transition-colors rounded py-1"
           value={node.controlType?.[0] || 'credit'}
           onChange={(e) => {
-            // Обработчик изменения формы контроля
-            // Здесь можно добавить логику сохранения выбранной формы контроля
-            console.log("Форма контроля:", e.target.value);
+            // Обновляем форму контроля в planData
+            setPlanData(prevData => {
+              return prevData.map(n => {
+                if (n.id === node.id && n.type === 'subject') {
+                  const subject = n as Subject;
+                  // Создаем новый массив форм контроля или используем существующий
+                  const newControlType = subject.controlType ? [...subject.controlType] : [];
+                  newControlType[0] = e.target.value as 'exam' | 'credit' | 'differentiated_credit' | 'coursework';
+                  
+                  return {
+                    ...subject,
+                    controlType: newControlType
+                  };
+                }
+                return n;
+              });
+            });
           }}
         >
           <option value="exam">Экзамен</option>
@@ -222,12 +230,13 @@ const SubjectRow: React.FC<{
               className="w-full bg-transparent text-center outline-none hover:bg-blue-50 dark:hover:bg-blue-900/20 focus:bg-blue-100 dark:focus:bg-blue-900/40 tabular-nums transition-colors rounded py-1"
               value={activityData[activity.key as keyof typeof activityData] || 0}
               onChange={(e) => {
-                // Если это итоговая сумма, то обновляем старое поле hours для обратной совместимости
+                // Преобразуем значение в число
+                const numValue = parseInt(e.target.value) || 0;
+                
                 if (activity.key === 'total') {
-                  handleHoursChange(semesterIndex, e.target.value);
+                  onValueChange(node.id, semesterIndex, numValue);
                 } else {
-                  // Здесь можно добавить логику обновления структуры activityHours
-                  console.log(`Семестр ${semesterIndex+1}, ${activity.key}:`, e.target.value);
+                  onValueChange(node.id, semesterIndex, numValue, activity.key as keyof ActivityHours);
                 }
               }}
               onBlur={(e) => {
