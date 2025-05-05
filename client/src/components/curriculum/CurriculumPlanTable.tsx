@@ -105,9 +105,9 @@ const SubjectRow: React.FC<{
     <tr
       ref={setNodeRef}
       style={style}
-      className={`${isSelected ? 'bg-blue-100 dark:bg-blue-900/40' : (isActive ? 'bg-blue-50 dark:bg-blue-900/20' : '')} 
+      className={`${isSelected ? 'bg-blue-200 dark:bg-blue-800 border-l-4 border-blue-500 dark:border-blue-400' : (isActive ? 'bg-blue-50 dark:bg-blue-900/20' : '')} 
         hover:bg-indigo-50/40 dark:hover:bg-indigo-600/10 transition-colors cursor-pointer`}
-      onClick={(e) => onSelect && onSelect(node.id, e.ctrlKey)}
+      onClick={(e) => onSelect && onSelect(node.id, e.ctrlKey || e.metaKey, e.shiftKey)}
     >
       <td className="sticky left-0 bg-inherit border-t border-slate-700/20 dark:border-slate-600/40 z-10">
         <div className="flex items-center" style={{ paddingLeft: `${paddingLeft}px` }}>
@@ -218,9 +218,9 @@ const GroupRow: React.FC<{
     <tr
       ref={setNodeRef}
       style={style}
-      className={`${isSelected ? 'bg-blue-100 dark:bg-blue-900/40' : (isActive ? 'bg-blue-50 dark:bg-blue-900/20' : bgClass)} 
+      className={`${isSelected ? 'bg-blue-200 dark:bg-blue-800 border-l-4 border-blue-500 dark:border-blue-400' : (isActive ? 'bg-blue-50 dark:bg-blue-900/20' : bgClass)} 
         hover:bg-indigo-50/40 dark:hover:bg-indigo-600/10 transition-colors cursor-pointer`}
-      onClick={(e) => onSelect && onSelect(node.id, e.ctrlKey)}
+      onClick={(e) => onSelect && onSelect(node.id, e.ctrlKey || e.metaKey, e.shiftKey)}
     >
       <td className="sticky left-0 bg-inherit border-t border-slate-700/20 dark:border-slate-600/40 z-10">
         <div className="flex items-center" style={{ paddingLeft: `${paddingLeft}px` }}>
