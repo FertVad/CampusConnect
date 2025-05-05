@@ -585,6 +585,17 @@
 .dialog-body::-webkit-scrollbar-thumb{background:rgba(100,116,139,.3);border-radius:4px}
 .dialog-body{scrollbar-width:thin}
 
+/* Стили для выбранных строк в таблице учебного плана */
+.curriculum-row-selected {
+  background-color: rgb(219 234 254) !important; /* Светло-синий фон bg-blue-100 */
+  border-left: 4px solid rgb(59 130 246) !important; /* Синяя полоса слева border-blue-500 */
+}
+
+.dark .curriculum-row-selected {
+  background-color: rgb(30 58 138 / 0.7) !important; /* Темно-синий фон для темной темы bg-blue-900/70 */
+  border-left: 4px solid rgb(96 165 250) !important; /* Синяя полоса слева в темной теме border-blue-400 */
+}
+
 .week-cell.selected::before {
   content: "";
   position: absolute;

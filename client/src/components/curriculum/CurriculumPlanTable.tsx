@@ -105,7 +105,7 @@ const SubjectRow: React.FC<{
     <tr
       ref={setNodeRef}
       style={style}
-      className={`${isSelected ? 'bg-blue-200 dark:bg-blue-800 border-l-4 border-blue-500 dark:border-blue-400' : (isActive ? 'bg-blue-50 dark:bg-blue-900/20' : '')} 
+      className={`${isSelected ? 'curriculum-row-selected' : (isActive ? 'bg-blue-50 dark:bg-blue-900/20' : '')} 
         hover:bg-indigo-50/40 dark:hover:bg-indigo-600/10 transition-colors cursor-pointer`}
       onClick={(e) => onSelect && onSelect(node.id, e.ctrlKey || e.metaKey, e.shiftKey)}
     >
@@ -204,10 +204,8 @@ const GroupRow: React.FC<{
   // Расчет отступа в зависимости от глубины
   const paddingLeft = 8 + depth * 20;
 
-  // Стиль для фона в зависимости от типа узла и наличия ошибки
-  let bgClass = isSection ? 
-    'bg-slate-100 dark:bg-slate-800' : 
-    'bg-emerald-50 dark:bg-emerald-900/20';
+  // Стиль для фона в зависимости от наличия ошибки только
+  let bgClass = '';
   
   // Если есть ошибка, применяем стиль ошибки
   if (hasError && !isSection) {
@@ -218,7 +216,7 @@ const GroupRow: React.FC<{
     <tr
       ref={setNodeRef}
       style={style}
-      className={`${isSelected ? 'bg-blue-200 dark:bg-blue-800 border-l-4 border-blue-500 dark:border-blue-400' : (isActive ? 'bg-blue-50 dark:bg-blue-900/20' : '')} 
+      className={`${isSelected ? 'curriculum-row-selected' : (isActive ? 'bg-blue-50 dark:bg-blue-900/20' : '')} 
         hover:bg-indigo-50/40 dark:hover:bg-indigo-600/10 transition-colors cursor-pointer`}
       onClick={(e) => onSelect && onSelect(node.id, e.ctrlKey || e.metaKey, e.shiftKey)}
     >
