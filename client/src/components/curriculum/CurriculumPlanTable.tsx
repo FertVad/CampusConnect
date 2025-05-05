@@ -66,10 +66,27 @@ const SubjectRow: React.FC<{
   depth: number;
   isMultiSelectMode?: boolean; // Режим множественного выбора
   onValueChange: (id: string, semesterIndex: number, value: number, activityType?: keyof ActivityHours) => void;
+  onControlTypeChange: (id: string, controlType: 'exam' | 'credit' | 'differentiated_credit' | 'coursework', index: number) => void;
+  onTotalHoursChange: (id: string, totalHours: number) => void;
+  onCreditUnitsChange: (id: string, creditUnits: number) => void;
   onRename: (id: string) => void;
   onDelete: (id: string) => void;
   onSelect?: (id: string, ctrlKey: boolean, shiftKey: boolean) => void; // Обработчик выбора элемента
-}> = ({ node, semesters, isActive, isSelected, depth, isMultiSelectMode, onValueChange, onRename, onDelete, onSelect }) => {
+}> = ({ 
+  node, 
+  semesters, 
+  isActive, 
+  isSelected, 
+  depth, 
+  isMultiSelectMode, 
+  onValueChange, 
+  onControlTypeChange,
+  onTotalHoursChange,
+  onCreditUnitsChange,
+  onRename, 
+  onDelete, 
+  onSelect 
+}) => {
   // Настройка сортировки элемента (для drag & drop)
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: node.id,
@@ -139,23 +156,12 @@ const SubjectRow: React.FC<{
           className="w-full bg-transparent text-center outline-none hover:bg-blue-50 dark:hover:bg-blue-900/20 focus:bg-blue-100 dark:focus:bg-blue-900/40 transition-colors rounded py-1"
           value={node.controlType?.[0] || 'credit'}
           onChange={(e) => {
-            // Обновляем форму контроля в planData
-            setPlanData(prevData => {
-              return prevData.map(n => {
-                if (n.id === node.id && n.type === 'subject') {
-                  const subject = n as Subject;
-                  // Создаем новый массив форм контроля или используем существующий
-                  const newControlType = subject.controlType ? [...subject.controlType] : [];
-                  newControlType[0] = e.target.value as 'exam' | 'credit' | 'differentiated_credit' | 'coursework';
-                  
-                  return {
-                    ...subject,
-                    controlType: newControlType
-                  };
-                }
-                return n;
-              });
-            });
+            // Используем обработчик из props
+            onControlTypeChange(
+              node.id, 
+              e.target.value as 'exam' | 'credit' | 'differentiated_credit' | 'coursework', 
+              0 // Индекс семестра (сейчас используем только первый семестр)
+            );
           }}
         >
           <option value="exam">Экзамен</option>
@@ -173,8 +179,11 @@ const SubjectRow: React.FC<{
           className="w-full bg-transparent text-center outline-none hover:bg-blue-50 dark:hover:bg-blue-900/20 focus:bg-blue-100 dark:focus:bg-blue-900/40 tabular-nums transition-colors rounded py-1"
           value={node.totalHours ?? 0}
           onChange={(e) => {
-            // Обработчик изменения общего числа часов
-            console.log("Общее число часов:", e.target.value);
+            // Получаем новое значение
+            const newValue = parseInt(e.target.value) || 0;
+            
+            // Используем обработчик из props
+            onTotalHoursChange(node.id, newValue);
           }}
         />
       </td>
@@ -188,8 +197,11 @@ const SubjectRow: React.FC<{
           className="w-full bg-transparent text-center outline-none hover:bg-blue-50 dark:hover:bg-blue-900/20 focus:bg-blue-100 dark:focus:bg-blue-900/40 tabular-nums transition-colors rounded py-1"
           value={node.creditUnits ?? 0}
           onChange={(e) => {
-            // Обработчик изменения зачетных единиц
-            console.log("Зачетные единицы:", e.target.value);
+            // Получаем новое значение (с поддержкой дробных чисел)
+            const newValue = parseFloat(e.target.value) || 0;
+            
+            // Используем обработчик из props
+            onCreditUnitsChange(node.id, newValue);
           }}
         />
       </td>
