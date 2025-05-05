@@ -725,6 +725,8 @@ export const CurriculumPlanTable = React.forwardRef<{ forceUpdate: () => void },
     });
   }, []);
 
+  // Состояние isDirty объявлено ниже, удаляем дублирование
+  
   // Обработчик изменения формы контроля
   const handleControlTypeChange = useCallback((
     nodeId: string,
