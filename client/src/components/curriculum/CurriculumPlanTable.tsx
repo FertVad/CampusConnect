@@ -1657,31 +1657,31 @@ export const CurriculumPlanTable = React.forwardRef<{ forceUpdate: () => void },
         onDragEnd={handleDragEnd}
         modifiers={[]}
       >
-        <div className="overflow-auto border rounded-lg curr-plan plan-wrapper max-h-[70vh]">
+        <div className="overflow-auto border border-slate-300 dark:border-slate-700 rounded-lg curr-plan plan-wrapper max-h-[70vh]">
           <table className="w-full table-fixed border-collapse select-none text-sm">
             <thead>
               {/* Первый уровень заголовка: Дисциплины и курсы */}
               <tr className="bg-gradient-to-b from-slate-800 to-slate-700 text-white">
                 <th 
-                  className="sticky left-0 top-0 bg-gradient-to-b from-slate-800 to-slate-700 p-2 z-30 w-[280px] text-left"
+                  className="sticky left-0 top-0 bg-gradient-to-b from-slate-800 to-slate-700 p-3 z-30 w-[280px] text-left border-r border-white/20"
                   rowSpan={3}
                 >
-                  <div className="text-[0.75rem] font-semibold">Дисциплины</div>
+                  <div className="text-base font-bold">Дисциплины</div>
                 </th>
                 <th 
-                  className="sticky top-0 z-20 px-2 py-1 text-center border-l border-slate-600/40 font-semibold text-[0.75rem]"
+                  className="sticky top-0 z-20 px-3 py-2 text-center border-l border-r border-white/20 font-semibold text-sm w-[90px]"
                   rowSpan={3}
                 >
                   Форма контроля
                 </th>
                 <th 
-                  className="sticky top-0 z-20 px-2 py-1 text-center border-l border-slate-600/40 font-semibold text-[0.75rem]"
+                  className="sticky top-0 z-20 px-3 py-2 text-center border-l border-r border-white/20 font-semibold text-sm w-[100px]"
                   rowSpan={3}
                 >
                   Итого акад.часов
                 </th>
                 <th 
-                  className="sticky top-0 z-20 px-2 py-1 text-center border-l border-slate-600/40 font-semibold text-[0.75rem]"
+                  className="sticky top-0 z-20 px-3 py-2 text-center border-l border-r border-white/20 font-semibold text-sm w-[80px]"
                   rowSpan={3}
                 >
                   Объем ОП
@@ -1696,7 +1696,7 @@ export const CurriculumPlanTable = React.forwardRef<{ forceUpdate: () => void },
                   return (
                     <th 
                       key={`course-${courseNum}`}
-                      className="sticky top-0 z-20 px-3 py-2 text-center border-l border-slate-600/40 font-semibold text-[0.75rem]"
+                      className="sticky top-0 z-20 px-4 py-3 text-center border-l border-white/20 font-bold text-lg"
                       colSpan={semestersInCourse * 4} // 4 колонки для каждого семестра (Л, Лб, П, КП)
                     >
                       Курс {courseNum}
@@ -1720,7 +1720,7 @@ export const CurriculumPlanTable = React.forwardRef<{ forceUpdate: () => void },
                     return (
                       <th 
                         key={`semester-${semesterNum}`}
-                        className="sticky top-[calc(1rem+1px)] z-20 px-2 py-1 text-center border-l border-slate-600/40 font-semibold text-[0.75rem]"
+                        className="sticky top-[calc(1rem+1px)] z-20 px-3 py-2 text-center border-l border-white/20 font-semibold text-sm"
                         colSpan={4} // 4 колонки типов занятий для каждого семестра
                         title={`Семестр ${semesterNum} (${weeksCount} недель)`}
                       >
@@ -1747,10 +1747,10 @@ export const CurriculumPlanTable = React.forwardRef<{ forceUpdate: () => void },
                   return activityTypes.map((activity, j) => (
                     <th 
                       key={`semester-${semesterNum}-activity-${j}`}
-                      className="sticky top-[calc(2rem+2px)] z-20 w-12 px-1 py-2 text-center border-l border-slate-600/40 font-semibold text-[0.75rem]"
+                      className="sticky top-[calc(2rem+2px)] z-20 w-14 px-2 py-3 text-center border-l border-white/20 font-semibold text-xs"
                       title={activity.full}
                     >
-                      <div className="writing-mode-vertical">
+                      <div className="writing-mode-vertical h-6">
                         {activity.short}
                       </div>
                     </th>
@@ -1808,19 +1808,19 @@ export const CurriculumPlanTable = React.forwardRef<{ forceUpdate: () => void },
               </SortableContext>
               
               {/* Строка "Итого" в нижней части таблицы */}
-              <tr className="total-row">
-                <td className="sticky left-0 z-20 bg-inherit p-2 font-semibold border-t border-slate-700/40 dark:border-slate-600/40">
+              <tr className="total-row bg-slate-100 dark:bg-slate-800/60">
+                <td className="sticky left-0 z-20 bg-inherit p-3 font-bold border-t-2 border-slate-700/60 dark:border-slate-600/70 text-base">
                   Итого
                 </td>
                 {/* Пустые ячейки для формы контроля, часов и единиц */}
-                <td className="border-t border-slate-700/40 dark:border-slate-600/40"></td>
-                <td className="border-t border-slate-700/40 dark:border-slate-600/40 text-center">
+                <td className="border-t-2 border-slate-700/60 dark:border-slate-600/70"></td>
+                <td className="border-t-2 border-slate-700/60 dark:border-slate-600/70 text-center p-2 font-semibold text-base">
                   {/* Общее количество часов по всем предметам */}
                   {planData
                     .filter(node => node.type === 'subject')
                     .reduce((sum, node) => sum + ((node as Subject).totalHours || 0), 0)}
                 </td>
-                <td className="border-t border-slate-700/40 dark:border-slate-600/40 text-center">
+                <td className="border-t-2 border-slate-700/60 dark:border-slate-600/70 text-center p-2 font-semibold text-base">
                   {/* Общее количество зачетных единиц */}
                   {planData
                     .filter(node => node.type === 'subject')
@@ -1860,7 +1860,7 @@ export const CurriculumPlanTable = React.forwardRef<{ forceUpdate: () => void },
                     return (
                       <td 
                         key={`total-sem-${semIndex}-act-${actIndex}`}
-                        className="border-t border-l border-slate-700/40 dark:border-slate-600/40 p-1 text-center font-semibold text-[0.75rem]"
+                        className="border-t-2 border-l border-slate-700/60 dark:border-slate-600/70 p-2 text-center font-semibold text-sm"
                       >
                         {sum > 0 ? sum : ''}
                       </td>
