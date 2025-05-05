@@ -605,6 +605,46 @@
   min-height: 3rem;
 }
 
+/* Стили для строк таблицы учебного плана (предметов и групп) */
+.curr-plan tr {
+  border-bottom: 1px solid rgba(203, 213, 225, 0.7); /* slate-300/70 */
+  height: 48px; /* Фиксированная высота строк для лучшей читаемости */
+}
+
+.dark .curr-plan tr {
+  border-bottom: 1px solid rgba(71, 85, 105, 0.7); /* slate-600/70 */
+}
+
+.curr-plan tr:hover {
+  background-color: rgba(236, 252, 255, 0.8); /* Светло-голубой цвет при наведении */
+}
+
+.dark .curr-plan tr:hover {
+  background-color: rgba(25, 62, 88, 0.3); /* Темно-голубой цвет при наведении в темной теме */
+}
+
+.curr-plan td {
+  padding: 0.5rem 0.7rem;
+  border-right: 1px solid rgba(203, 213, 225, 0.5); /* Добавляем вертикальные разделители */
+}
+
+.dark .curr-plan td {
+  border-right: 1px solid rgba(71, 85, 105, 0.5);
+}
+
+.curr-plan th {
+  padding: 0.6rem 0.75rem;
+}
+
+/* Увеличиваем расстояние между ячейками для лучшей читаемости */
+.curr-plan input, .curr-plan select {
+  padding: 0.4rem 0.6rem;
+  margin: 0.15rem 0;
+  min-height: 30px;
+  font-size: 0.9rem;
+  border-radius: 4px;
+}
+
 /* Стиль для строки "Итого" в нижней части таблицы */
 .total-row {
   position: sticky;
