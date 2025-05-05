@@ -218,7 +218,7 @@ const GroupRow: React.FC<{
     <tr
       ref={setNodeRef}
       style={style}
-      className={`${isSelected ? 'bg-blue-200 dark:bg-blue-800 border-l-4 border-blue-500 dark:border-blue-400' : (isActive ? 'bg-blue-50 dark:bg-blue-900/20' : bgClass)} 
+      className={`${isSelected ? 'bg-blue-200 dark:bg-blue-800 border-l-4 border-blue-500 dark:border-blue-400' : (isActive ? 'bg-blue-50 dark:bg-blue-900/20' : '')} 
         hover:bg-indigo-50/40 dark:hover:bg-indigo-600/10 transition-colors cursor-pointer`}
       onClick={(e) => onSelect && onSelect(node.id, e.ctrlKey || e.metaKey, e.shiftKey)}
     >
@@ -286,9 +286,8 @@ const GroupRow: React.FC<{
       {semesters.map((s, index) => (
         <td 
           key={s} 
-          className={`w-16 p-1 border-l border-t border-slate-700/20 dark:border-slate-600/40 text-center font-medium tabular-nums ${
-            isSection ? 'bg-red-50/50 dark:bg-red-950/20' : 'bg-green-50/50 dark:bg-green-950/20'
-          }`}
+          className={`w-16 p-1 border-l border-t border-slate-700/20 dark:border-slate-600/40 text-center font-medium tabular-nums 
+            bg-inherit`}
         >
           <span className={`${
             node.sums && node.sums[index] > 0 ? (isSection ? 'text-red-700 dark:text-red-400' : 'text-green-700 dark:text-green-400') : 'text-slate-400 dark:text-slate-600'
