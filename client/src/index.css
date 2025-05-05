@@ -596,6 +596,30 @@
   border-left: 4px solid rgb(96 165 250) !important; /* Синяя полоса слева в темной теме border-blue-400 */
 }
 
+/* Стили для трехуровневой шапки таблицы учебного плана */
+.writing-mode-vertical {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  white-space: nowrap;
+  padding: 0.25rem 0;
+  min-height: 3rem;
+}
+
+/* Стиль для строки "Итого" в нижней части таблицы */
+.total-row {
+  position: sticky;
+  bottom: 0;
+  background-color: rgb(241 245 249); /* bg-slate-100 */
+  font-weight: 600;
+  z-index: 20;
+  box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.dark .total-row {
+  background-color: rgb(30 41 59); /* dark:bg-slate-800 */
+  box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.2);
+}
+
 .week-cell.selected::before {
   content: "";
   position: absolute;

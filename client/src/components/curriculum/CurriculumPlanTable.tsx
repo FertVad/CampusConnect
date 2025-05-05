@@ -1657,29 +1657,29 @@ export const CurriculumPlanTable = React.forwardRef<{ forceUpdate: () => void },
       >
         <div className="overflow-auto border rounded-lg curr-plan plan-wrapper max-h-[70vh]">
           <table className="w-full table-fixed border-collapse select-none text-sm">
-            <thead className="bg-slate-800 text-white">
+            <thead>
               {/* Первый уровень заголовка: Дисциплины и курсы */}
-              <tr>
+              <tr className="bg-gradient-to-b from-slate-800 to-slate-700 text-white">
                 <th 
-                  className="sticky left-0 top-0 bg-slate-800 p-2 z-30 w-[280px] text-left"
+                  className="sticky left-0 top-0 bg-gradient-to-b from-slate-800 to-slate-700 p-2 z-30 w-[280px] text-left"
                   rowSpan={3}
                 >
-                  Дисциплины
+                  <div className="text-[0.75rem] font-semibold">Дисциплины</div>
                 </th>
                 <th 
-                  className="sticky top-0 z-20 px-2 py-1 text-center border-l border-slate-700/20 dark:border-slate-600/40 font-semibold text-xs"
+                  className="sticky top-0 z-20 px-2 py-1 text-center border-l border-slate-600/40 font-semibold text-[0.75rem]"
                   rowSpan={3}
                 >
                   Форма контроля
                 </th>
                 <th 
-                  className="sticky top-0 z-20 px-2 py-1 text-center border-l border-slate-700/20 dark:border-slate-600/40 font-semibold text-xs"
+                  className="sticky top-0 z-20 px-2 py-1 text-center border-l border-slate-600/40 font-semibold text-[0.75rem]"
                   rowSpan={3}
                 >
                   Итого акад.часов
                 </th>
                 <th 
-                  className="sticky top-0 z-20 px-2 py-1 text-center border-l border-slate-700/20 dark:border-slate-600/40 font-semibold text-xs"
+                  className="sticky top-0 z-20 px-2 py-1 text-center border-l border-slate-600/40 font-semibold text-[0.75rem]"
                   rowSpan={3}
                 >
                   Объем ОП
@@ -1694,8 +1694,8 @@ export const CurriculumPlanTable = React.forwardRef<{ forceUpdate: () => void },
                   return (
                     <th 
                       key={`course-${courseNum}`}
-                      className="sticky top-0 z-20 px-2 py-1 text-center border-l border-slate-700/20 dark:border-slate-600/40 font-semibold"
-                      colSpan={semestersInCourse * 7} // 7 колонок для каждого семестра
+                      className="sticky top-0 z-20 px-3 py-2 text-center border-l border-slate-600/40 font-semibold text-[0.75rem]"
+                      colSpan={semestersInCourse * 4} // 4 колонки для каждого семестра (Л, Лб, П, КП)
                     >
                       Курс {courseNum}
                     </th>
@@ -1704,7 +1704,7 @@ export const CurriculumPlanTable = React.forwardRef<{ forceUpdate: () => void },
               </tr>
               
               {/* Второй уровень заголовка: Семестры */}
-              <tr>
+              <tr className="bg-gradient-to-b from-slate-700 to-slate-600 text-white">
                 {Array.from({ length: courses }, (_, i) => {
                   const courseNum = i + 1;
                   const startSemester = i * 2 + 1;
@@ -1718,10 +1718,11 @@ export const CurriculumPlanTable = React.forwardRef<{ forceUpdate: () => void },
                     return (
                       <th 
                         key={`semester-${semesterNum}`}
-                        className="sticky top-0 z-20 px-2 py-1 text-center border-l border-slate-700/20 dark:border-slate-600/40 font-semibold text-xs"
-                        colSpan={7} // 7 колонок типов занятий для каждого семестра
+                        className="sticky top-[calc(1rem+1px)] z-20 px-2 py-1 text-center border-l border-slate-600/40 font-semibold text-[0.75rem]"
+                        colSpan={4} // 4 колонки типов занятий для каждого семестра
+                        title={`Семестр ${semesterNum} (${weeksCount} недель)`}
                       >
-                        Семестр {semesterNum} ({weeksCount} нед.)
+                        С{semesterNum} ({weeksCount})
                       </th>
                     );
                   });
@@ -1729,19 +1730,27 @@ export const CurriculumPlanTable = React.forwardRef<{ forceUpdate: () => void },
               </tr>
               
               {/* Третий уровень заголовка: Типы занятий */}
-              <tr>
+              <tr className="bg-gradient-to-b from-slate-600 to-slate-500 text-white">
                 {Array.from({ length: semesters.length }, (_, i) => {
                   const semesterNum = i + 1;
                   
-                  // Для каждого семестра создаем 7 колонок типов занятий
-                  const activityTypes = ["Лек", "Пр", "Лаб", "СП", "КРП", "Конс", "Итого"];
+                  // Для каждого семестра создаем 4 колонки типов занятий
+                  const activityTypes = [
+                    { short: "Л", full: "Лекции" },
+                    { short: "Лб", full: "Лабораторные" },
+                    { short: "П", full: "Практические" },
+                    { short: "КП", full: "Курсовые проекты" }
+                  ];
                   
-                  return activityTypes.map((activityType, j) => (
+                  return activityTypes.map((activity, j) => (
                     <th 
                       key={`semester-${semesterNum}-activity-${j}`}
-                      className="sticky top-0 z-20 w-16 px-2 py-1 text-center border-l border-slate-700/20 dark:border-slate-600/40 font-semibold text-xs"
+                      className="sticky top-[calc(2rem+2px)] z-20 w-12 px-1 py-2 text-center border-l border-slate-600/40 font-semibold text-[0.75rem]"
+                      title={activity.full}
                     >
-                      {activityType}
+                      <div className="writing-mode-vertical">
+                        {activity.short}
+                      </div>
                     </th>
                   ));
                 })}
