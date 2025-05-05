@@ -68,7 +68,7 @@ const SubjectRow: React.FC<{
   onValueChange: (id: string, semesterIndex: number, value: number) => void;
   onRename: (id: string) => void;
   onDelete: (id: string) => void;
-  onSelect?: (id: string, ctrlKey: boolean) => void; // Обработчик выбора элемента
+  onSelect?: (id: string, ctrlKey: boolean, shiftKey: boolean) => void; // Обработчик выбора элемента
 }> = ({ node, semesters, isActive, isSelected, depth, isMultiSelectMode, onValueChange, onRename, onDelete, onSelect }) => {
   // Настройка сортировки элемента (для drag & drop)
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -170,7 +170,7 @@ const GroupRow: React.FC<{
   onAddChild: (parentId: string, type: 'section' | 'group' | 'subject') => void;
   onRename: (id: string) => void;
   onDelete: (id: string) => void;
-  onSelect?: (id: string, ctrlKey: boolean) => void; // Обработчик выбора элемента
+  onSelect?: (id: string, ctrlKey: boolean, shiftKey: boolean) => void; // Обработчик выбора элемента
 }> = ({ 
   node, 
   semesters, 
@@ -424,10 +424,45 @@ export const CurriculumPlanTable = React.forwardRef<{ forceUpdate: () => void },
     });
   }, [createNewNode]);
 
+  // Последний выбранный элемент для использования с Shift
+  const lastSelectedNodeRef = useRef<string | null>(null);
+
   // Обработчик множественного выбора элементов
-  const handleSelectNode = useCallback((nodeId: string, ctrlKey: boolean) => {
-    // Если нажат Ctrl, добавляем/убираем из выделения
-    if (ctrlKey) {
+  const handleSelectNode = useCallback((nodeId: string, ctrlKey: boolean, shiftKey: boolean) => {
+    // Если нажат Shift, выделяем диапазон
+    if (shiftKey && lastSelectedNodeRef.current) {
+      const lastSelectedNodeId = lastSelectedNodeRef.current;
+      
+      // Активируем режим множественного выбора, если он еще не активен
+      if (!isMultiSelectMode) {
+        setIsMultiSelectMode(true);
+      }
+      
+      // Получаем плоский список элементов для определения диапазона
+      const flatList = getFlattenedData(planData);
+      const startIdx = flatList.findIndex(node => node.id === lastSelectedNodeId);
+      const endIdx = flatList.findIndex(node => node.id === nodeId);
+      
+      if (startIdx !== -1 && endIdx !== -1) {
+        // Определяем границы диапазона
+        const [minIdx, maxIdx] = startIdx < endIdx 
+          ? [startIdx, endIdx] 
+          : [endIdx, startIdx];
+        
+        // Создаем новый набор выделенных узлов с элементами из диапазона
+        const newSelection = new Set<string>();
+        
+        for (let i = minIdx; i <= maxIdx; i++) {
+          if (flatList[i]) {
+            newSelection.add(flatList[i].id);
+          }
+        }
+        
+        setSelectedNodes(newSelection);
+      }
+    }
+    // Если нажат Ctrl/Command, добавляем/убираем из выделения
+    else if (ctrlKey) {
       setSelectedNodes(prev => {
         const newSelection = new Set(prev);
         if (newSelection.has(nodeId)) {
@@ -447,12 +482,15 @@ export const CurriculumPlanTable = React.forwardRef<{ forceUpdate: () => void },
         }
         return prev;
       });
+      
+      // Обновляем последний выбранный элемент
+      lastSelectedNodeRef.current = nodeId;
     } else {
-      // Если Ctrl не нажат, сбрасываем множественное выделение
-      // и выбираем текущий элемент
+      // Если Ctrl не нажат и не Shift, работаем с одиночным выбором
       if (isMultiSelectMode) {
-        // Если уже в режиме множественного выбора и элемент выбран
+        // Если уже в режиме множественного выбора
         if (selectedNodes.has(nodeId)) {
+          // Если элемент уже выбран, снимаем выделение
           setSelectedNodes(prev => {
             const newSelection = new Set(prev);
             newSelection.delete(nodeId);
@@ -473,8 +511,11 @@ export const CurriculumPlanTable = React.forwardRef<{ forceUpdate: () => void },
         // Обычный выбор элемента
         setSelectedNodeId(nodeId);
       }
+      
+      // Обновляем последний выбранный элемент
+      lastSelectedNodeRef.current = nodeId;
     }
-  }, [isMultiSelectMode, selectedNodes]);
+  }, [isMultiSelectMode, selectedNodes, planData]);
 
   // Функция для очистки множественного выбора
   const clearSelection = useCallback(() => {
