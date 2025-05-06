@@ -1151,7 +1151,7 @@ export const CurriculumPlanTable = React.forwardRef<
     }
   }, [isMultiSelectMode, clearSelection, visibleNodes, shiftPressed]);
 
-  // Функция для планирования сохранения (debounce)
+  // Функция для планирования сохранения (debounce) - уменьшаем задержку до 500ms
   const scheduleSave = useCallback(() => {
     lastChangeTime.current = Date.now();
     
@@ -1160,16 +1160,14 @@ export const CurriculumPlanTable = React.forwardRef<
       window.clearTimeout(saveTimeoutRef.current);
     }
     
-    // Устанавливаем новый таймер для сохранения
+    // Устанавливаем новый таймер для сохранения с меньшей задержкой
     saveTimeoutRef.current = window.setTimeout(() => {
-      // Проверяем, что прошло достаточно времени с последнего изменения
-      if (Date.now() - lastChangeTime.current >= 3000) {
-        if (onPlanChange) {
-          console.log('[CurriculumPlanTable] Autosaving data...');
-          onPlanChange(planData);
-        }
+      // Немедленно сохраняем изменения
+      if (onPlanChange) {
+        console.log('[CurriculumPlanTable] Saving data immediately...');
+        onPlanChange(planData);
       }
-    }, 3000);
+    }, 250); // Уменьшаем задержку до 250ms для ощущения моментального изменения
   }, [planData, onPlanChange]);
 
   // Проверка на наличие пустых групп
