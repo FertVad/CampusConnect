@@ -519,10 +519,10 @@ export function AcademicCalendarTable({
     
     // Первый ряд: Курсы
     headers.push(
-      <tr key="course-level" className="bg-slate-900 text-white border-b border-slate-600">
+      <tr key="course-level" className="bg-gradient-to-b from-slate-900 to-slate-800 text-white border-b border-slate-600">
         <th 
           rowSpan={3}
-          className="sticky left-0 bg-slate-900 text-white px-4 py-2 z-30 whitespace-nowrap overflow-hidden text-ellipsis shadow-[2px_0_4px_-2px_rgba(0,0,0,0.4)]"
+          className="sticky left-0 bg-slate-900 text-white px-4 py-2 z-30 min-w-[200px] max-w-[200px] whitespace-nowrap overflow-hidden text-ellipsis shadow-[2px_0_4px_-2px_rgba(0,0,0,0.4)]"
         >
           Дисциплины
         </th>
@@ -540,7 +540,7 @@ export function AcademicCalendarTable({
     
     // 2. Уровень: Семестры (по 2 на курс)
     headers.push(
-      <tr key="semester-level" className="bg-slate-800 text-white border-b border-slate-600">
+      <tr key="semester-level" className="bg-gradient-to-b from-slate-800 to-slate-700 text-white border-b border-slate-600">
         {courseColGroups.map((course, courseIdx) => {
           // Делим на 2 семестра (по половине недель каждого курса)
           const semesterWeeks = Math.ceil(course.colSpan / 2);
@@ -567,11 +567,11 @@ export function AcademicCalendarTable({
     
     // 3. Уровень: Недели (просто номера недель)
     headers.push(
-      <tr key="week-level" className="bg-slate-700 text-white">
+      <tr key="week-level" className="bg-gradient-to-b from-slate-700 to-slate-800 text-white">
         {firstCourseWeeks.map((week, idx) => (
           <th 
             key={`week-${idx}`}
-            className="py-1 text-center font-medium text-xs border-r border-slate-600"
+            className="py-1 text-center font-medium text-xs border-r border-slate-600 w-[40px]"
           >
             {week.index}
           </th>
@@ -770,12 +770,12 @@ export function AcademicCalendarTable({
         </button>
       </div>
 
-      <div className="rounded-md overflow-hidden border shadow-sm dark:border-slate-700">
-        <div className="overflow-x-auto max-h-[700px] plan-wrapper" ref={scrollWrapperRef}>
+      <div className="rounded-md overflow-hidden border border-slate-700 shadow-md">
+        <div className="overflow-x-auto max-h-[700px] calendar-wrapper" ref={scrollWrapperRef}>
           <div className="min-w-max relative">
             <table className="table-fixed border-collapse w-full" ref={tableRef}>
               <colgroup>
-                <col className="w-[200px]" /> {/* Дисциплины */}
+                <col className="w-[200px] min-w-[200px]" /> {/* Дисциплины */}
                 {weeks.map((_, i) => (
                   <col key={i} className="w-[40px]" /> 
                 ))}
@@ -783,12 +783,12 @@ export function AcademicCalendarTable({
               <thead className="sticky top-0 z-20" ref={headerRef}>
                 {renderHeaders()}
               </thead>
-              <tbody className="bg-slate-950">
+              <tbody className="bg-slate-900/40">
                 {renderCourseRows()}
               </tbody>
-              <tfoot className="sticky bottom-0 bg-slate-900 text-white">
+              <tfoot className="sticky bottom-0 bg-gradient-to-t from-slate-900 to-slate-800 text-white shadow-[0_-2px_4px_-2px_rgba(0,0,0,0.3)]">
                 <tr>
-                  <td className="sticky left-0 bg-slate-900 px-4 py-2 font-semibold z-10">Итого</td>
+                  <td className="sticky left-0 bg-slate-900 px-4 py-2 font-semibold z-20 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.4)]">Итого</td>
                   {weeks.map((_, idx) => (
                     <td key={idx} className="text-center p-1 border-r border-slate-700"></td>
                   ))}
