@@ -69,6 +69,7 @@ const SubjectRow: React.FC<{
   onValueChange: (nodeId: string, semesterIndex: number, value: number, activityType?: keyof ActivityHours) => void;
   onCreditUnitsChange: (nodeId: string, value: number) => void;
   onControlTypeChange: (nodeId: string, controlType: string, semesterIndex: number) => void;
+  onRename: (id: string) => void; // Обработчик переименования
   onSelect?: (id: string, ctrlKey: boolean, shiftKey: boolean) => void; // Обработчик выбора элемента
 }> = ({ 
   node, 
@@ -81,6 +82,7 @@ const SubjectRow: React.FC<{
   onValueChange, 
   onCreditUnitsChange,
   onControlTypeChange,
+  onRename,
   onSelect
 }) => {
   // Обработчик потери фокуса для пересчета значений
@@ -92,10 +94,12 @@ const SubjectRow: React.FC<{
   // Обработчик для переименования
   const handleRename = (e: React.MouseEvent) => {
     e.stopPropagation();
-    // Вызовем панель переименования через родительский компонент если есть onRename
-    const parent = document.querySelector(`.rename-panel[data-node-id="${node.id}"]`) as HTMLElement;
-    if (parent) {
-      parent.click();
+    e.preventDefault(); // Предотвращаем стандартное поведение
+    // Вызываем функцию переименования напрямую
+    if (node && node.id) {
+      console.log('Double click on subject:', node.id);
+      // Находим rename-panel с нужным ID или просто вызываем функцию обработчика родителя
+      onRename && onRename(node.id);
     }
   };
 
@@ -135,15 +139,7 @@ const SubjectRow: React.FC<{
           
           <span 
             className="text-white cursor-pointer" 
-            onDoubleClick={(e) => {
-              e.stopPropagation(); // Предотвращаем распространение события
-              // Добавим обработчик для редактирования при двойном клике
-              // Если есть функция переименования в родительском компоненте, передаём ID
-              const renamePanel = document.querySelector('.rename-panel') as HTMLElement;
-              if (renamePanel) {
-                renamePanel.click();
-              }
-            }}
+            onDoubleClick={handleRename}
           >
             {node.title}
           </span>
@@ -1237,20 +1233,7 @@ export const CurriculumPlanTable = React.forwardRef<
             <span className="text-sm text-slate-500">
               Выбрано элементов: {selectedNodes.size}
             </span>
-            <Button 
-              variant="destructive" 
-              size="sm"
-              onClick={() => {
-                if (selectedNodes.size > 0) {
-                  // Удаляем первый элемент из выбранных (остальные удалятся автоматически)
-                  const firstNode = Array.from(selectedNodes)[0];
-                  handleDeleteNode(firstNode);
-                }
-              }}
-            >
-              <Trash size={16} className="mr-2" />
-              Удалить выбранное
-            </Button>
+            {/* Кнопка "Удалить выбранное" удалена, так как она дублирует функциональность */}
             <Button 
               variant="outline" 
               size="sm"
