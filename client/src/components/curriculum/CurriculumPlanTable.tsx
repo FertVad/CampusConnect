@@ -682,18 +682,26 @@ export const CurriculumPlanTable = React.forwardRef<
     value: number, 
     activityType: keyof ActivityHours = 'total'
   ) => {
+    console.log(`Изменяем значение: узел ${nodeId}, семестр ${semesterIndex}, значение ${value}, тип ${activityType}`);
+    
+    // Обновляем состояние и получаем новые данные
     setPlanData(prevData => {
-      return prevData.map(node => {
+      const newData = prevData.map(node => {
         if (node.id === nodeId && node.type === 'subject') {
           const subject = node as Subject;
           
           // Создаем новый массив часов с обновленным значением (для обратной совместимости)
           const newHours = [...subject.hours];
           
-          // Новая структура активностей для всех семестров
+          // Убедимся, что массив hours имеет достаточную длину
+          while (newHours.length <= semesterIndex) {
+            newHours.push(0);
+          }
+          
+          // Новая структура активностей для всех семестров (глубокое клонирование)
           const newActivityHours = subject.activityHours 
-            ? [...subject.activityHours] 
-            : Array(newHours.length).fill(null).map((_, i) => ({
+            ? JSON.parse(JSON.stringify(subject.activityHours))
+            : Array(Math.max(newHours.length, 8)).fill(null).map((_, i) => ({
                 lectures: 0,
                 practice: 0,
                 laboratory: 0,
@@ -746,16 +754,22 @@ export const CurriculumPlanTable = React.forwardRef<
         }
         return node;
       });
+
+      // Сразу же вызываем коллбэк с обновленными данными
+      if (onPlanChange) {
+        console.log('[CurriculumPlanTable] Моментальное обновление данных');
+        // Используем setTimeout с нулевой задержкой, чтобы вызов произошел после обновления состояния
+        setTimeout(() => onPlanChange(newData), 0);
+      }
+      
+      return newData;
     });
     
     // Устанавливаем флаг "грязных данных"
     if (onDirtyChange) {
       onDirtyChange(true);
     }
-    
-    // Запускаем таймер автосохранения
-    scheduleSave();
-  }, [onDirtyChange]);
+  }, [onPlanChange, onDirtyChange]);
 
   // Обработчик изменения зачетных единиц
   const handleCreditUnitsChange = useCallback((nodeId: string, value: number) => {
