@@ -1343,6 +1343,7 @@ export const CurriculumPlanTable = React.forwardRef<
                           onValueChange={handleValueChange}
                           onCreditUnitsChange={handleCreditUnitsChange}
                           onControlTypeChange={handleControlTypeChange}
+                          onRename={handleRenameNode}
                           onSelect={selectNode}
                         />
                       );

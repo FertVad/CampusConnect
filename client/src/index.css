@@ -600,6 +600,18 @@
   border-left: 4px solid rgb(96 165 250) !important; /* Синяя полоса слева в темной теме border-blue-400 */
 }
 
+/* Отменяем стандартное поведение Shift при прокрутке */
+html, body {
+  scroll-behavior: smooth;
+}
+
+/* Запрещаем прокрутку при нажатии Shift */
+html.shift-key-pressed,
+body.shift-key-pressed {
+  overflow: auto;
+  scroll-behavior: auto !important;
+}
+
 /* Убрать стрелки-бамперы в полях ввода числовых значений */
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button {
