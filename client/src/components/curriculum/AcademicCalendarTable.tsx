@@ -446,9 +446,6 @@ export function AcademicCalendarTable({
     const headers = [];
     
     // Создаем объединенный массив всех недель из первого курса для заголовков
-    // Используем недели первого учебного года в качестве шаблона
-    // Получаем недели для первого курса, которые будут использоваться для отображения в таблице
-    // Применяем нашу обновленную функцию, которая учитывает переменное количество недель в году
     const firstCourseWeeks = buildAcademicWeeks(weeks[0].startDate);
     console.log(`[AcademicCalendarTable] Сгенерировано ${firstCourseWeeks.length} недель для отображения`);
     
@@ -767,13 +764,27 @@ export function AcademicCalendarTable({
       <div className="rounded-md overflow-hidden border shadow-sm dark:border-slate-700">
         <div className="overflow-auto max-h-[500px] custom-scrollbar calendar-wrapper" ref={scrollWrapperRef}>
           <div className="min-w-max relative">
-            <table className="w-full border-collapse" ref={tableRef}>
-              <thead ref={headerRef}>
+            <table className="table-fixed w-full border-collapse" ref={tableRef}>
+              <colgroup>
+                <col className="w-[200px]" /> {/* Дисциплины */}
+                {weeks.map((_, i) => (
+                  <col key={i} className="w-[60px]" /> 
+                ))}
+              </colgroup>
+              <thead className="sticky top-0 z-20" ref={headerRef}>
                 {renderHeaders()}
               </thead>
               <tbody className="bg-slate-50 dark:bg-slate-900">
                 {renderCourseRows()}
               </tbody>
+              <tfoot className="sticky bottom-0 bg-slate-800 text-white">
+                <tr>
+                  <td className="sticky left-0 bg-slate-900 px-4 py-2 font-semibold">Итого</td>
+                  {weeks.map((_, idx) => (
+                    <td key={idx} className="text-center px-2 py-1"></td>
+                  ))}
+                </tr>
+              </tfoot>
             </table>
           </div>
         </div>

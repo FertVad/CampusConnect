@@ -609,6 +609,14 @@
   width: 20px;
 }
 
+/* Стиль для повернутых заголовков */
+.rotate-header {
+  transform: rotate(-90deg);
+  transform-origin: bottom left;
+  white-space: nowrap;
+  height: 80px; /* Высота для вертикального текста */
+}
+
 /* Стили для строк таблицы учебного плана (предметов и групп) */
 .curr-plan tr {
   border-bottom: 1px solid rgba(203, 213, 225, 0.7); /* slate-300/70 */
