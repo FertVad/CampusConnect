@@ -963,36 +963,48 @@ export const CurriculumPlanTable = React.forwardRef<
         
         // Если все проверки прошли, выполняем перемещение
         setPlanData(prevData => {
+          // Найдем текущий индекс перетаскиваемого и целевого узла в видимом списке узлов
+          const activeVisibleIndex = visibleNodes.findIndex(n => n.id === activeNodeId);
+          const overVisibleIndex = visibleNodes.findIndex(n => n.id === overNodeId);
+          
+          // Если один из них не найден, просто возвращаем данные без изменений
+          if (activeVisibleIndex === -1 || overVisibleIndex === -1) {
+            return prevData;
+          }
+          
+          // Определяем новый parentId в зависимости от типа над которым бросаем
+          let newParentId: string | null = null;
+          
+          if (overNodeData.type === 'section' || overNodeData.type === 'group') {
+            // Если перетащили на раздел или группу, они становятся родителями
+            newParentId = overNodeData.id;
+          } else if (overNodeData.type === 'subject') {
+            // Дисциплина не может быть родителем, используем её родителя
+            newParentId = overNodeData.parentId;
+          }
+          
+          // Получаем все узлы с таким же родителем
+          const siblingsWithSameParent = prevData
+            .filter(n => n.parentId === newParentId)
+            .sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
+          
+          // Определяем новый индекс сортировки
+          let newOrderIndex: number;
+          
+          // Если перетаскиваем вверх по списку
+          if (activeVisibleIndex > overVisibleIndex) {
+            // Вставляем перед целевым элементом
+            newOrderIndex = overNodeData.orderIndex ? overNodeData.orderIndex - 0.5 : -0.5;
+          } else {
+            // Вставляем после целевого элемента
+            newOrderIndex = overNodeData.orderIndex ? overNodeData.orderIndex + 0.5 : 0.5;
+          }
+          
+          console.log('[CurriculumPlanTable] New order index:', newOrderIndex);
+          
+          // Обновляем элемент
           return prevData.map(node => {
             if (node.id === activeNodeId) {
-              // Определяем новый parentId в зависимости от типа над которым бросаем
-              let newParentId: string | null = null;
-              
-              if (overNodeData.type === 'section' || overNodeData.type === 'group') {
-                // Раздел и группа могут быть родителями
-                newParentId = overNodeData.id;
-              } else if (overNodeData.type === 'subject') {
-                // Дисциплина не может быть родителем, используем её родителя
-                newParentId = overNodeData.parentId;
-              }
-              
-              // Обновляем индекс сортировки
-              const targetNodes = prevData.filter(n => n.parentId === newParentId);
-              const overNodeIndex = targetNodes.findIndex(n => n.id === overNodeId);
-              
-              // Вставляем перед/после в зависимости от позиции
-              let newOrderIndex = 0;
-              if (overNodeIndex === 0) {
-                newOrderIndex = (targetNodes[0]?.orderIndex || 0) - 1;
-              } else if (overNodeIndex === targetNodes.length - 1) {
-                newOrderIndex = (targetNodes[targetNodes.length - 1]?.orderIndex || 0) + 1;
-              } else {
-                // Берем среднее значение между соседними узлами
-                const prevIndex = targetNodes[overNodeIndex - 1]?.orderIndex || 0;
-                const nextIndex = targetNodes[overNodeIndex]?.orderIndex || 0;
-                newOrderIndex = prevIndex + (nextIndex - prevIndex) / 2;
-              }
-              
               return {
                 ...node,
                 parentId: newParentId,
@@ -1350,6 +1362,7 @@ export const CurriculumPlanTable = React.forwardRef<
         collisionDetection={closestCenter}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
+
       >
         <div className="relative bg-white dark:bg-slate-900 shadow-md rounded-lg overflow-hidden">
           <div className="overflow-x-auto overflow-y-auto max-h-[80vh]">
@@ -1545,15 +1558,15 @@ export const CurriculumPlanTable = React.forwardRef<
         </div>
         
         {/* Показываем контур перетаскиваемого элемента */}
-        <DragOverlay>
+        <DragOverlay adjustScale={false} dropAnimation={null}>
           {activeId && activeNode && (
             activeNode.type === 'subject' ? (
-              <div className="bg-white dark:bg-slate-800 rounded shadow-lg border p-2 opacity-90 min-w-[200px] flex items-center gap-2">
+              <div className="bg-white dark:bg-slate-800 rounded shadow-lg border p-2 opacity-95 min-w-[200px] flex items-center gap-2 translate-y-[-30px]">
                 <div className="h-3 w-3 rounded-full bg-blue-500 shrink-0"></div>
                 <span className="font-medium">{activeNode.title}</span>
               </div>
             ) : (
-              <div className="bg-white dark:bg-slate-800 rounded shadow-lg border p-2 opacity-90 min-w-[200px] flex items-center gap-2">
+              <div className="bg-white dark:bg-slate-800 rounded shadow-lg border p-2 opacity-95 min-w-[200px] flex items-center gap-2 translate-y-[-30px]">
                 <div className={`h-3 w-3 rounded-full ${activeNode.type === 'section' ? 'bg-red-500' : 'bg-green-500'} shrink-0`}></div>
                 <span className="font-medium">{activeNode.title}</span>
               </div>
