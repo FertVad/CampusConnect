@@ -8,6 +8,7 @@ export interface PlanNodeBase {
   type: 'section' | 'group' | 'subject';
   orderIndex?: number; // Индекс для сортировки
   isCollapsed?: boolean; // Флаг для свернутого состояния (для разделов и групп)
+  depth?: number;      // Уровень вложенности для отображения отступов
 }
 
 // Структура для часов по типу активности в семестре

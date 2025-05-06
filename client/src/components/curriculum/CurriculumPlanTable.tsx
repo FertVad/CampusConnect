@@ -1029,6 +1029,11 @@ export const CurriculumPlanTable = React.forwardRef<
     return result;
   }
 
+  // Вычисляем видимые узлы для рендеринга
+  const visibleNodes = useMemo(() => {
+    return getVisibleNodes();
+  }, [getVisibleNodes]);
+
   // Общая функция для выбора узла (одинарного и множественного)
   const selectNode = useCallback((id: string, ctrlKey = false, shiftKey = false) => {
     console.log(`Selecting node ${id}, ctrlKey: ${ctrlKey}, shiftKey: ${shiftKey}`);
@@ -1123,11 +1128,6 @@ export const CurriculumPlanTable = React.forwardRef<
       }
     }, 3000);
   }, [planData, onPlanChange]);
-
-  // Вычисляем видимые узлы для рендеринга
-  const visibleNodes = useMemo(() => {
-    return getVisibleNodes();
-  }, [getVisibleNodes]);
 
   // Проверка на наличие пустых групп
   useEffect(() => {
@@ -1382,7 +1382,7 @@ export const CurriculumPlanTable = React.forwardRef<
                           depth={node.depth || 0}
                           rowBgClass={rowBgClass}
                           onToggleCollapse={toggleNodeCollapse}
-                          onAddChild={addNode}
+                          onAddChild={(parentId, type) => addNode(type, parentId)}
                           onRename={handleRenameNode}
                           onDelete={handleDeleteNode}
                           onSelect={selectNode}
