@@ -28,6 +28,54 @@ import { PlusCircle, MoreVertical, ChevronRight, ChevronDown, Trash, Edit, Plus,
 import { PlanNode, Subject, CurriculumPlan, ActivityHours } from '@/types/curriculum';
 import sampleData from '@/data/sampleCurrPlan.json';
 
+// Компонент для прямого редактирования в DOM с минимальным влиянием на цикл React
+// Оптимизирован для быстрого отклика при редактировании ячеек таблицы
+const DirectEditCell: React.FC<{
+  initialValue: number;
+  onChange: (value: number) => void;
+  bold?: boolean;
+  background?: string;
+}> = ({ initialValue, onChange, bold, background }) => {
+  // Используем useRef для прямого доступа к DOM-элементу
+  const inputRef = useRef<HTMLInputElement>(null);
+  
+  // Инициализируем значение при монтировании компонента или изменении initialValue
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.value = initialValue.toString();
+    }
+  }, [initialValue]);
+  
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const numValue = parseInt(e.target.value) || 0;
+    
+    // Сразу обновляем значение в поле ввода (DOM) для мгновенной обратной связи
+    if (inputRef.current) {
+      inputRef.current.value = numValue.toString();
+    }
+    
+    // Вызываем колбэк для обновления данных в родительском компоненте
+    onChange(numValue);
+  };
+  
+  return (
+    <input
+      ref={inputRef}
+      type="number"
+      min={0}
+      defaultValue={initialValue} // Используем defaultValue вместо value для неконтролируемого компонента
+      className="w-full bg-transparent text-center outline-none hover:bg-blue-50 dark:hover:bg-blue-900/20 focus:bg-blue-100 dark:focus:bg-blue-900/40 tabular-nums transition-colors rounded py-1"
+      style={{
+        WebkitAppearance: 'none', 
+        appearance: 'none',
+        fontWeight: bold ? 'bold' : 'normal',
+        backgroundColor: background || 'transparent'
+      }}
+      onChange={handleChange}
+    />
+  );
+};
+
 // Тип для параметров компонента
 interface Props {
   courses: number;
@@ -203,23 +251,9 @@ const SubjectRow: React.FC<{
       
       {/* Ячейка зачетных единиц */}
       <td className="w-16 px-3 py-2 border-l border-t border-slate-700/20 dark:border-slate-600/40 text-center">
-        <input
-          type="number"
-          min={0}
-          step="0.5"
-          className="w-full bg-transparent text-center outline-none hover:bg-blue-50 dark:hover:bg-blue-900/20 focus:bg-blue-100 dark:focus:bg-blue-900/40 tabular-nums transition-colors rounded py-1"
-          style={{ WebkitAppearance: 'none', appearance: 'none' }}
-          value={node.creditUnits ?? 0}
-          onChange={(e) => {
-            // Получаем новое значение (с поддержкой дробных чисел)
-            const newValue = parseFloat(e.target.value) || 0;
-            
-            // Немедленно обновляем отображаемое значение в поле input
-            e.target.value = newValue.toString();
-            
-            // Используем обработчик из props
-            onCreditUnitsChange(node.id, newValue);
-          }}
+        <DirectEditCell 
+          initialValue={node.creditUnits ?? 0}
+          onChange={(value) => onCreditUnitsChange(node.id, value)}
         />
       </td>
       
@@ -253,36 +287,17 @@ const SubjectRow: React.FC<{
             key={`${s}-${activity.key}`} 
             className="w-16 px-3 py-2 border-l border-t border-slate-700/20 dark:border-slate-600/40 text-center"
           >
-            <input
-              type="number"
-              min={0}
-              className="w-full bg-transparent text-center outline-none hover:bg-blue-50 dark:hover:bg-blue-900/20 focus:bg-blue-100 dark:focus:bg-blue-900/40 tabular-nums transition-colors rounded py-1"
-              style={{
-                WebkitAppearance: 'none', 
-                appearance: 'none',
-                fontWeight: activity.key === 'total' ? 'bold' : 'normal',
-                backgroundColor: activity.key === 'total' ? 'rgba(100, 116, 139, 0.1)' : 'transparent'
-              }}
-              value={activityData[activity.key as keyof typeof activityData] || 0}
-              onChange={(e) => {
-                // Преобразуем значение в число
-                const numValue = parseInt(e.target.value) || 0;
-                
-                // Немедленно обновляем отображаемое значение в поле input
-                // Используем прямую модификацию DOM для моментального отображения
-                e.target.value = numValue.toString();
-                
+            <DirectEditCell
+              initialValue={activityData[activity.key as keyof typeof activityData] || 0}
+              onChange={(value) => {
                 if (activity.key === 'total') {
-                  onValueChange(node.id, semesterIndex, numValue);
+                  onValueChange(node.id, semesterIndex, value);
                 } else {
-                  onValueChange(node.id, semesterIndex, numValue, activity.key as keyof ActivityHours);
+                  onValueChange(node.id, semesterIndex, value, activity.key as keyof ActivityHours);
                 }
               }}
-              onBlur={(e) => {
-                if (activity.key === 'total') {
-                  handleBlur(e, semesterIndex);
-                }
-              }}
+              bold={activity.key === 'total'}
+              background={activity.key === 'total' ? 'rgba(100, 116, 139, 0.1)' : undefined}
             />
           </td>
         ));
