@@ -115,7 +115,7 @@ const SubjectRow: React.FC<{
       onClick={(e) => onSelect && onSelect(node.id, e.ctrlKey || e.metaKey, e.shiftKey)}
     >
       {/* Ячейка с названием дисциплины */}
-      <td className="sticky left-0 bg-inherit border-t border-slate-700/20 dark:border-slate-600/40 z-10">
+      <td className="sticky left-0 bg-slate-900 border-t border-slate-700/20 dark:border-slate-600/40 z-10">
         <div className="flex items-center" style={{ paddingLeft: `${paddingLeft}px` }}>
           <span className="w-6"></span>
           
@@ -123,7 +123,7 @@ const SubjectRow: React.FC<{
             <GripVertical size={16} className="text-slate-400 mr-2 hover:text-blue-500 transition-colors" />
           </span>
           
-          <span className="text-slate-700 dark:text-slate-200">
+          <span className="text-white">
             {node.title}
           </span>
           
@@ -166,6 +166,7 @@ const SubjectRow: React.FC<{
           type="number"
           min={0}
           className="w-full bg-transparent text-center outline-none hover:bg-blue-50 dark:hover:bg-blue-900/20 focus:bg-blue-100 dark:focus:bg-blue-900/40 tabular-nums transition-colors rounded py-1"
+          style={{ WebkitAppearance: 'none', appearance: 'none' }}
           value={node.hours.reduce((sum, hours) => sum + hours, 0)}
           readOnly
         />
@@ -178,6 +179,7 @@ const SubjectRow: React.FC<{
           min={0}
           step="0.5"
           className="w-full bg-transparent text-center outline-none hover:bg-blue-50 dark:hover:bg-blue-900/20 focus:bg-blue-100 dark:focus:bg-blue-900/40 tabular-nums transition-colors rounded py-1"
+          style={{ WebkitAppearance: 'none', appearance: 'none' }}
           value={node.creditUnits ?? 0}
           onChange={(e) => {
             // Получаем новое значение (с поддержкой дробных чисел)
@@ -223,6 +225,12 @@ const SubjectRow: React.FC<{
               type="number"
               min={0}
               className="w-full bg-transparent text-center outline-none hover:bg-blue-50 dark:hover:bg-blue-900/20 focus:bg-blue-100 dark:focus:bg-blue-900/40 tabular-nums transition-colors rounded py-1"
+              style={{
+                WebkitAppearance: 'none', 
+                appearance: 'none',
+                fontWeight: activity.key === 'total' ? 'bold' : 'normal',
+                backgroundColor: activity.key === 'total' ? 'rgba(100, 116, 139, 0.1)' : 'transparent'
+              }}
               value={activityData[activity.key as keyof typeof activityData] || 0}
               onChange={(e) => {
                 // Преобразуем значение в число
@@ -238,11 +246,6 @@ const SubjectRow: React.FC<{
                 if (activity.key === 'total') {
                   handleBlur(e, semesterIndex);
                 }
-              }}
-              // Делаем поле "Итого" выделенным
-              style={{
-                fontWeight: activity.key === 'total' ? 'bold' : 'normal',
-                backgroundColor: activity.key === 'total' ? 'rgba(100, 116, 139, 0.1)' : 'transparent'
               }}
             />
           </td>
@@ -319,17 +322,17 @@ const GroupRow: React.FC<{
         hover:bg-indigo-50/40 dark:hover:bg-indigo-600/10 transition-colors cursor-pointer`}
       onClick={(e) => onSelect && onSelect(node.id, e.ctrlKey || e.metaKey, e.shiftKey)}
     >
-      <td className="sticky left-0 bg-inherit border-t border-slate-700/20 dark:border-slate-600/40 z-10">
+      <td className="sticky left-0 bg-slate-900 border-t border-slate-700/20 dark:border-slate-600/40 z-10">
         <div className="flex items-center" style={{ paddingLeft: `${paddingLeft}px` }}>
           {hasChildren ? (
             <button
               onClick={() => onToggleCollapse(node.id)}
-              className="p-1 rounded-md hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+              className="p-1 rounded-md hover:bg-slate-700 transition-colors"
             >
               {node.isCollapsed ? (
-                <ChevronRight size={16} className="text-slate-500" />
+                <ChevronRight size={16} className="text-slate-300" />
               ) : (
-                <ChevronDown size={16} className="text-slate-500" />
+                <ChevronDown size={16} className="text-slate-300" />
               )}
             </button>
           ) : (
@@ -341,12 +344,12 @@ const GroupRow: React.FC<{
           </span>
           
           <span 
-            className={`flex items-center gap-1 ${isSection ? 'font-semibold text-red-700 dark:text-red-400' : 'font-medium text-green-700 dark:text-green-400'} cursor-pointer`}
+            className={`flex items-center gap-1 text-white ${isSection ? 'font-semibold' : 'font-medium'} cursor-pointer`}
             onDoubleClick={() => onRename(node.id)}
           >
             {node.title}
             {hasError && !isSection && (
-              <span className="ml-2 text-red-600 dark:text-red-400 text-xs" title="Группа не содержит дисциплин">
+              <span className="ml-2 text-red-400 text-xs" title="Группа не содержит дисциплин">
                 (пустая группа)
               </span>
             )}
@@ -1120,18 +1123,65 @@ export const CurriculumPlanTable = React.forwardRef<
     };
   }, []);
 
+  // Обработчик удаления выбранных строк
+  const handleDeleteSelected = useCallback(() => {
+    if (selectedNodes.size > 0) {
+      // Преобразуем Set в массив для удаления
+      const nodesToDelete = Array.from(selectedNodes);
+      // Удаляем каждый узел
+      nodesToDelete.forEach(nodeId => {
+        handleDeleteNode(nodeId);
+      });
+      // Очищаем выделение
+      setSelectedNodes(new Set());
+    }
+  }, [selectedNodes, handleDeleteNode]);
+  
+  // Обработчик нажатия клавиш
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Проверяем, активен ли документ и не в режиме ввода
+      if (document.activeElement?.tagName !== 'INPUT' && 
+          document.activeElement?.tagName !== 'TEXTAREA' && 
+          document.activeElement?.tagName !== 'SELECT') {
+        // Реагируем на Delete или Backspace для удаления выбранных строк
+        if ((e.key === 'Delete' || e.key === 'Backspace') && selectedNodes.size > 0) {
+          e.preventDefault();
+          handleDeleteSelected();
+        }
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [selectedNodes, handleDeleteSelected]);
+
   // Рендеринг главного содержимого
   return (
     <div className="py-4">
       <div className="mb-4 flex flex-wrap justify-between gap-2">
-        <Button
-          variant="outline"
-          className="gap-2"
-          onClick={() => addNode('section')}
-        >
-          <PlusCircle size={16} />
-          <span>Добавить раздел</span>
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            className="gap-2"
+            onClick={() => addNode('section')}
+          >
+            <PlusCircle size={16} />
+            <span>Добавить раздел</span>
+          </Button>
+          
+          <Button
+            variant="outline"
+            className="gap-2"
+            onClick={handleDeleteSelected}
+            disabled={selectedNodes.size === 0}
+          >
+            <Trash size={16} />
+            <span>Удалить выбранные</span>
+          </Button>
+        </div>
         
         {isMultiSelectMode && selectedNodes.size > 0 && (
           <div className="flex items-center gap-2">
@@ -1175,13 +1225,13 @@ export const CurriculumPlanTable = React.forwardRef<
             <table className="w-full text-sm text-left border-collapse">
               <thead className="sticky top-0 z-20">
                 {/* Первый уровень заголовка: Дисциплины и курсы */}
-                <tr className="bg-slate-800 text-white border-b border-slate-500">
-                  <th className="sticky left-0 top-0 bg-slate-800 px-3 py-2 z-30 min-w-[300px] text-left">
+                <tr className="bg-slate-800 text-white border-b-2 border-slate-500">
+                  <th className="sticky left-0 top-0 bg-slate-900 px-3 py-2 z-30 min-w-[300px] text-left">
                     Дисциплины
                   </th>
-                  <th className="px-3 py-2">Форма контроля</th>
-                  <th className="px-3 py-2">Всего часов</th>
-                  <th className="px-3 py-2">Зачетные единицы</th>
+                  <th className="px-3 py-2 border-r border-slate-600">Форма контроля</th>
+                  <th className="px-3 py-2 border-r border-slate-600">Всего часов</th>
+                  <th className="px-3 py-2 border-r border-slate-600">Зачетные единицы</th>
                   {Array.from({ length: courses }, (_, i) => i + 1).map(course => (
                     <th key={`course-${course}`} colSpan={7 * 2} className="text-center px-3 py-2">
                       <div className="font-bold text-lg">{course} курс</div>
@@ -1195,11 +1245,11 @@ export const CurriculumPlanTable = React.forwardRef<
                 </tr>
                 
                 {/* Второй уровень заголовка: Семестры */}
-                <tr className="bg-slate-700 text-white border-b border-slate-600">
-                  <th className="sticky left-0 top-[41px] bg-slate-700 px-3 py-2 z-30"></th>
-                  <th className="px-3 py-2"></th>
-                  <th className="px-3 py-2"></th>
-                  <th className="px-3 py-2"></th>
+                <tr className="bg-slate-700 text-white border-b-2 border-slate-600">
+                  <th className="sticky left-0 top-[41px] bg-slate-900 px-3 py-2 z-30"></th>
+                  <th className="px-3 py-2 border-r border-slate-600"></th>
+                  <th className="px-3 py-2 border-r border-slate-600"></th>
+                  <th className="px-3 py-2 border-r border-slate-600"></th>
                   {Array.from({ length: semesters.length }, (_, i) => i + 1).map(semester => (
                     <th key={`semester-${semester}`} colSpan={7} className="text-center px-3 py-2 font-medium">
                       {semester} семестр
@@ -1208,11 +1258,11 @@ export const CurriculumPlanTable = React.forwardRef<
                 </tr>
                 
                 {/* Третий уровень заголовка: Типы занятий */}
-                <tr className="bg-slate-600 text-white">
-                  <th className="sticky left-0 top-[81px] bg-slate-600 px-3 py-2 z-30"></th>
-                  <th className="px-3 py-2"></th>
-                  <th className="px-3 py-2"></th>
-                  <th className="px-3 py-2"></th>
+                <tr className="bg-slate-600 text-white border-b-2 border-slate-500">
+                  <th className="sticky left-0 top-[81px] bg-slate-900 px-3 py-2 z-30"></th>
+                  <th className="px-3 py-2 border-r border-slate-600"></th>
+                  <th className="px-3 py-2 border-r border-slate-600"></th>
+                  <th className="px-3 py-2 border-r border-slate-600"></th>
                   
                   {/* Для каждого семестра выводим заголовки типов занятий */}
                   {semesters.map(semester => {
