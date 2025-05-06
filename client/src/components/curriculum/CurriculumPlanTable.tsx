@@ -156,11 +156,8 @@ const SubjectRow: React.FC<{
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={() => {
-                  // Здесь обработчик для редактирования
-                  const renamePanel = document.querySelector('.rename-panel') as HTMLElement;
-                  if (renamePanel) {
-                    renamePanel.click();
-                  }
+                  // Вызываем функцию переименования напрямую
+                  onRename && onRename(node.id);
                 }}>
                   <Edit size={16} className="mr-2" /> Переименовать
                 </DropdownMenuItem>
@@ -1030,12 +1027,87 @@ export const CurriculumPlanTable = React.forwardRef<
     return getVisibleNodes();
   }, [getVisibleNodes]);
 
+  // Состояние для Shift-нажатия
+  const [shiftPressed, setShiftPressed] = useState<boolean>(false);
+
+  // Переключаем класс Shift на body при нажатии и отпускании клавиши
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Shift') {
+        setShiftPressed(true);
+        document.documentElement.classList.add('shift-key-pressed');
+        document.body.classList.add('shift-key-pressed');
+      }
+    };
+    
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.key === 'Shift') {
+        setShiftPressed(false);
+        document.documentElement.classList.remove('shift-key-pressed');
+        document.body.classList.remove('shift-key-pressed');
+      }
+    };
+    
+    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('keyup', handleKeyUp);
+    
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('keyup', handleKeyUp);
+      // Очистка классов при размонтировании
+      document.documentElement.classList.remove('shift-key-pressed');
+      document.body.classList.remove('shift-key-pressed');
+    };
+  }, []);
+
   // Общая функция для выбора узла (одинарного и множественного)
   const selectNode = useCallback((id: string, ctrlKey = false, shiftKey = false) => {
     console.log(`Selecting node ${id}, ctrlKey: ${ctrlKey}, shiftKey: ${shiftKey}`);
     
+    // Если клик на строку с нажатым Shift
+    if (shiftKey || shiftPressed) {
+      // Предотвращаем скролл страницы
+      if (shiftPressed) {
+        // Убедимся, что страница не будет скроллиться при множественном выборе
+        document.documentElement.style.overflow = 'hidden';
+        setTimeout(() => {
+          document.documentElement.style.overflow = '';
+        }, 100);
+      }
+      
+      // Включаем режим множественного выбора
+      if (!isMultiSelectMode) {
+        setIsMultiSelectMode(true);
+      }
+      
+      // Если нет последнего выбранного элемента, используем текущий
+      if (!lastSelectedNodeRef.current) {
+        lastSelectedNodeRef.current = id;
+        setSelectedNodeId(id);
+        setSelectedNodes(new Set([id]));
+        return;
+      }
+      
+      // Находим индексы начального и конечного элементов
+      const lastSelectedIndex = visibleNodes.findIndex(n => n.id === lastSelectedNodeRef.current);
+      const currentIndex = visibleNodes.findIndex(n => n.id === id);
+      
+      // Если оба элемента найдены
+      if (lastSelectedIndex !== -1 && currentIndex !== -1) {
+        // Определяем диапазон выделения
+        const start = Math.min(lastSelectedIndex, currentIndex);
+        const end = Math.max(lastSelectedIndex, currentIndex);
+        
+        console.log(`Selecting range from ${start} to ${end}`);
+        
+        // Создаем новое выделение
+        const nodesToSelect = visibleNodes.slice(start, end + 1).map(n => n.id);
+        setSelectedNodes(new Set(nodesToSelect));
+        setSelectedNodeId(id); // Устанавливаем текущий выбранный узел
+      }
+    } 
     // Если зажат Ctrl/Cmd
-    if (ctrlKey) {
+    else if (ctrlKey) {
       // Включаем режим множественного выбора, если он еще не включен
       if (!isMultiSelectMode) {
         setIsMultiSelectMode(true);
@@ -1065,31 +1137,6 @@ export const CurriculumPlanTable = React.forwardRef<
         return newSelection;
       });
     } 
-    // Если зажат Shift и установлен последний выбранный элемент
-    else if (shiftKey && lastSelectedNodeRef.current) {
-      // Включаем режим множественного выбора, если он еще не включен
-      if (!isMultiSelectMode) {
-        setIsMultiSelectMode(true);
-      }
-      
-      // Находим индексы начального и конечного элементов
-      const lastSelectedIndex = visibleNodes.findIndex(n => n.id === lastSelectedNodeRef.current);
-      const currentIndex = visibleNodes.findIndex(n => n.id === id);
-      
-      // Если оба элемента найдены
-      if (lastSelectedIndex !== -1 && currentIndex !== -1) {
-        // Определяем диапазон выделения
-        const start = Math.min(lastSelectedIndex, currentIndex);
-        const end = Math.max(lastSelectedIndex, currentIndex);
-        
-        console.log(`Selecting range from ${start} to ${end}`);
-        
-        // Создаем новое выделение
-        const nodesToSelect = visibleNodes.slice(start, end + 1).map(n => n.id);
-        setSelectedNodes(new Set(nodesToSelect));
-        setSelectedNodeId(id); // Устанавливаем текущий выбранный узел
-      }
-    }
     // Обычный выбор элемента
     else {
       // Снимаем множественное выделение
@@ -1102,7 +1149,7 @@ export const CurriculumPlanTable = React.forwardRef<
       setSelectedNodes(new Set([id])); // Также добавляем в множественное выделение
       lastSelectedNodeRef.current = id;
     }
-  }, [isMultiSelectMode, clearSelection, visibleNodes]);
+  }, [isMultiSelectMode, clearSelection, visibleNodes, shiftPressed]);
 
   // Функция для планирования сохранения (debounce)
   const scheduleSave = useCallback(() => {
