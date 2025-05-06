@@ -118,7 +118,7 @@ const SubjectRow: React.FC<{
     <tr
       ref={setNodeRef}
       style={style}
-      className={`${isSelected ? 'curriculum-row-selected' : (isActive ? 'bg-blue-50 dark:bg-blue-900/20' : '')} 
+      className={`${isSelected ? 'curriculum-row-selected' : (isActive ? 'bg-blue-50 dark:bg-blue-900/20' : rowBgClass)} 
         hover:bg-indigo-50/40 dark:hover:bg-indigo-600/10 transition-colors cursor-pointer`}
       onClick={(e) => onSelect && onSelect(node.id, e.ctrlKey || e.metaKey, e.shiftKey)}
     >
@@ -153,7 +153,7 @@ const SubjectRow: React.FC<{
         </div>
       </td>
       {/* Ячейка формы контроля */}
-      <td className="p-1 border-l border-t border-slate-700/20 dark:border-slate-600/40 text-center">
+      <td className="px-3 py-2 border-l border-t border-slate-700/20 dark:border-slate-600/40 text-center">
         <select
           className="w-full bg-transparent text-center outline-none hover:bg-blue-50 dark:hover:bg-blue-900/20 focus:bg-blue-100 dark:focus:bg-blue-900/40 transition-colors rounded py-1"
           value={node.controlType?.[0] || 'credit'}
@@ -174,7 +174,7 @@ const SubjectRow: React.FC<{
       </td>
       
       {/* Ячейка общего количества часов */}
-      <td className="w-16 p-1 border-l border-t border-slate-700/20 dark:border-slate-600/40 text-center">
+      <td className="w-16 px-3 py-2 border-l border-t border-slate-700/20 dark:border-slate-600/40 text-center">
         <input
           type="number"
           min={0}
@@ -191,7 +191,7 @@ const SubjectRow: React.FC<{
       </td>
       
       {/* Ячейка зачетных единиц */}
-      <td className="w-16 p-1 border-l border-t border-slate-700/20 dark:border-slate-600/40 text-center">
+      <td className="w-16 px-3 py-2 border-l border-t border-slate-700/20 dark:border-slate-600/40 text-center">
         <input
           type="number"
           min={0}
@@ -236,7 +236,7 @@ const SubjectRow: React.FC<{
         return activityTypes.map((activity, activityIndex) => (
           <td 
             key={`${s}-${activity.key}`} 
-            className="w-14 p-1 border-l border-t border-slate-700/20 dark:border-slate-600/40 text-center"
+            className="w-16 px-3 py-2 border-l border-t border-slate-700/20 dark:border-slate-600/40 text-center"
           >
             <input
               type="number"
@@ -334,7 +334,7 @@ const GroupRow: React.FC<{
     <tr
       ref={setNodeRef}
       style={style}
-      className={`${isSelected ? 'curriculum-row-selected' : (isActive ? 'bg-blue-50 dark:bg-blue-900/20' : '')} 
+      className={`${isSelected ? 'curriculum-row-selected' : (isActive ? 'bg-blue-50 dark:bg-blue-900/20' : rowBgClass)} 
         hover:bg-indigo-50/40 dark:hover:bg-indigo-600/10 transition-colors cursor-pointer`}
       onClick={(e) => onSelect && onSelect(node.id, e.ctrlKey || e.metaKey, e.shiftKey)}
     >
