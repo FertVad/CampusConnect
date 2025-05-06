@@ -88,6 +88,16 @@ const SubjectRow: React.FC<{
     const value = parseInt(e.target.value) || 0;
     onValueChange(node.id, semesterIndex, value);
   };
+  
+  // Обработчик для переименования
+  const handleRename = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    // Вызовем панель переименования через родительский компонент если есть onRename
+    const parent = document.querySelector(`.rename-panel[data-node-id="${node.id}"]`) as HTMLElement;
+    if (parent) {
+      parent.click();
+    }
+  };
 
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: node.id,
@@ -123,19 +133,41 @@ const SubjectRow: React.FC<{
             <GripVertical size={16} className="text-slate-400 mr-2 hover:text-blue-500 transition-colors" />
           </span>
           
-          <span className="text-white">
+          <span 
+            className="text-white cursor-pointer" 
+            onDoubleClick={(e) => {
+              e.stopPropagation(); // Предотвращаем распространение события
+              // Добавим обработчик для редактирования при двойном клике
+              // Если есть функция переименования в родительском компоненте, передаём ID
+              const renamePanel = document.querySelector('.rename-panel') as HTMLElement;
+              if (renamePanel) {
+                renamePanel.click();
+              }
+            }}
+          >
             {node.title}
           </span>
           
           <div className="ml-auto mr-2">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="p-1 rounded-md hover:bg-slate-200 dark:hover:bg-slate-700">
+                <button 
+                  className="p-1 rounded-md hover:bg-slate-200 dark:hover:bg-slate-700"
+                  onClick={(e) => e.stopPropagation()} // Предотвращаем распространение клика
+                >
                   <MoreVertical size={16} className="text-slate-500" />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                {/* Контекстное меню для дисциплины (если понадобится) */}
+                <DropdownMenuItem onClick={() => {
+                  // Здесь обработчик для редактирования
+                  const renamePanel = document.querySelector('.rename-panel') as HTMLElement;
+                  if (renamePanel) {
+                    renamePanel.click();
+                  }
+                }}>
+                  <Edit size={16} className="mr-2" /> Переименовать
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -326,7 +358,10 @@ const GroupRow: React.FC<{
         <div className="flex items-center" style={{ paddingLeft: `${paddingLeft}px` }}>
           {hasChildren ? (
             <button
-              onClick={() => onToggleCollapse(node.id)}
+              onClick={(e) => {
+                e.stopPropagation(); // Предотвращаем распространение клика
+                onToggleCollapse(node.id);
+              }}
               className="p-1 rounded-md hover:bg-slate-700 transition-colors"
             >
               {node.isCollapsed ? (
@@ -345,7 +380,10 @@ const GroupRow: React.FC<{
           
           <span 
             className={`flex items-center gap-1 text-white ${isSection ? 'font-semibold' : 'font-medium'} cursor-pointer`}
-            onDoubleClick={() => onRename(node.id)}
+            onDoubleClick={(e) => {
+              e.stopPropagation(); // Предотвращаем распространение события
+              onRename(node.id);
+            }}
           >
             {node.title}
             {hasError && !isSection && (
@@ -358,7 +396,10 @@ const GroupRow: React.FC<{
           <div className="ml-auto mr-2 flex">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="p-1 rounded-md hover:bg-slate-200 dark:hover:bg-slate-700">
+                <button 
+                  className="p-1 rounded-md hover:bg-slate-200 dark:hover:bg-slate-700"
+                  onClick={(e) => e.stopPropagation()} // Предотвращаем распространение клика
+                >
                   <MoreVertical size={16} className="text-slate-500" />
                 </button>
               </DropdownMenuTrigger>
