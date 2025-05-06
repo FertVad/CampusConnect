@@ -50,14 +50,14 @@ interface NodeWithSums {
   hours?: number[]; // Для дисциплин
 }
 
-// Интерфейс для элемента, который перетаскивается
+// Интерфейс для элемента при перетаскивании
 interface DragItem {
   id: string;
   type: 'section' | 'group' | 'subject';
   parentId: string | null;
 }
 
-// Компонент строки для дисциплины (конечный узел)
+// Компонент для строки дисциплины (конечный узел дерева)
 const SubjectRow: React.FC<{
   node: Subject;
   semesters: number[];
@@ -66,30 +66,29 @@ const SubjectRow: React.FC<{
   depth: number;
   rowBgClass?: string; // Класс для чередования фона строк
   isMultiSelectMode?: boolean; // Режим множественного выбора
-  onValueChange: (id: string, semesterIndex: number, value: number, activityType?: keyof ActivityHours) => void;
-  onControlTypeChange: (id: string, controlType: 'exam' | 'credit' | 'differentiated_credit' | 'coursework', index: number) => void;
-  onTotalHoursChange: (id: string, totalHours: number) => void;
-  onCreditUnitsChange: (id: string, creditUnits: number) => void;
-  onRename: (id: string) => void;
-  onDelete: (id: string) => void;
+  onValueChange: (nodeId: string, semesterIndex: number, value: number, activityType?: keyof ActivityHours) => void;
+  onCreditUnitsChange: (nodeId: string, value: number) => void;
+  onControlTypeChange: (nodeId: string, controlType: string, semesterIndex: number) => void;
   onSelect?: (id: string, ctrlKey: boolean, shiftKey: boolean) => void; // Обработчик выбора элемента
 }> = ({ 
   node, 
   semesters, 
   isActive, 
-  isSelected, 
+  isSelected,
   depth, 
   rowBgClass = '',
-  isMultiSelectMode, 
+  isMultiSelectMode,
   onValueChange, 
-  onControlTypeChange,
-  onTotalHoursChange,
   onCreditUnitsChange,
-  onRename, 
-  onDelete, 
-  onSelect 
+  onControlTypeChange,
+  onSelect
 }) => {
-  // Настройка сортировки элемента (для drag & drop)
+  // Обработчик потери фокуса для пересчета значений
+  const handleBlur = (e: React.FocusEvent<HTMLInputElement>, semesterIndex: number) => {
+    const value = parseInt(e.target.value) || 0;
+    onValueChange(node.id, semesterIndex, value);
+  };
+
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: node.id,
     data: {
@@ -107,13 +106,6 @@ const SubjectRow: React.FC<{
   // Расчет отступа в зависимости от глубины
   const paddingLeft = 8 + depth * 20;
 
-  // Обработчик потери фокуса для пустого поля
-  const handleBlur = (e: React.FocusEvent<HTMLInputElement>, semesterIndex: number) => {
-    if (e.target.value === '') {
-      onValueChange(node.id, semesterIndex, 0);
-    }
-  };
-
   return (
     <tr
       ref={setNodeRef}
@@ -122,17 +114,19 @@ const SubjectRow: React.FC<{
         hover:bg-indigo-50/40 dark:hover:bg-indigo-600/10 transition-colors cursor-pointer`}
       onClick={(e) => onSelect && onSelect(node.id, e.ctrlKey || e.metaKey, e.shiftKey)}
     >
+      {/* Ячейка с названием дисциплины */}
       <td className="sticky left-0 bg-inherit border-t border-slate-700/20 dark:border-slate-600/40 z-10">
         <div className="flex items-center" style={{ paddingLeft: `${paddingLeft}px` }}>
-          <span className="cursor-grab" {...attributes} {...listeners}>
+          <span className="w-6"></span>
+          
+          <span className="cursor-grab ml-1" {...attributes} {...listeners}>
             <GripVertical size={16} className="text-slate-400 mr-2 hover:text-blue-500 transition-colors" />
           </span>
-          <span 
-            className="font-normal text-blue-700 dark:text-blue-300 cursor-pointer" 
-            onDoubleClick={() => onRename(node.id)}
-          >
+          
+          <span className="text-slate-700 dark:text-slate-200">
             {node.title}
           </span>
+          
           <div className="ml-auto mr-2">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -141,52 +135,39 @@ const SubjectRow: React.FC<{
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => onRename(node.id)}>
-                  <Edit size={16} className="mr-2" /> Переименовать
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onDelete(node.id)}>
-                  <Trash size={16} className="mr-2" /> Удалить
-                </DropdownMenuItem>
+                {/* Контекстное меню для дисциплины (если понадобится) */}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
         </div>
       </td>
+      
       {/* Ячейка формы контроля */}
-      <td className="px-3 py-2 border-l border-t border-slate-700/20 dark:border-slate-600/40 text-center">
+      <td className="w-32 px-3 py-2 border-l border-t border-slate-700/20 dark:border-slate-600/40 text-center">
         <select
           className="w-full bg-transparent text-center outline-none hover:bg-blue-50 dark:hover:bg-blue-900/20 focus:bg-blue-100 dark:focus:bg-blue-900/40 transition-colors rounded py-1"
-          value={node.controlType?.[0] || 'credit'}
+          value={node.controlType || 'exam'}
           onChange={(e) => {
-            // Используем обработчик из props
-            onControlTypeChange(
-              node.id, 
-              e.target.value as 'exam' | 'credit' | 'differentiated_credit' | 'coursework', 
-              0 // Индекс семестра (сейчас используем только первый семестр)
-            );
+            // Для экзамена, обычно указывается семестр
+            const semesterIndex = node.controlSemester ?? 0;
+            onControlTypeChange(node.id, e.target.value, semesterIndex);
           }}
         >
           <option value="exam">Экзамен</option>
           <option value="credit">Зачет</option>
-          <option value="differentiated_credit">Дифф.зачет</option>
+          <option value="differentiated_credit">Диф. зачет</option>
           <option value="coursework">Курсовая</option>
         </select>
       </td>
       
-      {/* Ячейка общего количества часов */}
+      {/* Ячейка общего количества часов (сумма) */}
       <td className="w-16 px-3 py-2 border-l border-t border-slate-700/20 dark:border-slate-600/40 text-center">
         <input
           type="number"
           min={0}
           className="w-full bg-transparent text-center outline-none hover:bg-blue-50 dark:hover:bg-blue-900/20 focus:bg-blue-100 dark:focus:bg-blue-900/40 tabular-nums transition-colors rounded py-1"
-          value={node.totalHours ?? 0}
-          onChange={(e) => {
-            // Получаем новое значение
-            const newValue = parseInt(e.target.value) || 0;
-            
-            // Используем обработчик из props
-            onTotalHoursChange(node.id, newValue);
-          }}
+          value={node.hours.reduce((sum, hours) => sum + hours, 0)}
+          readOnly
         />
       </td>
       
@@ -400,9 +381,9 @@ const GroupRow: React.FC<{
         </div>
       </td>
       {/* Колонки формы контроля, общих часов и зачетных единиц (пустые для разделов и групп) */}
-      <td className="border-l border-t border-slate-700/20 dark:border-slate-600/40"></td>
-      <td className="border-l border-t border-slate-700/20 dark:border-slate-600/40"></td>
-      <td className="border-l border-t border-slate-700/20 dark:border-slate-600/40"></td>
+      <td className="px-3 py-2 border-l border-t border-slate-700/20 dark:border-slate-600/40"></td>
+      <td className="px-3 py-2 border-l border-t border-slate-700/20 dark:border-slate-600/40"></td>
+      <td className="px-3 py-2 border-l border-t border-slate-700/20 dark:border-slate-600/40"></td>
       
       {/* Для каждого семестра выводим ячейки с суммами по типам занятий */}
       {semesters.map((s, semesterIndex) => {
@@ -425,7 +406,7 @@ const GroupRow: React.FC<{
           return (
             <td 
               key={`${s}-${activity.key}`} 
-              className="w-14 p-1 border-l border-t border-slate-700/20 dark:border-slate-600/40 text-center font-medium tabular-nums bg-inherit"
+              className="w-16 px-3 py-2 border-l border-t border-slate-700/20 dark:border-slate-600/40 text-center font-medium tabular-nums bg-inherit"
             >
               <span 
                 className={`${
@@ -447,7 +428,10 @@ const GroupRow: React.FC<{
 };
 
 // Главный компонент таблицы учебного плана
-export const CurriculumPlanTable = React.forwardRef<{ forceUpdate: () => void }, Props>((props, ref) => {
+export const CurriculumPlanTable = React.forwardRef<
+  { forceUpdate: () => void }, 
+  Props
+>(function CurriculumPlanTable(props, ref) {
   const { courses, extraMonths, initialData, onPlanChange, onDirtyChange } = props;
   // Состояние для времени последнего изменения (для debounce)
   const lastChangeTime = useRef<number>(0);
@@ -546,7 +530,6 @@ export const CurriculumPlanTable = React.forwardRef<{ forceUpdate: () => void },
   }, [semesters.length]);
 
   // Обработчик добавления нового узла
-  // Оригинальный обработчик добавления узлов
   const addNode = useCallback((type: 'section' | 'group' | 'subject', parentId: string | null = null) => {
     console.log(`[CurriculumPlanTable] Adding new node of type: ${type}, parentId: ${parentId}`);
     
@@ -727,81 +710,230 @@ export const CurriculumPlanTable = React.forwardRef<{ forceUpdate: () => void },
         return node;
       });
     });
-  }, []);
+    
+    // Устанавливаем флаг "грязных данных"
+    if (onDirtyChange) {
+      onDirtyChange(true);
+    }
+    
+    // Запускаем таймер автосохранения
+    scheduleSave();
+  }, [onDirtyChange]);
 
-  // Состояние isDirty объявлено ниже, удаляем дублирование
-  
-  // Обработчик изменения формы контроля
-  const handleControlTypeChange = useCallback((
-    nodeId: string,
-    controlType: 'exam' | 'credit' | 'differentiated_credit' | 'coursework',
-    semesterIndex: number
-  ) => {
+  // Обработчик изменения зачетных единиц
+  const handleCreditUnitsChange = useCallback((nodeId: string, value: number) => {
     setPlanData(prevData => {
       return prevData.map(node => {
         if (node.id === nodeId && node.type === 'subject') {
-          const subject = node as Subject;
-          
-          // Создаем новый массив форм контроля или используем существующий
-          const newControlType = subject.controlType ? [...subject.controlType] : [];
-          
-          // Обновляем значение для указанного семестра
-          newControlType[semesterIndex] = controlType;
-          
           return {
-            ...subject,
-            controlType: newControlType
+            ...node,
+            creditUnits: value
           };
         }
         return node;
       });
     });
     
-    // Помечаем, что данные были изменены
-    setLocalIsDirty(true);
-  }, []);
-  
-  // Обработчик изменения общего количества часов
-  const handleTotalHoursChange = useCallback((nodeId: string, totalHours: number) => {
-    setPlanData(prevData => {
-      return prevData.map(node => {
-        if (node.id === nodeId && node.type === 'subject') {
-          return {
-            ...node,
-            totalHours
-          } as Subject;
-        }
-        return node;
-      });
-    });
+    // Устанавливаем флаг "грязных данных"
+    if (onDirtyChange) {
+      onDirtyChange(true);
+    }
     
-    // Помечаем, что данные были изменены
-    setLocalIsDirty(true);
-  }, []);
-  
-  // Обработчик изменения зачетных единиц
-  const handleCreditUnitsChange = useCallback((nodeId: string, creditUnits: number) => {
-    setPlanData(prevData => {
-      return prevData.map(node => {
-        if (node.id === nodeId && node.type === 'subject') {
-          return {
-            ...node,
-            creditUnits
-          } as Subject;
-        }
-        return node;
-      });
-    });
-    
-    // Помечаем, что данные были изменены
-    setLocalIsDirty(true);
-  }, []);
+    // Запускаем таймер автосохранения
+    scheduleSave();
+  }, [onDirtyChange]);
 
-  // Обработчик сворачивания/разворачивания узла
-  const handleToggleCollapse = useCallback((nodeId: string) => {
+  // Обработчик изменения типа контроля (экзамен, зачет и т.д.)
+  const handleControlTypeChange = useCallback((
+    nodeId: string, 
+    controlType: string, 
+    semesterIndex: number
+  ) => {
     setPlanData(prevData => {
       return prevData.map(node => {
-        if (node.id === nodeId && (node.type === 'section' || node.type === 'group')) {
+        if (node.id === nodeId && node.type === 'subject') {
+          return {
+            ...node,
+            controlType,
+            controlSemester: semesterIndex
+          };
+        }
+        return node;
+      });
+    });
+    
+    // Устанавливаем флаг "грязных данных"
+    if (onDirtyChange) {
+      onDirtyChange(true);
+    }
+    
+    // Запускаем таймер автосохранения
+    scheduleSave();
+  }, [onDirtyChange]);
+
+  // Обработчик переименования узла
+  const handleRenameNode = useCallback((nodeId: string) => {
+    const node = planData.find(n => n.id === nodeId);
+    if (node) {
+      setEditingNodeId(nodeId);
+      setEditNodeTitle(node.title);
+      setShowEditDialog(true);
+    }
+  }, [planData]);
+
+  // Подтверждение редактирования
+  const confirmEdit = useCallback(() => {
+    if (editingNodeId && editNodeTitle.trim()) {
+      setPlanData(prevData => {
+        return prevData.map(node => {
+          if (node.id === editingNodeId) {
+            return {
+              ...node,
+              title: editNodeTitle.trim()
+            };
+          }
+          return node;
+        });
+      });
+      
+      // Сбрасываем состояние редактирования
+      setEditingNodeId(null);
+      setEditNodeTitle('');
+      setShowEditDialog(false);
+      
+      // Устанавливаем флаг "грязных данных"
+      if (onDirtyChange) {
+        onDirtyChange(true);
+      }
+      
+      // Запускаем таймер автосохранения
+      scheduleSave();
+    }
+  }, [editingNodeId, editNodeTitle, onDirtyChange]);
+
+  // Обработчик начала перетаскивания
+  const handleDragStart = (event: DragStartEvent) => {
+    if (isDraggingOperation.current) return;
+    const { id } = event.active;
+    const draggedNode = planData.find(node => node.id === id);
+    
+    if (draggedNode) {
+      setActiveId(id as string);
+      setActiveNode(draggedNode);
+    }
+  };
+
+  // Обработчик окончания перетаскивания
+  const handleDragEnd = (event: DragEndEvent) => {
+    if (isDraggingOperation.current) return;
+    isDraggingOperation.current = true;
+    
+    const { active, over } = event;
+    
+    if (over && active.id !== over.id) {
+      const activeNode = active.data.current as DragItem;
+      const overNode = planData.find(node => node.id === over.id);
+      
+      if (activeNode && overNode) {
+        // Проверяем, что не перетаскиваем родителя в его потомка
+        let isDescendant = false;
+        let currentNode = overNode;
+        
+        while (currentNode && currentNode.parentId) {
+          if (currentNode.parentId === activeNode.id) {
+            isDescendant = true;
+            break;
+          }
+          
+          currentNode = planData.find(n => n.id === currentNode.parentId) as PlanNode;
+        }
+        
+        if (isDescendant) {
+          console.log('[CurriculumPlanTable] Cannot move a node to its own descendant');
+          setActiveId(null);
+          setActiveNode(null);
+          isDraggingOperation.current = false;
+          return;
+        }
+        
+        // Проверяем ограничения на типы узлов
+        if (
+          // Нельзя перетаскивать раздел в группу или в дисциплину
+          (activeNode.type === 'section' && overNode.type !== 'section') ||
+          // Нельзя перетаскивать группу в дисциплину
+          (activeNode.type === 'group' && overNode.type === 'subject')
+        ) {
+          console.log('[CurriculumPlanTable] Invalid drag operation - type mismatch');
+          setActiveId(null);
+          setActiveNode(null);
+          isDraggingOperation.current = false;
+          return;
+        }
+        
+        // Если все проверки прошли, выполняем перемещение
+        setPlanData(prevData => {
+          return prevData.map(node => {
+            if (node.id === active.id) {
+              // Определяем новый parentId в зависимости от типа над которым бросаем
+              let newParentId: string | null = null;
+              
+              if (overNode.type === 'section' || overNode.type === 'group') {
+                // Раздел и группа могут быть родителями
+                newParentId = overNode.id;
+              } else if (overNode.type === 'subject') {
+                // Дисциплина не может быть родителем, используем её родителя
+                newParentId = overNode.parentId;
+              }
+              
+              // Обновляем индекс сортировки
+              const targetNodes = prevData.filter(n => n.parentId === newParentId);
+              const overNodeIndex = targetNodes.findIndex(n => n.id === over.id);
+              
+              // Вставляем перед/после в зависимости от позиции
+              let newOrderIndex = 0;
+              if (overNodeIndex === 0) {
+                newOrderIndex = (targetNodes[0]?.orderIndex || 0) - 1;
+              } else if (overNodeIndex === targetNodes.length - 1) {
+                newOrderIndex = (targetNodes[targetNodes.length - 1]?.orderIndex || 0) + 1;
+              } else {
+                // Берем среднее значение между соседними узлами
+                const prevIndex = targetNodes[overNodeIndex - 1]?.orderIndex || 0;
+                const nextIndex = targetNodes[overNodeIndex]?.orderIndex || 0;
+                newOrderIndex = prevIndex + (nextIndex - prevIndex) / 2;
+              }
+              
+              return {
+                ...node,
+                parentId: newParentId,
+                orderIndex: newOrderIndex
+              };
+            }
+            return node;
+          });
+        });
+        
+        // Устанавливаем флаг "грязных данных"
+        if (onDirtyChange) {
+          onDirtyChange(true);
+        }
+        
+        // Запускаем таймер автосохранения
+        scheduleSave();
+      }
+    }
+    
+    setActiveId(null);
+    setActiveNode(null);
+    setTimeout(() => {
+      isDraggingOperation.current = false;
+    }, 100);
+  };
+
+  // Функция для свертывания/развертывания узла
+  const toggleNodeCollapse = useCallback((nodeId: string) => {
+    setPlanData(prevData => {
+      return prevData.map(node => {
+        if (node.id === nodeId) {
           return {
             ...node,
             isCollapsed: !node.isCollapsed
@@ -811,1075 +943,423 @@ export const CurriculumPlanTable = React.forwardRef<{ forceUpdate: () => void },
       });
     });
   }, []);
-
-  // Обработчик открытия диалога редактирования
-  const openEditDialog = useCallback((nodeId: string) => {
-    const node = planData.find(n => n.id === nodeId);
-    if (node) {
-      setEditingNodeId(nodeId);
-      setEditNodeTitle(node.title);
-      setShowEditDialog(true);
-    }
-  }, [planData]);
   
-  // Обработчик подтверждения редактирования
-  const confirmEdit = useCallback(() => {
-    if (editingNodeId && editNodeTitle.trim() !== '') {
-      setPlanData(prevData => {
-        const updatedData = prevData.map(node => {
-          if (node.id === editingNodeId) {
-            return {
-              ...node,
-              title: editNodeTitle.trim()
-            };
-          }
-          return node;
-        });
-        
-        // Принудительно сохраняем данные сразу после редактирования
-        if (onPlanChange) {
-          // Сделаем глубокую копию для избежания проблем с ссылками
-          const dataCopy = JSON.parse(JSON.stringify(updatedData));
-          
-          // Сохраняем в глобальной переменной
-          if (typeof window !== 'undefined') {
-            window._lastPlanData = JSON.stringify({ 
-              schemaVersion: 1, 
-              planData: dataCopy 
-            });
-          }
-          
-          // Вызываем колбэк для сохранения
-          setTimeout(() => {
-            onPlanChange(dataCopy);
-          }, 10);
+  // Функция для получения видимых узлов (с учетом свернутых разделов)
+  function getVisibleNodes(): PlanNode[] {
+    const result: PlanNode[] = [];
+    const hiddenParents = new Set<string>();
+    
+    // Функция для рекурсивного построения плоского списка
+    function buildList(parentId: string | null = null, depth = 0) {
+      // Находим прямых потомков текущего родителя
+      const children = planData
+        .filter(node => node.parentId === parentId)
+        .sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
+      
+      // Обрабатываем каждого потомка
+      for (const node of children) {
+        // Если родитель скрыт, пропускаем
+        if (parentId !== null && hiddenParents.has(parentId)) {
+          continue;
         }
         
-        return updatedData;
-      });
-      
-      setShowEditDialog(false);
-      setEditingNodeId(null);
-      setEditNodeTitle('');
-    }
-  }, [editingNodeId, editNodeTitle, onPlanChange]);
-  
-  // Обработчик переименования узла
-  const handleRename = useCallback((nodeId: string) => {
-    openEditDialog(nodeId);
-  }, [openEditDialog]);
-
-  // Адаптер для добавления нового узла, соответствующий интерфейсу GroupRow
-  const handleAddNode = useCallback((type: 'section' | 'group' | 'subject', parentId: string | null = null) => {
-    addNode(type, parentId);
-  }, [addNode]);
-
-  // Обработчик начала перетаскивания
-  const handleDragStart = (event: DragStartEvent) => {
-    const { active } = event;
-    setActiveId(active.id as string);
-    
-    // Найти активный узел
-    const node = planData.find(n => n.id === active.id);
-    if (node) {
-      setActiveNode(node);
-    }
-  };
-
-  // Обработчик завершения перетаскивания
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    
-    if (over && active.id !== over.id) {
-      const activeItem = active.data.current as DragItem;
-      const activeParentId = activeItem.parentId;
-      
-      const overNodeId = over.id as string;
-      const overNode = planData.find(n => n.id === overNodeId);
-      
-      if (overNode) {
-        // Проверяем, что мы не перетаскиваем раздел внутрь группы и узел не перетаскивается внутрь себя
-        const canDrop = (
-          // Не можем перетащить раздел в группу
-          !(activeItem.type === 'section' && overNode.type !== 'section') &&
-          // Не можем перетащить группу в дисциплину
-          !(activeItem.type === 'group' && overNode.type === 'subject') &&
-          // Родитель должен совпадать (перемещение только на одном уровне)
-          overNode.parentId === activeParentId
-        );
+        // Добавляем узел с глубиной вложенности
+        const nodeWithDepth = { ...node, depth } as PlanNode;
+        result.push(nodeWithDepth);
         
-        if (canDrop) {
-          // Защита от повторных вызовов - если уже идет операция, не начинаем новую
-          if (isDraggingOperation.current) {
-            console.log("[CurriculumPlanTable] Drag operation already in progress, skipping...");
-            return;
-          }
-          
-          isDraggingOperation.current = true;
-          
-          setPlanData(prevData => {
-            // Проверяем, перетаскиваем ли мы выбранные узлы
-            const isMovingSelection = isMultiSelectMode && selectedNodes.has(active.id as string);
-            
-            if (isMovingSelection && selectedNodes.size > 1) {
-              // Перемещение нескольких выбранных элементов
-              console.log("[CurriculumPlanTable] Moving multiple selected nodes");
-              
-              // Создаем копию массива
-              let newItems = [...prevData];
-              
-              // Получаем список всех выбранных элементов
-              const selectedItemsData = prevData.filter(node => selectedNodes.has(node.id));
-              
-              // Сортируем элементы по их текущим индексам
-              selectedItemsData.sort((a, b) => {
-                const indexA = prevData.findIndex(n => n.id === a.id);
-                const indexB = prevData.findIndex(n => n.id === b.id);
-                return indexA - indexB;
-              });
-              
-              // Находим индекс узла "над" которым мы перетаскиваем
-              const overIndex = newItems.findIndex(n => n.id === over.id);
-              
-              // Удаляем все выбранные элементы из массива (в порядке от большего индекса к меньшему)
-              const selectedIndices = selectedItemsData
-                .map(node => newItems.findIndex(n => n.id === node.id))
-                .sort((a, b) => b - a); // Сортируем в обратном порядке
-              
-              // Удаляем выбранные элементы из массива
-              const removedItems: PlanNode[] = [];
-              selectedIndices.forEach(index => {
-                if (index !== -1) {
-                  const [removed] = newItems.splice(index, 1);
-                  removedItems.unshift(removed); // Добавляем в начало, чтобы сохранить порядок
-                }
-              });
-              
-              // Вставляем все выбранные элементы на новую позицию
-              let insertIndex = overIndex;
-              // Если перетаскиваем ниже, корректируем позицию с учетом удаленных элементов
-              if (insertIndex > selectedIndices[selectedIndices.length - 1]) {
-                insertIndex -= selectedIndices.filter(i => i < insertIndex).length;
-              }
-              
-              newItems.splice(insertIndex, 0, ...removedItems);
-              
-              // Обновляем orderIndex для всех узлов с тем же родителем
-              const parentId = activeParentId;
-              const siblings = newItems.filter(n => n.parentId === parentId);
-              
-              siblings.forEach((node, index) => {
-                // Находим этот узел в массиве и обновляем его orderIndex
-                const nodeIndex = newItems.findIndex(n => n.id === node.id);
-                if (nodeIndex !== -1) {
-                  newItems[nodeIndex] = {
-                    ...newItems[nodeIndex],
-                    orderIndex: index
-                  };
-                }
-              });
-              
-              // Очищаем выбранные узлы после перемещения
-              // Оставляем режим множественного выбора активным
-              
-              // Завершаем операцию перетаскивания
-              setTimeout(() => {
-                isDraggingOperation.current = false;
-              }, 100);
-              
-              return newItems;
-            } else {
-              // Обычное перемещение одного узла
-              // Находим оригинальный индекс активного узла
-              const activeIndex = prevData.findIndex(n => n.id === active.id);
-              
-              // Находим индекс узла "над" которым мы перетаскиваем
-              const overIndex = prevData.findIndex(n => n.id === over.id);
-              
-              // Проверка на валидные индексы
-              if (activeIndex === -1 || overIndex === -1) {
-                console.log("[CurriculumPlanTable] Invalid indices:", { activeIndex, overIndex });
-                return prevData; // Ничего не меняем
-              }
-              
-              // Создаем копию массива
-              const newItems = [...prevData];
-              
-              // Вынимаем активный узел
-              const [activeNode] = newItems.splice(activeIndex, 1);
-              
-              // Вставляем его на новую позицию
-              newItems.splice(overIndex, 0, activeNode);
-              
-              // Обновляем orderIndex для всех узлов с тем же родителем
-              const parentId = activeNode.parentId;
-              const siblings = newItems.filter(n => n.parentId === parentId);
-              
-              siblings.forEach((node, index) => {
-                // Находим этот узел в массиве и обновляем его orderIndex
-                const nodeIndex = newItems.findIndex(n => n.id === node.id);
-                if (nodeIndex !== -1) {
-                  newItems[nodeIndex] = {
-                    ...newItems[nodeIndex],
-                    orderIndex: index
-                  };
-                }
-              });
-              
-              // Завершаем операцию перетаскивания
-              setTimeout(() => {
-                isDraggingOperation.current = false;
-              }, 100);
-              
-              // Не вызываем onPlanChange напрямую, т.к. это вызовет эффект выше
-              // Он сам обнаружит изменения и вызовет сохранение
-              return newItems;
-            }
-          });
+        // Если узел свернут, добавляем в список скрытых родителей
+        if (node.isCollapsed) {
+          hiddenParents.add(node.id);
+        }
+        
+        // Рекурсивно обрабатываем потомков текущего узла
+        if (node.type !== 'subject') {
+          buildList(node.id, depth + 1);
         }
       }
     }
-    
-    // Сбрасываем состояние перетаскивания
-    setActiveId(null);
-    setActiveNode(null);
-  };
-
-  // Функция для проверки пустых групп
-  const validateEmptyGroups = useCallback(() => {
-    // Находим все группы (не секции), у которых нет дочерних элементов
-    const emptyGroups = planData.filter(node => {
-      // Только для группы (не секции и не дисциплины)
-      if (node.type !== 'group') return false;
-      
-      // Проверяем наличие дочерних элементов
-      const hasChildren = planData.some(child => child.parentId === node.id);
-      return !hasChildren;
-    });
-    
-    // Обновляем список узлов с ошибками
-    setNodesWithErrors(emptyGroups.map(node => node.id));
-    
-    return emptyGroups.length > 0;
-  }, [planData]);
-  
-  // Запускаем валидацию при изменении данных
-  useEffect(() => {
-    validateEmptyGroups();
-  }, [validateEmptyGroups]);
-
-
-  
-  // Подготовка иерархии и расчет сумм часов
-  const { hierarchicalData, flattenedData } = useMemo(() => {
-    // Сортируем узлы по orderIndex
-    const sorted = [...planData].sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
-    
-    // Вычисляем суммы для разделов и групп
-    const withSums: NodeWithSums[] = [];
-    
-    // Карта для хранения сумм часов по ID узла
-    const sumsByNodeId: Record<string, number[]> = {};
-    
-    // Инициализируем массивы сумм для всех узлов (начальное значение - нули)
-    sorted.forEach(node => {
-      sumsByNodeId[node.id] = Array(semesters.length).fill(0);
-    });
-    
-    // Сначала обрабатываем листовые узлы (дисциплины)
-    sorted.forEach(node => {
-      if (node.type === 'subject') {
-        const subject = node as Subject;
-        
-        // Устанавливаем суммы для дисциплин (просто копия hours)
-        sumsByNodeId[node.id] = [...subject.hours];
-        
-        // Добавляем часы дисциплины к суммам родительских групп
-        if (node.parentId) {
-          for (let i = 0; i < semesters.length; i++) {
-            sumsByNodeId[node.parentId][i] += subject.hours[i] || 0;
-          }
-        }
-      }
-    });
-    
-    // Затем обрабатываем группы (чтобы включить их суммы в разделы)
-    sorted.forEach(node => {
-      if (node.type === 'group' && node.parentId) {
-        // Добавляем суммы групп к суммам родительских разделов
-        for (let i = 0; i < semesters.length; i++) {
-          sumsByNodeId[node.parentId][i] += sumsByNodeId[node.id][i];
-        }
-      }
-    });
-    
-    // Строим плоский список с суммами и информацией о глубине
-    sorted.forEach(node => {
-      const nodeWithSums: NodeWithSums = { ...node };
-      
-      // Добавляем суммы
-      if (node.type !== 'subject') {
-        nodeWithSums.sums = sumsByNodeId[node.id];
-      }
-      
-      // Вычисляем глубину узла
-      let depth = 0;
-      if (node.type === 'group') depth = 1;
-      if (node.type === 'subject') {
-        // Находим родителя
-        const parent = sorted.find(n => n.id === node.parentId);
-        // Если родитель - группа, а группа в разделе, то depth = 2
-        depth = parent?.type === 'group' ? 2 : 1;
-      }
-      
-      nodeWithSums.depth = depth;
-      withSums.push(nodeWithSums);
-    });
-    
-    // Строим плоский список с учетом свернутых узлов
-    const flattened: NodeWithSums[] = [];
-    
-    // Рекурсивная функция для добавления узлов в плоский список
-    const addToFlattened = (nodes: NodeWithSums[], parentId: string | null = null) => {
-      // Фильтруем узлы для текущего уровня
-      const levelNodes = nodes.filter(node => node.parentId === parentId);
-      
-      // Добавляем узлы в плоский список
-      levelNodes.forEach(node => {
-        flattened.push(node);
-        
-        // Если узел не свернут и это не дисциплина, добавляем его детей
-        if (!node.isCollapsed && node.type !== 'subject') {
-          addToFlattened(nodes, node.id);
-        }
-      });
-    };
     
     // Начинаем с корневых узлов
-    addToFlattened(withSums);
+    buildList(null);
     
-    return { hierarchicalData: withSums, flattenedData: flattened };
-  }, [planData, semesters.length]);
+    return result;
+  }
 
-  // Отслеживаем изменения данных и сохраняем только при явных изменениях
-  // Вместо постоянного автосохранения при каждом изменении planData
-  const isInitialMount = useRef(true);
-  const previousPlanDataRef = useRef<CurriculumPlan | null>(null);
-  
-  // Упрощенное локальное состояние для отслеживания грязных данных
-  const [localIsDirty, setLocalIsDirty] = useState(false);
-  // Таймер для debounce вызова onDirtyChange
-  const dirtyTimeoutRef = useRef<number | null>(null);
-  
-  // Функция для сравнения предыдущих и текущих данных
-  const hasPlanDataChanged = useCallback(() => {
-    if (!previousPlanDataRef.current) return false;
-    
-    // Быстрая проверка количества элементов
-    if (previousPlanDataRef.current.length !== planData.length) {
-      return true;
-    }
-    
-    // Сравниваем только основные свойства, исключая UI-состояния
-    const prevFiltered = previousPlanDataRef.current.map(node => {
-      const { isCollapsed, ...rest } = node as any;
-      return rest;
-    });
-    
-    const currentFiltered = planData.map(node => {
-      const { isCollapsed, ...rest } = node as any;
-      return rest;
-    });
-    
-    // Строковое сравнение только необходимых свойств
-    const prevString = JSON.stringify(prevFiltered);
-    const currentString = JSON.stringify(currentFiltered);
-    
-    return prevString !== currentString;
-  }, [planData]);
-
-  // Эффект для обновления локального isDirty состояния
-  useEffect(() => {
-    // Пропускаем первый рендер
-    if (isInitialMount.current) {
-      isInitialMount.current = false;
-      previousPlanDataRef.current = JSON.parse(JSON.stringify(planData));
-      return;
-    }
-    
-    // Проверяем наличие изменений
-    const isDirty = hasPlanDataChanged();
-    
-    // Обновляем локальное состояние
-    setLocalIsDirty(isDirty);
-    
-    // Используем debounce для вызова onDirtyChange, чтобы не вызывать его слишком часто
-    if (dirtyTimeoutRef.current) {
-      window.clearTimeout(dirtyTimeoutRef.current);
-    }
-    
-    dirtyTimeoutRef.current = window.setTimeout(() => {
-      // Вызываем колбэк только если он существует
-      if (onDirtyChange) {
-        onDirtyChange(isDirty);
-      }
-      dirtyTimeoutRef.current = null;
-    }, 300); // 300ms debounce
-    
-    // Если есть реальные изменения, обрабатываем их для автосохранения
-    if (isDirty && onPlanChange) {
-      // Отменяем предыдущий таймер сохранения, если он есть
-      if (saveTimeoutRef.current !== null) {
-        window.clearTimeout(saveTimeoutRef.current);
-      }
-      
-      // Запоминаем время последнего изменения
-      lastChangeTime.current = Date.now();
-      
-      // Устанавливаем новый таймер для сохранения через 1000 мс
-      saveTimeoutRef.current = window.setTimeout(() => {
-        // Делаем глубокую копию данных для сохранения, чтобы избежать проблем с ссылками
-        const planDataCopy = JSON.parse(JSON.stringify(planData));
-        console.log("[CurriculumPlanTable] Saving plan data...", {
-          nodesCount: planDataCopy.length,
-          firstNode: planDataCopy[0]?.title || 'unknown'
-        });
+  // Общая функция для выбора узла (одинарного и множественного)
+  const selectNode = useCallback((id: string, ctrlKey = false, shiftKey = false) => {
+    // Если зажат Ctrl/Cmd и у нас активен режим множественного выбора
+    if (ctrlKey && isMultiSelectMode) {
+      setSelectedNodes(prev => {
+        const newSelection = new Set(prev);
         
-        // КРИТИЧЕСКИ ВАЖНО: Сохраняем копию данных в глобальной переменной для надежного доступа
-        if (typeof window !== 'undefined') {
-          // @ts-ignore Добавляем глобальную переменную для сохранения последних данных
-          window._lastPlanData = JSON.stringify({ 
-            schemaVersion: 1, 
-            planData: planDataCopy 
-          });
-          console.log("[CurriculumPlanTable] Global data backup saved, length:", window._lastPlanData?.length || 0);
+        // Если узел уже выбран, убираем его из выделения
+        if (newSelection.has(id)) {
+          newSelection.delete(id);
+        } else {
+          // Иначе добавляем
+          newSelection.add(id);
         }
         
-        // Вызываем родительский обработчик с копией данных
-        onPlanChange(planDataCopy);
+        if (newSelection.size === 0) {
+          // Если выделение пусто, отключаем режим множественного выбора
+          setIsMultiSelectMode(false);
+          setSelectedNodeId(null);
+        } else {
+          // Запоминаем последний выбранный элемент для Shift
+          lastSelectedNodeRef.current = id;
+        }
         
-        // Обновляем предыдущее состояние после сохранения
-        previousPlanDataRef.current = planDataCopy;
-        saveTimeoutRef.current = null;
-      }, 1000);
+        return newSelection;
+      });
+    } 
+    // Если зажат Shift и у нас активен режим множественного выбора
+    else if (shiftKey && isMultiSelectMode && lastSelectedNodeRef.current) {
+      // Получаем список всех отображаемых узлов
+      const visibleNodes = getVisibleNodes();
+      
+      // Находим индексы начального и конечного элементов
+      const lastSelectedIndex = visibleNodes.findIndex(n => n.id === lastSelectedNodeRef.current);
+      const currentIndex = visibleNodes.findIndex(n => n.id === id);
+      
+      // Если оба элемента найдены
+      if (lastSelectedIndex !== -1 && currentIndex !== -1) {
+        // Определяем диапазон выделения
+        const start = Math.min(lastSelectedIndex, currentIndex);
+        const end = Math.max(lastSelectedIndex, currentIndex);
+        
+        // Создаем новое выделение
+        const nodesToSelect = visibleNodes.slice(start, end + 1).map(n => n.id);
+        setSelectedNodes(new Set(nodesToSelect));
+      }
+    }
+    // Обычный выбор элемента
+    else {
+      // Если нажат Ctrl, включаем режим множественного выбора
+      if (ctrlKey) {
+        enableMultiSelectMode();
+        setSelectedNodes(new Set([id]));
+        lastSelectedNodeRef.current = id;
+      } else {
+        // Снимаем множественное выделение
+        if (isMultiSelectMode) {
+          clearSelection();
+        }
+        
+        // Простое выделение одного элемента
+        setSelectedNodeId(id);
+      }
+    }
+  }, [isMultiSelectMode, clearSelection, enableMultiSelectMode, getVisibleNodes]);
+
+  // Функция для планирования сохранения (debounce)
+  const scheduleSave = useCallback(() => {
+    lastChangeTime.current = Date.now();
+    
+    // Очищаем предыдущий таймер, если он был
+    if (saveTimeoutRef.current !== null) {
+      window.clearTimeout(saveTimeoutRef.current);
     }
     
-    // Очищаем таймеры при размонтировании
+    // Устанавливаем новый таймер для сохранения
+    saveTimeoutRef.current = window.setTimeout(() => {
+      // Проверяем, что прошло достаточно времени с последнего изменения
+      if (Date.now() - lastChangeTime.current >= 3000) {
+        if (onPlanChange) {
+          console.log('[CurriculumPlanTable] Autosaving data...');
+          onPlanChange(planData);
+        }
+      }
+    }, 3000);
+  }, [planData, onPlanChange]);
+
+  // Вычисляем видимые узлы для рендеринга
+  const visibleNodes = useMemo(() => {
+    return getVisibleNodes();
+  }, [planData]);
+
+  // Проверка на наличие пустых групп
+  useEffect(() => {
+    // Находим все группы (не разделы и не дисциплины)
+    const groups = planData.filter(node => node.type === 'group');
+    
+    // Проверяем каждую группу на наличие дочерних элементов
+    const emptyGroups = groups.filter(group => {
+      return !planData.some(node => node.parentId === group.id);
+    });
+    
+    // Обновляем список проблемных узлов
+    setNodesWithErrors(emptyGroups.map(group => group.id));
+  }, [planData]);
+
+  // Обеспечиваем доступ к методу обновления извне через ref
+  useEffect(() => {
+    if (ref) {
+      if (typeof ref === 'function') {
+        ref({ forceUpdate: () => { /* Для принудительного обновления компонента */ } });
+      } else {
+        ref.current = { 
+          forceUpdate: () => { /* Для принудительного обновления компонента */ }
+        };
+      }
+    }
+  }, [ref]);
+
+  // Если данные изменились извне, обновляем состояние
+  useEffect(() => {
+    if (initialData?.planData) {
+      setPlanData(initialData.planData);
+    }
+  }, [initialData]);
+
+  // Чистим память при размонтировании
+  useEffect(() => {
     return () => {
       if (saveTimeoutRef.current !== null) {
         window.clearTimeout(saveTimeoutRef.current);
       }
-      if (dirtyTimeoutRef.current !== null) {
-        window.clearTimeout(dirtyTimeoutRef.current);
-      }
     };
-  }, [planData, hasPlanDataChanged, onPlanChange]);
+  }, []);
 
-  // Метод forceUpdate для принудительного обновления данных из родительского компонента
-  // Это решает проблему потери данных при переключении вкладок
-  useEffect(() => {
-    if (!ref) return;
-    
-    // Экспортируем метод forceUpdate через ref интерфейс
-    // Родительский компонент может вызвать его, чтобы принудительно сохранить последние изменения
-    (ref as any).current = {
-      forceUpdate: () => {
-        console.log("[CurriculumPlanTable] forceUpdate called from parent component");
-        
-        // Делаем глубокую копию данных
-        const planDataCopy = JSON.parse(JSON.stringify(planData));
-        
-        // Обновляем глобальную переменную в window
-        if (typeof window !== 'undefined') {
-          // Сохраняем данные в глобальной переменной для доступа из других компонентов
-          window._lastPlanData = JSON.stringify({ 
-            schemaVersion: 1, 
-            planData: planDataCopy,
-            timestamp: Date.now()
-          });
-          console.log("[CurriculumPlanTable] Global data updated in forceUpdate, length:", window._lastPlanData?.length || 0);
-        }
-        
-        // Вызываем родительский обработчик изменений, если он предоставлен
-        if (onPlanChange) {
-          onPlanChange(planDataCopy);
-          console.log("[CurriculumPlanTable] Parent onPlanChange triggered from forceUpdate");
-        }
-      }
-    };
-  }, [ref, planData, onPlanChange]);
-
-  // Сортированные ID для SortableContext
-  const sortedIds = useMemo(() => {
-    return flattenedData.map(node => node.id);
-  }, [flattenedData]);
-  
-  // Обработчик множественного выбора элементов
-  const handleSelectNode = useCallback((nodeId: string, ctrlKey: boolean, shiftKey: boolean) => {
-    // Если нажат Shift, выделяем диапазон
-    if (shiftKey && lastSelectedNodeRef.current) {
-      const lastSelectedNodeId = lastSelectedNodeRef.current;
-      
-      // Активируем режим множественного выбора, если он еще не активен
-      if (!isMultiSelectMode) {
-        setIsMultiSelectMode(true);
-      }
-      
-      // Получаем плоский список элементов для определения диапазона
-      const flatList = flattenedData;
-      const startIdx = flatList.findIndex((node) => node.id === lastSelectedNodeId);
-      const endIdx = flatList.findIndex((node) => node.id === nodeId);
-      
-      if (startIdx !== -1 && endIdx !== -1) {
-        // Определяем границы диапазона
-        const [minIdx, maxIdx] = startIdx < endIdx 
-          ? [startIdx, endIdx] 
-          : [endIdx, startIdx];
-        
-        // Создаем новый набор выделенных узлов с элементами из диапазона
-        const newSelection = new Set<string>();
-        
-        for (let i = minIdx; i <= maxIdx; i++) {
-          if (flatList[i]) {
-            newSelection.add(flatList[i].id);
-          }
-        }
-        
-        setSelectedNodes(newSelection);
-      }
-    }
-    // Если нажат Ctrl/Command, добавляем/убираем из выделения
-    else if (ctrlKey) {
-      setSelectedNodes(prev => {
-        const newSelection = new Set(prev);
-        if (newSelection.has(nodeId)) {
-          newSelection.delete(nodeId);
-        } else {
-          newSelection.add(nodeId);
-        }
-        return newSelection;
-      });
-
-      // Если выделение стало пустым, выходим из режима множественного выбора
-      setSelectedNodes(prev => {
-        if (prev.size === 0) {
-          setIsMultiSelectMode(false);
-        } else {
-          setIsMultiSelectMode(true);
-        }
-        return prev;
-      });
-      
-      // Обновляем последний выбранный элемент
-      lastSelectedNodeRef.current = nodeId;
-    } else {
-      // Если Ctrl не нажат и не Shift, работаем с одиночным выбором
-      if (isMultiSelectMode) {
-        // Если уже в режиме множественного выбора
-        if (selectedNodes.has(nodeId)) {
-          // Если элемент уже выбран, снимаем выделение
-          setSelectedNodes(prev => {
-            const newSelection = new Set(prev);
-            newSelection.delete(nodeId);
-            if (newSelection.size === 0) {
-              setIsMultiSelectMode(false);
-            }
-            return newSelection;
-          });
-        } else {
-          // Добавляем элемент в выделение
-          setSelectedNodes(prev => {
-            const newSelection = new Set(prev);
-            newSelection.add(nodeId);
-            return newSelection;
-          });
-        }
-      } else {
-        // Обычный выбор элемента
-        setSelectedNodeId(nodeId);
-      }
-      
-      // Обновляем последний выбранный элемент
-      lastSelectedNodeRef.current = nodeId;
-    }
-  }, [isMultiSelectMode, selectedNodes, flattenedData]);
-
+  // Рендеринг главного содержимого
   return (
-    <div className="space-y-4">
-      {/* Панель инструментов в верхней части */}
-      <div className="flex justify-between items-center mb-2">
-        {/* Кнопки для работы с выделением */}
-        <div className="flex items-center gap-2">
-          {isMultiSelectMode ? (
-            <>
-              <Button 
-                variant="destructive" 
-                size="sm" 
-                className="gap-2"
-                onClick={() => {
-                  // Удаляем все выбранные элементы
-                  if (selectedNodes.size > 0) {
-                    handleDeleteNode(Array.from(selectedNodes)[0]);
-                  }
-                }}
-              >
-                <Trash size={16} /> Удалить выбранные ({selectedNodes.size})
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={clearSelection}
-              >
-                Отменить выбор
-              </Button>
-            </>
-          ) : (
+    <div className="py-4">
+      <div className="mb-4 flex flex-wrap justify-between gap-2">
+        <Button
+          variant="outline"
+          className="gap-2"
+          onClick={() => addNode('section')}
+        >
+          <PlusCircle size={16} />
+          <span>Добавить раздел</span>
+        </Button>
+        
+        {isMultiSelectMode && selectedNodes.size > 0 && (
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-slate-500">
+              Выбрано элементов: {selectedNodes.size}
+            </span>
+            <Button 
+              variant="destructive" 
+              size="sm"
+              onClick={() => {
+                if (selectedNodes.size > 0) {
+                  // Удаляем первый элемент из выбранных (остальные удалятся автоматически)
+                  const firstNode = Array.from(selectedNodes)[0];
+                  handleDeleteNode(firstNode);
+                }
+              }}
+            >
+              <Trash size={16} className="mr-2" />
+              Удалить выбранное
+            </Button>
             <Button 
               variant="outline" 
-              size="sm" 
-              onClick={enableMultiSelectMode}
+              size="sm"
+              onClick={() => clearSelection()}
             >
-              Выбрать несколько
+              <X size={16} className="mr-2" />
+              Отменить выбор
             </Button>
-          )}
-        </div>
-        
-        {/* Кнопка добавления нового элемента */}
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button className="gap-2">
-              <PlusCircle size={16} /> Добавить
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-56 p-0" align="end">
-            <div className="flex flex-col">
-              <Button 
-                variant="ghost" 
-                className="justify-start gap-2 rounded-none"
-                onClick={() => {
-                  // Всегда добавляем новый раздел только в корень (null parentId)
-                  // Разделы всегда должны быть на верхнем уровне
-                  addNode('section', null);
-                }}
-              >
-                <Plus size={16} /> Раздел
-              </Button>
-              <Button 
-                variant="ghost" 
-                className="justify-start gap-2 rounded-none"
-                onClick={() => {
-                  // Группы должны добавляться только внутри разделов
-                  if (selectedNodeId) {
-                    const selectedNode = planData.find(n => n.id === selectedNodeId);
-                    if (selectedNode) {
-                      if (selectedNode.type === 'section') {
-                        // Если выбран раздел, добавляем группу внутрь него
-                        addNode('group', selectedNode.id);
-                        return;
-                      } else if (selectedNode.type === 'group') {
-                        // Если выбрана группа, добавляем группу на том же уровне (у того же родителя)
-                        addNode('group', selectedNode.parentId);
-                        return;
-                      } else if (selectedNode.type === 'subject') {
-                        // Если выбран предмет, находим его родителя (группу) и добавляем группу на этом же уровне
-                        const parentId = selectedNode.parentId;
-                        if (parentId) {
-                          const parentNode = planData.find(n => n.id === parentId);
-                          if (parentNode && parentNode.type === 'group') {
-                            addNode('group', parentNode.parentId);
-                            return;
-                          }
-                        }
-                      }
-                    }
-                  }
-                  
-                  // Если ничего не выбрано или неправильный выбор, ищем первый раздел
-                  const firstSection = planData.find(n => n.type === 'section');
-                  if (firstSection) {
-                    // Если есть хотя бы один раздел, добавляем группу в него
-                    addNode('group', firstSection.id);
-                  } else {
-                    // Если нет разделов, создаем сначала раздел, а потом группу
-                    const newSectionId = uuidv4();
-                    const newSection = {
-                      id: newSectionId,
-                      title: 'Новый раздел',
-                      parentId: null,
-                      type: 'section' as const,
-                      orderIndex: 0,
-                      isCollapsed: false
-                    };
-                    setPlanData(prev => [...prev, newSection]);
-                    
-                    // Добавляем группу в новый раздел
-                    addNode('group', newSectionId);
-                  }
-                }}
-              >
-                <Plus size={16} /> Группа
-              </Button>
-              <Button 
-                variant="ghost" 
-                className="justify-start gap-2 rounded-none"
-                onClick={() => {
-                  console.log("[CurriculumPlanTable] Добавить дисциплину - кнопка нажата");
-                  console.log("[CurriculumPlanTable] Текущий выбранный узел:", selectedNodeId);
-                  console.log("[CurriculumPlanTable] Доступные данные плана:", planData);
-                  
-                  // Дисциплины должны добавляться только внутри групп
-                  if (selectedNodeId) {
-                    const selectedNode = planData.find(n => n.id === selectedNodeId);
-                    console.log("[CurriculumPlanTable] Выбранный узел:", selectedNode);
-                    
-                    if (selectedNode) {
-                      if (selectedNode.type === 'group') {
-                        // Если выбрана группа, добавляем дисциплину внутрь нее
-                        console.log("[CurriculumPlanTable] Добавляем дисциплину в группу:", selectedNode.id);
-                        addNode('subject', selectedNode.id);
-                        return;
-                      } else if (selectedNode.type === 'subject') {
-                        // Если выбрана дисциплина, добавляем на том же уровне (в ту же группу)
-                        console.log("[CurriculumPlanTable] Добавляем дисциплину рядом с дисциплиной, parentId:", selectedNode.parentId);
-                        addNode('subject', selectedNode.parentId);
-                        return;
-                      } else if (selectedNode.type === 'section') {
-                        // Если выбран раздел, ищем первую группу внутри него
-                        console.log("[CurriculumPlanTable] Выбран раздел, ищем группу внутри него");
-                        const firstGroup = planData.find(n => n.parentId === selectedNode.id && n.type === 'group');
-                        if (firstGroup) {
-                          // Если есть группа, добавляем в нее
-                          console.log("[CurriculumPlanTable] Найдена группа в разделе, добавляем в нее:", firstGroup.id);
-                          addNode('subject', firstGroup.id);
-                        } else {
-                          // Если нет группы, создаем новую и добавляем в нее
-                          console.log("[CurriculumPlanTable] Группа в разделе не найдена, создаем новую");
-                          const newGroupId = uuidv4();
-                          const newGroup = {
-                            id: newGroupId,
-                            title: 'Новая группа дисциплин',
-                            parentId: selectedNode.id,
-                            type: 'group' as const,
-                            orderIndex: 0,
-                            isCollapsed: false
-                          };
-                          console.log("[CurriculumPlanTable] Созданная группа:", newGroup);
-                          setPlanData(prev => {
-                            console.log("[CurriculumPlanTable] Добавляем группу в данные плана, текущее количество узлов:", prev.length);
-                            return [...prev, newGroup]
-                          });
-                          setTimeout(() => {
-                            console.log("[CurriculumPlanTable] Добавляем дисциплину в новую группу:", newGroupId);
-                            addNode('subject', newGroupId);
-                          }, 50);
-                        }
-                        return;
-                      }
-                    }
-                  }
-                  
-                  console.log("[CurriculumPlanTable] Узел не выбран или некорректный тип, ищем подходящую группу");
-                  
-                  // Если ничего не выбрано или неправильный выбор, ищем первую группу
-                  const firstGroup = planData.find(n => n.type === 'group');
-                  if (firstGroup) {
-                    // Если есть хотя бы одна группа, добавляем дисциплину в нее
-                    console.log("[CurriculumPlanTable] Найдена группа в плане, добавляем в нее:", firstGroup.id);
-                    addNode('subject', firstGroup.id);
-                  } else {
-                    // Если нет групп, ищем первый раздел
-                    console.log("[CurriculumPlanTable] Группы не найдены, ищем разделы");
-                    const firstSection = planData.find(n => n.type === 'section');
-                    if (firstSection) {
-                      // Если есть раздел, создаем в нем группу, а затем добавляем предмет
-                      console.log("[CurriculumPlanTable] Найден раздел, создаем в нем группу:", firstSection.id);
-                      const newGroupId = uuidv4();
-                      const newGroup = {
-                        id: newGroupId,
-                        title: 'Новая группа дисциплин',
-                        parentId: firstSection.id,
-                        type: 'group' as const,
-                        orderIndex: 0,
-                        isCollapsed: false
-                      };
-                      console.log("[CurriculumPlanTable] Новая группа:", newGroup);
-                      setPlanData(prev => {
-                        console.log("[CurriculumPlanTable] Добавляем группу в данные плана, текущее количество узлов:", prev.length);
-                        return [...prev, newGroup];
-                      });
-                      setTimeout(() => {
-                        console.log("[CurriculumPlanTable] Добавляем дисциплину в новую группу:", newGroupId);
-                        addNode('subject', newGroupId);
-                      }, 50);
-                    } else {
-                      // Если нет ни разделов, ни групп, создаем цепочку раздел -> группа -> дисциплина
-                      console.log("[CurriculumPlanTable] Разделы не найдены, создаем новую иерархию");
-                      const newSectionId = uuidv4();
-                      const newSection = {
-                        id: newSectionId,
-                        title: 'Новый раздел',
-                        parentId: null,
-                        type: 'section' as const,
-                        orderIndex: 0,
-                        isCollapsed: false
-                      };
-                      
-                      const newGroupId = uuidv4();
-                      const newGroup = {
-                        id: newGroupId,
-                        title: 'Новая группа дисциплин',
-                        parentId: newSectionId,
-                        type: 'group' as const,
-                        orderIndex: 0,
-                        isCollapsed: false
-                      };
-                      
-                      console.log("[CurriculumPlanTable] Новый раздел и группа:", { newSection, newGroup });
-                      setPlanData(prev => {
-                        console.log("[CurriculumPlanTable] Добавляем раздел и группу в данные плана, текущее количество узлов:", prev.length);
-                        return [...prev, newSection, newGroup];
-                      });
-                      setTimeout(() => {
-                        console.log("[CurriculumPlanTable] Добавляем дисциплину в новую группу:", newGroupId);
-                        addNode('subject', newGroupId);
-                      }, 50);
-                    }
-                  }
-                }}
-              >
-                <Plus size={16} /> Дисциплина
-              </Button>
-            </div>
-          </PopoverContent>
-        </Popover>
+          </div>
+        )}
       </div>
       
-      <DndContext
+      <DndContext 
         sensors={sensors}
         collisionDetection={closestCenter}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
-        modifiers={[]}
       >
-        <div className="overflow-x-auto overflow-y-auto border rounded-md curr-plan plan-wrapper max-h-[80vh]">
-          <table className="w-full table-fixed border-collapse select-none text-sm">
-            <thead className="sticky top-0 z-20">
-              {/* Первый уровень заголовка: Дисциплины и курсы */}
-              <tr className="bg-slate-800 text-white border-b border-slate-500">
-                <th 
-                  className="sticky left-0 top-0 bg-slate-900 p-3 z-30 min-w-[200px] text-left border-r shadow-[2px_0_4px_-2px_rgba(0,0,0,0.4)]"
-                  rowSpan={3}
-                >
-                  <div className="text-base font-bold">Дисциплины</div>
-                </th>
-                <th 
-                  className="sticky top-0 z-20 px-2 py-2 text-center border-r border-white/30 font-semibold text-sm w-[100px]"
-                  rowSpan={3}
-                >
-                  Форма контроля
-                </th>
-                <th 
-                  className="sticky top-0 z-20 px-2 py-2 text-center border-r border-white/30 font-semibold text-sm w-[100px]"
-                  rowSpan={3}
-                >
-                  Итого акад.часов
-                </th>
-                <th 
-                  className="sticky top-0 z-20 px-2 py-2 text-center border-r border-white/30 font-semibold text-sm w-[100px]"
-                  rowSpan={3}
-                >
-                  Объем ОП
-                </th>
-                
-                {/* Блок курсов */}
-                {Array.from({ length: courses }, (_, i) => {
-                  const courseNum = i + 1;
-                  const startSemester = i * 2 + 1;
-                  const semestersInCourse = courseNum === courses && extraMonths > 0 ? 3 : 2;
-                  
-                  return (
-                    <th 
-                      key={`course-${courseNum}`}
-                      className="sticky top-0 z-20 px-2 py-2 text-center border-l border-white/20 font-semibold text-base"
-                      colSpan={semestersInCourse * 4} // 4 колонки для каждого семестра (Л, Лб, П, КП)
-                    >
-                      Курс {courseNum}
+        <div className="relative bg-white dark:bg-slate-900 shadow-md rounded-lg overflow-hidden">
+          <div className="overflow-x-auto overflow-y-auto max-h-[80vh]">
+            <table className="w-full text-sm text-left border-collapse">
+              <thead className="sticky top-0 z-20">
+                {/* Первый уровень заголовка: Дисциплины и курсы */}
+                <tr className="bg-slate-800 text-white border-b border-slate-500">
+                  <th className="sticky left-0 top-0 bg-slate-800 px-3 py-2 z-30 min-w-[300px] text-left">
+                    Дисциплины
+                  </th>
+                  <th className="px-3 py-2">Форма контроля</th>
+                  <th className="px-3 py-2">Всего часов</th>
+                  <th className="px-3 py-2">Зачетные единицы</th>
+                  {Array.from({ length: courses }, (_, i) => i + 1).map(course => (
+                    <th key={`course-${course}`} colSpan={7 * 2} className="text-center px-3 py-2">
+                      <div className="font-bold text-lg">{course} курс</div>
                     </th>
-                  );
-                })}
-              </tr>
-              
-              {/* Второй уровень заголовка: Семестры */}
-              <tr className="bg-slate-700 text-white border-b border-slate-500">
-                {Array.from({ length: courses }, (_, i) => {
-                  const courseNum = i + 1;
-                  const startSemester = i * 2 + 1;
-                  const semestersInCourse = courseNum === courses && extraMonths > 0 ? 3 : 2;
+                  ))}
+                  {extraMonths > 0 && (
+                    <th colSpan={7} className="text-center px-3 py-2">
+                      <div className="font-bold text-lg">Доп. семестр</div>
+                    </th>
+                  )}
+                </tr>
+                
+                {/* Второй уровень заголовка: Семестры */}
+                <tr className="bg-slate-700 text-white border-b border-slate-600">
+                  <th className="sticky left-0 top-[41px] bg-slate-700 px-3 py-2 z-30"></th>
+                  <th className="px-3 py-2"></th>
+                  <th className="px-3 py-2"></th>
+                  <th className="px-3 py-2"></th>
+                  {Array.from({ length: semesters.length }, (_, i) => i + 1).map(semester => (
+                    <th key={`semester-${semester}`} colSpan={7} className="text-center px-3 py-2 font-medium">
+                      {semester} семестр
+                    </th>
+                  ))}
+                </tr>
+                
+                {/* Третий уровень заголовка: Типы занятий */}
+                <tr className="bg-slate-600 text-white">
+                  <th className="sticky left-0 top-[81px] bg-slate-600 px-3 py-2 z-30"></th>
+                  <th className="px-3 py-2"></th>
+                  <th className="px-3 py-2"></th>
+                  <th className="px-3 py-2"></th>
                   
-                  // Создаем заголовки семестров для текущего курса
-                  return Array.from({ length: semestersInCourse }, (_, j) => {
-                    const semesterNum = startSemester + j;
-                    const weeksCount = 18; // Предположим, что в каждом семестре 18 недель
+                  {/* Для каждого семестра выводим заголовки типов занятий */}
+                  {semesters.map(semester => {
+                    const headers = [
+                      { key: 'lectures', label: 'Лек' },
+                      { key: 'practice', label: 'Пр' },
+                      { key: 'laboratory', label: 'Лаб' },
+                      { key: 'selfStudy', label: 'СП' },
+                      { key: 'courseProject', label: 'КРП' },
+                      { key: 'consultation', label: 'Конс' },
+                      { key: 'total', label: 'Итого' }
+                    ];
                     
-                    return (
-                      <th 
-                        key={`semester-${semesterNum}`}
-                        className="sticky top-[calc(1rem+1px)] z-20 px-3 py-2 text-center border-l border-white/20 font-semibold text-sm"
-                        colSpan={4} // 4 колонки типов занятий для каждого семестра
-                        title={`Семестр ${semesterNum} (${weeksCount} недель)`}
+                    return headers.map(header => (
+                      <th
+                        key={`sem-${semester}-${header.key}`}
+                        className="px-3 py-2 text-center border-l border-white/20 font-medium"
+                        title={getFullHeaderTitle(header.key)}
                       >
-                        Семестр {semesterNum} ({weeksCount} нед.)
+                        {header.label}
                       </th>
-                    );
-                  });
-                })}
-              </tr>
+                    ));
+                  })}
+                </tr>
+              </thead>
               
-              {/* Третий уровень заголовка: Типы занятий */}
-              <tr className="bg-slate-600 text-white">
-                {Array.from({ length: semesters.length }, (_, i) => {
-                  const semesterNum = i + 1;
-                  
-                  // Для каждого семестра создаем 4 колонки типов занятий
-                  const activityTypes = [
-                    { short: "Л", full: "Лекции" },
-                    { short: "Лб", full: "Лабораторные" },
-                    { short: "П", full: "Практические" },
-                    { short: "КП", full: "Курсовые проекты" }
-                  ];
-                  
-                  return activityTypes.map((activity, j) => (
-                    <th 
-                      key={`semester-${semesterNum}-activity-${j}`}
-                      className="sticky top-[calc(2rem+2px)] z-20 w-[60px] px-2 py-2 text-center border-l border-white/20 font-semibold text-[10px] uppercase leading-tight activity-col"
-                      title={activity.full}
-                    >
-                      <div className="writing-mode-vertical">
-                        {activity.short}
-                      </div>
-                    </th>
-                  ));
-                })}
-              </tr>
-            </thead>
-            <tbody>
-              <SortableContext items={sortedIds} strategy={verticalListSortingStrategy}>
-                {flattenedData.map((node, index) => {
-                  // Проверяем, есть ли у узла дочерние элементы
-                  const hasChildren = planData.some(n => n.parentId === node.id);
-                  // Чередование фоновых цветов строк (четные/нечетные)
-                  const rowBgClass = index % 2 === 0 ? 'bg-slate-900/30' : 'bg-slate-900/50';
-                  
-                  if (node.type === 'subject') {
-                    return (
-                      <SubjectRow
-                        key={node.id}
-                        node={node as Subject}
-                        semesters={semesters}
-                        isActive={node.id === selectedNodeId}
-                        isSelected={selectedNodes.has(node.id)}
-                        isMultiSelectMode={isMultiSelectMode}
-                        depth={node.depth || 0}
-                        rowBgClass={rowBgClass}
-                        onValueChange={handleValueChange}
-                        onControlTypeChange={handleControlTypeChange}
-                        onTotalHoursChange={handleTotalHoursChange}
-                        onCreditUnitsChange={handleCreditUnitsChange}
-                        onRename={handleRename}
-                        onDelete={handleDeleteNode}
-                        onSelect={handleSelectNode}
-                      />
-                    );
-                  } else {
-                    return (
-                      <GroupRow
-                        key={node.id}
-                        node={node}
-                        semesters={semesters}
-                        isActive={node.id === selectedNodeId}
-                        isSelected={selectedNodes.has(node.id)}
-                        isMultiSelectMode={isMultiSelectMode}
-                        hasChildren={hasChildren}
-                        isSection={node.type === 'section'}
-                        depth={node.depth || 0}
-                        rowBgClass={rowBgClass}
-                        hasError={node.type === 'group' && nodesWithErrors.includes(node.id)}
-                        onToggleCollapse={handleToggleCollapse}
-                        onAddChild={(parentId, type) => handleAddNode(type, parentId)}
-                        onRename={handleRename}
-                        onDelete={handleDeleteNode}
-                        onSelect={handleSelectNode}
-                      />
-                    );
-                  }
-                })}
-              </SortableContext>
+              <tbody>
+                {/* Сортируемый контекст для перетаскивания */}
+                <SortableContext items={visibleNodes.map(n => n.id)} strategy={verticalListSortingStrategy}>
+                  {visibleNodes.map((node, index) => {
+                    // Определяем цвет фона для чередования строк
+                    // Используем индекс исходного массива, который включает все видимые строки
+                    const rowBgClass = index % 2 === 0 ? 'bg-slate-50 dark:bg-slate-900/50' : 'bg-white dark:bg-slate-900/30';
+                    
+                    if (node.type === 'subject') {
+                      return (
+                        <SubjectRow
+                          key={node.id}
+                          node={node as Subject}
+                          semesters={semesters}
+                          isActive={selectedNodeId === node.id}
+                          isSelected={selectedNodes.has(node.id)}
+                          isMultiSelectMode={isMultiSelectMode}
+                          depth={node.depth || 0}
+                          rowBgClass={rowBgClass}
+                          onValueChange={handleValueChange}
+                          onCreditUnitsChange={handleCreditUnitsChange}
+                          onControlTypeChange={handleControlTypeChange}
+                          onSelect={selectNode}
+                        />
+                      );
+                    } else {
+                      const isSection = node.type === 'section';
+                      const hasChildren = planData.some(n => n.parentId === node.id);
+                      const hasError = nodesWithErrors.includes(node.id);
+                      
+                      return (
+                        <GroupRow
+                          key={node.id}
+                          node={node as NodeWithSums}
+                          semesters={semesters}
+                          isActive={selectedNodeId === node.id}
+                          isSelected={selectedNodes.has(node.id)}
+                          isMultiSelectMode={isMultiSelectMode}
+                          hasChildren={hasChildren}
+                          isSection={isSection}
+                          hasError={hasError}
+                          depth={node.depth || 0}
+                          rowBgClass={rowBgClass}
+                          onToggleCollapse={toggleNodeCollapse}
+                          onAddChild={addNode}
+                          onRename={handleRenameNode}
+                          onDelete={handleDeleteNode}
+                          onSelect={selectNode}
+                        />
+                      );
+                    }
+                  })}
+                </SortableContext>
+              </tbody>
               
-              {/* Итого строка - размещаем в tfoot для лучшей семантики и фиксации */}
-            </tbody>
-            <tfoot className="sticky bottom-0 bg-slate-900 text-white z-10">
-              <tr>
-                <td className="sticky left-0 z-20 bg-slate-900 p-3 font-bold text-base">
-                  Итого
-                </td>
-                {/* Пустые ячейки для формы контроля, часов и единиц */}
-                <td></td>
-                <td className="text-center p-2 font-semibold text-sm">
-                  {/* Общее количество часов по всем предметам */}
-                  {planData
-                    .filter(node => node.type === 'subject')
-                    .reduce((sum, node) => sum + ((node as Subject).totalHours || 0), 0)}
-                </td>
-                <td className="text-center p-2 font-semibold text-sm">
-                  {/* Общее количество зачетных единиц */}
-                  {planData
-                    .filter(node => node.type === 'subject')
-                    .reduce((sum, node) => sum + ((node as Subject).creditUnits || 0), 0)}
-                </td>
-                
-                {/* Общие суммы по семестрам и типам занятий */}
-                {Array.from({ length: semesters.length }, (_, semIndex) => {
-                  // Типы активностей
-                  const activityTypes = [
-                    'lectures',
-                    'laboratory',
-                    'practice',
-                    'courseProject'
-                  ];
-                  
-                  // Для каждого типа активности выводим сумму по всем предметам
-                  return activityTypes.map((activityType, actIndex) => {
-                    // Вычисляем сумму для данного типа активности в данном семестре
-                    const sum = planData
+              {/* Блок с итогами и суммарными часами */}
+              <tfoot className="bg-slate-200 dark:bg-slate-800 sticky bottom-0 border-t-2 border-slate-400 z-20">
+                <tr>
+                  <td className="sticky left-0 bottom-0 bg-slate-200 dark:bg-slate-800 px-3 py-2 font-bold z-20">
+                    Итого по учебному плану
+                  </td>
+                  <td className="px-3 py-2"></td>
+                  <td className="px-3 py-2 font-bold text-center">
+                    {planData
                       .filter(node => node.type === 'subject')
-                      .reduce((total, node) => {
-                        const subject = node as Subject;
+                      .reduce((sum, subject) => sum + (subject as Subject).hours.reduce((s, h) => s + h, 0), 0)}
+                  </td>
+                  <td className="px-3 py-2 font-bold text-center">
+                    {planData
+                      .filter(node => node.type === 'subject')
+                      .reduce((sum, subject) => sum + ((subject as Subject).creditUnits || 0), 0)}
+                  </td>
+                  
+                  {/* Для каждого семестра и типа активности выводим общую сумму */}
+                  {semesters.map((_, semIndex) => {
+                    // Получаем все предметы
+                    const subjects = planData.filter(node => node.type === 'subject') as Subject[];
+                    
+                    const activityTypes = [
+                      { key: 'lectures', label: 'Лек' },
+                      { key: 'practice', label: 'Пр' },
+                      { key: 'laboratory', label: 'Лаб' },
+                      { key: 'selfStudy', label: 'СП' },
+                      { key: 'courseProject', label: 'КРП' },
+                      { key: 'consultation', label: 'Конс' },
+                      { key: 'total', label: 'Итого' }
+                    ];
+                    
+                    return activityTypes.map((act, actIndex) => {
+                      // Считаем сумму часов по всем предметам для текущего семестра и типа активности
+                      const sum = subjects.reduce((total, subject) => {
                         if (!subject.activityHours || !subject.activityHours[semIndex]) {
                           return total;
                         }
                         
                         let value = 0;
-                        if (activityType === 'lectures') value = subject.activityHours[semIndex].lectures || 0;
-                        else if (activityType === 'laboratory') value = subject.activityHours[semIndex].laboratory || 0;
-                        else if (activityType === 'practice') value = subject.activityHours[semIndex].practice || 0;
-                        else if (activityType === 'courseProject') value = subject.activityHours[semIndex].courseProject || 0;
+                        if (act.key === 'total') value = subject.hours[semIndex] || 0;
+                        else if (act.key === 'lectures') value = subject.activityHours[semIndex].lectures || 0;
+                        else if (act.key === 'laboratory') value = subject.activityHours[semIndex].laboratory || 0;
+                        else if (act.key === 'practice') value = subject.activityHours[semIndex].practice || 0;
+                        else if (act.key === 'selfStudy') value = subject.activityHours[semIndex].selfStudy || 0;
+                        else if (act.key === 'courseProject') value = subject.activityHours[semIndex].courseProject || 0;
+                        else if (act.key === 'consultation') value = subject.activityHours[semIndex].consultation || 0;
                         
                         return total + value;
                       }, 0);
                     
-                    return (
-                      <td 
-                        key={`total-sem-${semIndex}-act-${actIndex}`}
-                        className="p-2 text-center border-l border-white/20 font-semibold text-sm"
-                      >
-                        {sum > 0 ? sum : ''}
-                      </td>
-                    );
-                  });
-                })}
-              </tr>
-            </tfoot>
-          </table>
+                      return (
+                        <td 
+                          key={`total-sem-${semIndex}-act-${actIndex}`}
+                          className="px-3 py-2 text-center border-l border-white/20 font-semibold text-sm"
+                        >
+                          {sum > 0 ? sum : ''}
+                        </td>
+                      );
+                    });
+                  })}
+                </tr>
+              </tfoot>
+            </table>
+          </div>
         </div>
         
         {/* Показываем контур перетаскиваемого элемента */}
@@ -1939,6 +1419,20 @@ export const CurriculumPlanTable = React.forwardRef<{ forceUpdate: () => void },
     </div>
   );
 });
+
+// Вспомогательная функция для получения полного названия типа занятия
+function getFullHeaderTitle(key: string): string {
+  switch(key) {
+    case 'lectures': return 'Лекции';
+    case 'practice': return 'Практические занятия';
+    case 'laboratory': return 'Лабораторные работы';
+    case 'selfStudy': return 'Самостоятельная работа';
+    case 'courseProject': return 'Курсовой проект/работа';
+    case 'consultation': return 'Консультации';
+    case 'total': return 'Итого часов';
+    default: return '';
+  }
+}
 
 // Экспортируем тип для использования в других частях приложения
 export type CurriculumPlanTableRef = { forceUpdate: () => void };
