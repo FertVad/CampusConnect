@@ -177,7 +177,7 @@ const SubjectRow: React.FC<{
       onClick={(e) => onSelect && onSelect(node.id, e.ctrlKey || e.metaKey, e.shiftKey)}
     >
       {/* Ячейка с названием дисциплины */}
-      <td className="sticky left-0 bg-slate-900 border-t border-slate-700/20 dark:border-slate-600/40 z-10">
+      <td className={`sticky left-0 ${isSelected ? 'bg-blue-600/20' : (isActive ? 'bg-blue-900/30' : 'bg-slate-900')} border-t border-slate-700/20 dark:border-slate-600/40 z-10`}>
         <div className="flex items-center" style={{ paddingLeft: `${paddingLeft}px` }}>
           <span className="w-6"></span>
           
@@ -373,7 +373,7 @@ const GroupRow: React.FC<{
         hover:bg-indigo-50/40 dark:hover:bg-indigo-600/10 transition-colors cursor-pointer`}
       onClick={(e) => onSelect && onSelect(node.id, e.ctrlKey || e.metaKey, e.shiftKey)}
     >
-      <td className="sticky left-0 bg-slate-900 border-t border-slate-700/20 dark:border-slate-600/40 z-10">
+      <td className={`sticky left-0 ${isSelected ? 'bg-blue-600/20' : (isActive ? 'bg-blue-900/30' : 'bg-slate-900')} border-t border-slate-700/20 dark:border-slate-600/40 z-10`}>
         <div className="flex items-center" style={{ paddingLeft: `${paddingLeft}px` }}>
           {hasChildren ? (
             <button
@@ -918,16 +918,20 @@ export const CurriculumPlanTable = React.forwardRef<
     const { active, over } = event;
     
     if (over && active.id !== over.id) {
-      const activeNode = active.data.current as DragItem;
-      const overNode = planData.find(node => node.id === over.id);
+      // Получаем оба узла из planData, вместо использования active.data.current
+      const activeNodeId = active.id as string;
+      const overNodeId = over.id as string;
       
-      if (activeNode && overNode) {
+      const activeNodeData = planData.find(node => node.id === activeNodeId);
+      const overNodeData = planData.find(node => node.id === overNodeId);
+      
+      if (activeNodeData && overNodeData) {
         // Проверяем, что не перетаскиваем родителя в его потомка
         let isDescendant = false;
-        let currentNode = overNode;
+        let currentNode = overNodeData;
         
         while (currentNode && currentNode.parentId) {
-          if (currentNode.parentId === activeNode.id) {
+          if (currentNode.parentId === activeNodeData.id) {
             isDescendant = true;
             break;
           }
@@ -946,9 +950,9 @@ export const CurriculumPlanTable = React.forwardRef<
         // Проверяем ограничения на типы узлов
         if (
           // Нельзя перетаскивать раздел в группу или в дисциплину
-          (activeNode.type === 'section' && overNode.type !== 'section') ||
+          (activeNodeData.type === 'section' && overNodeData.type !== 'section') ||
           // Нельзя перетаскивать группу в дисциплину
-          (activeNode.type === 'group' && overNode.type === 'subject')
+          (activeNodeData.type === 'group' && overNodeData.type === 'subject')
         ) {
           console.log('[CurriculumPlanTable] Invalid drag operation - type mismatch');
           setActiveId(null);
@@ -960,21 +964,21 @@ export const CurriculumPlanTable = React.forwardRef<
         // Если все проверки прошли, выполняем перемещение
         setPlanData(prevData => {
           return prevData.map(node => {
-            if (node.id === active.id) {
+            if (node.id === activeNodeId) {
               // Определяем новый parentId в зависимости от типа над которым бросаем
               let newParentId: string | null = null;
               
-              if (overNode.type === 'section' || overNode.type === 'group') {
+              if (overNodeData.type === 'section' || overNodeData.type === 'group') {
                 // Раздел и группа могут быть родителями
-                newParentId = overNode.id;
-              } else if (overNode.type === 'subject') {
+                newParentId = overNodeData.id;
+              } else if (overNodeData.type === 'subject') {
                 // Дисциплина не может быть родителем, используем её родителя
-                newParentId = overNode.parentId;
+                newParentId = overNodeData.parentId;
               }
               
               // Обновляем индекс сортировки
               const targetNodes = prevData.filter(n => n.parentId === newParentId);
-              const overNodeIndex = targetNodes.findIndex(n => n.id === over.id);
+              const overNodeIndex = targetNodes.findIndex(n => n.id === overNodeId);
               
               // Вставляем перед/после в зависимости от позиции
               let newOrderIndex = 0;
@@ -1313,7 +1317,7 @@ export const CurriculumPlanTable = React.forwardRef<
           </Button>
           
           <Button
-            variant="outline"
+            variant={selectedNodes.size > 0 ? "destructive" : "outline"}
             className="gap-2"
             onClick={handleDeleteSelected}
             disabled={selectedNodes.size === 0}
