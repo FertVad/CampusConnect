@@ -100,8 +100,8 @@ function CourseRow({
       const isMonthEnd = isLastDayOfMonth(weekInCourse.endDate);
       
       // Базовый класс ячейки без фонового цвета
-      const baseCellClass = `p-0 h-8 text-center cursor-pointer transition-colors
-        ${isMonthEnd ? 'border-r border-slate-500/15 dark:border-slate-500/10' : ''}
+      const baseCellClass = `p-0 h-8 text-center cursor-pointer transition-colors border-r border-slate-700
+        ${isMonthEnd ? 'border-r-2 border-r-slate-600' : ''}
         hover:outline hover:outline-2 hover:outline-blue-500 hover:outline-offset-[-2px]`;
       
       // Используем импортированные цвета из модуля ActivityTypes
@@ -161,7 +161,7 @@ function CourseRow({
       cells.push(
         <td 
           key={`cell-${cellKey}`}
-          className={`${baseCellClass} week-cell
+          className={`${baseCellClass} week-cell w-[40px] p-0 h-[38px]
             ${crossMonth ? '--split-month' : ''} 
             ${selectedCells && cellKey && selectedCells.has(cellKey) ? 'selected' : ''}`}
           data-cell-key={cellKey}
@@ -252,8 +252,8 @@ function CourseRow({
   };
   
   return (
-    <tr className="border-t hover:bg-slate-50 dark:hover:bg-slate-800/70">
-      <td className="sticky left-0 z-20 bg-slate-800 dark:bg-slate-900 text-white px-4 py-2 font-medium border-r-2 border-r-slate-600 text-center shadow-md">
+    <tr className="border-b border-slate-600 hover:bg-slate-800/70">
+      <td className="sticky left-0 z-20 bg-slate-800 text-white px-3 py-2 font-medium border-r border-slate-600 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.4)] max-w-[200px] truncate">
         {course.name || `Курс ${course.id}`}
       </td>
       {renderCells()}

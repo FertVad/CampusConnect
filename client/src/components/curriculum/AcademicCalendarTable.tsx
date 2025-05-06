@@ -480,64 +480,102 @@ export function AcademicCalendarTable({
       return sortedGroups;
     }, [firstCourseWeeks]);
     
-    // Трехуровневая структура заголовков в темной теме
+    // Создаем заголовки таблицы, адаптированные под темную тему
     
     // 1. Уровень: Курсы
+    // В этом ряду показываем курсы (Курс 1, Курс 2, Курс 3, Курс 4, Курс 5)
+    // Разделяем каждый курс на 2 семестра по ~18 недель
+    
+    const courseColGroups = [];
+    // Сначала делаем группировку по курсам (если у нас есть данные о курсах)
+    if (courses && courses.length > 0) {
+      // Делим колонки недель по курсам
+      for (let i = 0; i < courses.length; i++) {
+        const weeksPerCourse = i === 0 ? 52 : Math.ceil(52 / courses.length);
+        const startIdx = i * weeksPerCourse; 
+        const endIdx = Math.min((i + 1) * weeksPerCourse, firstCourseWeeks.length);
+        const colSpan = endIdx - startIdx;
+        
+        courseColGroups.push({
+          id: courses[i].id,
+          name: courses[i].name,
+          colSpan: colSpan
+        });
+      }
+    } else {
+      // Если нет данных о курсах, делаем группировку по 52 недели (1 год)
+      for (let i = 0; i < Math.ceil(firstCourseWeeks.length / 52); i++) {
+        const startIdx = i * 52;
+        const endIdx = Math.min((i + 1) * 52, firstCourseWeeks.length);
+        const colSpan = endIdx - startIdx;
+        
+        courseColGroups.push({
+          id: (i + 1).toString(),
+          name: `Курс ${i + 1}`,
+          colSpan: colSpan
+        });
+      }
+    }
+    
+    // Первый ряд: Курсы
     headers.push(
-      <tr key="course-level" className="bg-slate-800 text-white border-b border-slate-600">
+      <tr key="course-level" className="bg-slate-900 text-white border-b border-slate-600">
         <th 
           rowSpan={3}
           className="sticky left-0 bg-slate-900 text-white px-4 py-2 z-30 whitespace-nowrap overflow-hidden text-ellipsis shadow-[2px_0_4px_-2px_rgba(0,0,0,0.4)]"
         >
           Дисциплины
         </th>
-        {/* Группируем по курсам */}
-        {/* TODO: В будущей реализации добавить группировку по курсам */}
-        <th
-          colSpan={firstCourseWeeks.length}
-          className="px-2 py-2 text-center border-r border-slate-500 font-semibold"
-        >
-          Учебный год
-        </th>
-      </tr>
-    );
-    
-    // 2. Уровень: Месяцы
-    headers.push(
-      <tr key="month-level" className="bg-slate-700 text-white border-b border-slate-600">
-        {Object.entries(monthGroups).map(([key, list], i) => (
+        {courseColGroups.map((course, idx) => (
           <th 
-            key={`month-${key}`} 
-            colSpan={list.length}
-            className="px-2 py-1 text-center border-l border-white/20 font-semibold text-sm whitespace-nowrap overflow-hidden text-ellipsis"
-            title={key}
+            key={`course-${course.id}`} 
+            colSpan={course.colSpan}
+            className="px-2 py-2 text-center border-r border-slate-600 font-semibold"
           >
-            {key}
+            Курс {idx + 1}
           </th>
         ))}
       </tr>
     );
     
-    // 3. Уровень: Недели
+    // 2. Уровень: Семестры (по 2 на курс)
     headers.push(
-      <tr key="week-level" className="bg-slate-600 text-white">
-        {firstCourseWeeks.map((week, idx) => {
-          // Определяем месяц для чередования фона
-          const monthName = format(week.startDate, "LLLL", { locale: ru });
-          
-          // Проверяем, является ли эта неделя концом месяца
-          const isMonthEnd = isLastDayOfMonth(week.endDate);
+      <tr key="semester-level" className="bg-slate-800 text-white border-b border-slate-600">
+        {courseColGroups.map((course, courseIdx) => {
+          // Делим на 2 семестра (по половине недель каждого курса)
+          const semesterWeeks = Math.ceil(course.colSpan / 2);
           
           return (
-            <th 
-              key={`week-${idx}`}
-              className="px-2 py-1 text-center border-l border-white/20 font-semibold text-[10px] uppercase leading-tight rotate-header"
-              title={`Неделя ${week.index}: ${format(week.startDate, 'dd.MM')} - ${format(week.endDate, 'dd.MM')}`}
-            >
-              {week.index}
-            </th>
+            <React.Fragment key={`course-semesters-${course.id}`}>
+              <th 
+                colSpan={semesterWeeks}
+                className="px-2 py-1 text-center border-r border-slate-700 font-semibold"
+              >
+                Сем 1 ({semesterWeeks})
+              </th>
+              <th 
+                colSpan={course.colSpan - semesterWeeks}
+                className="px-2 py-1 text-center border-r border-slate-700 font-semibold"
+              >
+                Сем 2 ({course.colSpan - semesterWeeks})
+              </th>
+            </React.Fragment>
           );
         })}
+      </tr>
+    );
+    
+    // 3. Уровень: Недели (просто номера недель)
+    headers.push(
+      <tr key="week-level" className="bg-slate-700 text-white">
+        {firstCourseWeeks.map((week, idx) => (
+          <th 
+            key={`week-${idx}`}
+            className="py-1 text-center font-medium text-xs border-r border-slate-600"
+          >
+            {week.index}
+          </th>
+        ))}
       </tr>
     );
     
@@ -733,26 +771,26 @@ export function AcademicCalendarTable({
       </div>
 
       <div className="rounded-md overflow-hidden border shadow-sm dark:border-slate-700">
-        <div className="overflow-auto max-h-[500px] custom-scrollbar calendar-wrapper" ref={scrollWrapperRef}>
+        <div className="overflow-x-auto max-h-[700px] plan-wrapper" ref={scrollWrapperRef}>
           <div className="min-w-max relative">
-            <table className="table-fixed w-full border-collapse" ref={tableRef}>
+            <table className="table-fixed border-collapse w-full" ref={tableRef}>
               <colgroup>
                 <col className="w-[200px]" /> {/* Дисциплины */}
                 {weeks.map((_, i) => (
-                  <col key={i} className="w-[60px]" /> 
+                  <col key={i} className="w-[40px]" /> 
                 ))}
               </colgroup>
               <thead className="sticky top-0 z-20" ref={headerRef}>
                 {renderHeaders()}
               </thead>
-              <tbody className="bg-slate-50 dark:bg-slate-900">
+              <tbody className="bg-slate-950">
                 {renderCourseRows()}
               </tbody>
-              <tfoot className="sticky bottom-0 bg-slate-800 text-white">
+              <tfoot className="sticky bottom-0 bg-slate-900 text-white">
                 <tr>
-                  <td className="sticky left-0 bg-slate-900 px-4 py-2 font-semibold">Итого</td>
+                  <td className="sticky left-0 bg-slate-900 px-4 py-2 font-semibold z-10">Итого</td>
                   {weeks.map((_, idx) => (
-                    <td key={idx} className="text-center px-2 py-1"></td>
+                    <td key={idx} className="text-center p-1 border-r border-slate-700"></td>
                   ))}
                 </tr>
               </tfoot>
