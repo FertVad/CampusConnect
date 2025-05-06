@@ -441,7 +441,7 @@ export function AcademicCalendarTable({
     return nextDay.getMonth() !== date.getMonth();
   };
   
-  // Создание заголовков месяцев и недель
+  // Создание заголовков таблицы с трехуровневой структурой
   const renderHeaders = () => {
     const headers = [];
     
@@ -480,90 +480,61 @@ export function AcademicCalendarTable({
       return sortedGroups;
     }, [firstCourseWeeks]);
     
-    // Заголовок "Месяцы"
+    // Трехуровневая структура заголовков в темной теме
+    
+    // 1. Уровень: Курсы
     headers.push(
-      <tr key="month-row" className="whitespace-nowrap">
+      <tr key="course-level" className="bg-slate-800 text-white border-b border-slate-600">
         <th 
-          className="sticky left-0 z-30 bg-slate-800 dark:bg-slate-900 text-white px-4 py-2 text-center font-semibold border-r-2 border-r-slate-600 shadow-md"
-          rowSpan={1}
+          rowSpan={3}
+          className="sticky left-0 bg-slate-900 text-white px-4 py-2 z-30 whitespace-nowrap overflow-hidden text-ellipsis shadow-[2px_0_4px_-2px_rgba(0,0,0,0.4)]"
         >
-          Месяцы
+          Дисциплины
         </th>
-        {Object.entries(monthGroups).map(([key, list], i) => {
-          return (
-            <th 
-              key={key} 
-              colSpan={list.length}
-              className={`px-2 py-1 text-center font-medium ${i % 2 === 0 ? 'bg-slate-100 dark:bg-slate-800' : 'bg-slate-200 dark:bg-slate-700'}`}
-            >
-              {key}
-            </th>
-          );
-        })}
+        {/* Группируем по курсам */}
+        {/* TODO: В будущей реализации добавить группировку по курсам */}
+        <th
+          colSpan={firstCourseWeeks.length}
+          className="px-2 py-2 text-center border-r border-slate-500 font-semibold"
+        >
+          Учебный год
+        </th>
       </tr>
     );
     
-    // Заголовок "Недели"
+    // 2. Уровень: Месяцы
     headers.push(
-      <tr key="week-row" className="whitespace-nowrap">
-        <th 
-          className="sticky left-0 z-30 bg-slate-700 dark:bg-slate-800 text-white px-4 py-2 text-center font-semibold border-r-2 border-r-slate-600 shadow-md"
-        >
-          Недели
-        </th>
-        {firstCourseWeeks.map((w, idx) => {
+      <tr key="month-level" className="bg-slate-700 text-white border-b border-slate-600">
+        {Object.entries(monthGroups).map(([key, list], i) => (
+          <th 
+            key={`month-${key}`} 
+            colSpan={list.length}
+            className="px-2 py-1 text-center border-l border-white/20 font-semibold text-sm whitespace-nowrap overflow-hidden text-ellipsis"
+            title={key}
+          >
+            {key}
+          </th>
+        ))}
+      </tr>
+    );
+    
+    // 3. Уровень: Недели
+    headers.push(
+      <tr key="week-level" className="bg-slate-600 text-white">
+        {firstCourseWeeks.map((week, idx) => {
           // Определяем месяц для чередования фона
-          const monthIndex = Object.keys(monthGroups).findIndex(
-            month => month === format(w.startDate, "LLLL", { locale: ru })
-          );
-          const isEvenMonth = monthIndex % 2 === 0;
+          const monthName = format(week.startDate, "LLLL", { locale: ru });
           
           // Проверяем, является ли эта неделя концом месяца
-          const isMonthEnd = isLastDayOfMonth(w.endDate);
-          
-          // Проверяем, пересекает ли неделя границу месяцев
-          const isCrossingMonths = w.startDate.getMonth() !== w.endDate.getMonth();
-          
-          // Если неделя пересекает месяцы, расчитываем количество дней в текущем и следующем месяце
-          let bgClass = '';
-          bgClass = isEvenMonth 
-            ? 'bg-slate-100 dark:bg-slate-800' 
-            : 'bg-slate-200 dark:bg-slate-700';
-            
-          // Стиль для последнего столбца месяца (градиент)
-          let style = {};
-          
-          // Если это последний столбец месяца и существует следующий месяц, добавляем градиент
-          if (isMonthEnd && idx < firstCourseWeeks.length - 1) {
-            const nextMonthIdx = monthIndex + 1;
-            const isNextMonthEven = nextMonthIdx % 2 === 0;
-            const monthColor = isEvenMonth ? 'var(--month-even, #f1f5f9)' : 'var(--month-odd, #e2e8f0)';
-            const nextMonthColor = isNextMonthEven ? 'var(--month-even, #f1f5f9)' : 'var(--month-odd, #e2e8f0)';
-            
-            style = {
-              background: `linear-gradient(to right, ${monthColor} 0%, ${monthColor} 90%, ${nextMonthColor} 100%)`
-            };
-            
-            // Для темной темы
-            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-              const darkMonthColor = isEvenMonth ? 'var(--month-even, #1e293b)' : 'var(--month-odd, #334155)';
-              const darkNextMonthColor = isNextMonthEven ? 'var(--month-even, #1e293b)' : 'var(--month-odd, #334155)';
-              
-              style = {
-                background: `linear-gradient(to right, ${darkMonthColor} 0%, ${darkMonthColor} 90%, ${darkNextMonthColor} 100%)`
-              };
-            }
-          }
+          const isMonthEnd = isLastDayOfMonth(week.endDate);
           
           return (
             <th 
-              key={`week_${w.index}`}
-              className={`px-1 py-1 text-xs font-semibold w-8 text-center 
-                ${isMonthEnd ? 'border-r border-slate-400/40 dark:border-slate-400/40' : ''}
-                ${!isMonthEnd ? bgClass : ''}`}
-              style={isMonthEnd ? style : {}}
+              key={`week-${idx}`}
+              className="px-2 py-1 text-center border-l border-white/20 font-semibold text-[10px] uppercase leading-tight rotate-header"
+              title={`Неделя ${week.index}: ${format(week.startDate, 'dd.MM')} - ${format(week.endDate, 'dd.MM')}`}
             >
-              {w.index}
+              {week.index}
             </th>
           );
         })}
