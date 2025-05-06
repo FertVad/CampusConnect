@@ -180,8 +180,8 @@ const SubjectRow: React.FC<{
           className="w-full bg-transparent text-center outline-none hover:bg-blue-50 dark:hover:bg-blue-900/20 focus:bg-blue-100 dark:focus:bg-blue-900/40 transition-colors rounded py-1"
           value={node.controlType || 'exam'}
           onChange={(e) => {
-            // Для экзамена, обычно указывается семестр
-            const semesterIndex = node.controlSemester ?? 0;
+            // Для экзамена, обычно используется первый семестр по умолчанию
+            const semesterIndex = 0; // Используем первый семестр по умолчанию
             onControlTypeChange(node.id, e.target.value, semesterIndex);
           }}
         >
@@ -1031,8 +1031,15 @@ export const CurriculumPlanTable = React.forwardRef<
 
   // Общая функция для выбора узла (одинарного и множественного)
   const selectNode = useCallback((id: string, ctrlKey = false, shiftKey = false) => {
-    // Если зажат Ctrl/Cmd и у нас активен режим множественного выбора
-    if (ctrlKey && isMultiSelectMode) {
+    console.log(`Selecting node ${id}, ctrlKey: ${ctrlKey}, shiftKey: ${shiftKey}`);
+    
+    // Если зажат Ctrl/Cmd
+    if (ctrlKey) {
+      // Включаем режим множественного выбора, если он еще не включен
+      if (!isMultiSelectMode) {
+        setIsMultiSelectMode(true);
+      }
+      
       setSelectedNodes(prev => {
         const newSelection = new Set(prev);
         
@@ -1051,15 +1058,18 @@ export const CurriculumPlanTable = React.forwardRef<
         } else {
           // Запоминаем последний выбранный элемент для Shift
           lastSelectedNodeRef.current = id;
+          setSelectedNodeId(id); // Устанавливаем текущий выбранный узел
         }
         
         return newSelection;
       });
     } 
-    // Если зажат Shift и у нас активен режим множественного выбора
-    else if (shiftKey && isMultiSelectMode && lastSelectedNodeRef.current) {
-      // Получаем список всех отображаемых узлов
-      const visibleNodes = getVisibleNodes();
+    // Если зажат Shift и установлен последний выбранный элемент
+    else if (shiftKey && lastSelectedNodeRef.current) {
+      // Включаем режим множественного выбора, если он еще не включен
+      if (!isMultiSelectMode) {
+        setIsMultiSelectMode(true);
+      }
       
       // Находим индексы начального и конечного элементов
       const lastSelectedIndex = visibleNodes.findIndex(n => n.id === lastSelectedNodeRef.current);
@@ -1071,29 +1081,27 @@ export const CurriculumPlanTable = React.forwardRef<
         const start = Math.min(lastSelectedIndex, currentIndex);
         const end = Math.max(lastSelectedIndex, currentIndex);
         
+        console.log(`Selecting range from ${start} to ${end}`);
+        
         // Создаем новое выделение
         const nodesToSelect = visibleNodes.slice(start, end + 1).map(n => n.id);
         setSelectedNodes(new Set(nodesToSelect));
+        setSelectedNodeId(id); // Устанавливаем текущий выбранный узел
       }
     }
     // Обычный выбор элемента
     else {
-      // Если нажат Ctrl, включаем режим множественного выбора
-      if (ctrlKey) {
-        enableMultiSelectMode();
-        setSelectedNodes(new Set([id]));
-        lastSelectedNodeRef.current = id;
-      } else {
-        // Снимаем множественное выделение
-        if (isMultiSelectMode) {
-          clearSelection();
-        }
-        
-        // Простое выделение одного элемента
-        setSelectedNodeId(id);
+      // Снимаем множественное выделение
+      if (isMultiSelectMode) {
+        clearSelection();
       }
+      
+      // Простое выделение одного элемента
+      setSelectedNodeId(id);
+      setSelectedNodes(new Set([id])); // Также добавляем в множественное выделение
+      lastSelectedNodeRef.current = id;
     }
-  }, [isMultiSelectMode, clearSelection, enableMultiSelectMode, getVisibleNodes]);
+  }, [isMultiSelectMode, clearSelection, visibleNodes]);
 
   // Функция для планирования сохранения (debounce)
   const scheduleSave = useCallback(() => {
@@ -1119,7 +1127,7 @@ export const CurriculumPlanTable = React.forwardRef<
   // Вычисляем видимые узлы для рендеринга
   const visibleNodes = useMemo(() => {
     return getVisibleNodes();
-  }, [planData]);
+  }, [getVisibleNodes]);
 
   // Проверка на наличие пустых групп
   useEffect(() => {
