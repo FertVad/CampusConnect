@@ -1661,27 +1661,27 @@ export const CurriculumPlanTable = React.forwardRef<{ forceUpdate: () => void },
           <table className="w-full table-fixed border-collapse select-none text-sm">
             <thead className="sticky top-0 z-20">
               {/* Первый уровень заголовка: Дисциплины и курсы */}
-              <tr className="bg-gradient-to-r from-slate-800 to-slate-700 text-white border-b border-slate-500">
+              <tr className="bg-slate-800 text-white border-b border-slate-500">
                 <th 
-                  className="sticky left-0 top-0 bg-slate-900 p-3 z-30 min-w-[220px] text-left border-r shadow-[2px_0_4px_-2px_rgba(0,0,0,0.4)]"
+                  className="sticky left-0 top-0 bg-slate-900 p-3 z-30 min-w-[200px] text-left border-r shadow-[2px_0_4px_-2px_rgba(0,0,0,0.4)]"
                   rowSpan={3}
                 >
                   <div className="text-base font-bold">Дисциплины</div>
                 </th>
                 <th 
-                  className="sticky top-0 z-20 px-4 py-3 text-center border-r border-white/30 font-semibold text-base w-[100px]"
+                  className="sticky top-0 z-20 px-2 py-2 text-center border-r border-white/30 font-semibold text-sm w-[100px]"
                   rowSpan={3}
                 >
                   Форма контроля
                 </th>
                 <th 
-                  className="sticky top-0 z-20 px-4 py-3 text-center border-r border-white/30 font-semibold text-base w-[110px]"
+                  className="sticky top-0 z-20 px-2 py-2 text-center border-r border-white/30 font-semibold text-sm w-[100px]"
                   rowSpan={3}
                 >
                   Итого акад.часов
                 </th>
                 <th 
-                  className="sticky top-0 z-20 px-4 py-3 text-center border-r-2 border-white/30 font-semibold text-base w-[90px]"
+                  className="sticky top-0 z-20 px-2 py-2 text-center border-r border-white/30 font-semibold text-sm w-[100px]"
                   rowSpan={3}
                 >
                   Объем ОП
@@ -1696,7 +1696,7 @@ export const CurriculumPlanTable = React.forwardRef<{ forceUpdate: () => void },
                   return (
                     <th 
                       key={`course-${courseNum}`}
-                      className="sticky top-0 z-20 px-4 py-3 text-center border-l border-white/20 font-bold text-lg"
+                      className="sticky top-0 z-20 px-2 py-2 text-center border-l border-white/20 font-semibold text-base"
                       colSpan={semestersInCourse * 4} // 4 колонки для каждого семестра (Л, Лб, П, КП)
                     >
                       Курс {courseNum}
@@ -1720,11 +1720,11 @@ export const CurriculumPlanTable = React.forwardRef<{ forceUpdate: () => void },
                     return (
                       <th 
                         key={`semester-${semesterNum}`}
-                        className="sticky top-[calc(1rem+1px)] z-20 px-3 py-2 text-center border-l border-white/20 font-semibold text-sm"
+                        className="sticky top-[calc(1rem+1px)] z-20 px-2 py-1 text-center border-l border-white/20 font-semibold text-sm whitespace-nowrap"
                         colSpan={4} // 4 колонки типов занятий для каждого семестра
                         title={`Семестр ${semesterNum} (${weeksCount} недель)`}
                       >
-                        С{semesterNum} ({weeksCount})
+                        Семестр {semesterNum} ({weeksCount} нед.)
                       </th>
                     );
                   });
@@ -1747,10 +1747,10 @@ export const CurriculumPlanTable = React.forwardRef<{ forceUpdate: () => void },
                   return activityTypes.map((activity, j) => (
                     <th 
                       key={`semester-${semesterNum}-activity-${j}`}
-                      className="sticky top-[calc(2rem+2px)] z-20 w-14 px-2 py-3 text-center border-l border-white/20 font-semibold text-xs uppercase"
+                      className="sticky top-[calc(2rem+2px)] z-20 w-[60px] px-2 py-2 text-center border-l border-white/20 font-semibold text-[10px] uppercase leading-tight activity-col"
                       title={activity.full}
                     >
-                      <div className="writing-mode-vertical h-6">
+                      <div className="writing-mode-vertical">
                         {activity.short}
                       </div>
                     </th>
@@ -1816,13 +1816,13 @@ export const CurriculumPlanTable = React.forwardRef<{ forceUpdate: () => void },
                 </td>
                 {/* Пустые ячейки для формы контроля, часов и единиц */}
                 <td></td>
-                <td className="text-center p-2 font-semibold text-base">
+                <td className="text-center p-2 font-semibold text-sm">
                   {/* Общее количество часов по всем предметам */}
                   {planData
                     .filter(node => node.type === 'subject')
                     .reduce((sum, node) => sum + ((node as Subject).totalHours || 0), 0)}
                 </td>
-                <td className="text-center p-2 font-semibold text-base">
+                <td className="text-center p-2 font-semibold text-sm">
                   {/* Общее количество зачетных единиц */}
                   {planData
                     .filter(node => node.type === 'subject')

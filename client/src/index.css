@@ -598,42 +598,52 @@
 
 /* Стили для трехуровневой шапки таблицы учебного плана */
 .writing-mode-vertical {
-  writing-mode: vertical-rl;
-  transform: rotate(180deg);
+  transform: rotate(-90deg);
+  transform-origin: bottom left;
+  text-align: left;
   white-space: nowrap;
+  font-size: 10px;
+  line-height: 1.1;
   padding: 0.25rem 0;
-  min-height: 3rem;
+  height: 80px;
+  width: 20px;
 }
 
 /* Стили для строк таблицы учебного плана (предметов и групп) */
 .curr-plan tr {
   border-bottom: 1px solid rgba(203, 213, 225, 0.7); /* slate-300/70 */
-  height: 48px; /* Фиксированная высота строк для лучшей читаемости */
+  height: 42px; /* Фиксированная высота строк для лучшей читаемости */
 }
 
 .dark .curr-plan tr {
-  border-bottom: 1px solid rgba(71, 85, 105, 0.7); /* slate-600/70 */
+  border-bottom: 1px solid rgba(15, 23, 42, 0.7); /* slate-900/70 */
 }
 
 .curr-plan tr:hover {
-  background-color: rgba(236, 252, 255, 0.8); /* Светло-голубой цвет при наведении */
+  @apply bg-slate-700; /* Цвет при наведении согласно требованиям */
 }
 
-.dark .curr-plan tr:hover {
-  background-color: rgba(25, 62, 88, 0.3); /* Темно-голубой цвет при наведении в темной теме */
+/* Зебра по требованиям */
+.curr-plan tbody tr {
+  @apply bg-slate-950;
 }
 
-.curr-plan td {
-  padding: 0.5rem 0.7rem;
-  border-right: 1px solid rgba(203, 213, 225, 0.5); /* Добавляем вертикальные разделители */
+.curr-plan tbody tr:nth-child(even) { 
+  @apply bg-slate-900; 
 }
 
-.dark .curr-plan td {
-  border-right: 1px solid rgba(71, 85, 105, 0.5);
+/* Специальное форматирование для разделов и групп */
+.row-type-section, .row-type-group {
+  @apply bg-slate-800 font-semibold;
+}
+
+.curr-plan td, .curr-plan th {
+  @apply px-2 py-1 whitespace-nowrap overflow-hidden text-ellipsis;
+  border-right: 1px solid rgba(30, 41, 59, 0.4); /* Тонкие разделители для ячеек */
 }
 
 .curr-plan th {
-  padding: 0.6rem 0.75rem;
+  @apply text-center;
 }
 
 /* Увеличиваем расстояние между ячейками для лучшей читаемости */
