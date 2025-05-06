@@ -118,6 +118,10 @@
     --chart-1: 246 60% 60%;
     --chart-2: 180 70% 50%;
     --chart-3: 330 70% 60%;
+    
+    /* Academic calendar variables */
+    --month-even: #1e293b; /* slate-800 */
+    --month-odd: #0f172a; /* slate-900 */
     --chart-4: 60 70% 55%;
     --chart-5: 280 70% 60%;
 
