@@ -175,6 +175,10 @@ const SubjectRow: React.FC<{
           onChange={(e) => {
             // Для экзамена, обычно используется первый семестр по умолчанию
             const semesterIndex = 0; // Используем первый семестр по умолчанию
+            
+            // Немедленно обновляем отображаемое значение в выпадающем списке
+            e.target.value = e.target.value;
+            
             onControlTypeChange(node.id, e.target.value, semesterIndex);
           }}
         >
@@ -209,6 +213,9 @@ const SubjectRow: React.FC<{
           onChange={(e) => {
             // Получаем новое значение (с поддержкой дробных чисел)
             const newValue = parseFloat(e.target.value) || 0;
+            
+            // Немедленно обновляем отображаемое значение в поле input
+            e.target.value = newValue.toString();
             
             // Используем обработчик из props
             onCreditUnitsChange(node.id, newValue);
@@ -260,6 +267,10 @@ const SubjectRow: React.FC<{
               onChange={(e) => {
                 // Преобразуем значение в число
                 const numValue = parseInt(e.target.value) || 0;
+                
+                // Немедленно обновляем отображаемое значение в поле input
+                // Используем прямую модификацию DOM для моментального отображения
+                e.target.value = numValue.toString();
                 
                 if (activity.key === 'total') {
                   onValueChange(node.id, semesterIndex, numValue);
@@ -774,7 +785,7 @@ export const CurriculumPlanTable = React.forwardRef<
   // Обработчик изменения зачетных единиц
   const handleCreditUnitsChange = useCallback((nodeId: string, value: number) => {
     setPlanData(prevData => {
-      return prevData.map(node => {
+      const newData = prevData.map(node => {
         if (node.id === nodeId && node.type === 'subject') {
           return {
             ...node,
@@ -783,16 +794,21 @@ export const CurriculumPlanTable = React.forwardRef<
         }
         return node;
       });
+      
+      // Немедленно сохраняем изменения, без задержки
+      if (onPlanChange) {
+        console.log('[CurriculumPlanTable] Быстрое сохранение зачетных единиц');
+        setTimeout(() => onPlanChange(newData), 0);
+      }
+      
+      return newData;
     });
     
     // Устанавливаем флаг "грязных данных"
     if (onDirtyChange) {
       onDirtyChange(true);
     }
-    
-    // Запускаем таймер автосохранения
-    scheduleSave();
-  }, [onDirtyChange]);
+  }, [onPlanChange, onDirtyChange]);
 
   // Обработчик изменения типа контроля (экзамен, зачет и т.д.)
   const handleControlTypeChange = useCallback((
@@ -801,7 +817,7 @@ export const CurriculumPlanTable = React.forwardRef<
     semesterIndex: number
   ) => {
     setPlanData(prevData => {
-      return prevData.map(node => {
+      const newData = prevData.map(node => {
         if (node.id === nodeId && node.type === 'subject') {
           return {
             ...node,
@@ -811,16 +827,21 @@ export const CurriculumPlanTable = React.forwardRef<
         }
         return node;
       });
+      
+      // Немедленно сохраняем изменения, без задержки
+      if (onPlanChange) {
+        console.log('[CurriculumPlanTable] Быстрое сохранение типа контроля');
+        setTimeout(() => onPlanChange(newData), 0);
+      }
+      
+      return newData;
     });
     
     // Устанавливаем флаг "грязных данных"
     if (onDirtyChange) {
       onDirtyChange(true);
     }
-    
-    // Запускаем таймер автосохранения
-    scheduleSave();
-  }, [onDirtyChange]);
+  }, [onPlanChange, onDirtyChange]);
 
   // Обработчик переименования узла
   const handleRenameNode = useCallback((nodeId: string) => {
