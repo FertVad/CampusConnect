@@ -64,6 +64,7 @@ const SubjectRow: React.FC<{
   isActive?: boolean;
   isSelected?: boolean; // Флаг для множественного выделения
   depth: number;
+  rowBgClass?: string; // Класс для чередования фона строк
   isMultiSelectMode?: boolean; // Режим множественного выбора
   onValueChange: (id: string, semesterIndex: number, value: number, activityType?: keyof ActivityHours) => void;
   onControlTypeChange: (id: string, controlType: 'exam' | 'credit' | 'differentiated_credit' | 'coursework', index: number) => void;
@@ -78,6 +79,7 @@ const SubjectRow: React.FC<{
   isActive, 
   isSelected, 
   depth, 
+  rowBgClass = '',
   isMultiSelectMode, 
   onValueChange, 
   onControlTypeChange,
@@ -278,6 +280,7 @@ const GroupRow: React.FC<{
   hasChildren: boolean;
   isSection: boolean;
   depth: number;
+  rowBgClass?: string; // Класс для чередования фона строк
   hasError?: boolean; // Флаг ошибки (например, пустая группа)
   isMultiSelectMode?: boolean; // Режим множественного выбора
   onToggleCollapse: (id: string) => void;
@@ -293,6 +296,7 @@ const GroupRow: React.FC<{
   hasChildren, 
   isSection, 
   depth, 
+  rowBgClass = '',
   hasError,
   isMultiSelectMode,
   onToggleCollapse, 
@@ -1657,7 +1661,7 @@ export const CurriculumPlanTable = React.forwardRef<{ forceUpdate: () => void },
         onDragEnd={handleDragEnd}
         modifiers={[]}
       >
-        <div className="overflow-x-auto border rounded-md curr-plan plan-wrapper max-h-[70vh]">
+        <div className="overflow-x-auto overflow-y-auto border rounded-md curr-plan plan-wrapper max-h-[80vh]">
           <table className="w-full table-fixed border-collapse select-none text-sm">
             <thead className="sticky top-0 z-20">
               {/* Первый уровень заголовка: Дисциплины и курсы */}
@@ -1720,7 +1724,7 @@ export const CurriculumPlanTable = React.forwardRef<{ forceUpdate: () => void },
                     return (
                       <th 
                         key={`semester-${semesterNum}`}
-                        className="sticky top-[calc(1rem+1px)] z-20 px-2 py-1 text-center border-l border-white/20 font-semibold text-sm whitespace-nowrap"
+                        className="sticky top-[calc(1rem+1px)] z-20 px-3 py-2 text-center border-l border-white/20 font-semibold text-sm"
                         colSpan={4} // 4 колонки типов занятий для каждого семестра
                         title={`Семестр ${semesterNum} (${weeksCount} недель)`}
                       >
@@ -1760,9 +1764,11 @@ export const CurriculumPlanTable = React.forwardRef<{ forceUpdate: () => void },
             </thead>
             <tbody>
               <SortableContext items={sortedIds} strategy={verticalListSortingStrategy}>
-                {flattenedData.map(node => {
+                {flattenedData.map((node, index) => {
                   // Проверяем, есть ли у узла дочерние элементы
                   const hasChildren = planData.some(n => n.parentId === node.id);
+                  // Чередование фоновых цветов строк (четные/нечетные)
+                  const rowBgClass = index % 2 === 0 ? 'bg-slate-900/30' : 'bg-slate-900/50';
                   
                   if (node.type === 'subject') {
                     return (
@@ -1774,6 +1780,7 @@ export const CurriculumPlanTable = React.forwardRef<{ forceUpdate: () => void },
                         isSelected={selectedNodes.has(node.id)}
                         isMultiSelectMode={isMultiSelectMode}
                         depth={node.depth || 0}
+                        rowBgClass={rowBgClass}
                         onValueChange={handleValueChange}
                         onControlTypeChange={handleControlTypeChange}
                         onTotalHoursChange={handleTotalHoursChange}
@@ -1795,6 +1802,7 @@ export const CurriculumPlanTable = React.forwardRef<{ forceUpdate: () => void },
                         hasChildren={hasChildren}
                         isSection={node.type === 'section'}
                         depth={node.depth || 0}
+                        rowBgClass={rowBgClass}
                         hasError={node.type === 'group' && nodesWithErrors.includes(node.id)}
                         onToggleCollapse={handleToggleCollapse}
                         onAddChild={(parentId, type) => handleAddNode(type, parentId)}
