@@ -83,11 +83,7 @@ export default function GraphTab({
     return newData;
   }, [initialDataHash]);
   
-  // Отслеживаем изменения лет обучения
-  useEffect(() => {
-    // Реагируем на изменение лет обучения
-  }, [effectiveYearsOfStudy]);
-  
+
   // Создаем массив курсов в зависимости от effectiveCourseCount (годы + хвостовой курс, если есть месяцы)
   const courses = useMemo(() => {
     const result = [];

@@ -40,11 +40,6 @@ export const SummaryTab: React.FC<SummaryTabProps> = ({
   // Создаем локальную копию данных календаря
   const [localData, setLocalData] = useState<Record<string, string>>({});
   
-  // Эффект для отслеживания изменений yearsOfStudy и monthsOfStudy
-  useEffect(() => {
-    // Отслеживаем изменения параметров
-  }, [effectiveYearsOfStudy, effectiveMonthsOfStudy, actualCourseCount]);
-  
   // Обновляем локальные данные при изменении calendarData или параметров
   useEffect(() => {
     // Создаем глубокую копию данных
