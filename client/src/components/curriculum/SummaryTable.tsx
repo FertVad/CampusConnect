@@ -6,14 +6,14 @@ export const SummaryTable: React.FC<{ summary: SummaryRow[]; courses: number }> 
   // Проверяем, чтобы summary всегда был массивом
   const data = Array.isArray(summary) ? summary : [];
   
-  // Используем эффект для логирования при изменении данных
+  // Отслеживаем изменения данных
   useEffect(() => {
-    console.log('[SummaryTable] Received summary data:', summary);
+    // Данные сводной таблицы обновились
   }, [summary]);
   
-  // Логирование при изменении количества курсов
+  // Отслеживаем изменение количества курсов
   useEffect(() => {
-    console.log('[SummaryTable] Courses count changed:', courses);
+    // Количество курсов изменилось
   }, [courses]);
   
   // Рассчитываем количество недель для каждого семестра на каждом курсе

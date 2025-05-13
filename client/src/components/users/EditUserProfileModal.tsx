@@ -122,10 +122,6 @@ const EditUserProfileModal: React.FC<EditUserProfileModalProps> = ({
 
   // Обработчик отправки формы
   const onSubmit = async (data: FormData) => {
-    // Логируем данные формы для отладки
-    console.log('📝 Начинаем обновление профиля пользователя:', user.id);
-    console.log('📋 Данные формы:', JSON.stringify(data, null, 2));
-    
     try {
       // Формируем данные для отправки в зависимости от роли
       // Удаляем проблемные или нерелевантные поля из данных, отправляемых на сервер
@@ -138,15 +134,12 @@ const EditUserProfileModal: React.FC<EditUserProfileModalProps> = ({
       
       // Добавляем только нужные поля в зависимости от роли
       if (data.phone) formData.phone = data.phone;
-      
-      console.log('🔨 Подготовленные базовые данные для отправки:', formData);
 
       // Добавим предотвращение кеширования
       const cacheBuster = `?_t=${Date.now()}`;
       const userUpdateUrlWithCache = `/api/users/${user.id}${cacheBuster}`;
       
       // Отправляем запрос на обновление профиля
-      console.log('📤 Отправка запроса на:', userUpdateUrlWithCache);
       const response = await apiRequest('PUT', userUpdateUrlWithCache, formData);
       
       if (!response.ok) {
@@ -154,7 +147,6 @@ const EditUserProfileModal: React.FC<EditUserProfileModalProps> = ({
         try {
           // Проверяем тип содержимого ответа
           const contentType = response.headers.get('content-type');
-          console.log(`📋 Error response content type: ${contentType}`);
           
           if (contentType && contentType.includes('application/json')) {
             const errorData = await response.json();
@@ -166,27 +158,20 @@ const EditUserProfileModal: React.FC<EditUserProfileModalProps> = ({
             const errorText = await response.text();
             
             if (errorText.includes('<!DOCTYPE html>')) {
-              console.error('⚠️ Получен HTML вместо JSON, возможно проблема с аутентификацией');
               errorMessage = 'Ошибка авторизации. Пожалуйста, войдите снова';
             } else {
               errorMessage = response.statusText || errorMessage;
-              console.error('Error response:', response.status, errorText.substring(0, 100));
             }
           }
         } catch (e) {
           // Если не удалось распарсить ответ, используем statusText
           errorMessage = response.statusText || errorMessage;
-          console.error('Error parsing error response:', response.status, response.statusText, e);
         }
         throw new Error(errorMessage);
-      } else {
-        console.log('✅ Базовые данные успешно обновлены - получен статус:', response.status);
       }
 
       // Если роль изменилась, отправляем дополнительный запрос для обновления роли
       if (canChangeRole && data.role !== user.role) {
-        console.log(`🔄 Обновление роли пользователя с ${user.role} на ${data.role}`);
-        
         // Добавляем cache buster
         const roleCacheBuster = `?_t=${Date.now()}`;
         const roleUrl = `/api/users/${user.id}/role${roleCacheBuster}`;
@@ -200,7 +185,6 @@ const EditUserProfileModal: React.FC<EditUserProfileModalProps> = ({
           try {
             // Проверяем тип содержимого ответа
             const contentType = roleResponse.headers.get('content-type');
-            console.log(`📋 Role update error response content type: ${contentType}`);
             
             if (contentType && contentType.includes('application/json')) {
               const errorData = await roleResponse.json();
@@ -211,20 +195,15 @@ const EditUserProfileModal: React.FC<EditUserProfileModalProps> = ({
               // Для не-JSON ответов
               const errorText = await roleResponse.text();
               if (errorText.includes('<!DOCTYPE html>')) {
-                console.error('⚠️ Получен HTML вместо JSON при обновлении роли');
                 errorMessage = 'Ошибка авторизации при обновлении роли';
               } else {
                 errorMessage = roleResponse.statusText || errorMessage;
-                console.error('Role update error response:', roleResponse.status, errorText.substring(0, 100));
               }
             }
           } catch (e) {
             errorMessage = roleResponse.statusText || errorMessage;
-            console.error('Error parsing role update error:', roleResponse.status, roleResponse.statusText, e);
           }
           throw new Error(errorMessage);
-        } else {
-          console.log('✅ Роль пользователя успешно обновлена');
         }
       }
 
@@ -238,12 +217,7 @@ const EditUserProfileModal: React.FC<EditUserProfileModalProps> = ({
 
         const studentResponse = await apiRequest('PUT', `/api/students/${user.id}`, studentData);
         if (!studentResponse.ok) {
-          try {
-            const errorText = await studentResponse.text();
-            console.warn('Failed to update student details:', studentResponse.status, errorText);
-          } catch (e) {
-            console.warn('Failed to update student details, but user was updated');
-          }
+          // Обработка ошибки обновления данных студента, но продолжаем работу
         }
       }
       // Для преподавателя
@@ -254,12 +228,7 @@ const EditUserProfileModal: React.FC<EditUserProfileModalProps> = ({
 
         const teacherResponse = await apiRequest('PUT', `/api/teachers/${user.id}`, teacherData);
         if (!teacherResponse.ok) {
-          try {
-            const errorText = await teacherResponse.text();
-            console.warn('Failed to update teacher details:', teacherResponse.status, errorText);
-          } catch (e) {
-            console.warn('Failed to update teacher details, but user was updated');
-          }
+          // Обработка ошибки обновления данных преподавателя, но продолжаем работу
         }
       }
       // Для админа или директора
@@ -272,16 +241,9 @@ const EditUserProfileModal: React.FC<EditUserProfileModalProps> = ({
 
         const adminResponse = await apiRequest('PUT', `/api/admins/${user.id}`, adminData);
         if (!adminResponse.ok) {
-          try {
-            const errorText = await adminResponse.text();
-            console.warn('Failed to update admin details:', adminResponse.status, errorText);
-          } catch (e) {
-            console.warn('Failed to update admin details, but user was updated');
-          }
+          // Обработка ошибки обновления данных администратора, но продолжаем работу
         }
       }
-
-      console.log('🔄 Обновление данных после редактирования...');
 
       try {
         // Шаг 1: Инвалидируем все запросы, связанные с пользователями
@@ -318,10 +280,8 @@ const EditUserProfileModal: React.FC<EditUserProfileModalProps> = ({
         await queryClient.refetchQueries({ 
           queryKey: ['/api/users', user.id, 'tasks']
         });
-        
-        console.log('✅ Данные успешно обновлены');
       } catch (cacheError) {
-        console.error('❌ Ошибка при обновлении кеша:', cacheError);
+        // Обработка ошибки обновления кеша
       }
       
       // Показываем уведомление об успехе
@@ -334,7 +294,6 @@ const EditUserProfileModal: React.FC<EditUserProfileModalProps> = ({
       // Закрываем модальное окно
       onClose();
     } catch (error) {
-      console.error('Error updating profile:', error);
       // Показываем уведомление об ошибке
       toast({
         title: t('errors.title', 'Ошибка'),

@@ -21,8 +21,6 @@ export const SummaryTab: React.FC<SummaryTabProps> = ({
   effectiveCourseCount,
   updateCounter = 0
 }) => {
-  console.log('[SummaryTab] Render with data:', calendarData, 'years:', yearsOfStudy, 'months:', monthsOfStudy, 'updateCounter:', updateCounter);
-  
   // Получаем значения из глобального хранилища
   const { 
     yearsOfStudy: storeYearsOfStudy, 
@@ -44,18 +42,11 @@ export const SummaryTab: React.FC<SummaryTabProps> = ({
   
   // Эффект для отслеживания изменений yearsOfStudy и monthsOfStudy
   useEffect(() => {
-    console.log(`[SummaryTab] Параметры изменились: ${effectiveYearsOfStudy} лет, ${effectiveMonthsOfStudy} мес., ${actualCourseCount} курсов`);
+    // Отслеживаем изменения параметров
   }, [effectiveYearsOfStudy, effectiveMonthsOfStudy, actualCourseCount]);
   
   // Обновляем локальные данные при изменении calendarData или параметров
   useEffect(() => {
-    console.log('[SummaryTab] Data changed:', { 
-      dataKeys: Object.keys(calendarData || {}).length,
-      years: effectiveYearsOfStudy,
-      months: effectiveMonthsOfStudy,
-      courses: actualCourseCount,
-      updateCounter 
-    });
     // Создаем глубокую копию данных
     const dataCopy = JSON.parse(JSON.stringify(calendarData || {}));
     setLocalData(dataCopy);
@@ -63,9 +54,7 @@ export const SummaryTab: React.FC<SummaryTabProps> = ({
   
   // Вычисляем итоговые данные на основе полученных данных
   const summary = useMemo(() => {
-    console.log('[SummaryTab] Building summary with data:', localData);
     if (Object.keys(localData).length === 0) {
-      console.log('[SummaryTab] No data for summary');
       return [];
     }
     
