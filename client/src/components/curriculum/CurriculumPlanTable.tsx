@@ -703,8 +703,6 @@ export const CurriculumPlanTable = React.forwardRef<
     value: number, 
     activityType: keyof ActivityHours = 'total'
   ) => {
-    console.log(`Изменяем значение: узел ${nodeId}, семестр ${semesterIndex}, значение ${value}, тип ${activityType}`);
-    
     // Обновляем состояние и получаем новые данные
     setPlanData(prevData => {
       const newData = prevData.map(node => {
@@ -778,7 +776,6 @@ export const CurriculumPlanTable = React.forwardRef<
 
       // Сразу же вызываем коллбэк с обновленными данными
       if (onPlanChange) {
-        console.log('[CurriculumPlanTable] Моментальное обновление данных');
         // Используем setTimeout с нулевой задержкой, чтобы вызов произошел после обновления состояния
         setTimeout(() => onPlanChange(newData), 0);
       }
@@ -807,7 +804,6 @@ export const CurriculumPlanTable = React.forwardRef<
       
       // Немедленно сохраняем изменения, без задержки
       if (onPlanChange) {
-        console.log('[CurriculumPlanTable] Быстрое сохранение зачетных единиц');
         setTimeout(() => onPlanChange(newData), 0);
       }
       
@@ -840,7 +836,6 @@ export const CurriculumPlanTable = React.forwardRef<
       
       // Немедленно сохраняем изменения, без задержки
       if (onPlanChange) {
-        console.log('[CurriculumPlanTable] Быстрое сохранение типа контроля');
         setTimeout(() => onPlanChange(newData), 0);
       }
       
@@ -935,7 +930,7 @@ export const CurriculumPlanTable = React.forwardRef<
         }
         
         if (isDescendant) {
-          console.log('[CurriculumPlanTable] Cannot move a node to its own descendant');
+          // Нельзя перемещать узел в его собственный дочерний элемент
           setActiveId(null);
           setActiveNode(null);
           isDraggingOperation.current = false;
