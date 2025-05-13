@@ -152,12 +152,8 @@ export function AcademicCalendarTable({
   // Убедимся, что у нас есть числовой ID для плана
   const effectivePlanId = planId || urlPlanId || '';
   
-  // Добавим развернутое логирование для отслеживания планов
-  console.log('[AcademicCalendarTable] Effective Plan ID:', effectivePlanId);
-  
   // Блокируем автосохранение, если нет действительного planId
   const isValidPlanId = !!effectivePlanId && effectivePlanId !== '' && !isNaN(parseInt(effectivePlanId));
-  console.log('[AcademicCalendarTable] Is Valid Plan ID:', isValidPlanId);
   
   // Создаем объект с именованным ключом planId
   const dataToSave = { 
@@ -174,7 +170,7 @@ export function AcademicCalendarTable({
     // Используем флаг паузы из пропсов для приостановки автосохранения
     paused: autosavePaused,
     onSuccess: (data) => {
-      console.log('[AcademicCalendarTable] Данные автоматически сохранены', data);
+      // Данные успешно сохранены
     },
     onError: (error) => {
       console.error('[AcademicCalendarTable] Ошибка автосохранения:', error.message);
@@ -306,8 +302,6 @@ export function AcademicCalendarTable({
       const cellKey = getCellKey(selectedWeek.courseId, selectedWeek.weekNumber);
       newData[cellKey] = activity;
     }
-    
-    console.log('Обновляем данные таблицы:', newData);
     
     // Обновляем данные через нашу новую функцию
     updateTableData(newData);
@@ -443,7 +437,6 @@ export function AcademicCalendarTable({
     // Получаем недели для первого курса, которые будут использоваться для отображения в таблице
     // Применяем нашу обновленную функцию, которая учитывает переменное количество недель в году
     const firstCourseWeeks = buildAcademicWeeks(weeks[0].startDate);
-    console.log(`[AcademicCalendarTable] Сгенерировано ${firstCourseWeeks.length} недель для отображения`);
     
     // Группируем недели только по месяцам и сортируем, чтобы начинать с сентября
     const monthGroups = useMemo(() => {
@@ -472,7 +465,6 @@ export function AcademicCalendarTable({
         }
       });
       
-      console.log('[AcademicCalendarTable] Отсортированные месяцы:', Object.keys(sortedGroups));
       return sortedGroups;
     }, [firstCourseWeeks]);
     
