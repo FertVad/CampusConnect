@@ -145,7 +145,6 @@ const SubjectRow: React.FC<{
     e.preventDefault(); // Предотвращаем стандартное поведение
     // Вызываем функцию переименования напрямую
     if (node && node.id) {
-      console.log('Double click on subject:', node.id);
       // Находим rename-panel с нужным ID или просто вызываем функцию обработчика родителя
       onRename && onRename(node.id);
     }
@@ -594,8 +593,6 @@ export const CurriculumPlanTable = React.forwardRef<
 
   // Обработчик добавления нового узла
   const addNode = useCallback((type: 'section' | 'group' | 'subject', parentId: string | null = null) => {
-    console.log(`[CurriculumPlanTable] Adding new node of type: ${type}, parentId: ${parentId}`);
-    
     setPlanData(prevData => {
       // Находим максимальный orderIndex для новых элементов с тем же родителем
       const siblingNodes = prevData.filter(node => node.parentId === parentId);
@@ -604,11 +601,9 @@ export const CurriculumPlanTable = React.forwardRef<
         : -1;
       
       const newIndex = maxOrderIndex + 1;
-      console.log(`[CurriculumPlanTable] New node will have orderIndex: ${newIndex}`);
       
       // Создаем новый узел
       const newNode = createNewNode(type, parentId, newIndex);
-      console.log(`[CurriculumPlanTable] Created new node:`, newNode);
       
       // Добавляем его в план
       return [...prevData, newNode];

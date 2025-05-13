@@ -52,7 +52,6 @@ export default function GraphTab({
   const urlPlanId = urlParams.get('id') || '';
   // Используем planId из пропсов или fallback к URL
   const effectivePlanId = planId || urlPlanId;
-  console.log('[GraphTab] Plan ID from props:', planId, 'from URL:', urlPlanId, 'effective:', effectivePlanId);
   
   // Используем значение initialDataHash для сравнения изменений,
   // а не пересоздаем объект при каждом рендере
@@ -69,11 +68,8 @@ export default function GraphTab({
   const calendarData = useMemo(() => {
     // Если хеш данных не изменился, возвращаем ту же ссылку из ref
     if (lastInitialDataHashRef.current === initialDataHash) {
-      console.log('[GraphTab] Хеш данных не изменился, возвращаем существующий объект');
       return calendarDataRef.current;
     }
-    
-    console.log('[GraphTab] Хеш данных изменился, создаем новый объект');
     
     // Обновляем хеш для последующих сравнений
     lastInitialDataHashRef.current = initialDataHash;
@@ -87,13 +83,13 @@ export default function GraphTab({
     return newData;
   }, [initialDataHash]);
   
-  // Логирование для отладки
+  // Отслеживаем изменения лет обучения
   useEffect(() => {
-    console.log(`[GraphTab] effectiveYearsOfStudy изменилось: ${effectiveYearsOfStudy}`);
+    // Реагируем на изменение лет обучения
   }, [effectiveYearsOfStudy]);
+  
   // Создаем массив курсов в зависимости от effectiveCourseCount (годы + хвостовой курс, если есть месяцы)
   const courses = useMemo(() => {
-    console.log(`[GraphTab] Пересоздание списка курсов, полные годы: ${effectiveYearsOfStudy}, месяцы: ${effectiveMonthsOfStudy}`);
     const result = [];
     
     // Добавляем полные курсы по годам
@@ -163,15 +159,13 @@ export default function GraphTab({
   
   // Обработчик изменения данных календаря
   const handleCalendarChange = (data: CalendarData) => {
-    console.log('[GraphTab] Calendar data changed, cells count:', Object.keys(data).length);
-    
     try {
       // Проверяем, действительно ли изменились данные (для предотвращения циклов)
       const dataStr = JSON.stringify(data);
       const currentDataStr = JSON.stringify(calendarDataRef.current);
       
       if (dataStr === currentDataStr) {
-        console.log('[GraphTab] Данные календаря не изменились, пропускаем обновление');
+        // Данные календаря не изменились, пропускаем обновление
         return;
       }
       
@@ -186,11 +180,10 @@ export default function GraphTab({
       
       // Вызываем колбэк onChange, если он предоставлен
       if (onChange) {
-        console.log('[GraphTab] Calling parent onChange with updated data');
         onChange(newData);
       }
     } catch (error) {
-      console.error('[GraphTab] Error updating calendar data:', error);
+      // Обработка ошибок при обновлении данных календаря
     }
   };
   
