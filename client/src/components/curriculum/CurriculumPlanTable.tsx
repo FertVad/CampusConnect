@@ -944,7 +944,7 @@ export const CurriculumPlanTable = React.forwardRef<
           // Нельзя перетаскивать группу в дисциплину
           (activeNodeData.type === 'group' && overNodeData.type === 'subject')
         ) {
-          console.log('[CurriculumPlanTable] Invalid drag operation - type mismatch');
+          // Неверная операция перетаскивания - несоответствие типов
           setActiveId(null);
           setActiveNode(null);
           isDraggingOperation.current = false;
@@ -989,8 +989,6 @@ export const CurriculumPlanTable = React.forwardRef<
             // Вставляем после целевого элемента
             newOrderIndex = overNodeData.orderIndex ? overNodeData.orderIndex + 0.5 : 0.5;
           }
-          
-          console.log('[CurriculumPlanTable] New order index:', newOrderIndex);
           
           // Обновляем элемент
           return prevData.map(node => {
@@ -1118,8 +1116,6 @@ export const CurriculumPlanTable = React.forwardRef<
 
   // Общая функция для выбора узла (одинарного и множественного)
   const selectNode = useCallback((id: string, ctrlKey = false, shiftKey = false) => {
-    console.log(`Selecting node ${id}, ctrlKey: ${ctrlKey}, shiftKey: ${shiftKey}`);
-    
     // Если клик на строку с нажатым Shift
     if (shiftKey || shiftPressed) {
       // Предотвращаем скролл страницы
@@ -1153,8 +1149,6 @@ export const CurriculumPlanTable = React.forwardRef<
         // Определяем диапазон выделения
         const start = Math.min(lastSelectedIndex, currentIndex);
         const end = Math.max(lastSelectedIndex, currentIndex);
-        
-        console.log(`Selecting range from ${start} to ${end}`);
         
         // Создаем новое выделение
         const nodesToSelect = visibleNodes.slice(start, end + 1).map(n => n.id);
@@ -1220,7 +1214,6 @@ export const CurriculumPlanTable = React.forwardRef<
     saveTimeoutRef.current = window.setTimeout(() => {
       // Немедленно сохраняем изменения
       if (onPlanChange) {
-        console.log('[CurriculumPlanTable] Saving data immediately...');
         onPlanChange(planData);
       }
     }, 250); // Уменьшаем задержку до 250ms для ощущения моментального изменения
