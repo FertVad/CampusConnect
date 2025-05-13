@@ -82,18 +82,14 @@ export function AcademicCalendarTable({
     ? effectiveCourseCount 
     : getEffectiveCourseCount();
   
-  console.log('[AcademicCalendarTable] Годы:', effectiveYearsOfStudy, 'Месяцы:', effectiveMonthsOfStudy, 'Курсов:', actualCourseCount);
-  
+
   // Создаем ref для отслеживания предыдущего значения yearsOfStudy
   const prevYearsRef = useRef<number>(effectiveYearsOfStudy);
   
   // Эффект для очистки неиспользуемых данных курсов при уменьшении yearsOfStudy
   useEffect(() => {
-    console.log(`[AcademicCalendarTable] Используем ${effectiveYearsOfStudy} лет обучения из глобального хранилища`);
-    
     // Если количество лет уменьшилось, удаляем данные для лишних курсов
     if (prevYearsRef.current > effectiveYearsOfStudy && Object.keys(tableDataRef.current).length > 0) {
-      console.log(`[AcademicCalendarTable] Очистка данных для неиспользуемых курсов (${prevYearsRef.current} -> ${effectiveYearsOfStudy})`);
       
       // Копируем данные
       const newData = JSON.parse(JSON.stringify(tableDataRef.current));
@@ -115,7 +111,6 @@ export function AcademicCalendarTable({
       }
       
       if (keysRemoved > 0) {
-        console.log(`[AcademicCalendarTable] Удалено ${keysRemoved} записей для неиспользуемых курсов`);
         // Обновляем данные и принудительно сохраняем
         updateTableData(newData);
         setTimeout(() => forceSave(), 100);
@@ -137,7 +132,6 @@ export function AcademicCalendarTable({
   const tableData = useMemo(() => {
     // Проверяем, изменились ли данные с помощью хеша
     if (lastInitialDataHashRef.current !== initialDataHash) {
-      console.log('[AcademicCalendarTable] initialData hash changed, creating new tableData');
       
       // Сохраняем новый хеш
       lastInitialDataHashRef.current = initialDataHash;
@@ -149,7 +143,6 @@ export function AcademicCalendarTable({
     }
     
     // Возвращаем текущую ссылку, если хеш не изменился
-    console.log('[AcademicCalendarTable] initialData hash unchanged, reusing tableData');
     return tableDataRef.current;
   }, [initialDataHash]);
   
