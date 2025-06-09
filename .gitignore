@@ -14,3 +14,11 @@ yarn-error.log*
 # Переменные окружения
 .env
 .env.*.local
+# Игнорировать все CSV в uploads
+uploads/*.csv
+# Но не эти три
+!uploads/csvFile-1743659606930-678692034.csv
+!uploads/csvFile-1743659614090-136371932.csv
+!uploads/csvFile-1743659650224-895140697.csv
+# И не .gitkeep
+!uploads/.gitkeep
