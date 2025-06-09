@@ -3,14 +3,14 @@ import { Strategy as LocalStrategy } from "passport-local";
 import { Express } from "express";
 import session from "express-session";
 import bcrypt from "bcrypt";
-import { User as SelectUser } from "@shared/schema";
+import { User as SelectUser } from "../shared/schema";
 
 // Import storage module and IStorage interface
 import { storage, IStorage, setStorage, getStorage, DatabaseStorage } from "./storage";
 
 declare global {
   namespace Express {
-    interface User extends SelectUser {}
+    interface User extends SelectUser { }
   }
 }
 
@@ -45,16 +45,16 @@ export async function initializeDatabase(): Promise<boolean> {
       // Создаем хранилище базы данных
       console.log("Creating DatabaseStorage instance...");
       const dbStorage = new DatabaseStorage();
-      
+
       // Обновляем хранилище через сеттер
       setStorage(dbStorage);
-      
+
       console.log("Database migration completed successfully");
-      
+
       // Проверяем наличие пользователя-администратора
       console.log("Starting database seeding...");
       const adminUsers = await dbStorage.getAllAdminUsers();
-      
+
       if (adminUsers.length === 0) {
         console.log("No admin user found, creating one...");
         // Создаем admin пользователя, если его нет
@@ -70,7 +70,7 @@ export async function initializeDatabase(): Promise<boolean> {
       } else {
         console.log("Admin user already exists, checking for test users...");
       }
-      
+
       console.log("Database connection successful");
       return true;
     } catch (err) {
@@ -96,7 +96,7 @@ export function setupAuth(app: Express) {
     name: 'eduportal.sid', // Используем уникальное имя куки
     cookie: {
       maxAge: 14 * 24 * 60 * 60 * 1000, // 14 дней
-      httpOnly: true, 
+      httpOnly: true,
       secure: isProduction, // В разработке не требуем HTTPS
       sameSite: isProduction ? 'none' : 'lax', // В разработке используем lax для совместимости
       path: '/',
