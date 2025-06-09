@@ -3,44 +3,58 @@
 @tailwind utilities;
 
 @layer base {
+
   /* Theme transition class - applied during theme changes */
   .theme-transition * {
     transition: background-color 0.5s ease, color 0.5s ease, border-color 0.5s ease, fill 0.5s ease, box-shadow 0.5s ease !important;
   }
-  
+
   :root {
     /* Base transition for theme switching */
     --theme-transition: background-color 0.5s ease, color 0.5s ease, border-color 0.5s ease, fill 0.5s ease, box-shadow 0.5s ease;
-    
+
+    --radius: 12px;
     /* Light theme variables - updated with more muted colors */
-    --background: 60 6% 94%; /* #eeeeea even softer warm gray background */
-    --foreground: 215 25% 18%; /* #1e293b dark slate for text */
-    
-    --card: 220 14% 96%; /* #f0f2f5 slightly blue-tinted card background */
-    --card-foreground: 215 25% 27%; /* #334155 slate-700 for text */
-    
-    --popover: 220 14% 96%; /* #f0f2f5 for popover backgrounds */
-    --popover-foreground: 215 25% 27%; /* #334155 slate-700 for text */
-    
+    --background: 60 6% 94%;
+    /* #eeeeea even softer warm gray background */
+    --foreground: 215 25% 18%;
+    /* #1e293b dark slate for text */
+
+    --card: 220 14% 96%;
+    /* #f0f2f5 slightly blue-tinted card background */
+    --card-foreground: 215 25% 27%;
+    /* #334155 slate-700 for text */
+
+    --popover: 220 14% 96%;
+    /* #f0f2f5 for popover backgrounds */
+    --popover-foreground: 215 25% 27%;
+    /* #334155 slate-700 for text */
+
     --primary: 246 60% 60%;
     --primary-foreground: 0 0% 100%;
-    
-    --secondary: 210 20% 96%; /* #f1f5f9 light gray */
+
+    --secondary: 210 20% 96%;
+    /* #f1f5f9 light gray */
     --secondary-foreground: 215 25% 27%;
-    
-    --muted: 210 20% 96%; /* #f1f5f9 light gray */
-    --muted-foreground: 215 22% 45%; /* Softer muted text */
-    
-    --accent: 210 20% 96%; /* #f1f5f9 light gray */
+
+    --muted: 210 20% 96%;
+    /* #f1f5f9 light gray */
+    --muted-foreground: 215 22% 45%;
+    /* Softer muted text */
+
+    --accent: 210 20% 96%;
+    /* #f1f5f9 light gray */
     --accent-foreground: 215 25% 27%;
-    
+
     --destructive: 0 70% 50%;
     --destructive-foreground: 0 0% 100%;
-    
-    --border: 220 15% 90%; /* #e5e7eb gray-200 for borders */
-    --input: 220 15% 90%; /* #e5e7eb gray-200 for input borders */
+
+    --border: 220 15% 90%;
+    /* #e5e7eb gray-200 for borders */
+    --input: 220 15% 90%;
+    /* #e5e7eb gray-200 for input borders */
     --ring: 246 60% 60%;
-    
+
     /* Keeping chart colors consistent */
     --chart-1: 246 60% 50%;
     --chart-2: 180 70% 40%;
@@ -48,13 +62,18 @@
     --chart-4: 60 70% 45%;
     --chart-5: 280 70% 50%;
 
-    --sidebar-background: 210 20% 98%; /* Slightly darker than main bg */
-    --sidebar-foreground: 215 25% 27%; /* #334155 slate-700 for text */
+    --sidebar-background: 210 20% 98%;
+    /* Slightly darker than main bg */
+    --sidebar-foreground: 215 25% 27%;
+    /* #334155 slate-700 for text */
     --sidebar-primary: 246 60% 60%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 246 10% 97%; /* Lighter accent */
-    --sidebar-accent-foreground: 215 25% 27%; /* #334155 slate-700 for text */
-    --sidebar-border: 220 15% 92%; /* Subtle border */
+    --sidebar-accent: 246 10% 97%;
+    /* Lighter accent */
+    --sidebar-accent-foreground: 215 25% 27%;
+    /* #334155 slate-700 for text */
+    --sidebar-border: 220 15% 92%;
+    /* Subtle border */
     --sidebar-ring: 246 60% 60%;
   }
 
@@ -81,47 +100,50 @@
   }
 
   /* Force momentum scrolling for Safari */
-  body, .scrollable-content {
+  body,
+  .scrollable-content {
     -webkit-overflow-scrolling: touch;
   }
 
   .dark {
     --background: 240 10% 10%;
     --foreground: 0 0% 90%;
-    
+
     --card: 240 10% 12%;
     --card-foreground: 0 0% 90%;
-    --card-hover: rgba(255,255,255,0.06);
-    
+    --card-hover: rgba(255, 255, 255, 0.06);
+
     --popover: 240 10% 12%;
     --popover-foreground: 0 0% 90%;
-    
+
     --primary: 246 60% 60%;
     --primary-foreground: 0 0% 100%;
-    
+
     --secondary: 240 5% 15%;
     --secondary-foreground: 0 0% 90%;
-    
+
     --muted: 240 5% 20%;
     --muted-foreground: 240 5% 65%;
-    
+
     --accent: 240 5% 15%;
     --accent-foreground: 0 0% 90%;
-    
+
     --destructive: 0 70% 50%;
     --destructive-foreground: 0 0% 100%;
-    
+
     --border: 240 5% 18%;
     --input: 240 5% 18%;
     --ring: 240 5% 65%;
-    
+
     --chart-1: 246 60% 60%;
     --chart-2: 180 70% 50%;
     --chart-3: 330 70% 60%;
-    
+
     /* Academic calendar variables */
-    --month-even: #1e293b; /* slate-800 */
-    --month-odd: #0f172a; /* slate-900 */
+    --month-even: #1e293b;
+    /* slate-800 */
+    --month-odd: #0f172a;
+    /* slate-900 */
     --chart-4: 60 70% 55%;
     --chart-5: 280 70% 60%;
 
@@ -140,7 +162,7 @@
 .glass {
   /* Base style - works for both light and dark modes */
   @apply backdrop-blur-md border transition-colors;
-  
+
   /* Multiple backdrop filters for compatibility */
   -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
@@ -149,8 +171,8 @@
 /* Dark mode glass */
 .dark .glass {
   @apply bg-white/10 border-white/10;
-  background-color: rgba(30, 30, 35, 0.75); 
-  
+  background-color: rgba(30, 30, 35, 0.75);
+
   @supports not ((-webkit-backdrop-filter: blur(12px)) or (backdrop-filter: blur(12px))) {
     background-color: rgba(30, 30, 35, 0.9);
   }
@@ -161,7 +183,7 @@
   @apply bg-black/5 border-gray-200;
   background-color: rgba(250, 250, 250, 0.8);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  
+
   @supports not ((-webkit-backdrop-filter: blur(12px)) or (backdrop-filter: blur(12px))) {
     background-color: rgba(250, 250, 250, 0.95);
   }
@@ -261,6 +283,7 @@
 
 /* Safari-specific fixes */
 @supports (-webkit-touch-callout: none) {
+
   /* Fix for fixed position elements in Safari on iOS */
   .fixed {
     position: fixed;
@@ -268,7 +291,7 @@
     -webkit-transform: translateZ(0);
     transform: translateZ(0);
   }
-  
+
   /* Fix for grid gaps in Safari */
   .grid {
     display: grid;
@@ -276,7 +299,7 @@
     /* Safari specific gap fix */
     grid-gap: var(--grid-gap, 1rem);
   }
-  
+
   /* Fix for sticky positioning in Safari */
   .sticky {
     position: -webkit-sticky;
@@ -284,7 +307,7 @@
     top: 0;
     z-index: 10;
   }
-  
+
   /* Fix for Safari 100vh issue on iOS */
   .h-screen {
     height: 100vh;
@@ -297,23 +320,26 @@
     -webkit-flex-shrink: 0;
     flex-shrink: 0;
   }
-  
+
   /* Force hardware acceleration for Safari */
   .animate-gpu {
     -webkit-transform: translate3d(0, 0, 0);
     transform: translate3d(0, 0, 0);
-    will-change: transform; /* Hint to browsers about which properties will change */
-    backface-visibility: hidden; /* Further performance boost */
-    perspective: 1000; /* Fix for some Safari rendering issues */
+    will-change: transform;
+    /* Hint to browsers about which properties will change */
+    backface-visibility: hidden;
+    /* Further performance boost */
+    perspective: 1000;
+    /* Fix for some Safari rendering issues */
   }
-  
+
   /* Additional Safari fixes for black screen issue */
   body {
     /* Ensure proper content rendering in Safari */
     -webkit-text-size-adjust: 100%;
     -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
   }
-  
+
   /* Fix for Safari animation jankiness */
   * {
     animation-duration: 0.01ms !important;
@@ -325,12 +351,18 @@
 
 /* Safari-specific fixes outside media query */
 @media screen and (-webkit-min-device-pixel-ratio: 0) {
+
   /* Apply specifically to Safari */
-  _::-webkit-full-page-media, _:future, :root, .safari-only {
-    will-change: auto; /* Reset will-change to avoid memory issues */
-    transform: translateZ(0); /* Force hardware acceleration */
+  _::-webkit-full-page-media,
+  _:future,
+  :root,
+  .safari-only {
+    will-change: auto;
+    /* Reset will-change to avoid memory issues */
+    transform: translateZ(0);
+    /* Force hardware acceleration */
   }
-  
+
   /* Fix z-index stacking in Safari */
   .z-fix {
     isolation: isolate;
@@ -407,7 +439,7 @@
 
 .dark .card-hover {
   @apply hover:bg-opacity-60;
-  background-color: var(--card-hover, rgba(255,255,255,0.06));
+  background-color: var(--card-hover, rgba(255, 255, 255, 0.06));
 }
 
 /* Enhanced focus styles for form elements */
@@ -458,34 +490,59 @@
    ------------------------------------------------- */
 
 /* ─── переменные цвета месяцев ──────────────────── */
-:root{
-  --month-even:#f1f5f9;      /* slate-100 */
-  --month-odd :#e2e8f0;      /* slate-200 */
-  --violet-500:rgb(139 92 246);
+:root {
+  --month-even: #f1f5f9;
+  /* slate-100 */
+  --month-odd: #e2e8f0;
+  /* slate-200 */
+  --violet-500: rgb(139 92 246);
 }
-.dark{
-  --month-even:#1e293b;      /* slate-800 */
-  --month-odd :#334155;      /* slate-700 */
+
+.dark {
+  --month-even: #1e293b;
+  /* slate-800 */
+  --month-odd: #334155;
+  /* slate-700 */
 }
 
 /* ─── обёртка таблицы ───────────────────────────── */
-.calendar-wrapper{
-  overflow-x:auto;
-  overflow-y:hidden;
-  scroll-behavior:smooth;
+.calendar-wrapper {
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-behavior: smooth;
 }
 
 /* кастом-скролл */
-.calendar-wrapper::-webkit-scrollbar{height:8px}
-.calendar-wrapper::-webkit-scrollbar-track{background:transparent}
-.calendar-wrapper::-webkit-scrollbar-thumb{background:rgba(0,0,0,.25);border-radius:4px}
-.calendar-wrapper::-webkit-scrollbar-thumb:hover{background:rgba(0,0,0,.35)}
+.calendar-wrapper::-webkit-scrollbar {
+  height: 8px
+}
+
+.calendar-wrapper::-webkit-scrollbar-track {
+  background: transparent
+}
+
+.calendar-wrapper::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, .25);
+  border-radius: 4px
+}
+
+.calendar-wrapper::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, .35)
+}
 
 /* ─── ячейка недели ─────────────────────────────── */
-.week-cell{position:relative;overflow:visible !important}
+.week-cell {
+  position: relative;
+  overflow: visible !important
+}
 
-.week-cell[data-month-odd="0"]:not([style*="background"]){background:var(--month-even) !important}
-.week-cell[data-month-odd="1"]:not([style*="background"]){background:var(--month-odd)  !important}
+.week-cell[data-month-odd="0"]:not([style*="background"]) {
+  background: var(--month-even) !important
+}
+
+.week-cell[data-month-odd="1"]:not([style*="background"]) {
+  background: var(--month-odd) !important
+}
 
 /* неделя, пересекающая месяцы - класс для визуальной отметки */
 .week-cell.--split-month {
@@ -493,58 +550,67 @@
 }
 
 /* выделение */
-.week-cell.selected{
-  outline:2px solid var(--violet-500);
-  outline-offset:-2px;
-  border-radius:2px;
-  z-index:15;
+.week-cell.selected {
+  outline: 2px solid var(--violet-500);
+  outline-offset: -2px;
+  border-radius: 2px;
+  z-index: 15;
 }
-.week-cell.selected::before{
-  content:"";
-  position:absolute;inset:0;
-  background:rgba(139,92,246,.15);
-  border-radius:2px;
-  pointer-events:none;
+
+.week-cell.selected::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(139, 92, 246, .15);
+  border-radius: 2px;
+  pointer-events: none;
 }
 
 /* ─── dock-bar ───────────────────────────────────── */
 .calendar-dock-bar {
   position: fixed;
-  top: 140px; /* Фиксированное значение */
+  top: 140px;
+  /* Фиксированное значение */
   left: 50%;
   transform: translateX(-50%);
   min-width: 240px;
   max-width: 100%;
-  z-index: 999; /* Максимальный z-index */
-  
+  z-index: 999;
+  /* Максимальный z-index */
+
   display: flex;
   align-items: center;
   gap: 6px;
   padding: 8px 12px;
-  
-  background: rgba(17, 24, 39, 0.95); /* slate-900/95 */
+
+  background: rgba(17, 24, 39, 0.95);
+  /* slate-900/95 */
   color: white;
   backdrop-filter: blur(4px);
   border-radius: 4px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  
+
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.2s ease, transform 0.2s ease;
 }
+
 .calendar-dock-bar.is-visible {
   opacity: 1;
   pointer-events: auto;
 }
+
 .dark .calendar-dock-bar {
-  background: rgba(30, 41, 59, 0.95); /* slate-800/95 */
+  background: rgba(30, 41, 59, 0.95);
+  /* slate-800/95 */
 }
 
 /* ─── tooltip ───────────────────────────────────── */
 .academic-tooltip {
   z-index: 70 !important;
   max-width: 240px !important;
-  background: #0f172a !important; /* slate-900 */
+  background: #0f172a !important;
+  /* slate-900 */
   color: #fff !important;
   border-radius: 6px !important;
   padding: 8px 12px !important;
@@ -552,6 +618,7 @@
   font-size: 0.875rem !important;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
 }
+
 .dark .academic-tooltip {
   background: #fff !important;
   color: #0f172a !important;
@@ -560,14 +627,18 @@
 /* Стили для календаря - обновленные */
 
 :root {
-  --month-even: #f1f5f9;  /* slate-100 */
-  --month-odd: #e2e8f0;   /* slate-200 */
+  --month-even: #f1f5f9;
+  /* slate-100 */
+  --month-odd: #e2e8f0;
+  /* slate-200 */
   --violet-500: rgb(139, 92, 246);
 }
 
 .dark {
-  --month-even: #1e293b;  /* slate-800 */
-  --month-odd: #334155;   /* slate-700 */
+  --month-even: #1e293b;
+  /* slate-800 */
+  --month-odd: #334155;
+  /* slate-700 */
 }
 
 /* Base cell styles */
@@ -581,27 +652,42 @@
   outline: 2px solid var(--violet-500);
   outline-offset: -2px;
   z-index: 10 !important;
-  border-radius: 0.125rem; /* rounded-sm */
+  border-radius: 0.125rem;
+  /* rounded-sm */
 }
 
 /* modal body scroll */
-.dialog-body::-webkit-scrollbar{width:8px}
-.dialog-body::-webkit-scrollbar-thumb{background:rgba(100,116,139,.3);border-radius:4px}
-.dialog-body{scrollbar-width:thin}
+.dialog-body::-webkit-scrollbar {
+  width: 8px
+}
+
+.dialog-body::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, .3);
+  border-radius: 4px
+}
+
+.dialog-body {
+  scrollbar-width: thin
+}
 
 /* Стили для выбранных строк в таблице учебного плана */
 .curriculum-row-selected {
-  background-color: rgb(219 234 254) !important; /* Светло-синий фон bg-blue-100 */
-  border-left: 4px solid rgb(59 130 246) !important; /* Синяя полоса слева border-blue-500 */
+  background-color: rgb(219 234 254) !important;
+  /* Светло-синий фон bg-blue-100 */
+  border-left: 4px solid rgb(59 130 246) !important;
+  /* Синяя полоса слева border-blue-500 */
 }
 
 .dark .curriculum-row-selected {
-  background-color: rgb(30 58 138 / 0.7) !important; /* Темно-синий фон для темной темы bg-blue-900/70 */
-  border-left: 4px solid rgb(96 165 250) !important; /* Синяя полоса слева в темной теме border-blue-400 */
+  background-color: rgb(30 58 138 / 0.7) !important;
+  /* Темно-синий фон для темной темы bg-blue-900/70 */
+  border-left: 4px solid rgb(96 165 250) !important;
+  /* Синяя полоса слева в темной теме border-blue-400 */
 }
 
 /* Отменяем стандартное поведение Shift при прокрутке */
-html, body {
+html,
+body {
   scroll-behavior: smooth;
 }
 
@@ -646,21 +732,26 @@ input[type="number"] {
   transform: rotate(-90deg);
   transform-origin: bottom left;
   white-space: nowrap;
-  height: 80px; /* Высота для вертикального текста */
+  height: 80px;
+  /* Высота для вертикального текста */
 }
 
 /* Стили для строк таблицы учебного плана (предметов и групп) */
 .curr-plan tr {
-  border-bottom: 1px solid rgba(203, 213, 225, 0.7); /* slate-300/70 */
-  height: 42px; /* Фиксированная высота строк для лучшей читаемости */
+  border-bottom: 1px solid rgba(203, 213, 225, 0.7);
+  /* slate-300/70 */
+  height: 42px;
+  /* Фиксированная высота строк для лучшей читаемости */
 }
 
 .dark .curr-plan tr {
-  border-bottom: 1px solid rgba(15, 23, 42, 0.7); /* slate-900/70 */
+  border-bottom: 1px solid rgba(15, 23, 42, 0.7);
+  /* slate-900/70 */
 }
 
 .curr-plan tr:hover {
-  @apply bg-slate-700; /* Цвет при наведении согласно требованиям */
+  @apply bg-slate-700;
+  /* Цвет при наведении согласно требованиям */
 }
 
 /* Зебра по требованиям */
@@ -668,18 +759,21 @@ input[type="number"] {
   @apply bg-slate-950;
 }
 
-.curr-plan tbody tr:nth-child(even) { 
-  @apply bg-slate-900; 
+.curr-plan tbody tr:nth-child(even) {
+  @apply bg-slate-900;
 }
 
 /* Специальное форматирование для разделов и групп */
-.row-type-section, .row-type-group {
+.row-type-section,
+.row-type-group {
   @apply bg-slate-800 font-semibold;
 }
 
-.curr-plan td, .curr-plan th {
+.curr-plan td,
+.curr-plan th {
   @apply px-2 py-1 whitespace-nowrap overflow-hidden text-ellipsis;
-  border-right: 1px solid rgba(30, 41, 59, 0.4); /* Тонкие разделители для ячеек */
+  border-right: 1px solid rgba(30, 41, 59, 0.4);
+  /* Тонкие разделители для ячеек */
 }
 
 .curr-plan th {
@@ -687,7 +781,8 @@ input[type="number"] {
 }
 
 /* Увеличиваем расстояние между ячейками для лучшей читаемости */
-.curr-plan input, .curr-plan select {
+.curr-plan input,
+.curr-plan select {
   padding: 0.4rem 0.6rem;
   margin: 0.15rem 0;
   min-height: 30px;
@@ -731,14 +826,18 @@ input[type="number"] {
 
 /* Стиль для строки "Итого" в нижней части таблицы */
 tfoot {
-  @apply shadow-[0_-2px_4px_rgba(0,0,0,0.1)] dark:shadow-[0_-2px_4px_rgba(0,0,0,0.3)];
+  box-shadow: 0 -2px 4px rgba(0,0,0,0.1);
+}
+.dark tfoot {
+  box-shadow: 0 -2px 4px rgba(0,0,0,0.3);
 }
 
 .week-cell.selected::before {
   content: "";
   position: absolute;
   inset: 0;
-  background: rgba(139, 92, 246, 0.15); /* violet-500 @15% */
+  background: rgba(139, 92, 246, 0.15);
+  /* violet-500 @15% */
   border-radius: 4px;
   pointer-events: none;
   z-index: 1;
@@ -814,7 +913,8 @@ tfoot {
   right: 0;
   bottom: 0;
   width: 2px;
-  background: rgba(100, 116, 139, 0.15); /* slate-500/15 */
+  background: rgba(100, 116, 139, 0.15);
+  /* slate-500/15 */
   pointer-events: none;
 }
 
@@ -822,21 +922,22 @@ tfoot {
 
 /* Стили для учебного плана */
 .curr-plan input::-webkit-outer-spin-button,
-.curr-plan input::-webkit-inner-spin-button { 
-  -webkit-appearance: none; 
-  margin: 0; 
+.curr-plan input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
-.curr-plan input[type=number] { 
-  appearance: textfield; 
+
+.curr-plan input[type=number] {
+  appearance: textfield;
 }
 
 /* Стили для зебры в таблице учебного плана */
-.curr-plan tbody tr:nth-child(odd) { 
-  @apply bg-slate-100 dark:bg-slate-800; 
+.curr-plan tbody tr:nth-child(odd) {
+  @apply bg-slate-100 dark:bg-slate-800;
 }
 
-.curr-plan tbody tr:nth-child(even) { 
-  @apply bg-slate-50 dark:bg-slate-900; 
+.curr-plan tbody tr:nth-child(even) {
+  @apply bg-slate-50 dark:bg-slate-900;
 }
 
 /* Стили для разделов и групп */

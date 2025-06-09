@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
@@ -61,7 +62,7 @@ app.use((req, res, next) => {
   try {
     // Initialize the database before setting up routes
     log("Initializing database...");
-    
+
     try {
       // Попробуем инициализировать DatabaseStorage сразу
       const dbStorage = new DatabaseStorage();
@@ -72,7 +73,7 @@ app.use((req, res, next) => {
       log("Successfully initialized database storage");
       log("Database initialized successfully");
     } catch (error) {
-      log("Error initializing database storage:", error);
+      log("Error initializing database storage:", error instanceof Error ? error.message : String(error));
       log("Warning: Database initialization failed, falling back to in-memory storage");
       // Fallback на initializeDatabase(), который использует MemStorage
       const dbInitialized = await initializeDatabase();
@@ -109,7 +110,7 @@ app.use((req, res, next) => {
       }
 
       // Отправляем ответ с соответствующим статусом и сообщением об ошибке
-      res.status(status).json({ 
+      res.status(status).json({
         message,
         error: process.env.NODE_ENV === 'development' ? err.stack : undefined
       });
@@ -132,7 +133,7 @@ app.use((req, res, next) => {
     // ALWAYS serve the app on port 5000
     // this serves both the API and the client.
     // It is the only port that is not firewalled.
-    const port = 5000;
+    const port = 5050;
     server.listen({
       port,
       host: "0.0.0.0",

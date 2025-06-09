@@ -4,7 +4,7 @@ import App from "./App";
 import "./index.css";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "./lib/queryClient";
-import { Toaster } from "@/components/ui/toaster";
+import { Toaster } from "./components/ui/toaster";
 import { AuthProvider } from "@/hooks/use-auth";
 import { ThemeProvider } from "@/components/theme/theme-provider";
 
@@ -14,18 +14,18 @@ import "./i18n/i18n";
 // Wrap App in a special error boundary
 function AppWithErrorHandling() {
   const [error, setError] = useState<Error | null>(null);
-  
+
   // Reset error on retry
   const handleRetry = () => {
     setError(null);
     window.location.reload();
   };
-  
+
   // If we caught an error, show a simple error screen
   if (error) {
     // Import necessary i18n components at the top level
     const { t } = require('react-i18next');
-    
+
     return (
       <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-gray-50">
         <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-md">
@@ -46,7 +46,7 @@ function AppWithErrorHandling() {
       </div>
     );
   }
-  
+
   // Otherwise, try to render the app
   try {
     return (
@@ -73,24 +73,24 @@ function AppWithErrorHandling() {
 // This helps prevent issues in Safari where the DOM might not be ready
 function safelyInitializeApp() {
   console.log("App initialization started");
-  
+
   try {
     // Get the root element - we'll handle the null case safely
     const rootElement = document.getElementById("root");
-    
+
     // Debug: Display rendering location
     console.log("Rendering to element:", rootElement);
-    
+
     if (!rootElement) {
       throw new Error("Root element not found in DOM");
     }
 
     // Apply a class that will add Safari-specific optimizations
     rootElement.className += " safari-only animate-gpu";
-    
+
     // Create our React root and render the app
     const root = createRoot(rootElement);
-    
+
     // Define a rendering function we can use in a timeout
     const renderApp = () => {
       root.render(
@@ -99,14 +99,14 @@ function safelyInitializeApp() {
         </React.StrictMode>
       );
       console.log("App mounted successfully");
-      
+
       // Remove debug element after successful render
       const debugElement = document.getElementById('debug-message');
       if (debugElement && debugElement.parentNode) {
         debugElement.parentNode.removeChild(debugElement);
       }
     };
-    
+
     // Add a simple message directly to the body to confirm script execution
     const debugElement = document.createElement('div');
     debugElement.id = 'debug-message';
@@ -121,19 +121,19 @@ function safelyInitializeApp() {
     debugElement.style.borderRadius = '0 0 4px 0';
     debugElement.style.fontSize = '12px';
     document.body.appendChild(debugElement);
-    
+
     // Use a small timeout to ensure DOM is fully processed
     // This helps with Safari's rendering issues
     setTimeout(renderApp, 10);
-    
+
   } catch (err) {
     console.error("Failed to initialize app:", err);
-    
+
     // Try to use i18n translations even in critical error state
     let errorTitle = 'Critical Error';
     let errorMessage = 'The application failed to initialize. Please check your console for details.';
     let reloadText = 'Reload Application';
-    
+
     try {
       // Attempt to get translations if i18n is already initialized
       const i18n = require('i18next').default;
@@ -145,7 +145,7 @@ function safelyInitializeApp() {
     } catch (e) {
       console.error('Failed to load translations for error message:', e);
     }
-    
+
     // Create a fallback UI with inline styles for maximum compatibility
     const errorHtml = `
       <div style="display:flex;justify-content:center;align-items:center;height:100vh;flex-direction:column;padding:20px;text-align:center;background:#1a1a1a;color:#f0f0f0;">
@@ -159,11 +159,11 @@ function safelyInitializeApp() {
         </button>
       </div>
     `;
-    
+
     // Replace the body content without using innerHTML for better safety
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = errorHtml;
-    
+
     document.body.innerText = ''; // Clear existing content safely
     document.body.appendChild(tempDiv.firstElementChild || tempDiv);
   }

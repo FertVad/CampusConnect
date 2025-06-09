@@ -55,8 +55,8 @@ export default function CurriculumPlans() {
   });
 
   // Фильтрация учебных планов по уровню образования
-  const filteredPlans = activeTab === "all" 
-    ? curriculumPlans 
+  const filteredPlans = activeTab === "all"
+    ? curriculumPlans
     : curriculumPlans.filter((plan) => plan.educationLevel === activeTab);
 
   // Мутация для создания нового учебного плана
@@ -256,7 +256,7 @@ export default function CurriculumPlans() {
               {filteredPlans.map((plan: CurriculumPlan) => (
                 <Card key={plan.id} className="overflow-hidden relative group hover:shadow-sm transition-shadow duration-150">
                   {/* Кликабельная область карточки, кроме footer с кнопками */}
-                  <div 
+                  <div
                     className="cursor-pointer group-hover:bg-slate-100 dark:group-hover:bg-white/5 transition-colors duration-150"
                     onClick={() => navigate(`/curriculum-plans/${plan.id}/edit`)}
                   >
@@ -276,8 +276,8 @@ export default function CurriculumPlans() {
                       <div className="flex items-center justify-between text-sm text-muted-foreground">
                         <div className="flex items-center">
                           <Book className="h-4 w-4 mr-1" />
-                          <span>{plan.yearsOfStudy} {plan.yearsOfStudy === 1 ? "год" : 
-                                plan.yearsOfStudy < 5 ? "года" : "лет"}</span>
+                          <span>{plan.yearsOfStudy} {plan.yearsOfStudy === 1 ? "год" :
+                            plan.yearsOfStudy < 5 ? "года" : "лет"}</span>
                         </div>
                         <div>
                           Создан: {plan.createdAt ? new Date(plan.createdAt).toLocaleDateString() : '-'}
@@ -288,9 +288,9 @@ export default function CurriculumPlans() {
                   </div>
                   {/* Некликабельный footer с кнопками */}
                   <CardFooter className="pt-4 flex justify-between">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
+                    <Button
+                      variant="outline"
+                      size="sm"
                       onClick={(e) => {
                         e.stopPropagation(); // Предотвращаем всплытие события
                         navigate(`/curriculum-plans/${plan.id}/edit`);
@@ -299,9 +299,9 @@ export default function CurriculumPlans() {
                       <Edit className="h-4 w-4 mr-2" />
                       Редактировать
                     </Button>
-                    <Button 
-                      variant="destructive" 
-                      size="sm" 
+                    <Button
+                      variant="destructive"
+                      size="sm"
                       onClick={(e) => {
                         e.stopPropagation(); // Предотвращаем всплытие события
                         handleDeleteClick(plan);

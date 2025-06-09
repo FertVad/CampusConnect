@@ -17,6 +17,8 @@ interface CurriculumState {
   // Функция для установки данных календаря
   setCalendarData: (data: Record<string, string>) => void;
   // Получить эффективное количество курсов (годы + 1 при наличии месяцев)
+  plan: string | null;
+  setPlan: (plan: string) => void;
   getEffectiveCourseCount: () => number;
 }
 
@@ -37,6 +39,9 @@ export const useCurriculum = create<CurriculumState>((set, get) => ({
   // Функция для установки данных календаря
   setCalendarData: (data: Record<string, string>) => set({ calendarData: data }),
   // Получить эффективное количество курсов с учетом дополнительных месяцев
+  // NEW: единый учебный план (объект или строка-JSON)
+  plan: null as string | null,            // ← поле-хранилище
+  setPlan: (plan: string) => set({ plan }), // ← setter
   getEffectiveCourseCount: () => {
     const state = get();
     return state.yearsOfStudy + (state.monthsOfStudy > 0 ? 1 : 0);

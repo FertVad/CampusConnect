@@ -27,19 +27,19 @@ import { useTranslation } from 'react-i18next';
 const AdminDashboard = () => {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
-  
+
   // Get all users with refetch on window focus and interval
   const { data: users = [], isLoading: isLoadingUsers } = useQuery<User[]>({
     queryKey: ['/api/users'],
     refetchOnWindowFocus: true,
     refetchInterval: 30000, // Refresh every 30 seconds
   });
-  
+
   // Get all subjects
   const { data: subjects = [] } = useQuery<any[]>({
     queryKey: ['/api/subjects'],
   });
-  
+
   // Get pending requests
   const { data: requests = [] } = useQuery<Request[]>({
     queryKey: ['/api/requests'],
@@ -51,13 +51,13 @@ const AdminDashboard = () => {
     refetchOnWindowFocus: true,
     refetchInterval: 30000, // Refresh every 30 seconds
   });
-  
+
   // Calculate user statistics using useMemo for performance
   const userStats = useMemo(() => {
     const adminCount = users.filter(u => u.role === 'admin').length;
     const teacherCount = users.filter(u => u.role === 'teacher').length;
     const studentCount = users.filter(u => u.role === 'student').length;
-    
+
     return {
       total: users.length,
       adminCount,
@@ -65,10 +65,10 @@ const AdminDashboard = () => {
       studentCount
     };
   }, [users]);
-  
+
   // Count pending requests
   const pendingRequests = requests.filter(r => r.status === 'pending');
-  
+
   // Рассчитываем статистику задач
   const taskStats = useMemo(() => {
     const totalTasks = tasks.length;
@@ -76,10 +76,10 @@ const AdminDashboard = () => {
     const inProgressTasks = tasks.filter(t => t.status === 'in_progress').length;
     const completedTasks = tasks.filter(t => t.status === 'completed').length;
     const onHoldTasks = tasks.filter(t => t.status === 'on_hold').length;
-    
+
     // Расчет задач с высоким приоритетом
     const highPriorityTasks = tasks.filter(t => t.priority === 'high').length;
-    
+
     // Расчет просроченных задач (если дата выполнения прошла, а задача не выполнена)
     const overdueTasks = tasks.filter(t => {
       if (!t.dueDate) return false;
@@ -87,7 +87,7 @@ const AdminDashboard = () => {
       const dueDate = new Date(t.dueDate);
       return dueDate < new Date();
     }).length;
-    
+
     return {
       total: totalTasks,
       new: newTasks,
@@ -98,7 +98,7 @@ const AdminDashboard = () => {
       overdue: overdueTasks
     };
   }, [tasks]);
-  
+
   // Sort users by creation date (newest first)
   const sortedUsers = useMemo(() => {
     return [...users].sort((a, b) => {
@@ -108,13 +108,13 @@ const AdminDashboard = () => {
       return 0;
     });
   }, [users]);
-  
+
   // Get the 5 most recently added users
   const recentUsers = sortedUsers.slice(0, 5);
-  
+
   // Get role badge styles
   const getRoleBadgeStyles = (role: string) => {
-    switch(role) {
+    switch (role) {
       case 'admin':
         return 'bg-primary';
       case 'teacher':
@@ -125,10 +125,10 @@ const AdminDashboard = () => {
         return 'bg-neutral-500';
     }
   };
-  
+
   // Get role icon
   const getRoleIcon = (role: string) => {
-    switch(role) {
+    switch (role) {
       case 'admin':
         return <UserCircle className="h-6 w-6" />;
       case 'teacher':
@@ -139,7 +139,7 @@ const AdminDashboard = () => {
         return <Users className="h-6 w-6" />;
     }
   };
-  
+
   return (
     <div className="space-y-6">
       {/* Удаляем тестовый элемент, так как теперь есть глобальный топбар */}
@@ -149,35 +149,35 @@ const AdminDashboard = () => {
           title={t('users.roles.students')}
           value={userStats.studentCount.toString()}
           icon={<GraduationCap className="h-6 w-6" />}
-          iconBgColor="bg-accent bg-opacity-10"
-          iconColor="text-accent"
+          iconBgColor="bg-primary bg-opacity-10"
+          iconColor="text-white"
         />
-        
+
         <StatusCard
           title={t('users.roles.teachers')}
           value={userStats.teacherCount.toString()}
           icon={<Briefcase className="h-6 w-6" />}
-          iconBgColor="bg-secondary bg-opacity-10"
-          iconColor="text-secondary"
+          iconBgColor="bg-primary bg-opacity-10"
+          iconColor="text-white"
         />
-        
+
         <StatusCard
           title={t('task.total')}
           value={taskStats.total.toString()}
           icon={<ClipboardList className="h-6 w-6" />}
           iconBgColor="bg-primary bg-opacity-10"
-          iconColor="text-primary"
+          iconColor="text-white"
         />
-        
+
         <StatusCard
           title={t('task.completed')}
           value={taskStats.completed.toString()}
           icon={<CheckCircle className="h-6 w-6" />}
-          iconBgColor="bg-green-500 bg-opacity-10"
-          iconColor="text-green-500"
+          iconBgColor="bg-primary bg-opacity-10"
+          iconColor="text-white"
         />
       </div>
-      
+
       {/* Main Content */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main content (2/3 width) */}
@@ -210,27 +210,26 @@ const AdminDashboard = () => {
                       // Сначала сортируем по приоритету (high, medium, low)
                       const priorityOrder: Record<string, number> = { high: 0, medium: 1, low: 2 };
                       const priorityDiff = priorityOrder[a.priority as string] - priorityOrder[b.priority as string];
-                      
+
                       // Если приоритеты одинаковые, сортируем по дате выполнения
                       if (priorityDiff === 0) {
                         if (!a.dueDate) return 1;
                         if (!b.dueDate) return -1;
                         return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
                       }
-                      
+
                       return priorityDiff;
                     })
                     .slice(0, 6)
                     .map(task => (
                       <div key={task.id} className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors border border-gray-100 dark:border-gray-800 hover:border-primary dark:hover:border-primary shadow-sm hover:shadow mb-2">
                         <div className="flex items-center">
-                          <div className={`h-10 w-10 rounded-full flex items-center justify-center mr-3 ${
-                            task.priority === 'high' 
-                              ? 'bg-red-100/70 text-red-700 dark:bg-red-900/30 dark:text-red-400' 
-                              : task.priority === 'medium'
-                                ? 'bg-orange-100/70 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'
-                                : 'bg-green-100/70 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                          }`}>
+                          <div className={`h-10 w-10 rounded-full flex items-center justify-center mr-3 ${task.priority === 'high'
+                            ? 'bg-red-100/70 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                            : task.priority === 'medium'
+                              ? 'bg-orange-100/70 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'
+                              : 'bg-green-100/70 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                            }`}>
                             {task.status === 'new' ? (
                               <AlertCircle className="h-5 w-5" />
                             ) : task.status === 'in_progress' ? (
@@ -249,13 +248,12 @@ const AdminDashboard = () => {
                             )}
                           </div>
                         </div>
-                        <Badge variant="outline" className={`capitalize ${
-                          task.status === 'new' 
-                            ? 'bg-blue-100/70 text-blue-700 border-blue-200 dark:bg-blue-950/50 dark:text-blue-400 dark:border-blue-800' 
-                            : task.status === 'in_progress' 
-                              ? 'bg-amber-100/70 text-amber-700 border-amber-200 dark:bg-amber-950/50 dark:text-amber-400 dark:border-amber-800'
-                              : 'bg-green-100/70 text-green-700 border-green-200 dark:bg-green-950/50 dark:text-green-400 dark:border-green-800'
-                        }`}>
+                        <Badge variant="outline" className={`capitalize ${task.status === 'new'
+                          ? 'bg-blue-100/70 text-blue-700 border-blue-200 dark:bg-blue-950/50 dark:text-blue-400 dark:border-blue-800'
+                          : task.status === 'in_progress'
+                            ? 'bg-amber-100/70 text-amber-700 border-amber-200 dark:bg-amber-950/50 dark:text-amber-400 dark:border-amber-800'
+                            : 'bg-green-100/70 text-green-700 border-green-200 dark:bg-green-950/50 dark:text-green-400 dark:border-green-800'
+                          }`}>
                           {t(`task.status.${task.status}`)}
                         </Badge>
                       </div>
@@ -272,7 +270,7 @@ const AdminDashboard = () => {
             </CardContent>
           </Card>
         </div>
-        
+
         {/* Right column (1/3 width) */}
         <div className="space-y-6">
           {/* Task Manager Card */}
@@ -304,7 +302,7 @@ const AdminDashboard = () => {
                       </div>
                       <div className="text-2xl font-bold text-gray-900 dark:text-white">{taskStats.new}</div>
                     </div>
-                    
+
                     <div className="rounded-lg border border-gray-200 dark:border-gray-800 shadow-sm bg-white dark:bg-gray-900 p-3">
                       <div className="flex justify-between items-center mb-2">
                         <div className="text-sm font-medium text-gray-800 dark:text-gray-100">{t('task.status.in_progress')}</div>
@@ -314,7 +312,7 @@ const AdminDashboard = () => {
                       </div>
                       <div className="text-2xl font-bold text-gray-900 dark:text-white">{taskStats.inProgress}</div>
                     </div>
-                    
+
                     <div className="rounded-lg border border-gray-200 dark:border-gray-800 shadow-sm bg-white dark:bg-gray-900 p-3">
                       <div className="flex justify-between items-center mb-2">
                         <div className="text-sm font-medium text-gray-800 dark:text-gray-100">{t('task.status.completed')}</div>
@@ -324,7 +322,7 @@ const AdminDashboard = () => {
                       </div>
                       <div className="text-2xl font-bold text-gray-900 dark:text-white">{taskStats.completed}</div>
                     </div>
-                    
+
                     <div className="rounded-lg border border-gray-200 dark:border-gray-800 shadow-sm bg-white dark:bg-gray-900 p-3">
                       <div className="flex justify-between items-center mb-2">
                         <div className="text-sm font-medium text-gray-800 dark:text-gray-100">{t('task.status.on_hold')}</div>
@@ -335,7 +333,7 @@ const AdminDashboard = () => {
                       <div className="text-2xl font-bold text-gray-900 dark:text-white">{taskStats.onHold}</div>
                     </div>
                   </div>
-                  
+
                   <div className="text-center mt-4">
                     <Link href="/tasks">
                       <Button className="w-full">
@@ -347,7 +345,7 @@ const AdminDashboard = () => {
               )}
             </CardContent>
           </Card>
-        
+
           {/* Quick Actions */}
           <Card>
             <CardHeader className="pb-3">
@@ -362,7 +360,7 @@ const AdminDashboard = () => {
                     <span className="text-sm font-medium">{t('schedule.import.fileManager')}</span>
                   </Link>
                 </div>
-                
+
                 {/* Users */}
                 <div className="w-full">
                   <Link href="/users" className="rounded-lg border bg-card text-card-foreground shadow-sm hover:bg-accent/10 transition-colors p-4 flex flex-col items-center justify-center gap-2 h-full cursor-pointer">
@@ -370,7 +368,7 @@ const AdminDashboard = () => {
                     <span className="text-sm font-medium">{t('common.users')}</span>
                   </Link>
                 </div>
-                
+
                 {/* Requests */}
                 <div className="w-full">
                   <Link href="/requests" className="rounded-lg border bg-card text-card-foreground shadow-sm hover:bg-accent/10 transition-colors p-4 flex flex-col items-center justify-center gap-2 h-full cursor-pointer">
@@ -378,7 +376,7 @@ const AdminDashboard = () => {
                     <span className="text-sm font-medium">{t('requests.title')}</span>
                   </Link>
                 </div>
-                
+
                 {/* Chat */}
                 <div className="w-full">
                   <Link href="/chat" className="rounded-lg border bg-card text-card-foreground shadow-sm hover:bg-accent/10 transition-colors p-4 flex flex-col items-center justify-center gap-2 h-full cursor-pointer">

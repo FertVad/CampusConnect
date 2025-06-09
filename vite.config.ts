@@ -12,15 +12,10 @@ export default defineConfig({
   plugins: [
     react(),
     runtimeErrorOverlay(),
-    themePlugin(),
-    ...(process.env.NODE_ENV !== "production" &&
-    process.env.REPL_ID !== undefined
-      ? [
-          await import("@replit/vite-plugin-cartographer").then((m) =>
-            m.cartographer(),
-          ),
-        ]
-      : []),
+    // themePlugin(), // Если нужен, раскомментируй и проверь чтобы конфиг был валидный!
+    // Если cartographer действительно нужен, подключи его статически:
+    // cartographer(),
+
   ],
   resolve: {
     alias: {
@@ -34,4 +29,15 @@ export default defineConfig({
     outDir: path.resolve(__dirname, "dist/public"),
     emptyOutDir: true,
   },
+  server: {
+    port: 5173,
+    strictPort: true,
+    open: true,
+    proxy: {
+      // Прокидываем API-запросы на бэкенд
+      '/api': 'http://localhost:5050',
+      // Можно добавить любые другие эндпоинты
+    },
+  },
+
 });
