@@ -22,3 +22,4 @@ uploads/*.csv
 !uploads/csvFile-1743659650224-895140697.csv
 # И не .gitkeep
 !uploads/.gitkeep
+tsbuildinfo
