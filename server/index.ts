@@ -64,7 +64,7 @@ app.use((req, res, next) => {
     log("Initializing database...");
 
     try {
-      // Попробуем инициализировать DatabaseStorage сразу
+      // Попробуем инициализировать SupabaseStorage сразу
       const dbStorage = new DatabaseStorage();
       setStorage(dbStorage);
       log("Database connection successful");

@@ -37,13 +37,13 @@ export async function comparePasswords(supplied: string, stored: string): Promis
   }
 }
 
-// Initialize the database and switch to PostgreSQL storage
+// Initialize the database and switch to Supabase storage
 export async function initializeDatabase(): Promise<boolean> {
   try {
     console.log("Starting database migration...");
     try {
-      // Создаем хранилище базы данных
-      console.log("Creating DatabaseStorage instance...");
+      // Создаем хранилище базы данных Supabase
+      console.log("Creating SupabaseStorage instance...");
       const dbStorage = new DatabaseStorage();
 
       // Обновляем хранилище через сеттер
