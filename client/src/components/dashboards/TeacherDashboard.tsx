@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import { Link } from 'wouter';
 import { apiRequest } from '@/lib/queryClient';
-import { Notification, Assignment, User, Subject, Request } from '@shared/schema';
+import { Notification, Assignment, User, Subject, Request, ScheduleItem } from '@shared/schema';
 import { useAuth } from '@/hooks/use-auth';
 
 const TeacherDashboard = () => {

@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import StatusCard from '@/components/cards/StatusCard';
 import AssignmentList from '@/components/assignments/AssignmentList';
-import ClassSchedule from '@/components/schedule/ClassSchedule';
+import ClassSchedule, { ScheduleItemWithSubject } from '@/components/schedule/ClassSchedule';
 import NotificationList from '@/components/notifications/NotificationList';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { 
@@ -13,7 +13,7 @@ import {
 import { Link } from 'wouter';
 import { Badge } from '@/components/ui/badge';
 import { calculateGPA } from '@/lib/utils';
-import { Assignment, Notification, Request, ScheduleItem, Grade, Submission } from '@shared/schema';
+import { Assignment, Notification, Request, Grade, Submission } from '@shared/schema';
 import { apiRequest } from '@/lib/queryClient';
 import { useAuth } from '@/hooks/use-auth';
 
@@ -37,7 +37,7 @@ const StudentDashboard = () => {
   });
   
   // Get schedule
-  const { data: scheduleItems = [] } = useQuery<(ScheduleItem & { subject: { name: string } })[]>({
+  const { data: scheduleItems = [] } = useQuery<ScheduleItemWithSubject[]>({
     queryKey: ['/api/schedule/student/' + user?.id],
   });
   

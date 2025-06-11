@@ -6,11 +6,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Book, MapPin, User as UserIcon } from 'lucide-react';
 
 // Расширенные типы для обработки данных API
-interface SubjectWithTeacher extends Subject {
+export interface SubjectWithTeacher extends Subject {
   teacher?: User;
 }
 
-interface ScheduleItemWithSubject extends ScheduleItem {
+export interface ScheduleItemWithSubject extends ScheduleItem {
   subject: SubjectWithTeacher;
   teacherName?: string;
 }
