@@ -8,6 +8,8 @@ import createMemoryStore from 'memorystore';
 import pg from 'pg';
 import connectPgSimple from 'connect-pg-simple';
 
+import * as notificationQueries from './notifications';
+
 const { Pool } = pg;
 import {
   User, InsertUser, Subject, InsertSubject, Enrollment, InsertEnrollment,
@@ -690,154 +692,36 @@ export class PostgresStorage implements IStorage {
 
   // Notifications
   async getNotifications(): Promise<Notification[]> {
-    return db.select().from(schema.notifications);
+    return notificationQueries.getNotifications();
   }
 
   async getNotification(id: number): Promise<Notification | undefined> {
-    const notifications = await db.select()
-      .from(schema.notifications)
-      .where(eq(schema.notifications.id, id))
-      .limit(1);
-    return notifications[0];
+    return notificationQueries.getNotification(id);
   }
 
   async getNotificationsByUser(userId: number): Promise<Notification[]> {
-    return db.select()
-      .from(schema.notifications)
-      .where(eq(schema.notifications.userId, userId))
-      .orderBy(desc(schema.notifications.createdAt));
+    return notificationQueries.getNotificationsByUser(userId);
   }
 
   async getUnreadNotificationsByUser(userId: number): Promise<Notification[]> {
-    return db.select()
-      .from(schema.notifications)
-      .where(
-        and(
-          eq(schema.notifications.userId, userId),
-          eq(schema.notifications.isRead, false)
-        )
-      )
-      .orderBy(desc(schema.notifications.createdAt));
+    return notificationQueries.getUnreadNotificationsByUser(userId);
   }
 
-  async getNotificationsByUser(userId: number): Promise<Notification[]> {
-    console.log(`DB: Getting notifications for user ${userId}`);
-    try {
-      const notifications = await db.select()
-        .from(schema.notifications)
-        .where(eq(schema.notifications.userId, userId))
-        .orderBy(desc(schema.notifications.createdAt));
-      
-      console.log(`DB: Found ${notifications.length} notifications for user ${userId}`);
-      return notifications;
-    } catch (error) {
-      console.error('Error getting notifications by user:', error);
-      throw error;
-    }
-  }
-
-  async getUnreadNotificationsByUser(userId: number): Promise<Notification[]> {
-    console.log(`DB: Getting unread notifications for user ${userId}`);
-    try {
-      const notifications = await db.select()
-        .from(schema.notifications)
-        .where(
-          and(
-            eq(schema.notifications.userId, userId),
-            eq(schema.notifications.isRead, false)
-          )
-        )
-        .orderBy(desc(schema.notifications.createdAt));
-      
-      console.log(`DB: Found ${notifications.length} unread notifications for user ${userId}`);
-      return notifications;
-    } catch (error) {
-      console.error('Error getting unread notifications by user:', error);
-      throw error;
-    }
-  }
-  
-  async getNotification(id: number): Promise<Notification | undefined> {
-    console.log(`DB: Getting notification ${id}`);
-    try {
-      const notifications = await db.select()
-        .from(schema.notifications)
-        .where(eq(schema.notifications.id, id))
-        .limit(1);
-      
-      return notifications[0];
-    } catch (error) {
-      console.error(`Error getting notification ${id}:`, error);
-      throw error;
-    }
-  }
 
   async createNotification(notificationData: InsertNotification): Promise<Notification> {
-    console.log(`DB: Creating notification for user ${notificationData.userId}`);
-    try {
-      const [notification] = await db.insert(schema.notifications)
-        .values({
-          ...notificationData,
-          isRead: false
-        })
-        .returning();
-      
-      console.log(`DB: Created notification ${notification.id}`);
-      return notification;
-    } catch (error) {
-      console.error('Error creating notification:', error);
-      throw error;
-    }
+    return notificationQueries.createNotification(notificationData);
   }
 
   async markNotificationAsRead(id: number): Promise<Notification | undefined> {
-    console.log(`DB: Marking notification ${id} as read`);
-    try {
-      const [notification] = await db.update(schema.notifications)
-        .set({ isRead: true })
-        .where(eq(schema.notifications.id, id))
-        .returning();
-      
-      console.log(`DB: Marked notification ${id} as read`);
-      return notification;
-    } catch (error) {
-      console.error(`Error marking notification ${id} as read:`, error);
-      throw error;
-    }
+    return notificationQueries.markNotificationAsRead(id);
   }
 
   async deleteNotification(id: number): Promise<boolean> {
-    console.log(`DB: Deleting notification ${id}`);
-    try {
-      const result = await db.delete(schema.notifications)
-        .where(eq(schema.notifications.id, id));
-      
-      const success = result.rowCount > 0;
-      console.log(`DB: Deleted notification ${id}: ${success ? 'success' : 'failed'}`);
-      return success;
-    } catch (error) {
-      console.error(`Error deleting notification ${id}:`, error);
-      throw error;
-    }
+    return notificationQueries.deleteNotification(id);
   }
-  
+
   async markAllNotificationsAsRead(userId: number): Promise<void> {
-    console.log(`DB: Marking all notifications as read for user ${userId}`);
-    try {
-      const result = await db.update(schema.notifications)
-        .set({ isRead: true })
-        .where(
-          and(
-            eq(schema.notifications.userId, userId),
-            eq(schema.notifications.isRead, false)
-          )
-        );
-      
-      console.log(`DB: Marked ${result.rowCount || 0} notifications as read for user ${userId}`);
-    } catch (error) {
-      console.error(`Error marking all notifications as read for user ${userId}:`, error);
-      throw error;
-    }
+    return notificationQueries.markAllNotificationsAsRead(userId);
   }
 
   // Imported Files
