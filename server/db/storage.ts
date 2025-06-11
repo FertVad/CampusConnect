@@ -29,9 +29,9 @@ const MemoryStore = createMemoryStore(session);
 const PgSession = connectPgSimple(session);
 
 /**
- * A PostgreSQL-backed implementation of the IStorage interface
+ * Реализация IStorage, использующая базу данных Supabase
  */
-export class PostgresStorage implements IStorage {
+export class SupabaseStorage implements IStorage {
   sessionStore: session.Store;
 
   constructor() {
@@ -1523,7 +1523,7 @@ export class PostgresStorage implements IStorage {
   }
 
   async getCurriculumPlan(id: number): Promise<schema.CurriculumPlan | undefined> {
-    console.log(`PostgresStorage: Getting curriculum plan with ID: ${id}`);
+    console.log(`SupabaseStorage: Getting curriculum plan with ID: ${id}`);
     const plans = await db.select().from(schema.curriculumPlans)
       .where(eq(schema.curriculumPlans.id, id));
     
@@ -1586,5 +1586,5 @@ export async function createDatabaseStorage(): Promise<IStorage> {
     throw new Error('Database connection failed');
   }
   
-  return new PostgresStorage();
+  return new SupabaseStorage();
 }
