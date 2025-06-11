@@ -34,10 +34,7 @@ import { registerTaskRoutes } from "./tasks";
 // Extend the Express Request interface with session
 interface Request extends ExpressRequest {
   user?: User;
-  isAuthenticated?: () => boolean;
-  logout?: (cb: (err: any) => void) => void;
-  login?: (user: User, cb: (err: any) => void) => void;
-  session?: any;
+  session: any;
   sessionID?: string;
 }
 
@@ -534,7 +531,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Notify the teacher
         const subject = await getStorage().getSubject(assignment.subjectId);
-        if (subject?.teacherId) {
+        if (subject?.teacherId && req.user) {
           await getStorage().createNotification({
             userId: subject.teacherId,
             title: "New Submission",
@@ -806,14 +803,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Notify administrators
       const admins = (await getStorage().getUsers()).filter(user => user.role === 'admin');
-      for (const admin of admins) {
-        await getStorage().createNotification({
-          userId: admin.id,
-          title: "New Student Request",
-          content: `${req.user.firstName} ${req.user.lastName} has submitted a ${requestData.type} request.`,
-          relatedId: request.id,
-          relatedType: "request"
-        });
+      if (req.user) {
+        for (const admin of admins) {
+          await getStorage().createNotification({
+            userId: admin.id,
+            title: "New Student Request",
+            content: `${req.user.firstName} ${req.user.lastName} has submitted a ${requestData.type} request.`,
+            relatedId: request.id,
+            relatedType: "request"
+          });
+        }
       }
       
       res.status(201).json(request);
