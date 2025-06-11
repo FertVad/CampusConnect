@@ -196,7 +196,7 @@ export class SupabaseStorage {
   }
 
   async getStudentsBySubject(subjectId: number): Promise<User[]> {
-    return db.select()
+    const results = await db.select({ users: schema.users })
       .from(schema.users)
       .innerJoin(
         schema.enrollments,
@@ -207,6 +207,8 @@ export class SupabaseStorage {
       )
       .where(eq(schema.users.role, 'student'))
       .orderBy(schema.users.lastName, schema.users.firstName);
+
+    return results.map((r) => r.users);
   }
 
   async getSubjectsByStudent(studentId: number): Promise<Subject[]> {
