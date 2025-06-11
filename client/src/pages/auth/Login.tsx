@@ -29,7 +29,7 @@ const Login = () => {
   const { register, handleSubmit, formState: { errors } } = useForm<LoginCredentials>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      username: '',
+      email: '',
       password: ''
     }
   });
@@ -43,7 +43,7 @@ const Login = () => {
       setLocation('/dashboard');
     } catch (err) {
       console.error('Login error:', err);
-      setError('Invalid username or password. Please try again.');
+      setError('Invalid email or password. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -79,16 +79,16 @@ const Login = () => {
             
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="username">Username</Label>
+                <Label htmlFor="email">Email</Label>
                 <Input
-                  id="username"
-                  type="text"
-                  {...register('username')}
-                  placeholder="Enter your username"
-                  className={errors.username ? "border-error" : ""}
+                  id="email"
+                  type="email"
+                  {...register('email')}
+                  placeholder="Enter your email"
+                  className={errors.email ? "border-error" : ""}
                 />
-                {errors.username && (
-                  <p className="text-sm text-error">{errors.username.message}</p>
+                {errors.email && (
+                  <p className="text-sm text-error">{errors.email.message}</p>
                 )}
               </div>
               
@@ -127,19 +127,19 @@ const Login = () => {
               <p>Demo Accounts:</p>
               <div className="flex justify-center flex-wrap gap-2 mt-2">
                 <Badge variant="outline" className="cursor-pointer hover:bg-neutral-100" onClick={() => {
-                  register('username').onChange({ target: { value: 'admin' } });
+                  register('email').onChange({ target: { value: 'admin@example.com' } });
                   register('password').onChange({ target: { value: 'admin123' } });
                 }}>
                   Admin
                 </Badge>
                 <Badge variant="outline" className="cursor-pointer hover:bg-neutral-100" onClick={() => {
-                  register('username').onChange({ target: { value: 'david' } });
+                  register('email').onChange({ target: { value: 'david@example.com' } });
                   register('password').onChange({ target: { value: 'teacher123' } });
                 }}>
                   Teacher
                 </Badge>
                 <Badge variant="outline" className="cursor-pointer hover:bg-neutral-100" onClick={() => {
-                  register('username').onChange({ target: { value: 'alex' } });
+                  register('email').onChange({ target: { value: 'alex@example.com' } });
                   register('password').onChange({ target: { value: 'student123' } });
                 }}>
                   Student

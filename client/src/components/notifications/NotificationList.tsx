@@ -78,7 +78,7 @@ const NotificationList: React.FC<NotificationListProps> = ({
                 </div>
                 <div>
                   <p className="text-sm text-neutral-700">{notification.content}</p>
-                  <p className="text-xs text-neutral-500 mt-1">{getRelativeTime(notification.createdAt)}</p>
+                  <p className="text-xs text-neutral-500 mt-1">{notification.createdAt ? getRelativeTime(notification.createdAt) : "N/A"}</p>
                 </div>
               </div>
             ))

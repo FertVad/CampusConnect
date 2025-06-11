@@ -32,13 +32,13 @@ const AssignmentDetail = () => {
   });
   
   // Get submission for student
-  const { data: submission, isLoading: isLoadingSubmission } = useQuery({
+  const { data: submission = [], isLoading: isLoadingSubmission } = useQuery<Submission[]>({
     queryKey: [`/api/submissions/assignment/${assignmentId}`],
     enabled: !!assignment && user?.role === 'student',
   });
   
   // Get submissions for teacher
-  const { data: submissions = [], isLoading: isLoadingSubmissions } = useQuery({
+  const { data: submissions = [], isLoading: isLoadingSubmissions } = useQuery<Submission[]>({
     queryKey: [`/api/submissions/assignment/${assignmentId}`],
     enabled: !!assignment && user?.role === 'teacher',
   });

@@ -13,13 +13,22 @@ import {
 import { Link } from 'wouter';
 import { Badge } from '@/components/ui/badge';
 import { calculateGPA } from '@/lib/utils';
-import { Assignment, Notification, Request, ScheduleItem, Grade, Submission } from '@shared/schema';
+import { Assignment, Notification, Request, ScheduleItem, Grade, Submission, Subject, User } from '@shared/schema';
 import { apiRequest } from '@/lib/queryClient';
 import { useAuth } from '@/hooks/use-auth';
 
 // Extend Assignment type to include submission info
 interface AssignmentWithSubmission extends Assignment {
   submission?: Submission;
+}
+
+interface SubjectWithTeacher extends Subject {
+  teacher?: User;
+}
+
+interface ScheduleItemWithSubject extends ScheduleItem {
+  subject: SubjectWithTeacher;
+  teacherName?: string;
 }
 
 const StudentDashboard = () => {
@@ -37,7 +46,7 @@ const StudentDashboard = () => {
   });
   
   // Get schedule
-  const { data: scheduleItems = [] } = useQuery<(ScheduleItem & { subject: { name: string } })[]>({
+  const { data: scheduleItems = [] } = useQuery<ScheduleItemWithSubject[]>({
     queryKey: ['/api/schedule/student/' + user?.id],
   });
   
