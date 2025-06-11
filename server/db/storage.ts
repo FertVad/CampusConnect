@@ -17,7 +17,7 @@ import {
   Submission, InsertSubmission, Grade, InsertGrade, Request, InsertRequest,
   Document, InsertDocument, Message, InsertMessage, Notification, InsertNotification,
   LoginCredentials, ImportedFile, InsertImportedFile, ActivityLog, InsertActivityLog,
-  Task, InsertTask
+  Task, InsertTask, UserSummary
 } from '@shared/schema';
 import { testConnection } from './index';
 import bcrypt from 'bcrypt';
@@ -876,7 +876,7 @@ export class SupabaseStorage {
   }
   
   // Tasks
-  async getTasks(): Promise<(Task & { client?: User, executor?: User })[]> {
+  async getTasks(): Promise<(Task & { client?: UserSummary; executor?: UserSummary })[]> {
     try {
       // Create distinct aliases for the user tables
       const clientsTable = aliasedTable(schema.users, 'clients');
@@ -944,7 +944,7 @@ export class SupabaseStorage {
         };
         
         // Add client info if available (all fields must be present)
-        let client = undefined;
+        let client: UserSummary | undefined = undefined;
         if (task.clientFirstName && task.clientLastName && task.clientEmail && task.clientRole) {
           client = {
             id: task.clientId,
@@ -956,7 +956,7 @@ export class SupabaseStorage {
         }
         
         // Add executor info if available (all fields must be present)
-        let executor = undefined;
+        let executor: UserSummary | undefined = undefined;
         if (task.executorFirstName && task.executorLastName && task.executorEmail && task.executorRole) {
           executor = {
             id: task.executorId,
@@ -979,7 +979,7 @@ export class SupabaseStorage {
     }
   }
   
-  async getTask(id: number): Promise<Task | undefined> {
+  async getTask(id: number): Promise<(Task & { client?: UserSummary; executor?: UserSummary }) | undefined> {
     try {
       // Create distinct aliases for the user tables
       const clientsTable = aliasedTable(schema.users, 'clients');
@@ -1032,7 +1032,7 @@ export class SupabaseStorage {
       };
       
       // Add client info if available (all fields must be present)
-      let client = undefined;
+      let client: UserSummary | undefined = undefined;
       if (task.clientFirstName && task.clientLastName && task.clientEmail && task.clientRole) {
         client = {
           id: task.clientId,
@@ -1044,7 +1044,7 @@ export class SupabaseStorage {
       }
       
       // Add executor info if available (all fields must be present)
-      let executor = undefined;
+      let executor: UserSummary | undefined = undefined;
       if (task.executorFirstName && task.executorLastName && task.executorEmail && task.executorRole) {
         executor = {
           id: task.executorId,
@@ -1059,14 +1059,14 @@ export class SupabaseStorage {
         ...baseTask,
         client,
         executor
-      } as unknown as Task;
+      };
     } catch (error) {
       console.error('Error in getTask:', error);
       throw error;
     }
   }
   
-  async getTasksByClient(clientId: number): Promise<Task[]> {
+  async getTasksByClient(clientId: number): Promise<(Task & { client?: UserSummary; executor?: UserSummary })[]> {
     try {
       // Create distinct aliases for the user tables
       const clientsTable = aliasedTable(schema.users, 'clients');
@@ -1135,7 +1135,7 @@ export class SupabaseStorage {
         };
         
         // Add client info if available (all fields must be present)
-        let client = undefined;
+        let client: UserSummary | undefined = undefined;
         if (task.clientFirstName && task.clientLastName && task.clientEmail && task.clientRole) {
           client = {
             id: task.clientId,
@@ -1147,7 +1147,7 @@ export class SupabaseStorage {
         }
         
         // Add executor info if available (all fields must be present)
-        let executor = undefined;
+        let executor: UserSummary | undefined = undefined;
         if (task.executorFirstName && task.executorLastName && task.executorEmail && task.executorRole) {
           executor = {
             id: task.executorId,
@@ -1162,15 +1162,15 @@ export class SupabaseStorage {
           ...baseTask,
           client,
           executor
-        } as unknown as Task;
-      }) as unknown as Task[];
+        };
+      });
     } catch (error) {
       console.error('Error in getTasksByClient:', error);
       throw error;
     }
   }
   
-  async getTasksByExecutor(executorId: number): Promise<Task[]> {
+  async getTasksByExecutor(executorId: number): Promise<(Task & { client?: UserSummary; executor?: UserSummary })[]> {
     try {
       // Create distinct aliases for the user tables
       const clientsTable = aliasedTable(schema.users, 'clients');
@@ -1239,7 +1239,7 @@ export class SupabaseStorage {
         };
         
         // Add client info if available (all fields must be present)
-        let client = undefined;
+        let client: UserSummary | undefined = undefined;
         if (task.clientFirstName && task.clientLastName && task.clientEmail && task.clientRole) {
           client = {
             id: task.clientId,
@@ -1251,7 +1251,7 @@ export class SupabaseStorage {
         }
         
         // Add executor info if available (all fields must be present)
-        let executor = undefined;
+        let executor: UserSummary | undefined = undefined;
         if (task.executorFirstName && task.executorLastName && task.executorEmail && task.executorRole) {
           executor = {
             id: task.executorId,
@@ -1266,8 +1266,8 @@ export class SupabaseStorage {
           ...baseTask,
           client,
           executor
-        } as unknown as Task;
-      }) as unknown as Task[];
+        };
+      });
     } catch (error) {
       console.error('Error in getTasksByExecutor:', error);
       throw error;
@@ -1285,7 +1285,7 @@ export class SupabaseStorage {
     }
   }
   
-  async getTasksDueSoon(days: number): Promise<Task[]> {
+  async getTasksDueSoon(days: number): Promise<(Task & { client?: UserSummary; executor?: UserSummary })[]> {
     try {
       const now = new Date();
       const future = new Date();
@@ -1366,7 +1366,7 @@ export class SupabaseStorage {
         };
         
         // Add client info if available (all fields must be present)
-        let client = undefined;
+        let client: UserSummary | undefined = undefined;
         if (task.clientFirstName && task.clientLastName && task.clientEmail && task.clientRole) {
           client = {
             id: task.clientId,
@@ -1378,7 +1378,7 @@ export class SupabaseStorage {
         }
         
         // Add executor info if available (all fields must be present)
-        let executor = undefined;
+        let executor: UserSummary | undefined = undefined;
         if (task.executorFirstName && task.executorLastName && task.executorEmail && task.executorRole) {
           executor = {
             id: task.executorId,
@@ -1393,8 +1393,8 @@ export class SupabaseStorage {
           ...baseTask,
           client,
           executor
-        } as unknown as Task;
-      }) as unknown as Task[];
+        };
+      });
     } catch (error) {
       console.error('Error in getTasksDueSoon:', error);
       throw error;
