@@ -25,7 +25,6 @@ interface UserListProps {
 const userFormSchema = insertUserSchema.extend({
   firstName: z.string().min(2, "First name must be at least 2 characters"),
   lastName: z.string().min(2, "Last name must be at least 2 characters"),
-  username: z.string().min(3, "Username must be at least 3 characters"),
   password: z.string().min(6, "Password must be at least 6 characters"),
   email: z.string().email("Invalid email address"),
   role: z.enum(["student", "teacher", "admin"], {
@@ -44,7 +43,6 @@ const UserList: React.FC<UserListProps> = ({ users, onCreateUser, onUpdateUser, 
     defaultValues: {
       firstName: '',
       lastName: '',
-      username: '',
       password: '',
       email: '',
       role: 'student',
@@ -56,7 +54,6 @@ const UserList: React.FC<UserListProps> = ({ users, onCreateUser, onUpdateUser, 
     defaultValues: {
       firstName: '',
       lastName: '',
-      username: '',
       email: '',
       role: 'student',
     },
@@ -79,7 +76,6 @@ const UserList: React.FC<UserListProps> = ({ users, onCreateUser, onUpdateUser, 
     setSelectedUser(user);
     editUserForm.setValue('firstName', user.firstName);
     editUserForm.setValue('lastName', user.lastName);
-    editUserForm.setValue('username', user.username);
     editUserForm.setValue('email', user.email);
     editUserForm.setValue('role', user.role);
     setIsEditUserDialogOpen(true);
@@ -170,19 +166,6 @@ const UserList: React.FC<UserListProps> = ({ users, onCreateUser, onUpdateUser, 
                   />
                 </div>
                 
-                <FormField
-                  control={addUserForm.control}
-                  name="username"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Username</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
                 
                 <FormField
                   control={addUserForm.control}
@@ -262,7 +245,6 @@ const UserList: React.FC<UserListProps> = ({ users, onCreateUser, onUpdateUser, 
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
-                <TableHead>Username</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Role</TableHead>
                 <TableHead>Joined Date</TableHead>
@@ -275,14 +257,13 @@ const UserList: React.FC<UserListProps> = ({ users, onCreateUser, onUpdateUser, 
                   <TableCell className="font-medium">
                     {user.firstName} {user.lastName}
                   </TableCell>
-                  <TableCell>{user.username}</TableCell>
                   <TableCell>{user.email}</TableCell>
                   <TableCell>
                     <Badge variant="outline" className={getRoleBadgeColor(user.role)}>
                       {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
                     </Badge>
                   </TableCell>
-                  <TableCell>{formatDate(user.createdAt)}</TableCell>
+                  <TableCell>{user.createdAt ? formatDate(user.createdAt) : "N/A"}</TableCell>
                   <TableCell className="text-right space-x-2">
                     <Button
                       variant="outline"
@@ -348,19 +329,6 @@ const UserList: React.FC<UserListProps> = ({ users, onCreateUser, onUpdateUser, 
               
               <FormField
                 control={editUserForm.control}
-                name="username"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Username</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
                 control={editUserForm.control}
                 name="email"
                 render={({ field }) => (

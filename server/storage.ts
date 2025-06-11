@@ -34,7 +34,7 @@ export interface IStorage {
   getUsers(): Promise<User[]>;
   getUser(id: number): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
-  getUsersByRole(role: string): Promise<User[]>;
+  getUsersByRole(role: 'student' | 'teacher' | 'admin' | 'director'): Promise<User[]>;
   getAllAdminUsers(): Promise<User[]>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: number, userData: Partial<InsertUser>): Promise<User | undefined>;
@@ -204,7 +204,7 @@ export interface IStorage {
   // Curriculum Plans (Учебные планы)
   getCurriculumPlans(): Promise<CurriculumPlan[]>;
   getCurriculumPlan(id: number): Promise<CurriculumPlan | undefined>;
-  getCurriculumPlansByEducationLevel(level: string): Promise<CurriculumPlan[]>;
+  getCurriculumPlansByEducationLevel(level: 'СПО' | 'ВО' | 'Магистратура' | 'Аспирантура'): Promise<CurriculumPlan[]>;
   createCurriculumPlan(planData: InsertCurriculumPlan): Promise<CurriculumPlan>;
   updateCurriculumPlan(id: number, planData: Partial<InsertCurriculumPlan>): Promise<CurriculumPlan | undefined>;
   deleteCurriculumPlan(id: number): Promise<boolean>;
@@ -366,7 +366,7 @@ export class MemStorage implements IStorage {
     return user;
   }
   
-  async getUsersByRole(role: string): Promise<User[]> {
+  async getUsersByRole(role: 'student' | 'teacher' | 'admin' | 'director'): Promise<User[]> {
     return Array.from(this.users.values()).filter(user => user.role === role);
   }
   
@@ -618,11 +618,15 @@ export class MemStorage implements IStorage {
   async createSubmission(submissionData: InsertSubmission): Promise<Submission> {
     const id = this.submissionIdCounter++;
     const submittedAt = new Date();
-    const submission: Submission = { 
-      ...submissionData, 
-      id, 
+    const submission: Submission = {
+      ...submissionData,
+      id,
       submittedAt,
-      status: submissionData.status || 'not_started'
+      status: submissionData.status || 'not_started',
+      content: submissionData.content ?? null,
+      fileUrl: submissionData.fileUrl ?? null,
+      grade: submissionData.grade ?? null,
+      feedback: submissionData.feedback ?? null
     };
     this.submissions.set(id, submission);
     return submission;
@@ -668,11 +672,13 @@ export class MemStorage implements IStorage {
   async createGrade(gradeData: InsertGrade): Promise<Grade> {
     const id = this.gradeIdCounter++;
     const now = new Date();
-    const grade: Grade = { 
-      ...gradeData, 
+    const grade: Grade = {
+      ...gradeData,
       id,
       createdAt: now,
-      updatedAt: now
+      updatedAt: now,
+      assignmentId: gradeData.assignmentId ?? null,
+      comments: gradeData.comments ?? null
     };
     this.grades.set(id, grade);
     return grade;
@@ -776,10 +782,12 @@ export class MemStorage implements IStorage {
     const id = this.documentIdCounter++;
     const createdAt = new Date();
     
-    const document: Document = { 
-      ...documentData, 
+    const document: Document = {
+      ...documentData,
       id,
-      createdAt
+      createdAt,
+      fileUrl: documentData.fileUrl ?? null,
+      createdBy: documentData.createdBy ?? null
     };
     
     this.documents.set(id, document);
@@ -819,7 +827,7 @@ export class MemStorage implements IStorage {
         (message.fromUserId === fromUserId && message.toUserId === toUserId) ||
         (message.fromUserId === toUserId && message.toUserId === fromUserId)
       )
-      .sort((a, b) => a.sentAt.getTime() - b.sentAt.getTime());
+      .sort((a, b) => (a.sentAt?.getTime() ?? 0) - (b.sentAt?.getTime() ?? 0));
   }
   
   async createMessage(messageData: InsertMessage): Promise<Message> {
@@ -862,13 +870,13 @@ export class MemStorage implements IStorage {
   async getNotificationsByUser(userId: number): Promise<Notification[]> {
     return Array.from(this.notifications.values())
       .filter(notification => notification.userId === userId)
-      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+      .sort((a, b) => (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0));
   }
   
   async getUnreadNotificationsByUser(userId: number): Promise<Notification[]> {
     return Array.from(this.notifications.values())
       .filter(notification => notification.userId === userId && !notification.isRead)
-      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+      .sort((a, b) => (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0));
   }
   
   async createNotification(notificationData: InsertNotification): Promise<Notification> {
@@ -943,10 +951,12 @@ export class MemStorage implements IStorage {
   
   async createSpecialty(specialtyData: InsertSpecialty): Promise<Specialty> {
     const id = this.specialtyIdCounter++;
-    const specialty: Specialty = { 
-      ...specialtyData, 
-      id, 
-      createdAt: new Date() 
+    const specialty: Specialty = {
+      ...specialtyData,
+      id,
+      createdAt: new Date(),
+      code: specialtyData.code ?? null,
+      description: specialtyData.description ?? null
     };
     this.specialties.set(id, specialty);
     return specialty;
@@ -1211,7 +1221,11 @@ export class MemStorage implements IStorage {
       ...fileData,
       id,
       uploadedAt,
-      status: fileData.status || 'success'
+      status: fileData.status || 'success',
+      itemsCount: fileData.itemsCount ?? 0,
+      successCount: fileData.successCount ?? 0,
+      errorCount: fileData.errorCount ?? 0,
+      errorDetails: fileData.errorDetails ?? null
     };
     
     this.importedFiles.set(id, importedFile);
@@ -1404,7 +1418,11 @@ export class MemStorage implements IStorage {
       ...taskData,
       id,
       createdAt: now,
-      updatedAt: now
+      updatedAt: now,
+      description: taskData.description ?? null,
+      dueDate: taskData.dueDate ?? null,
+      status: taskData.status ?? 'new',
+      priority: taskData.priority ?? 'medium'
     };
     
     this.tasks.set(id, task);
@@ -1438,7 +1456,7 @@ export class MemStorage implements IStorage {
     return this.curriculumPlans.get(id);
   }
 
-  async getCurriculumPlansByEducationLevel(level: string): Promise<CurriculumPlan[]> {
+  async getCurriculumPlansByEducationLevel(level: 'СПО' | 'ВО' | 'Магистратура' | 'Аспирантура'): Promise<CurriculumPlan[]> {
     return Array.from(this.curriculumPlans.values())
       .filter(plan => plan.educationLevel === level);
   }
@@ -1624,7 +1642,7 @@ export class DatabaseStorage implements IStorage {
     return user || undefined;
   }
 
-  async getUsersByRole(role: string): Promise<User[]> {
+  async getUsersByRole(role: 'student' | 'teacher' | 'admin' | 'director'): Promise<User[]> {
     return await db.select().from(users).where(eq(users.role, role));
   }
 
@@ -1645,7 +1663,7 @@ export class DatabaseStorage implements IStorage {
     try {
       const [updatedUser] = await db
         .update(users)
-        .set({ ...userData, updatedAt: new Date() })
+        .set(userData)
         .where(eq(users.id, id))
         .returning();
       return updatedUser || undefined;
@@ -1679,7 +1697,7 @@ export class DatabaseStorage implements IStorage {
     return plan || undefined;
   }
 
-  async getCurriculumPlansByEducationLevel(level: string): Promise<CurriculumPlan[]> {
+  async getCurriculumPlansByEducationLevel(level: 'СПО' | 'ВО' | 'Магистратура' | 'Аспирантура'): Promise<CurriculumPlan[]> {
     return await db.select().from(curriculumPlans).where(eq(curriculumPlans.educationLevel, level));
   }
 

@@ -3,6 +3,7 @@ import { Assignment, Subject, Submission, User } from '@shared/schema';
 import { formatDate } from '@/lib/utils';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
@@ -101,7 +102,7 @@ const AssignmentDetails: React.FC<AssignmentDetailsProps> = ({
             </div>
             <div className="flex items-center text-sm text-neutral-600">
               <Clock className="h-4 w-4 mr-2 text-neutral-500" />
-              <span>Posted: {formatDate(assignment.createdAt)}</span>
+              <span>Posted: {assignment.createdAt ? formatDate(assignment.createdAt) : "N/A"}</span>
             </div>
           </div>
           
@@ -117,15 +118,9 @@ const AssignmentDetails: React.FC<AssignmentDetailsProps> = ({
         <Card>
           <CardHeader>
             <CardTitle className="text-lg font-heading">Your Submission</CardTitle>
-            {submission && submission.submittedAt && (
+            {submission?.submittedAt && (
               <CardDescription>
-                Submitted on {formatDate(submission.submittedAt, { 
-                  year: 'numeric', 
-                  month: 'short', 
-                  day: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit'
-                })}
+                Submitted on {format(new Date(submission.submittedAt), 'PPpp')}
               </CardDescription>
             )}
           </CardHeader>
@@ -183,13 +178,7 @@ const AssignmentDetails: React.FC<AssignmentDetailsProps> = ({
             <CardTitle className="text-lg font-heading">Student Submission</CardTitle>
             {submission.submittedAt && (
               <CardDescription>
-                Submitted on {formatDate(submission.submittedAt, { 
-                  year: 'numeric', 
-                  month: 'short', 
-                  day: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit'
-                })}
+                Submitted on {format(new Date(submission.submittedAt), 'PPpp')}
               </CardDescription>
             )}
           </CardHeader>

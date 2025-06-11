@@ -13,7 +13,6 @@ const mockStudent: Student = {
   major: 'Информатика и ВТ',
   course: 3,
   lastLogin: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 дня назад
-  upcomingLesson: 'Математика в 10:00',
   tasksOpen: 5,
   tasksDone: 12,
   unreadNotifications: 3,
@@ -49,8 +48,6 @@ const mockStudent3: Student = {
   group: 'ИС-101',
   major: 'Информатика и ВТ',
   course: 3,
-  upcomingLesson: 'Физика в 14:30',
-  tasksOpen: 10,
   tasksDone: 3,
   unreadNotifications: 7,
   averageGrade: 65,

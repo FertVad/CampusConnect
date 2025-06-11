@@ -73,7 +73,7 @@ const RequestList: React.FC<RequestListProps> = ({ requests, users = [], isAdmin
               <div className="space-y-4">
                 <div>
                   <p className="text-sm text-neutral-500">From: {getStudentName(request.studentId)}</p>
-                  <p className="text-sm text-neutral-500">Submitted: {formatDate(request.createdAt)}</p>
+                  <p className="text-sm text-neutral-500">Submitted: {request.createdAt ? formatDate(request.createdAt) : "N/A"}</p>
                 </div>
                 
                 <div className="p-3 bg-neutral-50 rounded-lg">
