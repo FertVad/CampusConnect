@@ -27,7 +27,7 @@ app.get('/api/tasks/client/:clientId', authenticateUser, async (req, res) => {
     const clientId = parseInt(req.params.clientId);
     
     // Только клиент или администратор может просматривать задачи клиента
-    if (req.user.role !== 'admin' && req.user.id !== clientId) {
+    if (req.user!.role !== 'admin' && req.user!.id !== clientId) {
       return res.status(403).json({ message: "Forbidden - You can only view your own tasks" });
     }
     
@@ -50,7 +50,7 @@ app.get('/api/tasks/executor/:executorId', authenticateUser, async (req, res) =>
     const executorId = parseInt(req.params.executorId);
     
     // Только исполнитель или администратор может просматривать задачи исполнителя
-    if (req.user.role !== 'admin' && req.user.id !== executorId) {
+    if (req.user!.role !== 'admin' && req.user!.id !== executorId) {
       return res.status(403).json({ message: "Forbidden - You can only view tasks assigned to you" });
     }
     
@@ -84,8 +84,8 @@ app.get('/api/tasks/status/:status', authenticateUser, async (req, res) => {
     const tasks = await getStorage().getTasksByStatus(status);
     
     // Если пользователь не админ, фильтруем только те задачи, которые относятся к нему
-    if (req.user.role !== 'admin') {
-      const userId = req.user.id;
+    if (req.user!.role !== 'admin') {
+      const userId = req.user!.id;
       const filteredTasks = tasks.filter(task => 
         task.clientId === userId || task.executorId === userId
       );
@@ -119,8 +119,8 @@ app.get('/api/tasks/due-soon/:days', authenticateUser, async (req, res) => {
     const tasks = await getStorage().getTasksDueSoon(days);
     
     // Если пользователь не админ, фильтруем только те задачи, которые относятся к нему
-    if (req.user.role !== 'admin') {
-      const userId = req.user.id;
+    if (req.user!.role !== 'admin') {
+      const userId = req.user!.id;
       const filteredTasks = tasks.filter(task => 
         task.clientId === userId || task.executorId === userId
       );
@@ -153,12 +153,12 @@ app.post('/api/tasks', authenticateUser, async (req, res) => {
     
     // Устанавливаем текущего пользователя как клиента, если не указано иное
     if (!taskData.clientId) {
-      taskData.clientId = req.user.id;
+      taskData.clientId = req.user!.id;
     }
     
     // Администраторы могут создавать задачи от имени любого пользователя
     // Обычные пользователи могут создавать задачи только от своего имени
-    if (req.user.role !== 'admin' && taskData.clientId !== req.user.id) {
+    if (req.user!.role !== 'admin' && taskData.clientId !== req.user!.id) {
       return res.status(403).json({ 
         message: "Forbidden - You can only create tasks on your own behalf", 
         details: "Regular users can only create tasks where they are the client"
@@ -211,7 +211,7 @@ app.delete('/api/tasks/:id', authenticateUser, async (req, res) => {
     
     // Проверяем права на удаление
     // Только создатель задачи (клиент) или администратор может удалить задачу
-    if (req.user.role !== 'admin' && req.user.id !== task.clientId) {
+    if (req.user!.role !== 'admin' && req.user!.id !== task.clientId) {
       return res.status(403).json({ 
         message: "Forbidden - Only task creators or admins can delete tasks",
         details: "You don't have permission to delete this task" 
@@ -222,7 +222,7 @@ app.delete('/api/tasks/:id', authenticateUser, async (req, res) => {
     await getStorage().deleteTask(taskId);
     
     // Уведомляем исполнителя о удалении задачи, если задача была назначена
-    if (task.executorId && task.executorId !== req.user.id) {
+    if (task.executorId && task.executorId !== req.user!.id) {
       await getStorage().createNotification({
         userId: task.executorId,
         title: "Task Deleted",
@@ -262,9 +262,9 @@ app.put('/api/tasks/:id', authenticateUser, async (req, res) => {
     
     // Check permission to edit the task
     // Only the task creator (client) or admin can edit the task
-    if (req.user.role !== 'admin' && req.user.id !== task.clientId) {
+    if (req.user!.role !== 'admin' && req.user!.id !== task.clientId) {
       // Allow executor to change status only, not other fields
-      if (req.user.id === task.executorId && Object.keys(req.body).length === 1 && 'status' in req.body) {
+      if (req.user!.id === task.executorId && Object.keys(req.body).length === 1 && 'status' in req.body) {
         // Executor can only update status
       } else {
         return res.status(403).json({ 
@@ -282,7 +282,7 @@ app.put('/api/tasks/:id', authenticateUser, async (req, res) => {
     const taskData = modifiedUpdateTaskSchema.parse(req.body);
     
     // Ограничиваем поля, которые может изменить исполнитель
-    if (req.user.role !== 'admin' && req.user.id === task.executorId && req.user.id !== task.clientId) {
+    if (req.user!.role !== 'admin' && req.user!.id === task.executorId && req.user!.id !== task.clientId) {
       // Исполнитель может изменить только статус и, возможно, добавить описание
       const allowedFields = ['status', 'description'];
       const providedFields = Object.keys(taskData);
@@ -329,7 +329,7 @@ app.put('/api/tasks/:id', authenticateUser, async (req, res) => {
       } else {
         // Обычное уведомление об изменении статуса
         // Уведомляем клиента, если исполнитель обновил статус
-        if (req.user.id === task.executorId) {
+        if (req.user!.id === task.executorId) {
           await getStorage().createNotification({
             userId: task.clientId,
             title: "Task Status Updated",
@@ -339,7 +339,7 @@ app.put('/api/tasks/:id', authenticateUser, async (req, res) => {
           });
         } 
         // Уведомляем исполнителя, если клиент обновил статус
-        else if (req.user.id === task.clientId) {
+        else if (req.user!.id === task.clientId) {
           await getStorage().createNotification({
             userId: task.executorId,
             title: "Task Status Updated",
@@ -396,7 +396,7 @@ app.get('/api/tasks/:id', authenticateUser, async (req, res) => {
     }
     
     // Проверяем, имеет ли пользователь право на просмотр этой задачи
-    if (req.user.role !== 'admin' && req.user.id !== task.clientId && req.user.id !== task.executorId) {
+    if (req.user!.role !== 'admin' && req.user!.id !== task.clientId && req.user!.id !== task.executorId) {
       return res.status(403).json({ 
         message: "Forbidden",
         details: "You can only view tasks where you are the client, executor, or an admin"

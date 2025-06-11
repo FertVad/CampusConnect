@@ -73,13 +73,13 @@ const authenticateUser = async (req: Request, res: Response, next: NextFunction)
     // Подробное логирование сессии для отладки проблем аутентификации
     console.log(`Auth check - Session ID: ${req.sessionID}`);
     console.log(`Auth check - Is Authenticated: ${req.isAuthenticated ? req.isAuthenticated() : 'method undefined'}`);
-    console.log(`Auth check - User: ${req.user ? JSON.stringify({ id: req.user.id, role: req.user.role }) : 'undefined'}`);
+    console.log(`Auth check - User: ${req.user ? JSON.stringify({ id: req.user!.id, role: req.user!.role }) : 'undefined'}`);
     console.log(`Auth check - Cookies: ${req.headers.cookie}`);
     console.log(`Auth check - Session data:`, req.session);
     
     // Если пользователь аутентифицирован через passport, пропускаем
     if (req.isAuthenticated && req.isAuthenticated() && req.user) {
-      console.log(`User authenticated normally: ${req.user.id} (${req.user.role})`);
+      console.log(`User authenticated normally: ${req.user!.id} (${req.user!.role})`);
       
       // Принудительно сохраняем сессию при каждом запросе
       if (req.session) {
@@ -128,7 +128,7 @@ const requireRole = (roles: string[]) => {
       return res.status(401).json({ message: "Unauthorized" });
     }
     
-    if (!roles.includes(req.user.role)) {
+    if (!roles.includes(req.user!.role)) {
       return res.status(403).json({ message: "Forbidden - Insufficient permissions" });
     }
     
@@ -282,7 +282,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const studentId = parseInt(req.params.studentId);
       
       // Students can only view their own assignments unless they're admins/teachers
-      if (req.user.id !== studentId && req.user.role === 'student') {
+      if (req.user!.id !== studentId && req.user!.role === 'student') {
         return res.status(403).json({ message: "Forbidden" });
       }
       
@@ -296,15 +296,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Simplified route for student's own assignments and submissions
   app.get('/api/assignments/student', authenticateUser, async (req, res) => {
     try {
-      if (req.user.role !== 'student') {
+      if (req.user!.role !== 'student') {
         return res.status(403).json({ message: "Access denied" });
       }
       
       // Get all assignments for the student
-      const assignments = await getStorage().getAssignmentsByStudent(req.user.id);
+      const assignments = await getStorage().getAssignmentsByStudent(req.user!.id);
       
       // Get all submissions by this student
-      const submissions = await getStorage().getSubmissionsByStudent(req.user.id);
+      const submissions = await getStorage().getSubmissionsByStudent(req.user!.id);
       
       // Map submissions to assignments
       const assignmentsWithSubmissions = assignments.map(assignment => {
@@ -326,7 +326,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const teacherId = parseInt(req.params.teacherId);
       
       // Teachers can only view their own assignments unless they're admins
-      if (req.user.id !== teacherId && req.user.role !== 'admin') {
+      if (req.user!.id !== teacherId && req.user!.role !== 'admin') {
         return res.status(403).json({ message: "Forbidden" });
       }
       
@@ -340,12 +340,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Simplified route for teacher's own assignments with submissions
   app.get('/api/assignments/teacher', authenticateUser, async (req, res) => {
     try {
-      if (req.user.role !== 'teacher' && req.user.role !== 'admin') {
+      if (req.user!.role !== 'teacher' && req.user!.role !== 'admin') {
         return res.status(403).json({ message: "Access denied" });
       }
       
       // Get all assignments created by this teacher
-      const assignments = await getStorage().getAssignmentsByTeacher(req.user.id);
+      const assignments = await getStorage().getAssignmentsByTeacher(req.user!.id);
       
       // For each assignment, get submissions count and other details
       const assignmentsWithDetails = await Promise.all(assignments.map(async assignment => {
@@ -375,7 +375,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const assignmentData = insertAssignmentSchema.parse({
         ...req.body,
-        createdBy: req.user.id
+        createdBy: req.user!.id
       });
       const assignment = await getStorage().createAssignment(assignmentData);
       
@@ -410,7 +410,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Teachers can only edit their own assignments unless they're admins
-      if (req.user.role === 'teacher' && assignment.createdBy !== req.user.id) {
+      if (req.user!.role === 'teacher' && assignment.createdBy !== req.user!.id) {
         return res.status(403).json({ message: "Forbidden" });
       }
       
@@ -436,7 +436,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Teachers can only delete their own assignments unless they're admins
-      if (req.user.role === 'teacher' && assignment.createdBy !== req.user.id) {
+      if (req.user!.role === 'teacher' && assignment.createdBy !== req.user!.id) {
         return res.status(403).json({ message: "Forbidden" });
       }
       
@@ -459,14 +459,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Check permissions
-      if (req.user.role === 'student') {
+      if (req.user!.role === 'student') {
         // Students can only see their own submissions
-        const submission = await getStorage().getSubmissionByAssignmentAndStudent(assignmentId, req.user.id);
+        const submission = await getStorage().getSubmissionByAssignmentAndStudent(assignmentId, req.user!.id);
         return res.json(submission ? [submission] : []);
       }
       
       // Teachers can see submissions for assignments they created
-      if (req.user.role === 'teacher' && assignment.createdBy !== req.user.id) {
+      if (req.user!.role === 'teacher' && assignment.createdBy !== req.user!.id) {
         return res.status(403).json({ message: "Forbidden" });
       }
       
@@ -482,7 +482,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const studentId = parseInt(req.params.studentId);
       
       // Students can only view their own submissions unless they're admins/teachers
-      if (req.user.id !== studentId && req.user.role === 'student') {
+      if (req.user!.id !== studentId && req.user!.role === 'student') {
         return res.status(403).json({ message: "Forbidden" });
       }
       
@@ -496,7 +496,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/submissions', authenticateUser, requireRole(['student']), upload.single('file'), async (req, res) => {
     try {
       const assignmentId = parseInt(req.body.assignmentId);
-      const studentId = req.user.id;
+      const studentId = req.user!.id;
       
       // Check if assignment exists
       const assignment = await getStorage().getAssignment(assignmentId);
@@ -572,9 +572,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Teachers can only grade submissions for their subjects
-      if (req.user.role === 'teacher') {
+      if (req.user!.role === 'teacher') {
         const subject = await getStorage().getSubject(assignment.subjectId);
-        if (subject?.teacherId !== req.user.id) {
+        if (subject?.teacherId !== req.user!.id) {
           return res.status(403).json({ message: "Forbidden" });
         }
       }
@@ -617,7 +617,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const studentId = parseInt(req.params.studentId);
       
       // Students can only view their own grades unless they're admins/teachers
-      if (req.user.id !== studentId && req.user.role === 'student') {
+      if (req.user!.id !== studentId && req.user!.role === 'student') {
         return res.status(403).json({ message: "Forbidden" });
       }
       
@@ -633,9 +633,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const subjectId = parseInt(req.params.subjectId);
       
       // Check if the teacher has access to this subject
-      if (req.user.role === 'teacher') {
+      if (req.user!.role === 'teacher') {
         const subject = await getStorage().getSubject(subjectId);
-        if (subject?.teacherId !== req.user.id) {
+        if (subject?.teacherId !== req.user!.id) {
           return res.status(403).json({ message: "Forbidden" });
         }
       }
@@ -652,9 +652,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const gradeData = insertGradeSchema.parse(req.body);
       
       // Check if the teacher has access to this subject
-      if (req.user.role === 'teacher') {
+      if (req.user!.role === 'teacher') {
         const subject = await getStorage().getSubject(gradeData.subjectId);
-        if (subject?.teacherId !== req.user.id) {
+        if (subject?.teacherId !== req.user!.id) {
           return res.status(403).json({ message: "Forbidden" });
         }
       }
@@ -689,9 +689,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Check if the teacher has access to this subject
-      if (req.user.role === 'teacher') {
+      if (req.user!.role === 'teacher') {
         const subject = await getStorage().getSubject(grade.subjectId);
-        if (subject?.teacherId !== req.user.id) {
+        if (subject?.teacherId !== req.user!.id) {
           return res.status(403).json({ message: "Forbidden" });
         }
       }
@@ -735,7 +735,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const otherUserId = parseInt(req.params.userId);
-      const messages = await getStorage().getMessagesBetweenUsers(req.user.id, otherUserId);
+      const messages = await getStorage().getMessagesBetweenUsers(req.user!.id, otherUserId);
       
       res.json(messages);
     } catch (error) {
@@ -769,7 +769,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Request Routes
   app.get('/api/requests', authenticateUser, requireRole(['admin', 'teacher']), async (req, res) => {
     try {
-      const requests = req.user.role === 'admin' 
+      const requests = req.user!.role === 'admin' 
         ? await getStorage().getRequests()
         : await getStorage().getPendingRequests();
       
@@ -784,7 +784,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const studentId = parseInt(req.params.studentId);
       
       // Students can only view their own requests unless they're admins/teachers
-      if (req.user.id !== studentId && req.user.role === 'student') {
+      if (req.user!.id !== studentId && req.user!.role === 'student') {
         return res.status(403).json({ message: "Forbidden" });
       }
       
@@ -799,7 +799,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const requestData = insertRequestSchema.parse({
         ...req.body,
-        studentId: req.user.id
+        studentId: req.user!.id
       });
       
       const request = await getStorage().createRequest(requestData);
@@ -842,7 +842,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const updatedRequest = await getStorage().updateRequestStatus(
         requestId, 
         status as 'approved' | 'rejected',
-        req.user.id,
+        req.user!.id,
         resolution
       );
       
@@ -867,7 +867,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = parseInt(req.params.userId);
       
       // Students can only view their own documents unless they're admins/teachers
-      if (req.user.id !== userId && req.user.role === 'student') {
+      if (req.user!.id !== userId && req.user!.role === 'student') {
         return res.status(403).json({ message: "Forbidden" });
       }
       
@@ -884,7 +884,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const type = req.params.type;
       
       // Students can only view their own documents unless they're admins/teachers
-      if (req.user.id !== userId && req.user.role === 'student') {
+      if (req.user!.id !== userId && req.user!.role === 'student') {
         return res.status(403).json({ message: "Forbidden" });
       }
       
@@ -899,7 +899,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const documentData = insertDocumentSchema.parse({
         ...req.body,
-        createdBy: req.user.id,
+        createdBy: req.user!.id,
         fileUrl: req.file ? `/uploads/${req.file.filename}` : null
       });
       
@@ -927,7 +927,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // GET /api/notifications - получить все уведомления для текущего пользователя
   app.get('/api/notifications', authenticateUser, async (req, res) => {
     try {
-      const userId = req.user.id;
+      const userId = req.user!.id;
       const notifications = await getStorage().getNotificationsByUser(userId);
       res.json(notifications);
     } catch (error) {
@@ -938,7 +938,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // GET /api/notifications/unread - получить все непрочитанные уведомления для текущего пользователя
   app.get('/api/notifications/unread', authenticateUser, async (req, res) => {
     try {
-      const userId = req.user.id;
+      const userId = req.user!.id;
       const notifications = await getStorage().getUnreadNotificationsByUser(userId);
       res.json(notifications);
     } catch (error) {
@@ -957,7 +957,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Notification not found" });
       }
       
-      if (notification.userId !== req.user.id) {
+      if (notification.userId !== req.user!.id) {
         return res.status(403).json({ message: "You don't have permission to modify this notification" });
       }
       
@@ -979,7 +979,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Notification not found" });
       }
       
-      if (notification.userId !== req.user.id) {
+      if (notification.userId !== req.user!.id) {
         return res.status(403).json({ message: "You don't have permission to delete this notification" });
       }
       
@@ -1029,7 +1029,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Users can only mark their own notifications as read
-      if (req.user.id !== notification.userId) {
+      if (req.user!.id !== notification.userId) {
         return res.status(403).json({ message: "Forbidden" });
       }
       
@@ -1043,7 +1043,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // PATCH /api/notifications/read-all - отметить все уведомления пользователя как прочитанные
   app.patch('/api/notifications/read-all', authenticateUser, async (req, res) => {
     try {
-      const userId = req.user.id;
+      const userId = req.user!.id;
       await getStorage().markAllNotificationsAsRead(userId);
       res.json({ success: true, message: "All notifications marked as read" });
     } catch (error) {
@@ -1057,7 +1057,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = parseInt(req.params.userId);
       
       // Users can only view their own notifications
-      if (req.user.id !== userId) {
+      if (req.user!.id !== userId) {
         return res.status(403).json({ message: "Forbidden" });
       }
       
@@ -1073,7 +1073,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = parseInt(req.params.userId);
       
       // Users can only view their own notifications
-      if (req.user.id !== userId) {
+      if (req.user!.id !== userId) {
         return res.status(403).json({ message: "Forbidden" });
       }
       
@@ -1193,7 +1193,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   app.get('/api/curriculum-plans/education-level/:level', authenticateUser, async (req, res) => {
     try {
-      const level = req.params.level;
+      const level = req.params.level as 'СПО' | 'ВО' | 'Магистратура' | 'Аспирантура';
       
       // Проверяем, что уровень образования валидный
       const validLevels = ['СПО', 'ВО', 'Магистратура', 'Аспирантура'];
@@ -1307,7 +1307,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Добавляем id текущего пользователя как создателя
       if (!planData.createdBy) {
-        planData.createdBy = req.user.id;
+        planData.createdBy = req.user!.id;
       }
       
       const plan = await getStorage().createCurriculumPlan(planData);
@@ -1590,7 +1590,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 declare global {
   namespace Express {
     interface Request {
-      user?: any;
+      user?: User;
     }
   }
 }
