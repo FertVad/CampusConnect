@@ -299,7 +299,7 @@ export class SupabaseStorage {
     
     return results.map(({ schedule_items, subjects }) => ({
       ...schedule_items,
-      subject: subjects
+      subject: subjects!
     }));
   }
 
