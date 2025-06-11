@@ -119,13 +119,10 @@ const AssignmentDetails: React.FC<AssignmentDetailsProps> = ({
             <CardTitle className="text-lg font-heading">Your Submission</CardTitle>
             {submission && submission.submittedAt && (
               <CardDescription>
-                Submitted on {formatDate(submission.submittedAt, { 
-                  year: 'numeric', 
-                  month: 'short', 
-                  day: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit'
-                })}
+                Submitted on {formatDate(
+                  submission.submittedAt,
+                  'MMM d, yyyy HH:mm'
+                )}
               </CardDescription>
             )}
           </CardHeader>
@@ -183,13 +180,10 @@ const AssignmentDetails: React.FC<AssignmentDetailsProps> = ({
             <CardTitle className="text-lg font-heading">Student Submission</CardTitle>
             {submission.submittedAt && (
               <CardDescription>
-                Submitted on {formatDate(submission.submittedAt, { 
-                  year: 'numeric', 
-                  month: 'short', 
-                  day: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit'
-                })}
+                Submitted on {formatDate(
+                  submission.submittedAt,
+                  'MMM d, yyyy HH:mm'
+                )}
               </CardDescription>
             )}
           </CardHeader>

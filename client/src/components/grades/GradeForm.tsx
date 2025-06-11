@@ -152,7 +152,7 @@ const GradeForm: React.FC<GradeFormProps> = ({ students, subjects, onSubmit }) =
                 <FormItem>
                   <FormLabel>Comments</FormLabel>
                   <FormControl>
-                    <Textarea rows={3} {...field} />
+                    <Textarea rows={3} {...field} value={field.value ?? ''} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

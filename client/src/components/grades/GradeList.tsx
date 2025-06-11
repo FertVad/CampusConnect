@@ -28,7 +28,7 @@ const GradeList: React.FC<GradeListProps> = ({ grades, subjects }) => {
   });
   
   // Calculate GPA for all subjects
-  const overallGPA = calculateGPA(grades);
+  const overallGPA = parseFloat(calculateGPA(grades));
   
   // Calculate color based on GPA
   const getGpaColor = (gpa: number) => {
@@ -63,7 +63,7 @@ const GradeList: React.FC<GradeListProps> = ({ grades, subjects }) => {
         </Card>
       ) : (
         Object.entries(gradesBySubject).map(([subjectId, subjectGrades]) => {
-          const subjectGpa = calculateGPA(subjectGrades);
+          const subjectGpa = parseFloat(calculateGPA(subjectGrades));
           
           return (
             <Card key={subjectId}>
