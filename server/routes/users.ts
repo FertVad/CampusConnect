@@ -20,7 +20,7 @@ app.get('/api/users/:id', authenticateUser, async (req, res) => {
     const userId = parseInt(req.params.id);
     
     // Users can only view their own profile unless they're admins
-    if (req.user.id !== userId && req.user.role !== 'admin') {
+    if (req.user!.id !== userId && req.user!.role !== 'admin') {
       return res.status(403).json({ message: "Forbidden" });
     }
     

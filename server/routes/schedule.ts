@@ -3,10 +3,23 @@ import { getStorage } from "../storage";
 import { insertSubjectSchema, insertEnrollmentSchema, insertScheduleItemSchema } from "@shared/schema";
 import { parseSheetDataToScheduleItems, fetchSheetData, authenticateWithGoogleSheets } from "../utils/googleSheetsHelper";
 import { parseCsvToScheduleItems, validateScheduleItems, prepareImportResult } from "../utils/csvHelper";
+import { db } from "../db";
 import type { RouteContext } from "./index";
 import path from "path";
 import fs from "fs";
 import { z } from "zod";
+
+async function getDefaultTeacherId(): Promise<number> {
+  try {
+    const teachers = await getStorage().getUsersByRole('teacher');
+    if (teachers.length > 0) {
+      return teachers[0].id;
+    }
+    return 2;
+  } catch {
+    return 2;
+  }
+}
 
 export function registerScheduleRoutes(app: Express, { authenticateUser, requireRole, upload }: RouteContext) {
 // Subject Routes
@@ -39,11 +52,11 @@ app.get('/api/subjects/:id', authenticateUser, async (req, res) => {
 // Get subjects taught by the current teacher
 app.get('/api/subjects/teacher', authenticateUser, async (req, res) => {
   try {
-    if (!req.user || (req.user.role !== 'teacher' && req.user.role !== 'admin')) {
+    if (!req.user || (req.user!.role !== 'teacher' && req.user!.role !== 'admin')) {
       return res.status(403).json({ message: "Access denied" });
     }
     
-    const subjects = await getStorage().getSubjectsByTeacher(req.user.id);
+    const subjects = await getStorage().getSubjectsByTeacher(req.user!.id);
     res.json(subjects);
   } catch (error) {
     res.status(500).json({ message: "Server error" });
@@ -112,7 +125,7 @@ app.get('/api/enrollments/student/:studentId', authenticateUser, async (req, res
     const studentId = parseInt(req.params.studentId);
     
     // Students can only view their own enrollments unless they're admins/teachers
-    if (req.user.id !== studentId && req.user.role === 'student') {
+    if (req.user!.id !== studentId && req.user!.role === 'student') {
       return res.status(403).json({ message: "Forbidden" });
     }
     
@@ -235,7 +248,7 @@ app.get('/api/schedule/student/:studentId', authenticateUser, async (req, res) =
     const studentId = parseInt(req.params.studentId);
     
     // Students can only view their own schedule unless they're admins/teachers
-    if (req.user.id !== studentId && req.user.role === 'student') {
+    if (req.user!.id !== studentId && req.user!.role === 'student') {
       return res.status(403).json({ message: "Forbidden" });
     }
     
@@ -249,13 +262,13 @@ app.get('/api/schedule/student/:studentId', authenticateUser, async (req, res) =
 // Simplified route for student's own schedule
 app.get('/api/schedule/student', authenticateUser, async (req, res) => {
   try {
-    if (!req.user || req.user.role !== 'student') {
+    if (!req.user || req.user!.role !== 'student') {
       return res.status(403).json({ message: "Access denied" });
     }
     
-    console.log(`Fetching schedule for student with ID: ${req.user.id}`);
-    const schedule = await getStorage().getScheduleItemsByStudent(req.user.id);
-    console.log(`Found ${schedule.length} schedule items for student ${req.user.id}`);
+    console.log(`Fetching schedule for student with ID: ${req.user!.id}`);
+    const schedule = await getStorage().getScheduleItemsByStudent(req.user!.id);
+    console.log(`Found ${schedule.length} schedule items for student ${req.user!.id}`);
     
     res.json(schedule);
   } catch (error) {
@@ -269,7 +282,7 @@ app.get('/api/schedule/teacher/:teacherId', authenticateUser, async (req, res) =
     const teacherId = parseInt(req.params.teacherId);
     
     // Teachers can only view their own schedule unless they're admins
-    if (req.user.id !== teacherId && req.user.role !== 'admin') {
+    if (req.user!.id !== teacherId && req.user!.role !== 'admin') {
       return res.status(403).json({ message: "Forbidden" });
     }
     
@@ -283,13 +296,13 @@ app.get('/api/schedule/teacher/:teacherId', authenticateUser, async (req, res) =
 // Simplified route for teacher's own schedule
 app.get('/api/schedule/teacher', authenticateUser, async (req, res) => {
   try {
-    if (!req.user || (req.user.role !== 'teacher' && req.user.role !== 'admin')) {
+    if (!req.user || (req.user!.role !== 'teacher' && req.user!.role !== 'admin')) {
       return res.status(403).json({ message: "Access denied" });
     }
     
-    console.log(`Fetching schedule for teacher with ID: ${req.user.id}`);
-    const schedule = await getStorage().getScheduleItemsByTeacher(req.user.id);
-    console.log(`Found ${schedule.length} schedule items for teacher ${req.user.id}`);
+    console.log(`Fetching schedule for teacher with ID: ${req.user!.id}`);
+    const schedule = await getStorage().getScheduleItemsByTeacher(req.user!.id);
+    console.log(`Found ${schedule.length} schedule items for teacher ${req.user!.id}`);
     
     res.json(schedule);
   } catch (error) {
@@ -484,17 +497,17 @@ app.post('/api/schedule/import/google-sheets', authenticateUser, requireRole(['a
     // Сохраняем информацию о загруженном файле в базу данных
     try {
       const gsheetFileInfo = await getStorage().createImportedFile({
-        originalName: req.file.originalname,
-        storedName: path.basename(req.file.path),
-        filePath: req.file.path,
-        fileSize: req.file.size,
-        mimeType: req.file.mimetype,
+        originalName: req.file!.originalname,
+        storedName: path.basename(req.file!.path),
+        filePath: req.file!.path,
+        fileSize: req.file!.size,
+        mimeType: req.file!.mimetype,
         importType: 'csv',
         status: result.success > 0 ? 'success' : 'error',
         itemsCount: result.total,
         successCount: result.success,
         errorCount: result.total - result.success,
-        uploadedBy: req.user!.id
+        uploadedBy: req.user!!.id
       });
       
       console.log(`Created import file record: ${gsheetFileInfo.id}`);
@@ -538,14 +551,14 @@ app.post(
       }
       
       // Get the path to the uploaded file
-      const filePath = req.file.path;
+      const filePath = req.file!.path;
       console.log(`Processing uploaded CSV file at: ${filePath}`);
       
       // Проверяем и получаем информацию о CSV файле
       const csvFileInfo = {
-        mime: req.file.mimetype,
-        size: req.file.size,
-        name: req.file.originalname
+        mime: req.file!.mimetype,
+        size: req.file!.size,
+        name: req.file!.originalname
       };
       
       console.log(`CSV File Info - Type: ${csvFileInfo.mime}, Size: ${csvFileInfo.size} bytes, Name: ${csvFileInfo.name}`);
@@ -678,17 +691,17 @@ app.post(
       // Сохраняем информацию о загруженном файле в базу данных
       try {
         const importFileInfo = await getStorage().createImportedFile({
-          originalName: req.file.originalname,
-          storedName: path.basename(req.file.path),
-          filePath: req.file.path,
-          fileSize: req.file.size,
-          mimeType: req.file.mimetype,
+          originalName: req.file!.originalname,
+          storedName: path.basename(req.file!.path),
+          filePath: req.file!.path,
+          fileSize: req.file!.size,
+          mimeType: req.file!.mimetype,
           importType: 'csv',
           status: result.success > 0 ? 'success' : 'error',
           itemsCount: result.total,
           successCount: result.success,
           errorCount: result.errors.length,
-          uploadedBy: req.user!.id
+          uploadedBy: req.user!!.id
         });
         
         console.log(`Created import file record: ${importFileInfo.id}`);
@@ -714,8 +727,8 @@ app.post(
       console.error('Error importing schedule from CSV:', error);
       
       // Clean up the uploaded file if exists
-      if (req.file && fs.existsSync(req.file.path)) {
-        fs.unlinkSync(req.file.path);
+      if (req.file && fs.existsSync(req.file!.path)) {
+        fs.unlinkSync(req.file!.path);
       }
       
       res.status(500).json({ 
@@ -826,7 +839,7 @@ app.delete('/api/imported-files/:id', authenticateUser, requireRole(['admin']), 
     
     // Step 3: Get count of related schedule items before deletion
     const { scheduleItems } = await import('@shared/schema');
-    const { sql } = await import('drizzle-orm');
+    const { sql, eq } = await import('drizzle-orm');
     
     // Get count of related items
     const relatedItemsCount = await db.select({
