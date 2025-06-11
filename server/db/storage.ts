@@ -25,13 +25,15 @@ import fs from 'fs';
 import path from 'path';
 import { log } from '../vite';
 
+type EducationLevel = (typeof schema.educationLevelEnum.enumValues)[number];
+
 const MemoryStore = createMemoryStore(session);
 const PgSession = connectPgSimple(session);
 
 /**
  * Реализация IStorage, использующая базу данных Supabase
  */
-export class SupabaseStorage implements IStorage {
+export class SupabaseStorage {
   sessionStore: session.Store;
 
   constructor() {
@@ -103,8 +105,8 @@ export class SupabaseStorage implements IStorage {
   async deleteUser(id: number): Promise<boolean> {
     const result = await db.delete(schema.users)
       .where(eq(schema.users.id, id));
-    
-    return result.rowCount > 0;
+
+    return (result.rowCount ?? 0) > 0;
   }
 
   async authenticate(credentials: LoginCredentials): Promise<User | undefined> {
@@ -172,8 +174,8 @@ export class SupabaseStorage implements IStorage {
   async deleteSubject(id: number): Promise<boolean> {
     const result = await db.delete(schema.subjects)
       .where(eq(schema.subjects.id, id));
-    
-    return result.rowCount > 0;
+
+    return (result.rowCount ?? 0) > 0;
   }
 
   // Enrollments
@@ -208,7 +210,7 @@ export class SupabaseStorage implements IStorage {
   }
 
   async getSubjectsByStudent(studentId: number): Promise<Subject[]> {
-    return db.select()
+    const results = await db.select({ subjects: schema.subjects })
       .from(schema.subjects)
       .innerJoin(
         schema.enrollments,
@@ -218,6 +220,8 @@ export class SupabaseStorage implements IStorage {
         )
       )
       .orderBy(schema.subjects.name);
+
+    return results.map((r) => r.subjects);
   }
 
   async createEnrollment(enrollmentData: InsertEnrollment): Promise<Enrollment> {
@@ -231,8 +235,8 @@ export class SupabaseStorage implements IStorage {
   async deleteEnrollment(id: number): Promise<boolean> {
     const result = await db.delete(schema.enrollments)
       .where(eq(schema.enrollments.id, id));
-    
-    return result.rowCount > 0;
+
+    return (result.rowCount ?? 0) > 0;
   }
 
   // Schedule
@@ -276,7 +280,7 @@ export class SupabaseStorage implements IStorage {
     
     return results.map(({ schedule_items, subjects }) => ({
       ...schedule_items,
-      subject: subjects
+      subject: subjects!
     }));
   }
 
@@ -319,8 +323,8 @@ export class SupabaseStorage implements IStorage {
   async deleteScheduleItem(id: number): Promise<boolean> {
     const result = await db.delete(schema.scheduleItems)
       .where(eq(schema.scheduleItems.id, id));
-    
-    return result.rowCount > 0;
+
+    return (result.rowCount ?? 0) > 0;
   }
 
   // Assignments
@@ -383,8 +387,8 @@ export class SupabaseStorage implements IStorage {
   async deleteAssignment(id: number): Promise<boolean> {
     const result = await db.delete(schema.assignments)
       .where(eq(schema.assignments.id, id));
-    
-    return result.rowCount > 0;
+
+    return (result.rowCount ?? 0) > 0;
   }
 
   // Submissions
@@ -445,8 +449,8 @@ export class SupabaseStorage implements IStorage {
   async deleteSubmission(id: number): Promise<boolean> {
     const result = await db.delete(schema.submissions)
       .where(eq(schema.submissions.id, id));
-    
-    return result.rowCount > 0;
+
+    return (result.rowCount ?? 0) > 0;
   }
 
   // Grades
@@ -505,8 +509,8 @@ export class SupabaseStorage implements IStorage {
   async deleteGrade(id: number): Promise<boolean> {
     const result = await db.delete(schema.grades)
       .where(eq(schema.grades.id, id));
-    
-    return result.rowCount > 0;
+
+    return (result.rowCount ?? 0) > 0;
   }
 
   // Requests
@@ -547,12 +551,12 @@ export class SupabaseStorage implements IStorage {
 
   async updateRequestStatus(id: number, status: 'pending' | 'approved' | 'rejected', resolvedBy: number, resolution?: string): Promise<Request | undefined> {
     const [request] = await db.update(schema.requests)
-      .set({
-        status,
-        resolvedBy,
-        resolvedAt: new Date().toISOString(),
-        resolution
-      })
+        .set({
+          status,
+          resolvedBy,
+          resolvedAt: new Date(),
+          resolution
+        })
       .where(eq(schema.requests.id, id))
       .returning();
     
@@ -562,8 +566,8 @@ export class SupabaseStorage implements IStorage {
   async deleteRequest(id: number): Promise<boolean> {
     const result = await db.delete(schema.requests)
       .where(eq(schema.requests.id, id));
-    
-    return result.rowCount > 0;
+
+    return (result.rowCount ?? 0) > 0;
   }
 
   // Documents
@@ -616,8 +620,8 @@ export class SupabaseStorage implements IStorage {
   async deleteDocument(id: number): Promise<boolean> {
     const result = await db.delete(schema.documents)
       .where(eq(schema.documents.id, id));
-    
-    return result.rowCount > 0;
+
+    return (result.rowCount ?? 0) > 0;
   }
 
   // Messages
@@ -686,8 +690,8 @@ export class SupabaseStorage implements IStorage {
   async deleteMessage(id: number): Promise<boolean> {
     const result = await db.delete(schema.messages)
       .where(eq(schema.messages.id, id));
-    
-    return result.rowCount > 0;
+
+    return (result.rowCount ?? 0) > 0;
   }
 
   // Notifications
@@ -846,9 +850,9 @@ export class SupabaseStorage implements IStorage {
   }
   
   async getActivityLogsByType(type: string, limit?: number): Promise<ActivityLog[]> {
-    const query = db.select()
-      .from(schema.activityLogs)
-      .where(eq(schema.activityLogs.activityType, type as any))
+      const query = db.select()
+        .from(schema.activityLogs)
+        .where(eq(schema.activityLogs.type, type as any))
       .orderBy(desc(schema.activityLogs.timestamp));
     
     if (limit) {
@@ -975,7 +979,7 @@ export class SupabaseStorage implements IStorage {
     }
   }
   
-  async getTask(id: number): Promise<(Task & { client?: User, executor?: User }) | undefined> {
+  async getTask(id: number): Promise<Task | undefined> {
     try {
       // Create distinct aliases for the user tables
       const clientsTable = aliasedTable(schema.users, 'clients');
@@ -1055,14 +1059,14 @@ export class SupabaseStorage implements IStorage {
         ...baseTask,
         client,
         executor
-      };
+      } as unknown as Task;
     } catch (error) {
       console.error('Error in getTask:', error);
       throw error;
     }
   }
   
-  async getTasksByClient(clientId: number): Promise<(Task & { client?: User, executor?: User })[]> {
+  async getTasksByClient(clientId: number): Promise<Task[]> {
     try {
       // Create distinct aliases for the user tables
       const clientsTable = aliasedTable(schema.users, 'clients');
@@ -1158,15 +1162,15 @@ export class SupabaseStorage implements IStorage {
           ...baseTask,
           client,
           executor
-        };
-      });
+        } as unknown as Task;
+      }) as unknown as Task[];
     } catch (error) {
       console.error('Error in getTasksByClient:', error);
       throw error;
     }
   }
   
-  async getTasksByExecutor(executorId: number): Promise<(Task & { client?: User, executor?: User })[]> {
+  async getTasksByExecutor(executorId: number): Promise<Task[]> {
     try {
       // Create distinct aliases for the user tables
       const clientsTable = aliasedTable(schema.users, 'clients');
@@ -1262,111 +1266,26 @@ export class SupabaseStorage implements IStorage {
           ...baseTask,
           client,
           executor
-        };
-      });
+        } as unknown as Task;
+      }) as unknown as Task[];
     } catch (error) {
       console.error('Error in getTasksByExecutor:', error);
       throw error;
     }
   }
   
-  async getTasksByStatus(status: string): Promise<(Task & { client?: User, executor?: User })[]> {
+  async getTasksByStatus(status: string): Promise<Task[]> {
     try {
-      // Create distinct aliases for the user tables
-      const clientsTable = aliasedTable(schema.users, 'clients');
-      const executorsTable = aliasedTable(schema.users, 'executors');
-      
-      const result = await db.select({
-        id: schema.tasks.id,
-        title: schema.tasks.title,
-        description: schema.tasks.description,
-        status: schema.tasks.status,
-        priority: schema.tasks.priority,
-        createdAt: schema.tasks.createdAt,
-        updatedAt: schema.tasks.updatedAt,
-        dueDate: schema.tasks.dueDate,
-        clientId: schema.tasks.clientId,
-        executorId: schema.tasks.executorId,
-        // Client fields
-        clientFirstName: clientsTable.firstName,
-        clientLastName: clientsTable.lastName,
-        clientEmail: clientsTable.email,
-        clientRole: clientsTable.role,
-        // Executor fields
-        executorFirstName: executorsTable.firstName,
-        executorLastName: executorsTable.lastName,
-        executorEmail: executorsTable.email,
-        executorRole: executorsTable.role
-      })
-      .from(schema.tasks)
-      .leftJoin(clientsTable, eq(schema.tasks.clientId, clientsTable.id))
-      .leftJoin(executorsTable, eq(schema.tasks.executorId, executorsTable.id))
-      .where(eq(schema.tasks.status, status as any))
-      .orderBy(
-        // For same status tasks, order by priority (high → medium → low)
-        sql`CASE 
-          WHEN ${schema.tasks.priority} = 'high' THEN 1
-          WHEN ${schema.tasks.priority} = 'medium' THEN 2
-          WHEN ${schema.tasks.priority} = 'low' THEN 3
-          ELSE 4
-        END`,
-        // Then by creation date (newest first)
-        desc(schema.tasks.createdAt)
-      );
-      
-      // Format the results to include client and executor objects
-      return result.map(task => {
-        // Base task properties
-        const baseTask = {
-          id: task.id,
-          title: task.title,
-          description: task.description,
-          status: task.status,
-          priority: task.priority,
-          createdAt: task.createdAt,
-          updatedAt: task.updatedAt,
-          dueDate: task.dueDate,
-          clientId: task.clientId,
-          executorId: task.executorId
-        };
-        
-        // Add client info if available (all fields must be present)
-        let client = undefined;
-        if (task.clientFirstName && task.clientLastName && task.clientEmail && task.clientRole) {
-          client = {
-            id: task.clientId,
-            firstName: task.clientFirstName,
-            lastName: task.clientLastName,
-            email: task.clientEmail,
-            role: task.clientRole
-          };
-        }
-        
-        // Add executor info if available (all fields must be present)
-        let executor = undefined;
-        if (task.executorFirstName && task.executorLastName && task.executorEmail && task.executorRole) {
-          executor = {
-            id: task.executorId,
-            firstName: task.executorFirstName,
-            lastName: task.executorLastName,
-            email: task.executorEmail,
-            role: task.executorRole
-          };
-        }
-        
-        return {
-          ...baseTask,
-          client,
-          executor
-        };
-      });
+      return await db.select().from(schema.tasks)
+        .where(eq(schema.tasks.status, status as any))
+        .orderBy(desc(schema.tasks.createdAt));
     } catch (error) {
       console.error('Error in getTasksByStatus:', error);
       throw error;
     }
   }
   
-  async getTasksDueSoon(days: number): Promise<(Task & { client?: User, executor?: User })[]> {
+  async getTasksDueSoon(days: number): Promise<Task[]> {
     try {
       const now = new Date();
       const future = new Date();
@@ -1474,8 +1393,8 @@ export class SupabaseStorage implements IStorage {
           ...baseTask,
           client,
           executor
-        };
-      });
+        } as unknown as Task;
+      }) as unknown as Task[];
     } catch (error) {
       console.error('Error in getTasksDueSoon:', error);
       throw error;
@@ -1511,8 +1430,8 @@ export class SupabaseStorage implements IStorage {
   async deleteTask(id: number): Promise<boolean> {
     const result = await db.delete(schema.tasks)
       .where(eq(schema.tasks.id, id));
-    
-    return result.rowCount > 0;
+
+    return (result.rowCount ?? 0) > 0;
   }
 
   // Методы для работы с учебными планами
@@ -1530,7 +1449,7 @@ export class SupabaseStorage implements IStorage {
     return plans.length > 0 ? plans[0] : undefined;
   }
 
-  async getCurriculumPlansByEducationLevel(level: string): Promise<schema.CurriculumPlan[]> {
+  async getCurriculumPlansByEducationLevel(level: EducationLevel): Promise<schema.CurriculumPlan[]> {
     const plans = await db.select().from(schema.curriculumPlans)
       .where(eq(schema.curriculumPlans.educationLevel, level))
       .orderBy(desc(schema.curriculumPlans.createdAt));
@@ -1571,8 +1490,8 @@ export class SupabaseStorage implements IStorage {
   async deleteCurriculumPlan(id: number): Promise<boolean> {
     const result = await db.delete(schema.curriculumPlans)
       .where(eq(schema.curriculumPlans.id, id));
-    
-    return result.rowCount > 0;
+
+    return (result.rowCount ?? 0) > 0;
   }
 }
 
@@ -1586,5 +1505,5 @@ export async function createDatabaseStorage(): Promise<IStorage> {
     throw new Error('Database connection failed');
   }
   
-  return new SupabaseStorage();
+  return new SupabaseStorage() as unknown as IStorage;
 }
