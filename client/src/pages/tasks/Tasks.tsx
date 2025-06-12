@@ -59,6 +59,13 @@ const TasksPage = () => {
     deleteTaskMutation,
   } = useTasks();
 
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [currentTask, setCurrentTask] = useState<Task | null>(null);
+  const [statusFilter, setStatusFilter] = useState<string | null>(null);
+
   const filteredTasks = statusFilter ? tasks?.filter((task) => task.status === statusFilter) : tasks;
 
   const handleStatusChange = (id: number, status: string) => {
