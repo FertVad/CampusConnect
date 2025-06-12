@@ -41,6 +41,16 @@ script:
 psql "$SUPABASE_DATABASE_URL" -f server/db/session-table.sql
 ```
 
+### Migrations
+
+If you change `shared/schema.ts` later (for example to add indexes), generate a
+SQL migration and apply it:
+
+```
+npx drizzle-kit generate --config=drizzle.config.ts
+psql "$SUPABASE_DATABASE_URL" -f migrations/<generated_file>.sql
+```
+
 ## 4. Start the development server
 
 After the variables are set and the schema is applied you can start the app:
