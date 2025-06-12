@@ -10,6 +10,7 @@ import session from 'express-session';
 import createMemoryStore from 'memorystore';
 import pg from 'pg';
 import connectPgSimple from 'connect-pg-simple';
+import { getOrSet } from '../utils/cache';
 
 import * as notificationQueries from './notifications';
 
@@ -186,7 +187,9 @@ export class SupabaseStorage {
 
   // Schedule
   async getScheduleItems(): Promise<ScheduleItem[]> {
-    return db.select().from(schema.scheduleItems);
+    return getOrSet('scheduleItems', async () => {
+      return db.select().from(schema.scheduleItems);
+    });
   }
 
   async getScheduleItem(id: number): Promise<ScheduleItem | undefined> {
@@ -859,9 +862,11 @@ export class SupabaseStorage {
 
   // Методы для работы с учебными планами
   async getCurriculumPlans(): Promise<schema.CurriculumPlan[]> {
-    const plans = await db.select().from(schema.curriculumPlans)
-      .orderBy(desc(schema.curriculumPlans.createdAt));
-    return plans;
+    return getOrSet('curriculumPlans', async () => {
+      const plans = await db.select().from(schema.curriculumPlans)
+        .orderBy(desc(schema.curriculumPlans.createdAt));
+      return plans;
+    });
   }
 
   async getCurriculumPlan(id: number): Promise<schema.CurriculumPlan | undefined> {
