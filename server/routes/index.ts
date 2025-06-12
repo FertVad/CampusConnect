@@ -43,7 +43,6 @@ import { registerCurriculumRoutes } from "./curriculum";
 interface Request extends ExpressRequest {
   user?: User;
   session: any;
-  sessionID?: string;
 }
 
 // Set up file upload storage
