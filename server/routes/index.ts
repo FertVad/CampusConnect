@@ -263,7 +263,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   registerNotificationRoutes(app, ctx);
   registerActivityLogRoutes(app, ctx);
   registerCurriculumRoutes(app, ctx);
-  
+
+  // Handle unknown /api routes with JSON 404
+  app.use('/api', (_req, res) => {
+    res.status(404).json({ message: 'API endpoint not found' });
+  });
+
   return httpServer;
 }
 
