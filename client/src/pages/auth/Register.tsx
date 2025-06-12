@@ -1,189 +1,173 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useLocation } from 'wouter';
+import { useAuth } from '@/hooks/use-auth';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle } from 'lucide-react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { insertUserSchema, type InsertUser } from '@shared/schema';
-import { useAuth } from '@/hooks/use-auth';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Loader2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { createRegisterSchema, type RegisterData } from './schema';
 
-import { Link } from 'wouter';
+interface RegisterProps {
+  onTabChange: (tab: string) => void;
+}
 
-// Extend the insertUserSchema with additional validation rules
-const registerSchema = insertUserSchema.extend({
-  confirmPassword: z.string().min(1, "Please confirm your password"),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ["confirmPassword"],
-});
+export default function Register({ onTabChange }: RegisterProps) {
+  const { registerMutation } = useAuth();
+  const [, setLocation] = useLocation();
+  const { t } = useTranslation();
 
-type RegisterFormData = z.infer<typeof registerSchema>;
-
-const Register = () => {
-  const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [_, setLocation] = useLocation();
-  const { user, registerMutation } = useAuth();
-
-  // Redirect to dashboard if user is already logged in
-  useEffect(() => {
-    if (user) {
-      setLocation('/dashboard');
-    }
-  }, [user, setLocation]);
-
-  const { register, handleSubmit, formState: { errors } } = useForm<RegisterFormData>({
+  const registerSchema = createRegisterSchema(t);
+  const form = useForm<RegisterData>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
-      firstName: '',
-      lastName: '',
-      email: '',
       password: '',
       confirmPassword: '',
-      role: 'student' // Default role
-    }
+      email: '',
+      firstName: '',
+      lastName: '',
+      role: 'student',
+    },
   });
 
-  const onSubmit = async (data: RegisterFormData) => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      
-      // Remove confirmPassword as it's not part of the API schema
-      const { confirmPassword, ...userData } = data;
-      
-      await registerMutation.mutateAsync(userData as InsertUser);
-      setLocation('/dashboard');
-    } catch (err: any) {
-      console.error('Registration error:', err);
-      setError(err.message || 'Registration failed. Please try again.');
-    } finally {
-      setIsLoading(false);
+  function onSubmit(data: RegisterData) {
+    const { confirmPassword, ...userData } = data;
+    registerMutation.mutate(userData);
+  }
+
+  const prevSuccessRef = React.useRef(false);
+  useEffect(() => {
+    if (registerMutation.isSuccess && !prevSuccessRef.current) {
+      prevSuccessRef.current = true;
+      setTimeout(() => setLocation('/'), 100);
     }
-  };
+    if (!registerMutation.isSuccess) {
+      prevSuccessRef.current = false;
+    }
+  }, [registerMutation.isSuccess, setLocation]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-neutral-50 p-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <div className="inline-block bg-primary p-3 rounded-lg mb-4">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-            </svg>
-          </div>
-          <h1 className="text-3xl font-bold font-heading text-neutral-800">EduPortal</h1>
-          <p className="text-neutral-500 mt-2">College Management System</p>
-        </div>
-        
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-xl font-heading">Create Account</CardTitle>
-            <CardDescription>
-              Register to access the college management system
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {error && (
-              <Alert variant="destructive" className="mb-4">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
-            
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="firstName">First Name</Label>
-                  <Input
-                    id="firstName"
-                    placeholder="John"
-                    {...register('firstName')}
-                    className={errors.firstName ? 'border-red-500' : ''}
-                  />
-                  {errors.firstName && (
-                    <p className="text-red-500 text-xs mt-1">{errors.firstName.message}</p>
-                  )}
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="lastName">Last Name</Label>
-                  <Input
-                    id="lastName"
-                    placeholder="Doe"
-                    {...register('lastName')}
-                    className={errors.lastName ? 'border-red-500' : ''}
-                  />
-                  {errors.lastName && (
-                    <p className="text-red-500 text-xs mt-1">{errors.lastName.message}</p>
-                  )}
-                </div>
-              </div>
-              
-              
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="john.doe@example.com"
-                  {...register('email')}
-                  className={errors.email ? 'border-red-500' : ''}
-                />
-                {errors.email && (
-                  <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>
-                )}
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  {...register('password')}
-                  className={errors.password ? 'border-red-500' : ''}
-                />
-                {errors.password && (
-                  <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>
-                )}
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirm Password</Label>
-                <Input
-                  id="confirmPassword"
-                  type="password"
-                  {...register('confirmPassword')}
-                  className={errors.confirmPassword ? 'border-red-500' : ''}
-                />
-                {errors.confirmPassword && (
-                  <p className="text-red-500 text-xs mt-1">{errors.confirmPassword.message}</p>
-                )}
-              </div>
-              
-              <input type="hidden" {...register('role')} />
-              
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? 'Creating Account...' : 'Register'}
-              </Button>
-            </form>
-          </CardContent>
-          <CardFooter>
-            <div className="text-sm text-center w-full text-neutral-500">
-              Already have an account?{' '}
-              <Link href="/login" className="text-primary hover:underline">
-                Sign in
-              </Link>
-            </div>
-          </CardFooter>
-        </Card>
-      </div>
-    </div>
+    <Card className="glass border-0 shadow-none">
+      <CardHeader>
+        <CardTitle className="text-2xl bg-gradient-to-r from-indigo-400 to-emerald-300 text-transparent bg-clip-text">
+          {t('auth.register.title')}
+        </CardTitle>
+        <CardDescription>{t('auth.register.subtitle')}</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="firstName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('auth.register.firstName')}</FormLabel>
+                  <FormControl>
+                    <Input placeholder={t('auth.placeholders.firstName')} className="glass" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="lastName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('auth.register.lastName')}</FormLabel>
+                  <FormControl>
+                    <Input placeholder={t('auth.placeholders.lastName')} className="glass" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('auth.register.email')}</FormLabel>
+                  <FormControl>
+                    <Input placeholder="email@example.com" className="glass" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="role"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('auth.register.role')}</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger className="glass">
+                        <SelectValue placeholder={t('auth.placeholders.selectRole')} />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent className="glass-modal">
+                      <SelectItem value="student">{t('users.roles.student')}</SelectItem>
+                      <SelectItem value="teacher">{t('users.roles.teacher')}</SelectItem>
+                      <SelectItem value="admin">{t('users.roles.admin')}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('auth.register.password')}</FormLabel>
+                  <FormControl>
+                    <Input type="password" placeholder="********" className="glass" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="confirmPassword"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('auth.register.confirmPassword')}</FormLabel>
+                  <FormControl>
+                    <Input type="password" placeholder="********" className="glass" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <Button type="submit" className="w-full bg-primary hover:bg-primary/80" disabled={registerMutation.isPending}>
+              {registerMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  {t('auth.register.creatingAccount')}
+                </>
+              ) : (
+                t('auth.register.createAccount')
+              )}
+            </Button>
+          </form>
+        </Form>
+      </CardContent>
+      <CardFooter className="flex justify-center text-sm">
+        <span className="text-muted-foreground">{t('auth.register.alreadyHaveAccount')}</span>
+        <Button variant="link" className="px-2 text-indigo-400 hover:text-indigo-300" onClick={() => onTabChange('login')}>
+          {t('auth.register.signIn')}
+        </Button>
+      </CardFooter>
+    </Card>
   );
-};
+}
 
-export default Register;
