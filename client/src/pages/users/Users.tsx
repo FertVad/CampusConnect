@@ -9,6 +9,8 @@ import { useTranslation } from 'react-i18next';
 // UI Components
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { TextField } from '@/components/forms/TextField';
+import { SelectField } from '@/components/forms/SelectField';
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -17,6 +19,10 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from '@/components/ui/label';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Loader2, Plus, Pencil, Trash2, Search } from 'lucide-react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { insertUserSchema, type InsertUser } from '@shared/schema';
+import { z } from 'zod';
 
 // Define the User type
 interface User {
@@ -28,14 +34,6 @@ interface User {
   createdAt: string;
 }
 
-// Define UserFormData type for the create/edit forms
-interface UserFormData {
-  firstName: string;
-  lastName: string;
-  email: string;
-  password?: string;
-  role: 'admin' | 'teacher' | 'student' | 'director';
-}
 
 export default function Users() {
   const { user } = useAuth();
@@ -62,14 +60,38 @@ export default function Users() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
-  const [formData, setFormData] = useState<UserFormData>({
-    firstName: '',
-    lastName: '',
-    email: '',
-    password: '',
-    role: 'student'
+
+  const createForm = useForm<InsertUser>({
+    resolver: zodResolver(insertUserSchema),
+    defaultValues: {
+      firstName: '',
+      lastName: '',
+      email: '',
+      password: '',
+      role: 'student'
+    }
   });
-  
+
+  const editUserSchema = insertUserSchema.pick({
+    firstName: true,
+    lastName: true,
+    email: true,
+    role: true
+  }).extend({
+    password: insertUserSchema.shape.password.optional()
+  });
+
+  const editForm = useForm<z.infer<typeof editUserSchema>>({
+    resolver: zodResolver(editUserSchema),
+    defaultValues: {
+      firstName: '',
+      lastName: '',
+      email: '',
+      password: '',
+      role: 'student'
+    }
+  });
+
   // State for delete confirmation
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -85,14 +107,14 @@ export default function Users() {
 
   // Create user mutation
   const createUserMutation = useMutation({
-    mutationFn: async (userData: UserFormData) => {
+    mutationFn: async (userData: InsertUser) => {
       const response = await apiRequest('POST', '/api/users', userData);
       return response.json() as Promise<User>;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/users'] });
       setIsCreateDialogOpen(false);
-      resetForm();
+      createForm.reset();
       toast({
         title: "Success",
         description: "User created successfully",
@@ -109,7 +131,7 @@ export default function Users() {
 
   // Update user mutation
   const updateUserMutation = useMutation({
-    mutationFn: async ({ id, userData }: { id: number, userData: Partial<UserFormData> }) => {
+    mutationFn: async ({ id, userData }: { id: number, userData: Partial<InsertUser> }) => {
       const response = await apiRequest('PUT', `/api/users/${id}`, userData);
       return response.json() as Promise<User>;
     },
@@ -119,7 +141,7 @@ export default function Users() {
       queryClient.invalidateQueries({ queryKey: ['/api/notifications'] });
       setIsEditDialogOpen(false);
       setEditingUser(null);
-      resetForm();
+      editForm.reset();
       toast({
         title: "Success",
         description: "User updated successfully",
@@ -158,16 +180,6 @@ export default function Users() {
     }
   });
 
-  // Handler for form input changes
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  // Handler for role selection change
-  const handleRoleChange = (value: string) => {
-    setFormData(prev => ({ ...prev, role: value as 'admin' | 'teacher' | 'student' | 'director' }));
-  };
 
   // Filter users based on search query and role filter
   const filteredUsers = users.filter(user => {
@@ -188,54 +200,28 @@ export default function Users() {
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentUsers = filteredUsers.slice(indexOfFirstItem, indexOfLastItem);
 
-  // Reset form data
-  const resetForm = () => {
-    setFormData({
-      firstName: '',
-      lastName: '',
-      email: '',
-      password: '',
-      role: 'student'
-    });
-  };
 
   // Open edit dialog with user data
   const openEditDialog = (user: User) => {
     setEditingUser(user);
-    setFormData({
+    editForm.reset({
       firstName: user.firstName,
       lastName: user.lastName,
       email: user.email,
       role: user.role,
+      password: ''
     });
     setIsEditDialogOpen(true);
   };
 
-  // Handle create form submission
-  const handleCreateSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    createUserMutation.mutate(formData);
-  };
+  const handleCreateSubmit = createForm.handleSubmit((data) => {
+    createUserMutation.mutate(data);
+  });
 
-  // Handle edit form submission
-  const handleEditSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleEditSubmit = editForm.handleSubmit((data) => {
     if (!editingUser) return;
-    
-    // Only include password if it was provided
-    const userData: Partial<UserFormData> = {
-      firstName: formData.firstName,
-      lastName: formData.lastName,
-      email: formData.email,
-      role: formData.role,
-    };
-    
-    if (formData.password) {
-      userData.password = formData.password;
-    }
-    
-    updateUserMutation.mutate({ id: editingUser.id, userData });
-  };
+    updateUserMutation.mutate({ id: editingUser.id, userData: data });
+  });
 
   // Handle delete confirmation
   const confirmDelete = () => {
@@ -340,7 +326,7 @@ export default function Users() {
           </div>
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogTrigger asChild>
-              <Button onClick={() => { resetForm(); setIsCreateDialogOpen(true); }}>
+              <Button onClick={() => { createForm.reset(); setIsCreateDialogOpen(true); }}>
                 <Plus className="mr-2 h-4 w-4" /> {t('users.management.addUser', 'Добавить пользователя')}
               </Button>
             </DialogTrigger>
@@ -351,91 +337,43 @@ export default function Users() {
                   {t('users.create.description', 'Добавьте нового пользователя в систему. Вам потребуется установить его имя, электронную почту, пароль и роль.')}
                 </DialogDescription>
               </DialogHeader>
-              <form onSubmit={handleCreateSubmit}>
-                <div className="grid gap-4 py-4">
+              <Form {...createForm}>
+                <form onSubmit={handleCreateSubmit} className="space-y-4 py-4">
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="firstName">First Name</Label>
-                      <Input
-                        id="firstName"
-                        name="firstName"
-                        value={formData.firstName}
-                        onChange={handleInputChange}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="lastName">Last Name</Label>
-                      <Input
-                        id="lastName"
-                        name="lastName"
-                        value={formData.lastName}
-                        onChange={handleInputChange}
-                        required
-                      />
-                    </div>
+                    <TextField control={createForm.control} name="firstName" label="First Name" />
+                    <TextField control={createForm.control} name="lastName" label="Last Name" />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input
-                      id="email"
-                      name="email"
-                      type="email"
-                      value={formData.email}
-                      onChange={handleInputChange}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="password">Password</Label>
-                    <Input
-                      id="password"
-                      name="password"
-                      type="password"
-                      value={formData.password}
-                      onChange={handleInputChange}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="role">Role</Label>
-                    <Select 
-                      name="role" 
-                      value={formData.role} 
-                      onValueChange={handleRoleChange}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a role" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="director">Director</SelectItem>
-                        <SelectItem value="admin">Admin</SelectItem>
-                        <SelectItem value="teacher">Teacher</SelectItem>
-                        <SelectItem value="student">Student</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    onClick={() => setIsCreateDialogOpen(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button type="submit" disabled={createUserMutation.isPending}>
-                    {createUserMutation.isPending ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Creating...
-                      </>
-                    ) : (
-                      'Create User'
-                    )}
-                  </Button>
-                </DialogFooter>
-              </form>
+                  <TextField control={createForm.control} name="email" label="Email" type="email" />
+                  <TextField control={createForm.control} name="password" label="Password" type="password" />
+                  <SelectField
+                    control={createForm.control}
+                    name="role"
+                    label="Role"
+                    placeholder="Select a role"
+                    options={[
+                      { value: 'director', label: 'Director' },
+                      { value: 'admin', label: 'Admin' },
+                      { value: 'teacher', label: 'Teacher' },
+                      { value: 'student', label: 'Student' }
+                    ]}
+                  />
+                  <DialogFooter>
+                    <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button type="submit" disabled={createUserMutation.isPending}>
+                      {createUserMutation.isPending ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Creating...
+                        </>
+                      ) : (
+                        'Create User'
+                      )}
+                    </Button>
+                  </DialogFooter>
+                </form>
+              </Form>
             </DialogContent>
           </Dialog>
         </CardHeader>
@@ -578,92 +516,43 @@ export default function Users() {
               Update user information. Leave the password field blank to keep the current password.
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleEditSubmit}>
-            <div className="grid gap-4 py-4">
+          <Form {...editForm}>
+            <form onSubmit={handleEditSubmit} className="space-y-4 py-4">
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="edit-firstName">First Name</Label>
-                  <Input
-                    id="edit-firstName"
-                    name="firstName"
-                    value={formData.firstName}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="edit-lastName">Last Name</Label>
-                  <Input
-                    id="edit-lastName"
-                    name="lastName"
-                    value={formData.lastName}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </div>
+                <TextField control={editForm.control} name="firstName" label="First Name" />
+                <TextField control={editForm.control} name="lastName" label="Last Name" />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-email">Email</Label>
-                <Input
-                  id="edit-email"
-                  name="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-password">
-                  Password <span className="text-sm text-muted-foreground">(Leave blank to keep current)</span>
-                </Label>
-                <Input
-                  id="edit-password"
-                  name="password"
-                  type="password"
-                  value={formData.password || ''}
-                  onChange={handleInputChange}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-role">Role</Label>
-                <Select 
-                  name="role" 
-                  value={formData.role} 
-                  onValueChange={handleRoleChange}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a role" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="director">Director</SelectItem>
-                    <SelectItem value="admin">Admin</SelectItem>
-                    <SelectItem value="teacher">Teacher</SelectItem>
-                    <SelectItem value="student">Student</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <DialogFooter>
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={() => setIsEditDialogOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" disabled={updateUserMutation.isPending}>
-                {updateUserMutation.isPending ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  'Save Changes'
-                )}
-              </Button>
-            </DialogFooter>
-          </form>
+              <TextField control={editForm.control} name="email" label="Email" type="email" />
+              <TextField control={editForm.control} name="password" label="Password" type="password" />
+              <SelectField
+                control={editForm.control}
+                name="role"
+                label="Role"
+                placeholder="Select a role"
+                options={[
+                  { value: 'director', label: 'Director' },
+                  { value: 'admin', label: 'Admin' },
+                  { value: 'teacher', label: 'Teacher' },
+                  { value: 'student', label: 'Student' }
+                ]}
+              />
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={updateUserMutation.isPending}>
+                  {updateUserMutation.isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    'Save Changes'
+                  )}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
         </DialogContent>
       </Dialog>
 

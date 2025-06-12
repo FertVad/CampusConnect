@@ -31,8 +31,9 @@ import {
   FormMessage 
 } from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { TextField } from '@/components/forms/TextField';
+import { TextareaField } from '@/components/forms/TextareaField';
+import { SelectField } from '@/components/forms/SelectField';
 import {
   Select,
   SelectContent,
@@ -47,8 +48,8 @@ import { format } from 'date-fns';
 import { CalendarIcon, CheckCircle, Clock, XCircle, AlertCircle, PauseCircle } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import { cn } from '@/lib/utils';
+import { insertTaskSchema, type InsertTask } from '@shared/schema';
 
 // Тип для задачи
 type Task = {
@@ -66,17 +67,7 @@ type Task = {
   executor?: { firstName: string; lastName: string };
 };
 
-// Схема валидации формы создания задачи
-const taskFormSchema = z.object({
-  title: z.string().min(3, { message: "Title must be at least 3 characters long" }),
-  description: z.string().optional(),
-  status: z.enum(['new', 'in_progress', 'completed', 'on_hold']),
-  priority: z.enum(['high', 'medium', 'low']),
-  dueDate: z.date().optional().nullable(),
-  executorId: z.number().positive(),
-});
-
-type TaskFormData = z.infer<typeof taskFormSchema>;
+type TaskFormData = InsertTask;
 
 // Компонент карточки задачи
 const TaskCard = ({ 
@@ -333,7 +324,7 @@ const TasksPage = () => {
 
   // Форма создания новой задачи
   const form = useForm<TaskFormData>({
-    resolver: zodResolver(taskFormSchema),
+    resolver: zodResolver(insertTaskSchema),
     defaultValues: {
       title: '',
       description: '',
@@ -346,7 +337,7 @@ const TasksPage = () => {
   
   // Форма редактирования задачи
   const editForm = useForm<TaskFormData>({
-    resolver: zodResolver(taskFormSchema),
+    resolver: zodResolver(insertTaskSchema),
     defaultValues: {
       title: '',
       description: '',
@@ -621,118 +612,45 @@ const TasksPage = () => {
             </DialogHeader>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="title"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t('task.title')}</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <TextField control={form.control} name="title" label={t('task.title')} />
                 
-                <FormField
-                  control={form.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t('task.description')}</FormLabel>
-                      <FormControl>
-                        <Textarea {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <TextareaField control={form.control} name="description" label={t('task.description')} />
                 
                 <div className="grid grid-cols-2 gap-4">
-                  <FormField
+                  <SelectField
                     control={form.control}
                     name="priority"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t('task.priority.label')}</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder={t('task.priority.select')} />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="high">{t('task.priority.high')}</SelectItem>
-                            <SelectItem value="medium">{t('task.priority.medium')}</SelectItem>
-                            <SelectItem value="low">{t('task.priority.low')}</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
+                    label={t('task.priority.label')}
+                    placeholder={t('task.priority.select')}
+                    options={[
+                      { value: 'high', label: t('task.priority.high') },
+                      { value: 'medium', label: t('task.priority.medium') },
+                      { value: 'low', label: t('task.priority.low') }
+                    ]}
                   />
                   
-                  <FormField
+                  <SelectField
                     control={form.control}
                     name="status"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t('task.status.label')}</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder={t('task.status.select')} />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="new">{t('task.status.new')}</SelectItem>
-                            <SelectItem value="in_progress">{t('task.status.in_progress')}</SelectItem>
-                            <SelectItem value="on_hold">{t('task.status.on_hold')}</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
+                    label={t('task.status.label')}
+                    placeholder={t('task.status.select')}
+                    options={[
+                      { value: 'new', label: t('task.status.new') },
+                      { value: 'in_progress', label: t('task.status.in_progress') },
+                      { value: 'on_hold', label: t('task.status.on_hold') }
+                    ]}
                   />
                 </div>
                 
-                <FormField
+                <SelectField
                   control={form.control}
                   name="executorId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t('task.assignee')}</FormLabel>
-                      <Select
-                        onValueChange={(value) => field.onChange(parseInt(value))}
-                        defaultValue={field.value ? field.value.toString() : undefined}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder={t('task.select_assignee')} />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {users && users.length > 0 ? (
-                            users.map((user) => (
-                              <SelectItem key={user.id} value={user.id.toString()}>
-                                {user.firstName} {user.lastName} ({t(`role.${user.role}`)})
-                              </SelectItem>
-                            ))
-                          ) : (
-                            <SelectItem value="no_users" disabled>{t('task.no_users_available')}</SelectItem>
-                          )}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+                  label={t('task.assignee')}
+                  placeholder={t('task.select_assignee')}
+                  options={(users || []).map(u => ({
+                    value: u.id,
+                    label: `${u.firstName} ${u.lastName} (${t(`role.${u.role}`)})`
+                  }))}
                 />
                 
                 <FormField
@@ -797,119 +715,46 @@ const TasksPage = () => {
           </DialogHeader>
           <Form {...editForm}>
             <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-4">
-              <FormField
-                control={editForm.control}
-                name="title"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t('task.title')}</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <TextField control={editForm.control} name="title" label={t('task.title')} />
               
-              <FormField
-                control={editForm.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t('task.description')}</FormLabel>
-                    <FormControl>
-                      <Textarea {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <TextareaField control={editForm.control} name="description" label={t('task.description')} />
               
               <div className="grid grid-cols-2 gap-4">
-                <FormField
+                <SelectField
                   control={editForm.control}
                   name="priority"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t('task.priority.label')}</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder={t('task.priority.select')} />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="high">{t('task.priority.high')}</SelectItem>
-                          <SelectItem value="medium">{t('task.priority.medium')}</SelectItem>
-                          <SelectItem value="low">{t('task.priority.low')}</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+                  label={t('task.priority.label')}
+                  placeholder={t('task.priority.select')}
+                  options={[
+                    { value: 'high', label: t('task.priority.high') },
+                    { value: 'medium', label: t('task.priority.medium') },
+                    { value: 'low', label: t('task.priority.low') }
+                  ]}
                 />
                 
-                <FormField
+                <SelectField
                   control={editForm.control}
                   name="status"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t('task.status.label')}</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder={t('task.status.select')} />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="new">{t('task.status.new')}</SelectItem>
-                          <SelectItem value="in_progress">{t('task.status.in_progress')}</SelectItem>
-                          <SelectItem value="on_hold">{t('task.status.on_hold')}</SelectItem>
-                          <SelectItem value="completed">{t('task.status.completed')}</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+                  label={t('task.status.label')}
+                  placeholder={t('task.status.select')}
+                  options={[
+                    { value: 'new', label: t('task.status.new') },
+                    { value: 'in_progress', label: t('task.status.in_progress') },
+                    { value: 'on_hold', label: t('task.status.on_hold') },
+                    { value: 'completed', label: t('task.status.completed') }
+                  ]}
                 />
               </div>
               
-              <FormField
+              <SelectField
                 control={editForm.control}
                 name="executorId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t('task.assignee')}</FormLabel>
-                    <Select
-                      onValueChange={(value) => field.onChange(parseInt(value))}
-                      defaultValue={field.value ? field.value.toString() : undefined}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder={t('task.select_assignee')} />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {users && users.length > 0 ? (
-                          users.map((user) => (
-                            <SelectItem key={user.id} value={user.id.toString()}>
-                              {user.firstName} {user.lastName} ({t(`role.${user.role}`)})
-                            </SelectItem>
-                          ))
-                        ) : (
-                          <SelectItem value="no_users" disabled>{t('task.no_users_available')}</SelectItem>
-                        )}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
+                label={t('task.assignee')}
+                placeholder={t('task.select_assignee')}
+                options={(users || []).map(u => ({
+                  value: u.id,
+                  label: `${u.firstName} ${u.lastName} (${t(`role.${u.role}`)})`
+                }))}
               />
               
               <FormField
