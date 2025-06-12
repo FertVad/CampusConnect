@@ -331,11 +331,16 @@ export const insertActivityLogSchema = createInsertSchema(activityLogs).omit({
   timestamp: true
 });
 
-export const insertTaskSchema = createInsertSchema(tasks).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+export const insertTaskSchema = createInsertSchema(tasks)
+  .omit({
+    id: true,
+    createdAt: true,
+    updatedAt: true,
+  })
+  .extend({
+    executorId: z.number().int().positive(),
+    clientId: z.number().int().positive(),
+  });
 
 export const insertCurriculumPlanSchema = createInsertSchema(curriculumPlans).omit({
   id: true,
