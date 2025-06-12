@@ -28,7 +28,9 @@ export default function CreateTaskDialog({ open, onOpenChange, form, onSubmit, l
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
-        <Button>{t('task.create_new')}</Button>
+        <Button onClick={() => onOpenChange(true)} type="button">
+          {t('task.create_new')}
+        </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
