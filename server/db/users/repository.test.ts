@@ -37,5 +37,8 @@ const repo = new UsersRepository(fakeDb);
   const updated = await repo.updateUser(1, { password: 'new' });
   assert(updated && updated.password !== 'new');
 
+  const authMissing = await repo.authenticate({ email: 'missing@example.com', password: 'pass' });
+  assert.strictEqual(authMissing, undefined);
+
   console.log('UsersRepository tests passed');
 })();
