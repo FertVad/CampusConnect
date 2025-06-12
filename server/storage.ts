@@ -24,6 +24,7 @@ import session from "express-session";
 import * as expressSession from 'express-session';
 import createMemoryStore from "memorystore";
 import PgStoreFactory from 'connect-pg-simple';
+import { logger } from "./utils/logger";
 
 const MemoryStore = createMemoryStore(session);
 
@@ -340,20 +341,20 @@ export class MemStorage implements IStorage {
   }
   
   async updateUser(id: number, userData: Partial<InsertUser>): Promise<User | undefined> {
-    console.log(`🔄 updateUser called for ID ${id} with data:`, JSON.stringify(userData));
+    logger.info(`🔄 updateUser called for ID ${id} with data:`, JSON.stringify(userData));
     
     const user = this.users.get(id);
     if (!user) {
-      console.log(`⚠️ User with ID ${id} not found`);
+      logger.info(`⚠️ User with ID ${id} not found`);
       return undefined;
     }
     
-    console.log(`🔍 Original user data:`, JSON.stringify(user));
+    logger.info(`🔍 Original user data:`, JSON.stringify(user));
     
     const updatedUser = { ...user, ...userData };
     this.users.set(id, updatedUser);
     
-    console.log(`✅ User updated successfully:`, JSON.stringify(updatedUser));
+    logger.info(`✅ User updated successfully:`, JSON.stringify(updatedUser));
     return updatedUser;
   }
   
@@ -918,7 +919,7 @@ export class MemStorage implements IStorage {
   
   async createNotification(notificationData: InsertNotification): Promise<Notification> {
     try {
-      console.log('📣 Creating notification:', JSON.stringify(notificationData));
+      logger.info('📣 Creating notification:', JSON.stringify(notificationData));
       
       const id = this.notificationIdCounter++;
       const createdAt = new Date();
@@ -937,15 +938,15 @@ export class MemStorage implements IStorage {
       };
       
       this.notifications.set(id, notification);
-      console.log(`✅ NOTIFICATION CREATED - ID: ${id}, Title: ${notification.title}, For User: ${notification.userId}`);
+      logger.info(`✅ NOTIFICATION CREATED - ID: ${id}, Title: ${notification.title}, For User: ${notification.userId}`);
       
       // Получим текущее количество уведомлений
       const totalCount = this.notifications.size;
-      console.log(`📊 Total notifications in storage: ${totalCount}`);
+      logger.info(`📊 Total notifications in storage: ${totalCount}`);
       
       return notification;
     } catch (error) {
-      console.error('❌ ERROR CREATING NOTIFICATION:', error);
+      logger.error('❌ ERROR CREATING NOTIFICATION:', error);
       throw error;
     }
   }
@@ -960,7 +961,7 @@ export class MemStorage implements IStorage {
   }
   
   async markAllNotificationsAsRead(userId: number): Promise<void> {
-    console.log(`MEM: Marking all notifications as read for user ${userId}`);
+    logger.info(`MEM: Marking all notifications as read for user ${userId}`);
     const userNotifications = Array.from(this.notifications.values())
       .filter(notification => notification.userId === userId && !notification.isRead);
     
@@ -969,7 +970,7 @@ export class MemStorage implements IStorage {
       this.notifications.set(notification.id, updatedNotification);
     });
     
-    console.log(`MEM: Marked ${userNotifications.length} notifications as read for user ${userId}`);
+    logger.info(`MEM: Marked ${userNotifications.length} notifications as read for user ${userId}`);
   }
   
   async deleteNotification(id: number): Promise<boolean> {
@@ -1293,11 +1294,11 @@ export class MemStorage implements IStorage {
   
   async deleteImportedFile(id: number): Promise<boolean> {
     try {
-      console.log(`In-Memory: Deleting imported file with ID: ${id}`);
+      logger.info(`In-Memory: Deleting imported file with ID: ${id}`);
       
       // First check if the file exists
       if (!this.importedFiles.has(id)) {
-        console.error(`In-Memory: ImportedFile with ID ${id} not found`);
+        logger.error(`In-Memory: ImportedFile with ID ${id} not found`);
         return false;
       }
       
@@ -1308,17 +1309,17 @@ export class MemStorage implements IStorage {
       const itemsToDelete = Array.from(this.scheduleItems.values())
         .filter(item => item.importedFileId === id);
       
-      console.log(`In-Memory: Found ${itemsToDelete.length} schedule items to delete for import file ${id}`);
+      logger.info(`In-Memory: Found ${itemsToDelete.length} schedule items to delete for import file ${id}`);
       
       // Delete all associated schedule items
       for (const item of itemsToDelete) {
         this.scheduleItems.delete(item.id);
       }
-      console.log(`In-Memory: Deleted ${itemsToDelete.length} schedule items associated with import file ${id}`);
+      logger.info(`In-Memory: Deleted ${itemsToDelete.length} schedule items associated with import file ${id}`);
       
       // Then delete the import file record
       const result = this.importedFiles.delete(id);
-      console.log(`In-Memory: Deleted imported file record: ${result ? 'success' : 'failed'}`);
+      logger.info(`In-Memory: Deleted imported file record: ${result ? 'success' : 'failed'}`);
       
       // Create activity log for file deletion if successful
       if (result && file) {
@@ -1338,10 +1339,10 @@ export class MemStorage implements IStorage {
       
       return result;
     } catch (error) {
-      console.error('In-Memory: Error in deleteImportedFile:', error);
+      logger.error('In-Memory: Error in deleteImportedFile:', error);
       // Print detailed error information for debugging
       if (error instanceof Error) {
-        console.error('In-Memory: Error details:', {
+        logger.error('In-Memory: Error details:', {
           name: error.name,
           message: error.message,
           stack: error.stack
@@ -1691,7 +1692,7 @@ export const getStorage = (): IStorage => _storage;
 // Экспортируем сеттер для обновления хранилища из других модулей (например, auth.ts)
 export const setStorage = (newStorage: IStorage): void => {
   _storage = newStorage;
-  console.log('Storage implementation has been updated');
+  logger.info('Storage implementation has been updated');
 };
 
 // Для обратной совместимости экспортируем ссылку на хранилище

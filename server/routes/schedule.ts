@@ -4,6 +4,7 @@ import { insertSubjectSchema, insertEnrollmentSchema, insertScheduleItemSchema }
 import { parseSheetDataToScheduleItems, fetchSheetData, authenticateWithGoogleSheets } from "../utils/googleSheetsHelper";
 import { parseCsvToScheduleItems, validateScheduleItems, prepareImportResult } from "../utils/csvHelper";
 import { db } from "../db";
+import { logger } from "../utils/logger";
 import type { RouteContext } from "./index";
 import path from "path";
 import fs from "fs";
@@ -26,10 +27,10 @@ export function registerScheduleRoutes(app: Express, { authenticateUser, require
 app.get('/api/subjects', authenticateUser, async (req, res) => {
   try {
     const subjects = await getStorage().getSubjects();
-    console.log('Retrieved subjects:', JSON.stringify(subjects, null, 2));
+    logger.info('Retrieved subjects:', JSON.stringify(subjects, null, 2));
     res.json(subjects);
   } catch (error) {
-    console.error('Error fetching subjects:', error);
+    logger.error('Error fetching subjects:', error);
     res.status(500).json({ message: "Server error" });
   }
 });
@@ -185,7 +186,7 @@ app.get('/api/schedule', authenticateUser, async (req, res) => {
       
       // Если предмет не найден в базе, пропускаем этот элемент расписания
       if (!subject) {
-        console.log(`Subject with ID ${item.subjectId} not found, skipping schedule item`);
+        logger.info(`Subject with ID ${item.subjectId} not found, skipping schedule item`);
         return null; 
       }
       
@@ -217,10 +218,10 @@ app.get('/api/schedule', authenticateUser, async (req, res) => {
     // Фильтруем элементы, где предмет не найден
     const validSchedule = enrichedSchedule.filter(item => item !== null);
     
-    console.log(`Returning ${validSchedule.length} valid schedule items with subject and teacher info`);
+    logger.info(`Returning ${validSchedule.length} valid schedule items with subject and teacher info`);
     res.json(validSchedule);
   } catch (error) {
-    console.error('Error fetching schedule:', error);
+    logger.error('Error fetching schedule:', error);
     res.status(500).json({ message: "Server error" });
   }
 });
@@ -238,7 +239,7 @@ app.get('/schedule-template.csv', (req, res) => {
     // Отправка CSV данных
     res.send(csvTemplate);
   } catch (error) {
-    console.error('Error generating CSV template:', error);
+    logger.error('Error generating CSV template:', error);
     res.status(500).send('Ошибка при генерации шаблона CSV');
   }
 });
@@ -266,13 +267,13 @@ app.get('/api/schedule/student', authenticateUser, async (req, res) => {
       return res.status(403).json({ message: "Access denied" });
     }
     
-    console.log(`Fetching schedule for student with ID: ${req.user!.id}`);
+    logger.info(`Fetching schedule for student with ID: ${req.user!.id}`);
     const schedule = await getStorage().getScheduleItemsByStudent(req.user!.id);
-    console.log(`Found ${schedule.length} schedule items for student ${req.user!.id}`);
+    logger.info(`Found ${schedule.length} schedule items for student ${req.user!.id}`);
     
     res.json(schedule);
   } catch (error) {
-    console.error('Error fetching student schedule:', error);
+    logger.error('Error fetching student schedule:', error);
     res.status(500).json({ message: "Server error" });
   }
 });
@@ -300,13 +301,13 @@ app.get('/api/schedule/teacher', authenticateUser, async (req, res) => {
       return res.status(403).json({ message: "Access denied" });
     }
     
-    console.log(`Fetching schedule for teacher with ID: ${req.user!.id}`);
+    logger.info(`Fetching schedule for teacher with ID: ${req.user!.id}`);
     const schedule = await getStorage().getScheduleItemsByTeacher(req.user!.id);
-    console.log(`Found ${schedule.length} schedule items for teacher ${req.user!.id}`);
+    logger.info(`Found ${schedule.length} schedule items for teacher ${req.user!.id}`);
     
     res.json(schedule);
   } catch (error) {
-    console.error('Error fetching teacher schedule:', error);
+    logger.error('Error fetching teacher schedule:', error);
     res.status(500).json({ message: "Server error" });
   }
 });
@@ -406,7 +407,7 @@ app.post('/api/schedule/import/google-sheets', authenticateUser, requireRole(['a
     // Обрабатываем предметы по их названиям
     // Сначала получаем все существующие предметы
     const allSubjects = await getStorage().getSubjects();
-    console.log(`Existing subjects: ${allSubjects.length}`);
+    logger.info(`Existing subjects: ${allSubjects.length}`);
     
     // Обрабатываем каждый элемент расписания
     for (const item of scheduleItems) {
@@ -424,11 +425,11 @@ app.post('/api/schedule/import/google-sheets', authenticateUser, requireRole(['a
         
         if (existingSubject) {
           // Если предмет найден, используем его ID
-          console.log(`Found existing subject "${existingSubject.name}" with ID: ${existingSubject.id}`);
+          logger.info(`Found existing subject "${existingSubject.name}" with ID: ${existingSubject.id}`);
           item.subjectId = existingSubject.id;
         } else {
           // Если предмет не найден, создаем новый
-          console.log(`Creating new subject with name: "${subjectName}"`);
+          logger.info(`Creating new subject with name: "${subjectName}"`);
           
           // Увеличиваем счетчик для выбора цвета
           newSubjectCounter++;
@@ -443,7 +444,7 @@ app.post('/api/schedule/import/google-sheets', authenticateUser, requireRole(['a
             color: getColorFromPalette(newSubjectCounter) // Выбираем цвет из палитры
           });
           
-          console.log(`Created new subject: ${JSON.stringify(newSubject)}`);
+          logger.info(`Created new subject: ${JSON.stringify(newSubject)}`);
           
           // Добавляем новый предмет в массив для будущих проверок
           allSubjects.push(newSubject);
@@ -452,7 +453,7 @@ app.post('/api/schedule/import/google-sheets', authenticateUser, requireRole(['a
           item.subjectId = newSubject.id;
         }
       } catch (error) {
-        console.error(`Error processing subject for schedule item:`, error);
+        logger.error(`Error processing subject for schedule item:`, error);
       }
     }
     
@@ -510,7 +511,7 @@ app.post('/api/schedule/import/google-sheets', authenticateUser, requireRole(['a
         uploadedBy: req.user!!.id
       });
       
-      console.log(`Created import file record: ${gsheetFileInfo.id}`);
+      logger.info(`Created import file record: ${gsheetFileInfo.id}`);
       
       // Обновляем созданные элементы расписания, чтобы связать их с файлом
       for (const item of createdItems) {
@@ -518,10 +519,10 @@ app.post('/api/schedule/import/google-sheets', authenticateUser, requireRole(['a
           ...item,
           importedFileId: gsheetFileInfo.id
         });
-        console.log(`Linked schedule item ${item.id} with imported file ${gsheetFileInfo.id}`);
+        logger.info(`Linked schedule item ${item.id} with imported file ${gsheetFileInfo.id}`);
       }
     } catch (fileError) {
-      console.error('Error saving file import record:', fileError);
+      logger.error('Error saving file import record:', fileError);
       // Не прерываем операцию, если не удалось сохранить информацию о файле
     }
     
@@ -530,7 +531,7 @@ app.post('/api/schedule/import/google-sheets', authenticateUser, requireRole(['a
       result
     });
   } catch (error: any) {
-    console.error('Error importing schedule from Google Sheets:', error);
+    logger.error('Error importing schedule from Google Sheets:', error);
     res.status(500).json({ 
       message: "Failed to import schedule from Google Sheets",
       error: error.message || 'Unknown error'
@@ -552,7 +553,7 @@ app.post(
       
       // Get the path to the uploaded file
       const filePath = req.file!.path;
-      console.log(`Processing uploaded CSV file at: ${filePath}`);
+      logger.info(`Processing uploaded CSV file at: ${filePath}`);
       
       // Проверяем и получаем информацию о CSV файле
       const csvFileInfo = {
@@ -561,11 +562,11 @@ app.post(
         name: req.file!.originalname
       };
       
-      console.log(`CSV File Info - Type: ${csvFileInfo.mime}, Size: ${csvFileInfo.size} bytes, Name: ${csvFileInfo.name}`);
+      logger.info(`CSV File Info - Type: ${csvFileInfo.mime}, Size: ${csvFileInfo.size} bytes, Name: ${csvFileInfo.name}`);
       
       // Parse the CSV file to schedule items - не передаем заголовки, чтобы функция автоматически определила их
       const { scheduleItems, errors: parseErrors } = await parseCsvToScheduleItems(filePath);
-      console.log(`Parsed CSV data: Found ${scheduleItems.length} potential schedule items with ${parseErrors.length} parse errors`);
+      logger.info(`Parsed CSV data: Found ${scheduleItems.length} potential schedule items with ${parseErrors.length} parse errors`);
       
       // Функция для генерации цвета из палитры предопределенных цветов
       const getColorFromPalette = (index: number): string => {
@@ -590,7 +591,7 @@ app.post(
       // Обрабатываем предметы по их названиям
       // Сначала получаем все существующие предметы
       const allSubjects = await getStorage().getSubjects();
-      console.log(`Existing subjects: ${allSubjects.length}`);
+      logger.info(`Existing subjects: ${allSubjects.length}`);
       
       // Обрабатываем каждый элемент расписания
       for (const item of scheduleItems) {
@@ -608,11 +609,11 @@ app.post(
           
           if (existingSubject) {
             // Если предмет найден, используем его ID
-            console.log(`Found existing subject "${existingSubject.name}" with ID: ${existingSubject.id}`);
+            logger.info(`Found existing subject "${existingSubject.name}" with ID: ${existingSubject.id}`);
             item.subjectId = existingSubject.id;
           } else {
             // Если предмет не найден, создаем новый
-            console.log(`Creating new subject with name: "${subjectName}"`);
+            logger.info(`Creating new subject with name: "${subjectName}"`);
             
             // Увеличиваем счетчик для выбора цвета
             newSubjectCounter++;
@@ -628,7 +629,7 @@ app.post(
               color: getColorFromPalette(newSubjectCounter) // Выбираем цвет из палитры
             });
             
-            console.log(`Created new subject: ${JSON.stringify(newSubject)}`);
+            logger.info(`Created new subject: ${JSON.stringify(newSubject)}`);
             
             // Добавляем новый предмет в массив для будущих проверок
             allSubjects.push(newSubject);
@@ -637,7 +638,7 @@ app.post(
             item.subjectId = newSubject.id;
           }
         } catch (error) {
-          console.error(`Error processing subject for schedule item:`, error);
+          logger.error(`Error processing subject for schedule item:`, error);
         }
       }
       
@@ -704,7 +705,7 @@ app.post(
           uploadedBy: req.user!!.id
         });
         
-        console.log(`Created import file record: ${importFileInfo.id}`);
+        logger.info(`Created import file record: ${importFileInfo.id}`);
         
         // Обновляем созданные элементы расписания, чтобы связать их с файлом
         for (const item of createdItems) {
@@ -712,10 +713,10 @@ app.post(
             ...item,
             importedFileId: importFileInfo.id
           });
-          console.log(`Linked schedule item ${item.id} with imported file ${importFileInfo.id}`);
+          logger.info(`Linked schedule item ${item.id} with imported file ${importFileInfo.id}`);
         }
       } catch (fileError) {
-        console.error('Error saving file import record:', fileError);
+        logger.error('Error saving file import record:', fileError);
         // Не прерываем операцию, если не удалось сохранить информацию о файле
       }
       
@@ -724,7 +725,7 @@ app.post(
         result
       });
     } catch (error: any) {
-      console.error('Error importing schedule from CSV:', error);
+      logger.error('Error importing schedule from CSV:', error);
       
       // Clean up the uploaded file if exists
       if (req.file && fs.existsSync(req.file!.path)) {
@@ -793,7 +794,7 @@ app.delete('/api/imported-files/:id', authenticateUser, requireRole(['admin']), 
   try {
     const id = parseInt(req.params.id);
     if (isNaN(id)) {
-      console.error('Invalid file ID provided:', req.params.id);
+      logger.error('Invalid file ID provided:', req.params.id);
       return res.status(400).json({ 
         error: true,
         message: "Invalid file ID", 
@@ -801,13 +802,13 @@ app.delete('/api/imported-files/:id', authenticateUser, requireRole(['admin']), 
       });
     }
     
-    console.log(`[DELETE FILE] Processing delete request for imported file ID: ${id}`);
+    logger.info(`[DELETE FILE] Processing delete request for imported file ID: ${id}`);
     
     // Step 1: Get the file details
     const file = await getStorage().getImportedFile(id);
     
     if (!file) {
-      console.log(`[DELETE FILE] File with ID ${id} not found`);
+      logger.info(`[DELETE FILE] File with ID ${id} not found`);
       return res.status(404).json({ 
         error: true, 
         message: "File not found",
@@ -815,27 +816,27 @@ app.delete('/api/imported-files/:id', authenticateUser, requireRole(['admin']), 
       });
     }
     
-    console.log(`[DELETE FILE] Found file: ${file.originalName}, import type: ${file.importType}`);
+    logger.info(`[DELETE FILE] Found file: ${file.originalName}, import type: ${file.importType}`);
     
     // Step 2: Delete the physical file if it exists
     let physicalFileDeleted = false;
     
     if (file.filePath && file.importType === 'csv') {
       const fullPath = path.join(process.cwd(), file.filePath);
-      console.log(`[DELETE FILE] Attempting to delete physical file at: ${fullPath}`);
+      logger.info(`[DELETE FILE] Attempting to delete physical file at: ${fullPath}`);
       
       try {
         await fs.promises.access(fullPath);
         await fs.promises.unlink(fullPath);
-        console.log(`[DELETE FILE] Successfully deleted physical file: ${fullPath}`);
+        logger.info(`[DELETE FILE] Successfully deleted physical file: ${fullPath}`);
         physicalFileDeleted = true;
       } catch (err) {
-        console.error(`[DELETE FILE] Could not delete physical file ${fullPath}:`, err);
+        logger.error(`[DELETE FILE] Could not delete physical file ${fullPath}:`, err);
         // Continue with database operations even if physical file delete fails
       }
     }
     
-    console.log(`[DELETE FILE] Now checking related schedule items for file ID: ${id}`);
+    logger.info(`[DELETE FILE] Now checking related schedule items for file ID: ${id}`);
     
     // Step 3: Get count of related schedule items before deletion
     const { scheduleItems } = await import('@shared/schema');
@@ -849,15 +850,15 @@ app.delete('/api/imported-files/:id', authenticateUser, requireRole(['admin']), 
       .where(eq(scheduleItems.importedFileId, id))
       .then(result => Number(result[0]?.count || 0));
     
-    console.log(`[DELETE FILE] Found ${relatedItemsCount} schedule items related to imported file ID: ${id}`);
+    logger.info(`[DELETE FILE] Found ${relatedItemsCount} schedule items related to imported file ID: ${id}`);
     
     // Step 4: Delete the database records using our improved transaction-based method
-    console.log(`[DELETE FILE] Attempting to delete file ID ${id} and related records from database`);
+    logger.info(`[DELETE FILE] Attempting to delete file ID ${id} and related records from database`);
     const success = await getStorage().deleteImportedFile(id);
     
     // Step 5: Respond with appropriate status based on success
     if (success) {
-      console.log(`[DELETE FILE] Successfully deleted imported file with ID: ${id} and all related schedule items`);
+      logger.info(`[DELETE FILE] Successfully deleted imported file with ID: ${id} and all related schedule items`);
       return res.status(200).json({ 
         error: false,
         message: "File deleted successfully",
@@ -869,7 +870,7 @@ app.delete('/api/imported-files/:id', authenticateUser, requireRole(['admin']), 
         }
       });
     } else {
-      console.error(`[DELETE FILE] Database operation failed for deleting imported file with ID: ${id}`);
+      logger.error(`[DELETE FILE] Database operation failed for deleting imported file with ID: ${id}`);
       return res.status(500).json({ 
         error: true,
         message: "Failed to delete file",
@@ -883,11 +884,11 @@ app.delete('/api/imported-files/:id', authenticateUser, requireRole(['admin']), 
     }
   } catch (error) {
     // Enhanced error logging with prefix for easier debugging
-    console.error('[DELETE FILE] Unhandled error in delete imported file handler:', error);
+    logger.error('[DELETE FILE] Unhandled error in delete imported file handler:', error);
     
     // Provide more helpful error messages to both logs and response
     if (error instanceof Error) {
-      console.error('[DELETE FILE] Detailed error:', {
+      logger.error('[DELETE FILE] Detailed error:', {
         name: error.name,
         message: error.message,
         stack: error.stack

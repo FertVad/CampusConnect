@@ -2,6 +2,7 @@ import { Express } from "express";
 import { getStorage } from "../storage";
 import { z } from "zod";
 import type { RouteContext } from "./index";
+import { logger } from "../utils/logger";
 
 export function registerCurriculumRoutes(app: Express, { authenticateUser, requireRole }: RouteContext) {
   app.get('/api/curriculum-plans', authenticateUser, async (req, res) => {
@@ -184,7 +185,7 @@ export function registerCurriculumRoutes(app: Express, { authenticateUser, requi
       const userId = req.query.userId ? parseInt(req.query.userId as string) : undefined;
       res.json([]);
     } catch (error) {
-      console.error('Error getting documents:', error);
+      logger.error('Error getting documents:', error);
       res.status(500).json({ message: "Server error" });
     }
   });
@@ -207,7 +208,7 @@ export function registerCurriculumRoutes(app: Express, { authenticateUser, requi
       const updatedPlan = await getStorage().updateCurriculumPlan(id, { calendarData: calendarDataString });
       return res.json({ success: true, message: "Calendar data saved", plan: updatedPlan });
     } catch (error) {
-      console.error('Error saving calendar data:', error);
+      logger.error('Error saving calendar data:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       res.status(500).json({ message: "Error saving calendar data", details: errorMessage });
     }

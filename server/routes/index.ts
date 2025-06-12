@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { getStorage } from "../storage";
 import { WebSocketServer } from "ws";
 import { WebSocket } from "ws";
+import { logger } from "../utils/logger";
 import { setupAuth } from "../auth";
 import { 
   loginSchema, insertUserSchema, 
@@ -75,15 +76,15 @@ export interface RouteContext {
 const authenticateUser = async (req: Request, res: Response, next: NextFunction) => {
   try {
     // Подробное логирование сессии для отладки проблем аутентификации
-    console.log(`Auth check - Session ID: ${req.sessionID}`);
-    console.log(`Auth check - Is Authenticated: ${req.isAuthenticated ? req.isAuthenticated() : 'method undefined'}`);
-    console.log(`Auth check - User: ${req.user ? JSON.stringify({ id: req.user!.id, role: req.user!.role }) : 'undefined'}`);
-    console.log(`Auth check - Cookies: ${req.headers.cookie}`);
-    console.log(`Auth check - Session data:`, req.session);
+    logger.info(`Auth check - Session ID: ${req.sessionID}`);
+    logger.info(`Auth check - Is Authenticated: ${req.isAuthenticated ? req.isAuthenticated() : 'method undefined'}`);
+    logger.info(`Auth check - User: ${req.user ? JSON.stringify({ id: req.user!.id, role: req.user!.role }) : 'undefined'}`);
+    logger.info(`Auth check - Cookies: ${req.headers.cookie}`);
+    logger.info(`Auth check - Session data:`, req.session);
     
     // Если пользователь аутентифицирован через passport, пропускаем
     if (req.isAuthenticated && req.isAuthenticated() && req.user) {
-      console.log(`User authenticated normally: ${req.user!.id} (${req.user!.role})`);
+      logger.info(`User authenticated normally: ${req.user!.id} (${req.user!.role})`);
       
       // Принудительно сохраняем сессию при каждом запросе
       if (req.session) {
@@ -95,7 +96,7 @@ const authenticateUser = async (req: Request, res: Response, next: NextFunction)
     
     // Проверяем данные в сессии напрямую
     if (req.session && req.session.passport && req.session.passport.user) {
-      console.log(`Auth check - Session contains user ID: ${req.session.passport.user}`);
+      logger.info(`Auth check - Session contains user ID: ${req.session.passport.user}`);
       
       try {
         // Попытка восстановить пользователя из ID в сессии
@@ -103,24 +104,24 @@ const authenticateUser = async (req: Request, res: Response, next: NextFunction)
         const user = await getStorage().getUser(userId);
         
         if (user) {
-          console.log(`Auth check - Recovered user from session: ${user.id} (${user.role})`);
+          logger.info(`Auth check - Recovered user from session: ${user.id} (${user.role})`);
           (req as any).user = user; // Восстанавливаем пользователя
           return next();
         }
       } catch (err) {
-        console.error("Error recovering user from session:", err);
+        logger.error("Error recovering user from session:", err);
       }
     }
     
     // Делаем финальную проверку cookie для отладки
     if (!req.headers.cookie || !req.headers.cookie.includes('eduportal.sid')) {
-      console.warn(`Auth failed - No session cookie found in request`);
+      logger.warn(`Auth failed - No session cookie found in request`);
     }
     
     // Если все способы восстановления сессии не удались, возвращаем 401
     return res.status(401).json({ message: "Unauthorized - Please log in" });
   } catch (error) {
-    console.error("Auth middleware error:", error);
+    logger.error("Auth middleware error:", error);
     return res.status(500).json({ message: "Internal server error during authentication" });
   }
 };
@@ -146,15 +147,15 @@ async function getDefaultTeacherId(): Promise<number> {
     // Пытаемся найти пользователя с ролью "teacher"
     const teachers = await getStorage().getUsersByRole('teacher');
     if (teachers && teachers.length > 0) {
-      console.log(`Found ${teachers.length} teachers, using ${teachers[0].firstName} ${teachers[0].lastName} (ID: ${teachers[0].id}) as default`);
+      logger.info(`Found ${teachers.length} teachers, using ${teachers[0].firstName} ${teachers[0].lastName} (ID: ${teachers[0].id}) as default`);
       return teachers[0].id;
     }
     
     // Если учителей нет, создаем тестового преподавателя
-    console.log('No teachers found, using fallback teacher ID 2');
+    logger.info('No teachers found, using fallback teacher ID 2');
     return 2; // ID тестового преподавателя
   } catch (error) {
-    console.error('Error getting default teacher:', error);
+    logger.error('Error getting default teacher:', error);
     return 2; // В случае ошибки возвращаем ID тестового преподавателя
   }
 }
@@ -182,7 +183,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (data.type === 'auth') {
           userId = Number(data.userId);
           connections.set(userId, ws);
-          console.log(`User ${userId} connected to WebSocket`);
+          logger.info(`User ${userId} connected to WebSocket`);
           
           // Send any undelivered messages to the user
           const messages = await getStorage().getMessagesByUser(userId);
@@ -237,14 +238,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           await getStorage().updateMessageStatus(messageId, 'read');
         }
       } catch (error) {
-        console.error('WebSocket message error:', error);
+        logger.error('WebSocket message error:', error);
       }
     });
     
     ws.on('close', () => {
       if (userId) {
         connections.delete(userId);
-        console.log(`User ${userId} disconnected from WebSocket`);
+        logger.info(`User ${userId} disconnected from WebSocket`);
       }
     });
   });
