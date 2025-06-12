@@ -18,7 +18,6 @@ async function throwIfResNotOk(res: Response) {
           }
         }
       } catch (parseError) {
-        console.warn('Error parsing response:', parseError);
       }
 
       throw new Error(`${res.status}: ${text}`);
@@ -76,7 +75,6 @@ export async function apiRequest(
     try {
       return await res.json();
     } catch (parseError) {
-      console.warn('Response is not JSON, returning raw response:', parseError);
       return res;
     }
   } catch (error) {
@@ -116,7 +114,6 @@ export const getQueryFn: <T>(options: {
 
       // Обработка ошибки авторизации
       if (unauthorizedBehavior === "returnNull" && res.status === 401) {
-        console.warn(`Auth required for ${queryKey[0]}, returning null`);
         return null;
       }
 

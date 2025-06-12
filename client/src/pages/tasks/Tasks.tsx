@@ -369,9 +369,7 @@ const TasksPage = () => {
       clientId: number;
     }) => {
       try {
-        console.log('Sending API request with data:', data);
         const result = await apiRequest('POST', '/api/tasks', data);
-        console.log('API response:', result);
         return result;
       } catch (error) {
         console.error('API error details:', error);
@@ -379,7 +377,6 @@ const TasksPage = () => {
       }
     },
     onSuccess: (data) => {
-      console.log('Task created successfully:', data);
       queryClient.invalidateQueries({ queryKey: ['/api/tasks'] });
       toast({
         title: t('task.created_success'),
@@ -404,9 +401,7 @@ const TasksPage = () => {
   const updateTaskStatusMutation = useMutation({
     mutationFn: async ({ id, status }: { id: number, status: string }) => {
       try {
-        console.log(`Updating task status: ID=${id}, status=${status}`);
         const result = await apiRequest('PUT', `/api/tasks/${id}`, { status });
-        console.log('Task update response:', result);
         return result;
       } catch (error) {
         console.error('API error details for task update:', error);
@@ -436,9 +431,7 @@ const TasksPage = () => {
   const deleteTaskMutation = useMutation({
     mutationFn: async (id: number) => {
       try {
-        console.log(`Deleting task with ID: ${id}`);
         const result = await apiRequest('DELETE', `/api/tasks/${id}`);
-        console.log('Task deletion response:', result);
         return result;
       } catch (error) {
         console.error('API error details for task deletion:', error);
@@ -478,9 +471,7 @@ const TasksPage = () => {
     }) => {
       try {
         const { id, ...taskData } = data;
-        console.log(`Updating full task: ID=${id}`, taskData);
         const result = await apiRequest('PUT', `/api/tasks/${id}`, taskData);
-        console.log('Full task update response:', result);
         return result;
       } catch (error) {
         console.error('API error details for full task update:', error);
@@ -516,7 +507,6 @@ const TasksPage = () => {
   
   // Обработчик для открытия диалога редактирования задачи
   const handleEditClick = (task: Task) => {
-    console.log('Opening edit dialog for task:', task);
     
     // Установить текущую задачу
     setCurrentTask(task);
@@ -537,7 +527,6 @@ const TasksPage = () => {
   
   // Обработчик для открытия диалога удаления задачи
   const handleDeleteClick = (task: Task) => {
-    console.log('Opening delete dialog for task:', task);
     setCurrentTask(task);
     setDeleteDialogOpen(true);
   };
@@ -554,7 +543,6 @@ const TasksPage = () => {
   
   // Обработчик для просмотра деталей задачи
   const handleViewDetails = (task: Task) => {
-    console.log('Opening details dialog for task:', task);
     setCurrentTask(task);
     setDetailDialogOpen(true);
   };
@@ -568,7 +556,6 @@ const TasksPage = () => {
     
     // Проверяем наличие ошибок
     if (editForm.formState.errors && Object.keys(editForm.formState.errors).length > 0) {
-      console.log('Edit form validation errors:', editForm.formState.errors);
       return;
     }
     
@@ -583,7 +570,6 @@ const TasksPage = () => {
       executorId: data.executorId
     };
     
-    console.log('Submitting edit task data:', taskData);
     updateTaskMutation.mutate(taskData);
   };
 
@@ -591,13 +577,11 @@ const TasksPage = () => {
   const onSubmit = (data: TaskFormData) => {
     // Проверяем наличие ошибок
     if (form.formState.errors && Object.keys(form.formState.errors).length > 0) {
-      console.log('Form validation errors:', form.formState.errors);
       return; // Прерываем отправку при наличии ошибок
     }
     
     // Проверяем критические данные
     if (!user?.id) {
-      console.log('User ID is missing');
       toast({
         title: t('task.error_creating'),
         description: t('auth.user_not_found'),
@@ -617,7 +601,6 @@ const TasksPage = () => {
       clientId: user.id // текущий пользователь становится клиентом задачи
     };
     
-    console.log('Submitting task data:', taskData);
     createTaskMutation.mutate(taskData);
   };
 

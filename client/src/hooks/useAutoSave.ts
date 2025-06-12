@@ -27,7 +27,6 @@ const consoleLogger = (message: string, ...args: any[]) => {
   if (process.env.NODE_ENV === 'production') {
     return;
   }
-  console.log(message, ...args);
 };
 
 /**
@@ -109,20 +108,17 @@ export function useAutoSave<T>(data: T, options: AutoSaveOptions) {
     // Сбрасываем флаг паузы, если он был установлен
     pausedRef.current = false;
     
-    console.log('[useAutoSave] Updated saved data hash after successful save');
   };
   
   // Функция сохранения
   const saveData = async (dataToSave: T): Promise<boolean> => {
     // Проверка на изменения в данных используя хэши
     if (!isDataChanged()) {
-      console.log('[useAutoSave] Skipping save - no changes detected by hash comparison');
       return false; // Данные не изменились, не сохраняем
     }
     
     // Если уже идет процесс сохранения или активирована пауза, то пропускаем
     if (savingRef.current || paused) {
-      console.log(`[useAutoSave] Skipping save - ${savingRef.current ? 'already saving' : 'paused'}`);
       return false;
     }
     
@@ -132,7 +128,6 @@ export function useAutoSave<T>(data: T, options: AutoSaveOptions) {
     setError(null);
     
     try {
-      console.log('[useAutoSave] Saving data to', url, 'with method', method);
       
       const response = await fetch(url, {
         method,
@@ -148,7 +143,6 @@ export function useAutoSave<T>(data: T, options: AutoSaveOptions) {
       }
       
       const result = await response.json();
-      console.log('[useAutoSave] Save successful, response:', result);
       
       // Сохраняем последние успешно сохраненные данные
       setLastSavedData(dataToSave);
@@ -193,7 +187,6 @@ export function useAutoSave<T>(data: T, options: AutoSaveOptions) {
       timeoutRef.current = null;
     }
     
-    console.log('[useAutoSave] Force saving data');
     const success = await saveData(data);
     
     if (success) {
@@ -222,11 +215,9 @@ export function useAutoSave<T>(data: T, options: AutoSaveOptions) {
       const isVisible = document.visibilityState === 'visible';
       isDocumentVisibleRef.current = isVisible;
       
-      console.log(`[useAutoSave] Document visibility changed to: ${isVisible ? 'visible' : 'hidden'}`);
       
       // Если вкладка стала видимой, а у нас есть изменения - планируем отложенное сохранение
       if (isVisible && isDataChanged() && !pausedRef.current) {
-        console.log('[useAutoSave] Document became visible with pending changes, scheduling delayed save');
         
         // Отменяем существующий таймаут
         if (timeoutRef.current) {
@@ -236,7 +227,6 @@ export function useAutoSave<T>(data: T, options: AutoSaveOptions) {
         // Планируем новое сохранение с небольшой задержкой
         timeoutRef.current = setTimeout(() => {
           if (!pausedRef.current) {
-            console.log('[useAutoSave] Executing delayed save after tab became visible');
             saveData(data);
           }
         }, 2000);
@@ -260,10 +250,8 @@ export function useAutoSave<T>(data: T, options: AutoSaveOptions) {
     if (paused) {
       // Запоминаем время активации паузы
       pauseTimeRef.current = Date.now();
-      console.log('[useAutoSave] Pause activated, time:', new Date().toISOString());
     } else {
       pauseTimeRef.current = null;
-      console.log('[useAutoSave] Pause deactivated');
     }
   }, [paused]);
   
@@ -284,7 +272,6 @@ export function useAutoSave<T>(data: T, options: AutoSaveOptions) {
       const MAX_PAUSE_DURATION = 10000; // 10 секунд
       
       if (pauseDuration > MAX_PAUSE_DURATION) {
-        console.log(`[useAutoSave] Pause timeout exceeded (${pauseDuration}ms > ${MAX_PAUSE_DURATION}ms), resetting pause state`);
         pausedRef.current = false;
         pauseTimeRef.current = null;
       }
@@ -292,7 +279,6 @@ export function useAutoSave<T>(data: T, options: AutoSaveOptions) {
     
     // Если автосохранение отключено или поставлено на паузу - выходим сразу
     if (!enabled || pausedRef.current) {
-      console.log(`[useAutoSave] Auto-save skipped - ${!enabled ? 'disabled' : 'paused'}`);
       return;
     }
     
@@ -302,7 +288,6 @@ export function useAutoSave<T>(data: T, options: AutoSaveOptions) {
       timeoutRef.current = null;
     }
     
-    console.log('[useAutoSave] Scheduling auto-save in', debounceMs, 'ms');
     
     // Используем стандартное значение debounce
     let effectiveDebounceMs = debounceMs;
@@ -311,33 +296,28 @@ export function useAutoSave<T>(data: T, options: AutoSaveOptions) {
     timeoutRef.current = setTimeout(() => {
       // Повторная проверка на паузу прямо перед сохранением
       if (pausedRef.current) {
-        console.log('[useAutoSave] Auto-save cancelled - paused flag active');
         return;
       }
       
       // Дополнительная проверка на состояние документа
       // Не сохраняем если браузер неактивен (пользователь переключился на другую вкладку)
       if (typeof document !== 'undefined' && document.visibilityState === 'hidden') {
-        console.log('[useAutoSave] Auto-save cancelled - document not visible');
         
         // Планируем перепроверку позже, когда пользователь вернется
         setTimeout(() => {
           if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
-            console.log('[useAutoSave] Document became visible again, scheduling save');
             saveData(data);
           }
         }, 500);
         return;
       }
       
-      console.log('[useAutoSave] Auto-save triggered');
       saveData(data);
     }, effectiveDebounceMs);
     
     // Очистка таймаута при размонтировании компонента или перед новым рендером
     return () => {
       if (timeoutRef.current) {
-        console.log('[useAutoSave] Cleaning up timeout on unmount/re-render');
         clearTimeout(timeoutRef.current);
         timeoutRef.current = null;
       }
@@ -347,7 +327,6 @@ export function useAutoSave<T>(data: T, options: AutoSaveOptions) {
   // Функция для обновления эталонного хэша после успешного сохранения или смены вкладки
   const updateLastSavedHash = () => {
     setLastSavedHash(jsonHash(data));
-    console.log('[useAutoSave] Last saved hash updated manually');
   };
   
   // В продакшн режиме уменьшаем количество логов
@@ -356,7 +335,6 @@ export function useAutoSave<T>(data: T, options: AutoSaveOptions) {
     if (process.env.NODE_ENV === 'production') {
       return;
     }
-    console.log(message, ...args);
   };
   
   return {

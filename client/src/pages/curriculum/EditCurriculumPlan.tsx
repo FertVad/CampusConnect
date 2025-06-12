@@ -153,7 +153,6 @@ function EditCurriculumPlanContent(): React.ReactNode {
 
       // Сохраняем текущие данные yearsOfStudy для синхронизации между компонентами
       if (planData.yearsOfStudy && planData.yearsOfStudy !== planYearsOfStudy) {
-        console.log(`[updateMutation] Обновляем planYearsOfStudy: ${planYearsOfStudy} -> ${planData.yearsOfStudy}`);
         // Обновляем в следующем цикле рендеринга, чтобы избежать состояния гонки
         setTimeout(() => {
           setPlanYearsOfStudy(planData.yearsOfStudy as number);
@@ -162,7 +161,6 @@ function EditCurriculumPlanContent(): React.ReactNode {
 
       // Также обновляем месяцы обучения в глобальном хранилище
       if (planData.monthsOfStudy !== undefined && planData.monthsOfStudy !== planMonthsOfStudy) {
-        console.log(`[updateMutation] Обновляем planMonthsOfStudy: ${planMonthsOfStudy} -> ${planData.monthsOfStudy}`);
         // Обновляем в следующем цикле рендеринга
         setTimeout(() => {
           setPlanMonthsOfStudy(planData.monthsOfStudy as number);
@@ -181,7 +179,6 @@ function EditCurriculumPlanContent(): React.ReactNode {
 
       // Проверка и логирование унифицированного запроса
       if (planData.calendarJson || planData.planJson) {
-        console.log('[updateMutation] Отправка унифицированных данных:', {
           formFieldsCount: Object.keys(planData).length,
           hasCalendarJson: !!planData.calendarJson,
           hasPlanJson: !!planData.planJson,
@@ -203,7 +200,6 @@ function EditCurriculumPlanContent(): React.ReactNode {
           planData.calendarData = JSON.stringify(calendarDataRef.current);
         }
 
-        console.log('[updateMutation] Отправка стандартных данных:', planData);
       }
 
       // Используем PATCH метод для унифицированного сохранения
@@ -240,7 +236,6 @@ function EditCurriculumPlanContent(): React.ReactNode {
 
           // Обновляем кэш напрямую, чтобы избежать дополнительных запросов
           queryClient.setQueryData([`/api/curriculum-plans/${planId}`], updatedCache);
-          console.log('[updateMutation] Обновлен кэш с новыми данными:', updatedCache);
         } else {
           // Если нет данных в кэше, делаем полную перезагрузку
           queryClient.invalidateQueries({ queryKey: [`/api/curriculum-plans/${planId}`] });
@@ -289,7 +284,6 @@ function EditCurriculumPlanContent(): React.ReactNode {
     try {
       // Приостанавливаем автосохранение на время ручного сохранения
       setAutosavePaused(true);
-      console.log("[saveCurriculum] Начало сохранения учебного плана");
 
       // Принудительно вызываем валидацию формы для обновления isDirty и ошибок
       await form.trigger();
@@ -320,19 +314,15 @@ function EditCurriculumPlanContent(): React.ReactNode {
       // Проверяем сначала глобальную переменную, затем кэш, затем текущие данные
       if (window._lastPlanData) {
         planDataStr = window._lastPlanData;
-        console.log("[saveCurriculum] Using plan data from global variable:", planDataStr.length, "bytes");
       } else {
         // Получаем данные из кэша
         const currentPlan = queryClient.getQueryData<CurriculumPlan>([`/api/curriculum-plans/${planId}`]);
 
         if (currentPlan?.curriculumPlanData) {
           planDataStr = currentPlan.curriculumPlanData;
-          console.log("[saveCurriculum] Using plan data from queryClient cache:", planDataStr.length, "bytes");
         } else if (plan?.curriculumPlanData) {
           planDataStr = plan.curriculumPlanData;
-          console.log("[saveCurriculum] Using plan data from component state:", planDataStr.length, "bytes");
         } else {
-          console.warn("[saveCurriculum] No plan data found in any source");
         }
       }
 
@@ -340,7 +330,6 @@ function EditCurriculumPlanContent(): React.ReactNode {
       if (planDataStr) {
         try {
           const parsedPlan = JSON.parse(planDataStr);
-          console.log("[saveCurriculum] Plan data validation:", {
             hasSchemaVersion: !!parsedPlan.schemaVersion,
             hasPlanData: !!parsedPlan.planData,
             planDataLength: parsedPlan.planData?.length || 0
@@ -351,7 +340,6 @@ function EditCurriculumPlanContent(): React.ReactNode {
       }
 
       // Выводим в лог информацию о сохраняемых данных плана
-      console.log(`[saveCurriculum] Curriculum plan data found: ${planDataStr.length} bytes`);
 
       // Подготавливаем данные календаря
       const calendarDataJson = JSON.stringify(calendarDataRef.current);
@@ -367,7 +355,6 @@ function EditCurriculumPlanContent(): React.ReactNode {
         curriculumPlanData: planDataStr
       };
 
-      console.log("[saveCurriculum] Sending data in unified PATCH request:", {
         formFields: Object.keys(formData).length,
         calendarFields: Object.keys(calendarDataRef.current).length,
         planDataLength: planDataStr.length
@@ -375,7 +362,6 @@ function EditCurriculumPlanContent(): React.ReactNode {
 
       // Сохраняем все данные формы через единый PATCH запрос
       await updateMutation.mutateAsync(dataToSave);
-      console.log("[saveCurriculum] Request to server completed successfully");
 
       // После успешного сохранения сбрасываем флаги dirty
       setIsDirty(false);
@@ -390,7 +376,6 @@ function EditCurriculumPlanContent(): React.ReactNode {
       // Возобновляем автосохранение с небольшой задержкой
       setTimeout(() => {
         setAutosavePaused(false);
-        console.log("[saveCurriculum] Autosave re-enabled after manual save");
       }, 500);
 
       return true;
@@ -407,7 +392,6 @@ function EditCurriculumPlanContent(): React.ReactNode {
       // Возобновляем автосохранение
       setTimeout(() => {
         setAutosavePaused(false);
-        console.log("[saveCurriculum] Autosave re-enabled after error");
       }, 500);
 
       return false;
@@ -436,7 +420,6 @@ function EditCurriculumPlanContent(): React.ReactNode {
           currentValues.educationLevel !== plan.educationLevel ||
           currentValues.description !== (plan.description || "");
 
-        console.log("[EditCurriculumPlan] Form change detected, real changes:", hasRealChanges);
         setIsDirty(hasRealChanges);
       } else {
         // Если нет данных плана для сравнения, просто устанавливаем флаг
@@ -458,14 +441,12 @@ function EditCurriculumPlanContent(): React.ReactNode {
     // Если есть год начала, рассчитываем год окончания
     if (startYear) {
       const result = calcEndYear(startYear, years, months);
-      console.log(`[EndYearCalc] startYear=${startYear}, years=${years}, months=${months} => endYear=${result}`);
       form.setValue('endYear', result);
     }
   }, [form.watch('startYear'), form.watch('yearsOfStudy'), form.watch('monthsOfStudy')]);
 
   useEffect(() => {
     if (plan) {
-      console.log("[EditCurriculumPlan] Обновление данных плана из API:", plan);
 
       // Обновляем значения формы
       form.reset({
@@ -485,7 +466,6 @@ function EditCurriculumPlanContent(): React.ReactNode {
       if (plan.calendarData) {
         try {
           const parsedData = JSON.parse(plan.calendarData as string);
-          console.log("[EditCurriculumPlan] Обновление данных календаря:", parsedData);
           setCalendarData(parsedData);
           calendarDataRef.current = parsedData;
 
@@ -501,7 +481,6 @@ function EditCurriculumPlanContent(): React.ReactNode {
       // Инициализируем данные учебного плана из плана, если они есть
       if (plan.curriculumPlanData) {
         try {
-          console.log("[EditCurriculumPlan] Данные учебного плана доступны:", plan.curriculumPlanData);
         } catch (e) {
           console.error("Ошибка при обработке данных учебного плана:", e);
         }
@@ -509,7 +488,6 @@ function EditCurriculumPlanContent(): React.ReactNode {
 
       // Важно: проверяем, изменились ли даты при обновлении количества лет обучения
       if (plan.yearsOfStudy !== planYearsOfStudy) {
-        console.log(`[EditCurriculumPlan] Количество лет обучения изменилось: ${planYearsOfStudy} -> ${plan.yearsOfStudy}`);
 
         // Устанавливаем новое значение
         setPlanYearsOfStudy(plan.yearsOfStudy);
@@ -521,7 +499,6 @@ function EditCurriculumPlanContent(): React.ReactNode {
       // Аналогично для месяцев
       const planMonths = plan.monthsOfStudy || 0;
       if (planMonths !== planMonthsOfStudy) {
-        console.log(`[EditCurriculumPlan] Количество месяцев изменилось: ${planMonthsOfStudy} -> ${planMonths}`);
 
         // Устанавливаем новое значение
         setPlanMonthsOfStudy(planMonths);
@@ -537,12 +514,10 @@ function EditCurriculumPlanContent(): React.ReactNode {
   // Функция сохранения данных календаря - теперь использует общую функцию saveCurriculum
   const saveCalendarData = async () => {
     if (Object.keys(calendarDataRef.current).length === 0) {
-      console.log("[EditCurriculumPlan] No calendar data to save");
       return false;
     }
 
     try {
-      console.log("[EditCurriculumPlan] Calendar data changed, saving through unified save function");
 
       // Устанавливаем флаг dirty для календаря
       setFormIsDirty(prev => ({
@@ -577,7 +552,6 @@ function EditCurriculumPlanContent(): React.ReactNode {
 
   // Функция для обновления таблицы итогов
   const updateSummaryTable = useCallback(() => {
-    console.log("[EditCurriculumPlan] Updating summary table with data:", calendarDataRef.current);
     // Увеличиваем счетчик для принудительного обновления SummaryTable
     setCalendarUpdateCount(prev => prev + 1);
   }, []);
@@ -588,7 +562,6 @@ function EditCurriculumPlanContent(): React.ReactNode {
       try {
         // Пытаемся распарсить данные календаря из плана
         const parsedData = JSON.parse(plan.calendarData);
-        console.log("[EditCurriculumPlan] Parsed calendar data from plan:", parsedData);
 
         // Обновляем данные в ссылке
         calendarDataRef.current = parsedData;
@@ -613,7 +586,6 @@ function EditCurriculumPlanContent(): React.ReactNode {
   useEffect(() => {
     // Пропускаем первый рендер
     if (isFirstRenderRef.current) {
-      console.log("[EditCurriculumPlan] First render, initializing refs");
       isFirstRenderRef.current = false;
       if (plan) {
         prevYearsOfStudyRef.current = plan.yearsOfStudy;
@@ -624,7 +596,6 @@ function EditCurriculumPlanContent(): React.ReactNode {
 
     // Проверяем, действительно ли изменилось значение по сравнению с предыдущим
     if (prevYearsOfStudyRef.current !== planYearsOfStudy && plan) {
-      console.log(`[EditCurriculumPlan] yearsOfStudy changed: ${prevYearsOfStudyRef.current} -> ${planYearsOfStudy}`);
 
       // Обновляем данные формы
       form.setValue('yearsOfStudy', planYearsOfStudy);
@@ -634,7 +605,6 @@ function EditCurriculumPlanContent(): React.ReactNode {
 
       // Если есть данные календаря, сохраняем их с новым planYearsOfStudy
       if (Object.keys(calendarDataRef.current).length > 0) {
-        console.log("[EditCurriculumPlan] Auto-saving calendar data after yearsOfStudy change");
 
         // Используем debounce вместо setTimeout для предотвращения множественных вызовов
         const timeoutId = setTimeout(() => {
@@ -656,7 +626,6 @@ function EditCurriculumPlanContent(): React.ReactNode {
 
     // Проверяем, действительно ли изменилось значение по сравнению с предыдущим
     if (prevMonthsOfStudyRef.current !== planMonthsOfStudy && plan) {
-      console.log(`[EditCurriculumPlan] monthsOfStudy changed: ${prevMonthsOfStudyRef.current} -> ${planMonthsOfStudy}`);
 
       // Обновляем данные формы
       form.setValue('monthsOfStudy', planMonthsOfStudy);
@@ -666,7 +635,6 @@ function EditCurriculumPlanContent(): React.ReactNode {
 
       // Если есть данные календаря, сохраняем их с новым planMonthsOfStudy
       if (Object.keys(calendarDataRef.current).length > 0) {
-        console.log("[EditCurriculumPlan] Auto-saving calendar data after monthsOfStudy change");
 
         // Используем debounce вместо setTimeout для предотвращения множественных вызовов
         const timeoutId = setTimeout(() => {
@@ -681,18 +649,15 @@ function EditCurriculumPlanContent(): React.ReactNode {
 
   // Обработчик смены вкладок
   const handleTabChange = async (value: string) => {
-    console.log(`[EditCurriculumPlan] Tab change: ${activeTab} -> ${value}`);
 
     // Предотвращаем бесполезные переключения на ту же вкладку
     if (activeTab === value) {
-      console.log("[EditCurriculumPlan] Already on this tab, skipping...");
       return;
     }
 
     try {
       // Если мы уходим с вкладки "title", проверяем, есть ли несохраненные изменения
       if (activeTab === "title" && value !== "title") {
-        console.log("[EditCurriculumPlan] Leaving title tab, checking for unsaved changes...");
 
         // Принудительно вызываем валидацию формы для обновления isDirty и ошибок
         await form.trigger();
@@ -729,7 +694,6 @@ function EditCurriculumPlanContent(): React.ReactNode {
 
             if (shouldSave) {
               // Пользователь подтвердил сохранение
-              console.log("[EditCurriculumPlan] User confirmed saving changes");
               const saveResult = await savePlan();
               if (!saveResult) {
                 console.error("[EditCurriculumPlan] Failed to save form data");
@@ -737,7 +701,6 @@ function EditCurriculumPlanContent(): React.ReactNode {
               }
             } else {
               // Пользователь отказался от сохранения, откатываем изменения в форме
-              console.log("[EditCurriculumPlan] User declined saving changes, reverting form data");
               if (plan) {
                 form.reset({
                   specialtyName: plan.specialtyName,
@@ -757,7 +720,6 @@ function EditCurriculumPlanContent(): React.ReactNode {
             }
           } else {
             // Хотя isDirty=true, но реальных изменений нет, сбрасываем флаг
-            console.log("[EditCurriculumPlan] No real changes detected despite isDirty flag");
             setIsDirty(false);
           }
         }
@@ -765,21 +727,17 @@ function EditCurriculumPlanContent(): React.ReactNode {
 
       // Если мы уходим с вкладки "schedule", сохраняем данные календаря
       if (activeTab === "schedule" && value !== activeTab) {
-        console.log("[EditCurriculumPlan] Leaving schedule tab, saving calendar data...");
         // Дожидаемся завершения сохранения
         const saveResult = await saveCalendarData();
-        console.log("[EditCurriculumPlan] Calendar save result:", saveResult);
 
         if (saveResult) {
           // После сохранения, перезагружаем данные плана с сервера
-          console.log("[EditCurriculumPlan] Invalidating cache to refresh data...");
           await queryClient.invalidateQueries({ queryKey: [`/api/curriculum-plans/${planId}`] });
         }
       }
 
       // Если мы уходим с вкладки "plan", сохраняем данные учебного плана
       if (activeTab === "plan" && value !== activeTab) {
-        console.log("[EditCurriculumPlan] Leaving plan tab, checking if plan data needs saving...", {
           formIsDirty,
           activeTab,
           newTab: value
@@ -787,34 +745,27 @@ function EditCurriculumPlanContent(): React.ReactNode {
 
         // ВАЖНО: Перед проверкой на unsaved changes, отменяем любой отложенный таймер сохранения
         if (saveTimeoutRef.current) {
-          console.log("[EditCurriculumPlan] Canceling pending save timer before tab change");
           clearTimeout(saveTimeoutRef.current);
           saveTimeoutRef.current = null;
         }
 
         // Проверяем, есть ли несохраненные изменения в учебном плане
         const planIsDirty = formIsDirty.plan;
-        console.log("[EditCurriculumPlan] Plan dirty state:", planIsDirty);
 
         // КРИТИЧЕСКИ ВАЖНО: Проверяем наличие глобальных данных, которые могли быть созданы в CurriculumPlanTable
         if (typeof window !== 'undefined' && window._lastPlanData) {
-          console.log("[EditCurriculumPlan] Found global plan data when leaving tab, length:", window._lastPlanData.length);
         } else {
-          console.log("[EditCurriculumPlan] No global plan data found when leaving tab!");
         }
 
         // ВСЕГДА получаем и проверяем текущий план
         const currentPlan = queryClient.getQueryData<CurriculumPlan>([`/api/curriculum-plans/${planId}`]);
-        console.log("[EditCurriculumPlan] Current plan data length:", currentPlan?.curriculumPlanData?.length || 0);
 
         // Принудительно сохраняем данные при переключении вкладки
         try {
-          console.log("[EditCurriculumPlan] Plan data being saved FORCEFULLY when leaving tab");
 
           // ОЧЕНЬ ВАЖНО: Форсируем событие изменения плана из CurriculumPlanTable
           // Это гарантирует, что самые последние изменения будут сохранены
           if (curriculumTableRef.current && typeof curriculumTableRef.current.forceUpdate === "function") {
-            console.log("[EditCurriculumPlan] Forcing update on curriculum table before saving");
             curriculumTableRef.current.forceUpdate();
 
             // Даем время на обновление данных
@@ -823,10 +774,8 @@ function EditCurriculumPlanContent(): React.ReactNode {
 
           // Сохраняем данные через унифицированную функцию
           const saveResult = await saveCurriculum();
-          console.log("[EditCurriculumPlan] Plan data save result:", saveResult);
 
           if (!saveResult) {
-            console.warn("[EditCurriculumPlan] Failed to save plan data when leaving tab");
 
             // Спрашиваем пользователя, хочет ли он продолжить без сохранения
             const shouldProceed = window.confirm(
@@ -856,14 +805,12 @@ function EditCurriculumPlanContent(): React.ReactNode {
 
       // Специфичная обработка для каждой вкладки при переходе на неё
       if (value === "schedule") {
-        console.log("[EditCurriculumPlan] Switching to schedule tab...");
 
         // Обновляем календарные данные из плана
         if (plan && plan.calendarData) {
           try {
             // Пытаемся распарсить данные календаря из плана
             const parsedData = JSON.parse(plan.calendarData);
-            console.log("[EditCurriculumPlan] Loaded calendar data:", parsedData);
 
             // Создаем глубокую копию данных
             const newData = JSON.parse(JSON.stringify(parsedData));
@@ -882,23 +829,19 @@ function EditCurriculumPlanContent(): React.ReactNode {
             // Снимаем паузу через 3 секунды, чтобы компоненты успели отрендериться
             setTimeout(() => {
               setAutosavePaused(false);
-              console.log("[EditCurriculumPlan] Auto-save re-enabled after schedule tab switch");
             }, 3000);
           } catch (e) {
             console.error("Ошибка при парсинге данных календаря:", e);
           }
         }
       } else if (value === "summary") {
-        console.log("[EditCurriculumPlan] Switching to summary tab, refreshing data...");
 
         // Проверяем, есть ли актуальные данные и соответствует ли количество лет обучения текущему значению
         const planMonths = plan?.monthsOfStudy || 0;
         if (plan && (plan.yearsOfStudy !== planYearsOfStudy || planMonths !== planMonthsOfStudy)) {
-          console.log(`[EditCurriculumPlan] Study duration mismatch before summary tab: plan=[${plan.yearsOfStudy}y, ${planMonths}m], current=[${planYearsOfStudy}y, ${planMonthsOfStudy}m]`);
 
           // Сначала пробуем сохранить актуальные данные
           if (Object.keys(calendarDataRef.current).length > 0) {
-            console.log("[EditCurriculumPlan] Auto-saving before switching to summary tab");
             await saveCalendarData();
           }
         }
@@ -921,17 +864,14 @@ function EditCurriculumPlanContent(): React.ReactNode {
 
   // Обработчик отправки формы титульного листа
   const onSubmit = async (data: CurriculumFormValues) => {
-    console.log('[EditCurriculumPlan] Submitting form data:', data);
 
     try {
       // Приостанавливаем автосохранение на время ручного сохранения
       setAutosavePaused(true);
-      console.log("[EditCurriculumPlan] Auto-save paused for manual form save");
 
       // ВАЖНО: Форсируем обновление данных из таблицы перед сохранением
       // Это обеспечивает синхронизацию последних изменений в CurriculumPlanTable
       if (curriculumTableRef.current && typeof curriculumTableRef.current.forceUpdate === "function") {
-        console.log("[EditCurriculumPlan] Forcing update on curriculum table before saving");
         curriculumTableRef.current.forceUpdate();
 
         // Даем время на обновление данных
@@ -940,14 +880,12 @@ function EditCurriculumPlanContent(): React.ReactNode {
 
       // Если количество лет обучения изменилось, обновляем локальное состояние
       if (data.yearsOfStudy !== planYearsOfStudy) {
-        console.log(`[EditCurriculumPlan] yearsOfStudy changed in form submit: ${planYearsOfStudy} -> ${data.yearsOfStudy}`);
         // Обновляем локальное состояние
         setPlanYearsOfStudy(data.yearsOfStudy);
       }
 
       // Аналогично для количества месяцев обучения
       if (data.monthsOfStudy !== planMonthsOfStudy) {
-        console.log(`[EditCurriculumPlan] monthsOfStudy changed in form submit: ${planMonthsOfStudy} -> ${data.monthsOfStudy}`);
         // Обновляем локальное состояние
         setPlanMonthsOfStudy(data.monthsOfStudy);
       }
@@ -966,7 +904,6 @@ function EditCurriculumPlanContent(): React.ReactNode {
           : undefined
       };
 
-      console.log('[EditCurriculumPlan] Sending data to update mutation:', formDataToSave);
 
       // Отправляем запрос на сохранение и ждем результата
       const result = await updateMutation.mutateAsync(formDataToSave);
@@ -991,14 +928,12 @@ function EditCurriculumPlanContent(): React.ReactNode {
         };
 
         queryClient.setQueryData([`/api/curriculum-plans/${planId}`], updatedPlan);
-        console.log('[EditCurriculumPlan] Updated plan cache after manual save:', updatedPlan);
 
         // Обновляем данные в общем кэше планов
         const plansCache = queryClient.getQueryData<CurriculumPlan[]>(['/api/curriculum-plans']);
         if (plansCache) {
           const updatedPlans = plansCache.map(p => p.id === planId ? updatedPlan : p);
           queryClient.setQueryData(['/api/curriculum-plans'], updatedPlans);
-          console.log("[EditCurriculumPlan] Updated plans list cache with new data");
         }
       }
 
@@ -1023,7 +958,6 @@ function EditCurriculumPlanContent(): React.ReactNode {
       // Возобновляем автосохранение после завершения ручного сохранения с увеличенной задержкой
       setTimeout(() => {
         setAutosavePaused(false);
-        console.log("[EditCurriculumPlan] Auto-save resumed after manual form save");
       }, 3000); // Увеличенная задержка (3 секунды) для предотвращения немедленного возобновления автосохранения
     }
   };
@@ -1250,7 +1184,6 @@ function EditCurriculumPlanContent(): React.ReactNode {
 
                                 // ВАЖНО: Не обновляем planYearsOfStudy здесь напрямую
                                 // Это будет обрабатываться в обработчике submit формы или handleTabChange
-                                console.log(`[EditCurriculumPlan] yearsOfStudy input changed to: ${value}, but not updating planYearsOfStudy yet`);
                               }}
                             />
                           </FormControl>
@@ -1409,7 +1342,6 @@ function EditCurriculumPlanContent(): React.ReactNode {
                           planId={planId.toString()} // Явно указываем planId из родительского компонента
                           autosavePaused={autosavePaused} // Передаем флаг паузы автосохранения
                           onChange={(data) => {
-                            console.log("[EditCurriculumPlan] Calendar data updated:", data);
 
                             // Создаем глубокую копию данных для защиты от мутаций
                             const dataCopy = JSON.parse(JSON.stringify(data));
@@ -1494,7 +1426,6 @@ function EditCurriculumPlanContent(): React.ReactNode {
                   onPlanChange={(planData) => {
                     // Сохраняем данные через единую функцию saveCurriculum
                     if (planId && !isNaN(planId)) {
-                      console.log("[EditCurriculumPlan] Plan data changed, setting dirty state", {
                         nodesCount: planData.length,
                         firstNode: planData[0]?.title || 'unknown'
                       });
@@ -1510,7 +1441,6 @@ function EditCurriculumPlanContent(): React.ReactNode {
                       const planDataJson = JSON.stringify(dataForSaving);
                       setPlan(planDataJson);
 
-                      console.log(`[EditCurriculumPlan] Serialized plan data: ${planDataJson.length} bytes`);
 
                       // Обновляем план с новыми данными через queryClient
                       if (plan) {
@@ -1523,19 +1453,16 @@ function EditCurriculumPlanContent(): React.ReactNode {
                         // ОЧЕНЬ ВАЖНО: сохраняем эти данные в глобальном контексте
                         if (window._lastPlanData !== planDataJson) {
                           window._lastPlanData = planDataJson;
-                          console.log("[EditCurriculumPlan] Updated global reference to plan data");
                         }
 
                         // Обновляем кэш queryClient напрямую - это гарантирует реактивность
                         queryClient.setQueryData([`/api/curriculum-plans/${planId}`], updatedPlan);
-                        console.log("[EditCurriculumPlan] Updated plan data in queryClient cache");
 
                         // Также обновляем общий кэш со списком планов для согласованности
                         const plansCache = queryClient.getQueryData<CurriculumPlan[]>(['/api/curriculum-plans']);
                         if (plansCache) {
                           const updatedPlans = plansCache.map(p => p.id === planId ? updatedPlan : p);
                           queryClient.setQueryData(['/api/curriculum-plans'], updatedPlans);
-                          console.log("[EditCurriculumPlan] Updated plans list cache");
                         }
                       }
 
@@ -1549,14 +1476,11 @@ function EditCurriculumPlanContent(): React.ReactNode {
                       if (saveTimeoutRef.current) {
                         clearTimeout(saveTimeoutRef.current);
                         saveTimeoutRef.current = null;
-                        console.log("[EditCurriculumPlan] Cleared previous save timer");
                       }
 
                       // Используем debounce для вызова saveCurriculum и сохраняем ID таймера
                       saveTimeoutRef.current = window.setTimeout(async () => {
-                        console.log("[EditCurriculumPlan] Timer elapsed, saving plan data to server");
                         const saveSuccessful = await saveCurriculum();
-                        console.log("[EditCurriculumPlan] Plan data save result:", saveSuccessful);
                         saveTimeoutRef.current = null;
                       }, 1000);
                     }

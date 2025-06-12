@@ -97,7 +97,6 @@ export default function Schedule() {
         throw new Error('Не удалось загрузить полное расписание');
       }
       const data = await response.json();
-      console.log('Loaded schedule data:', data);
       return data;
     },
     enabled: !!user && userIsAdmin, // Только для администраторов
@@ -118,7 +117,6 @@ export default function Schedule() {
         throw new Error('Не удалось загрузить расписание');
       }
       const data = await response.json();
-      console.log(`Loaded ${isStudent ? 'student' : 'teacher'} schedule data:`, data);
       return data;
     },
     enabled: !!user && !userIsAdmin, // Только для студентов и преподавателей
@@ -132,7 +130,6 @@ export default function Schedule() {
   // Отладочный вывод данных в консоль
   React.useEffect(() => {
     if (scheduleItems) {
-      console.log('Current schedule data:', scheduleItems);
     }
   }, [scheduleItems]);
   

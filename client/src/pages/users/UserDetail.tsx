@@ -56,7 +56,6 @@ const UserDetail: React.FC = () => {
       
       // Данные пользователя из основного API
       const baseUserData = { ...user };
-      console.log('📊 Base user data:', baseUserData);
       
       // Объект для реальных данных о пользователе с сервера по роли
       let roleDetails: Record<string, any> = {};
@@ -79,7 +78,6 @@ const UserDetail: React.FC = () => {
         
         // Загружаем дополнительные данные с сервера
         if (url) {
-          console.log(`🔍 Fetching role details from ${url}`);
           try {
             // Добавим параметр для предотвращения кеширования
             const cacheBuster = `?_t=${Date.now()}`;
@@ -88,13 +86,11 @@ const UserDetail: React.FC = () => {
             if (response.ok) {
               // Сначала проверяем тип содержимого ответа
               const contentType = response.headers.get('content-type');
-              console.log(`📋 Response content type: ${contentType}`);
               
               // Проверка, что ответ - это JSON, а не HTML
               if (contentType && contentType.includes('application/json')) {
                 const jsonData = await response.json();
                 roleDetails = jsonData;
-                console.log('✅ Received role details as JSON:', roleDetails);
               } else {
                 // Если не JSON - попробуем прочитать как текст и преобразовать
                 const responseText = await response.text();
@@ -105,26 +101,20 @@ const UserDetail: React.FC = () => {
                     // Попытка парсинга JSON из текста
                     const detailData = JSON.parse(responseText);
                     roleDetails = detailData;
-                    console.log('✅ Parsed JSON from text response:', roleDetails);
                   } catch (parseError) {
                     console.error('❌ Error parsing response as JSON:', parseError);
-                    console.log('📄 Response starts with:', responseText.substring(0, 100));
                     
                     // Добавим повторный запрос в случае ошибки сессии
                     if (responseText.includes('<!DOCTYPE html>')) {
-                      console.log('🔄 Received HTML instead of JSON, trying to refresh authentication');
                       // Не используем данные из этого ответа
                     }
                   }
                 } else {
-                  console.warn('⚠️ Response is not JSON or is empty HTML');
                 }
               }
             } else {
-              console.warn(`⚠️ Failed to load detailed data from ${url}, status: ${response.status}`);
               
               if (response.status === 401) {
-                console.log('🔒 Authentication error, user might need to login again');
               }
             }
           } catch (fetchError) {
@@ -179,7 +169,6 @@ const UserDetail: React.FC = () => {
         ...enrichedDetails
       };
       
-      console.log('🔄 Final user data:', combinedData);
       return combinedData;
     },
     enabled: !!user, // Запрос выполняется только после получения базовой информации
@@ -199,7 +188,6 @@ const UserDetail: React.FC = () => {
   
   // Рендерим соответствующую карточку по роли
   const renderUserCard = () => {
-    console.log('Rendering user card for:', detailedUser);
     
     if (!detailedUser) {
       console.error('No detailed user data available');
@@ -215,7 +203,6 @@ const UserDetail: React.FC = () => {
     
     // Общий обработчик клика на карточке
     const handleCardClick = (userId: number) => {
-      console.log('Card clicked for user:', userId);
     };
     
     // Выбираем компонент карточки в зависимости от роли

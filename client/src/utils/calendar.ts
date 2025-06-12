@@ -61,9 +61,6 @@ export const buildAcademicWeeks = (
   const endYearWeeks = getWeeksInYear(endYear);
   const maxWeeksInYear = Math.max(startYearWeeks, endYearWeeks);
   
-  console.log(`[buildAcademicWeeks] Количество недель в году ${startYear}: ${startYearWeeks}`);
-  console.log(`[buildAcademicWeeks] Количество недель в году ${endYear}: ${endYearWeeks}`);
-  console.log(`[buildAcademicWeeks] Максимальное количество недель: ${maxWeeksInYear}`);
   
   // Теперь генерируем недели для одного учебного года
   // Учебный год: с 1 сентября по 31 августа следующего года
@@ -144,7 +141,6 @@ export const buildWeeksWithMonths = (
     // Дата окончания хвостового курса - через указанное количество месяцев
     const tailEndDate = addMonths(tailStartDate, months);
     
-    console.log(`[buildWeeksWithMonths] Хвостовой курс: ${format(tailStartDate, 'yyyy-MM-dd')} - ${format(tailEndDate, 'yyyy-MM-dd')}`);
     
     // Получаем все недели для хвостового курса
     const weeksInTailCourse = eachWeekOfInterval(

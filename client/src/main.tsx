@@ -72,14 +72,12 @@ function AppWithErrorHandling() {
 // Ensure the DOM is fully loaded before attempting to mount React
 // This helps prevent issues in Safari where the DOM might not be ready
 function safelyInitializeApp() {
-  console.log("App initialization started");
 
   try {
     // Get the root element - we'll handle the null case safely
     const rootElement = document.getElementById("root");
 
     // Debug: Display rendering location
-    console.log("Rendering to element:", rootElement);
 
     if (!rootElement) {
       throw new Error("Root element not found in DOM");
@@ -98,7 +96,6 @@ function safelyInitializeApp() {
           <AppWithErrorHandling />
         </React.StrictMode>
       );
-      console.log("App mounted successfully");
 
       // Remove debug element after successful render
       const debugElement = document.getElementById('debug-message');

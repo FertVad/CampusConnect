@@ -44,7 +44,6 @@ export function ProtectedRoute({ path, component: Component, adminOnly = false }
     
     // Если страница только для админа, и пользователь не админ
     if (user && adminOnly && user.role !== 'admin' && !redirectAttempted && userChanged) {
-      console.log("Redirecting admin-only user to dashboard");
       setRedirectAttempted(true);
       
       // Используем setTimeout для избежания проблем с React 18 StrictMode
@@ -54,7 +53,6 @@ export function ProtectedRoute({ path, component: Component, adminOnly = false }
 
     // Если пользователь не авторизован и это не страница авторизации
     if (!user && !redirectAttempted && userChanged && location !== '/auth') {
-      console.log("Redirecting unauthenticated user to auth page");
       setRedirectAttempted(true);
       
       // Используем setTimeout для избежания проблем с React 18 StrictMode

@@ -110,7 +110,6 @@ function CourseRow({
       if (activity) {
         // Убираем лишние логи или оборачиваем их проверкой окружения
         if (process.env.NODE_ENV === "development" && false) { // Отключаем все логи
-          console.log(`Ячейка ${cellKey} с активностью ${activity}`);
         }
         
         if (activity.length === 1 && activity in ACTIVITY_COLORS) {
@@ -149,7 +148,6 @@ function CourseRow({
           ${nextMonthColor} 100%)`;
           
         if (process.env.NODE_ENV === "development" && false) { // Отключаем все логи
-          console.log(`[${cellKey}] Многоточечный плавный градиент: ${backgroundStyle}, дней: ${daysInCurrentMonth}/${daysInNextMonth} (${firstMonthPercent}%)`);
         }
       }
       

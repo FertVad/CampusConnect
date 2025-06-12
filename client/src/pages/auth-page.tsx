@@ -52,7 +52,6 @@ function LoginForm({ onTabChange }: { onTabChange: (tab: string) => void }) {
   });
 
   function onSubmit(data: LoginData) {
-    console.log("Login form submitted with:", data);
     loginMutation.mutate(data);
   }
   

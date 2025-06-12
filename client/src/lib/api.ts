@@ -135,7 +135,6 @@ export async function uploadFile(endpoint: string, formData: FormData): Promise<
 export function createWebSocketConnection(userId: number | undefined | null, onMessage: (data: any) => void): WebSocket | null {
   // Check if user is logged in and has userId
   if (!userId) {
-    console.warn('WebSocket connection not created: User not authenticated');
     return null;
   }
   
@@ -143,7 +142,6 @@ export function createWebSocketConnection(userId: number | undefined | null, onM
     // Get user authentication status from localStorage
     const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
     if (!isAuthenticated) {
-      console.warn('WebSocket connection not created: Authentication status is false');
       return null;
     }
 
@@ -153,18 +151,15 @@ export function createWebSocketConnection(userId: number | undefined | null, onM
                   
     // Only create WebSocket if we have a valid URL and user ID
     if (!wsUrl || wsUrl.includes('undefined')) {
-      console.warn('WebSocket connection not created: Invalid WebSocket URL', wsUrl);
       return null;
     }
 
-    console.log(`Creating WebSocket connection to ${wsUrl}/?token=${userId}`);
     
     // Create WebSocket connection
     const socket = new WebSocket(`${wsUrl}/?token=${userId}`);
     
     // Set up event handlers
     socket.onopen = () => {
-      console.log('WebSocket connection established');
     };
     
     socket.onmessage = (event) => {
@@ -181,7 +176,6 @@ export function createWebSocketConnection(userId: number | undefined | null, onM
     };
     
     socket.onclose = (event) => {
-      console.log(`WebSocket connection closed: ${event.code} ${event.reason}`);
     };
     
     return socket;
@@ -194,7 +188,6 @@ export function createWebSocketConnection(userId: number | undefined | null, onM
 // Send chat message through WebSocket with Safari compatibility
 export function sendChatMessage(socket: WebSocket | null, toUserId: number, content: string): boolean {
   if (!socket || socket.readyState !== WebSocket.OPEN) {
-    console.warn('Cannot send message: WebSocket not connected');
     return false;
   }
   
@@ -217,7 +210,6 @@ export function sendChatMessage(socket: WebSocket | null, toUserId: number, cont
 // Mark message as read through WebSocket with Safari compatibility
 export function markMessageAsRead(socket: WebSocket | null, messageId: number): boolean {
   if (!socket || socket.readyState !== WebSocket.OPEN) {
-    console.warn('Cannot mark message as read: WebSocket not connected');
     return false;
   }
   
