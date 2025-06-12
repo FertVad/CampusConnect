@@ -59,7 +59,7 @@ export async function apiRequest(
     const res = await fetch(url, {
       method,
       headers,
-      body: data ? data.toString() : undefined,
+      body: data ? JSON.stringify(data) : undefined,
       credentials: "include", // Всегда включаем учетные данные для cookie сессии
       mode: 'cors', // Для лучшей совместимости
       redirect: 'follow', // Следовать за перенаправлениями
