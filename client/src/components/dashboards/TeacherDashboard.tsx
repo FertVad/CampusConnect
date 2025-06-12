@@ -23,25 +23,28 @@ const TeacherDashboard = () => {
   const { user } = useAuth();
   const { t } = useTranslation();
   
+  const isAdmin = user?.role === 'admin';
+
   // Get teacher's classes/subjects
   const { data: subjects = [] } = useQuery<Subject[]>({
-    queryKey: [`/api/subjects/teacher/${user?.id}`],
+    queryKey: ['/api/subjects/teacher'],
   });
-  
+
   // Get teacher's schedule
   const { data: scheduleItems = [] } = useQuery<ScheduleItemWithSubject[]>({
-    queryKey: [`/api/schedule/teacher/${user?.id}`],
+    queryKey: ['/api/schedule/teacher'],
   });
-  
+
   // Get teacher's assignments
   const { data: assignments = [] } = useQuery<Assignment[]>({
-    queryKey: [`/api/assignments/teacher/${user?.id}`],
+    queryKey: ['/api/assignments/teacher'],
   });
-  
+
   // Get all students for teacher's classes
   const { data: allStudents = [] } = useQuery<User[]>({
     queryKey: ['/api/users'],
     select: (data) => data.filter(user => user.role === 'student'),
+    enabled: isAdmin,
   });
   
   // Get notifications
