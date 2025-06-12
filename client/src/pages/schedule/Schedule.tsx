@@ -1,8 +1,4 @@
-import React, { useEffect, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { useAuth } from '@/hooks/use-auth';
-import { format, parseISO, addDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear, eachDayOfInterval } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import React, { useState } from 'react';
 import {
   Card,
   CardContent,
@@ -13,7 +9,6 @@ import {
 import {
   Table,
   TableBody,
-  TableCaption,
   TableCell,
   TableHead,
   TableHeader,
@@ -21,27 +16,23 @@ import {
 } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { 
-  AlertCircle, 
-  Clock, 
-  Download, 
+import {
+  AlertCircle,
+  Clock,
   FileText,
-  MapPin, 
-  Upload, 
-  User, 
-  Calendar, 
-  CalendarDays, 
-  CalendarIcon, 
-  CalendarRange, 
-  ChevronLeft, 
-  ChevronRight 
+  MapPin,
+  Upload,
+  User,
+  Calendar,
+  CalendarDays,
+  CalendarIcon,
+  CalendarRange,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Subject } from '@shared/schema';
 import ScheduleImport from '@/components/schedule/ScheduleImport';
-import { isAdmin } from '@/lib/auth';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import {
   Popover,
@@ -55,186 +46,26 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-
-// Map weekday numbers to names
-const DAYS_OF_WEEK = [
-  'Воскресенье',
-  'Понедельник',
-  'Вторник',
-  'Среда',
-  'Четверг',
-  'Пятница',
-  'Суббота',
-];
-
-// Format time in 24-hour format for Russian convention
-function formatTime(time: string): string {
-  const [hours, minutes] = time.split(':').map(Number);
-  return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-}
-
-// Периоды отображения расписания
-type ViewPeriod = 'day' | 'week' | 'month' | 'year' | 'all';
+import { useFilteredSchedule } from '@/hooks/useFilteredSchedule';
+import { formatTime } from '@/lib/utils';
 
 export default function Schedule() {
-  const { user } = useAuth();
-  const isStudent = user?.role === 'student';
-  const isTeacher = user?.role === 'teacher';
-  const userIsAdmin = isAdmin(user?.role);
-  const [activeTab, setActiveTab] = useState<string>("schedule");
-  const [viewPeriod, setViewPeriod] = useState<ViewPeriod>('all');
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [isCalendarOpen, setIsCalendarOpen] = useState<boolean>(false);
-  
-  // Получение всех элементов расписания (для администратора)
-  const allSchedule = useQuery({
-    queryKey: ['/api/schedule'],
-    queryFn: async () => {
-      const response = await fetch('/api/schedule', {
-        credentials: 'include'
-      });
-      if (!response.ok) {
-        throw new Error('Не удалось загрузить полное расписание');
-      }
-      const data = await response.json();
-      return data;
-    },
-    enabled: !!user && userIsAdmin, // Только для администраторов
-  });
-  
-  // Получение расписания по роли пользователя (для преподавателей и студентов)
-  const roleBasedSchedule = useQuery({
-    queryKey: [isStudent ? '/api/schedule/student' : '/api/schedule/teacher'],
-    queryFn: async () => {
-      const endpoint = isStudent 
-        ? `/api/schedule/student`
-        : `/api/schedule/teacher`;
-      
-      const response = await fetch(endpoint, {
-        credentials: 'include'
-      });
-      if (!response.ok) {
-        throw new Error('Не удалось загрузить расписание');
-      }
-      const data = await response.json();
-      return data;
-    },
-    enabled: !!user && !userIsAdmin, // Только для студентов и преподавателей
-  });
-  
-  // Объединяем данные из двух запросов
-  const scheduleItems = userIsAdmin ? allSchedule.data : roleBasedSchedule.data;
-  const isLoading = userIsAdmin ? allSchedule.isLoading : roleBasedSchedule.isLoading;
-  const error = userIsAdmin ? allSchedule.error : roleBasedSchedule.error;
-  
-  // Отладочный вывод данных в консоль
-  React.useEffect(() => {
-    if (scheduleItems) {
-    }
-  }, [scheduleItems]);
-  
-  // Функция фильтрации расписания на основе выбранного периода и даты
-  const getFilteredScheduleItems = () => {
-    if (!scheduleItems) return [];
-    
-    // Если отображение всех элементов, но также выбрана дата - 
-    // фильтруем по дню недели выбранной даты
-    if (viewPeriod === 'all') {
-      // Проверяем, была ли дата явно выбрана пользователем (отличается от текущей)
-      const today = new Date();
-      const isCustomDate = 
-        selectedDate.getDate() !== today.getDate() || 
-        selectedDate.getMonth() !== today.getMonth() || 
-        selectedDate.getFullYear() !== today.getFullYear();
-      
-      // Если дата была явно выбрана, фильтруем по дню недели
-      if (isCustomDate) {
-        const dayOfWeek = selectedDate.getDay();
-        // В нашей системе воскресенье = 0, а в date-fns это 0. 
-        // Поэтому преобразуем, учитывая что суббота = 6, воскресенье = 0
-        return scheduleItems.filter((item: any) => item.dayOfWeek === dayOfWeek);
-      }
-      return scheduleItems;
-    }
-    
-    const today = new Date();
-    let startDate: Date;
-    let endDate: Date;
-    
-    // Определение периода на основе выбранного значения и даты
-    switch (viewPeriod) {
-      case 'day':
-        startDate = selectedDate;
-        endDate = selectedDate;
-        break;
-      case 'week':
-        startDate = startOfWeek(selectedDate, { locale: ru, weekStartsOn: 1 });
-        endDate = endOfWeek(selectedDate, { locale: ru, weekStartsOn: 1 });
-        break;
-      case 'month':
-        startDate = startOfMonth(selectedDate);
-        endDate = endOfMonth(selectedDate);
-        break;
-      case 'year':
-        startDate = startOfYear(selectedDate);
-        endDate = endOfYear(selectedDate);
-        break;
-      default:
-        return scheduleItems;
-    }
-    
-    // В данной версии расписание привязано к дням недели
-    // Поэтому мы фильтруем элементы, день недели которых попадает в выбранный период
-    const daysInRange = eachDayOfInterval({ start: startDate, end: endDate });
-    const weekdaysInRange = daysInRange.map(date => date.getDay());
-    // Создаем массив уникальных дней недели
-    const uniqueWeekdaysInRange = Array.from(new Set(weekdaysInRange));
-    
-    // Фильтруем элементы расписания по дням недели
-    return scheduleItems.filter((item: any) => uniqueWeekdaysInRange.includes(item.dayOfWeek));
-  };
-  
-  // Получаем отфильтрованные элементы расписания
-  const filteredScheduleItems = getFilteredScheduleItems();
-  
-  // Группировка элементов расписания по дням недели
-  const scheduleByDay = React.useMemo(() => {
-    if (!filteredScheduleItems || filteredScheduleItems.length === 0) return {};
-    
-    const grouped: Record<string, any[]> = {};
-    
-    DAYS_OF_WEEK.forEach(day => {
-      grouped[day] = [];
-    });
-    
-    filteredScheduleItems.forEach((item: any) => {
-      const day = DAYS_OF_WEEK[item.dayOfWeek];
-      if (!grouped[day]) {
-        grouped[day] = [];
-      }
-      grouped[day].push(item);
-    });
-    
-    // Сортировка элементов по времени начала занятия
-    Object.keys(grouped).forEach(day => {
-      grouped[day].sort((a: any, b: any) => {
-        const aTime = a.startTime.split(':').map(Number);
-        const bTime = b.startTime.split(':').map(Number);
-        
-        if (aTime[0] !== bTime[0]) {
-          return aTime[0] - bTime[0];
-        }
-        return aTime[1] - bTime[1];
-      });
-    });
-    
-    return grouped;
-  }, [filteredScheduleItems]);
+  const [activeTab, setActiveTab] = useState('schedule');
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
-  // Determine if we should show admin features
-  // Опеределяем, есть ли импортированные данные
-  const hasImportedData = Array.isArray(scheduleItems) && scheduleItems.length > 0;
-  
+  const {
+    scheduleByDay,
+    formattedDate,
+    viewPeriod,
+    selectedDate,
+    handleDateChange,
+    handlePeriodChange,
+    navigatePeriod,
+    isLoading,
+    error,
+    userIsAdmin,
+  } = useFilteredSchedule();
+
   const renderContent = () => {
     if (isLoading) {
       return (
@@ -252,7 +83,7 @@ export default function Schedule() {
         </div>
       );
     }
-    
+
     if (error) {
       return (
         <Alert variant="destructive">
@@ -264,37 +95,25 @@ export default function Schedule() {
         </Alert>
       );
     }
-    
-    // Если нет элементов расписания или они еще не загружены
-    if (!filteredScheduleItems || filteredScheduleItems.length === 0) {
-      return (
-        <Alert>
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Нет расписания</AlertTitle>
-          <AlertDescription>
-            {viewPeriod === 'all' 
-              ? 'Расписание отсутствует. Попробуйте импортировать расписание или добавить занятия вручную.'
-              : 'Нет занятий в выбранном периоде. Попробуйте выбрать другой период или установить "Все расписание".'}
-          </AlertDescription>
-        </Alert>
-      );
-    }
-    
-    // Получаем дни, для которых есть занятия
-    const daysWithClasses = Object.keys(scheduleByDay).filter(day => scheduleByDay[day].length > 0);
-    
+
+    const daysWithClasses = Object.keys(scheduleByDay).filter(
+      (day) => scheduleByDay[day].length > 0,
+    );
+
     if (daysWithClasses.length === 0) {
       return (
         <Alert>
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Нет расписания</AlertTitle>
           <AlertDescription>
-            Нет занятий в выбранном периоде. Попробуйте выбрать другой период или установить "Все расписание".
+            {viewPeriod === 'all'
+              ? 'Расписание отсутствует. Попробуйте импортировать расписание или добавить занятия вручную.'
+              : 'Нет занятий в выбранном периоде. Попробуйте выбрать другой период или установить "Все расписание".'}
           </AlertDescription>
         </Alert>
       );
     }
-    
+
     return (
       <div className="space-y-6">
         {daysWithClasses.map((day) => (
@@ -336,9 +155,10 @@ export default function Schedule() {
                       <TableCell>
                         <div className="flex items-center gap-1">
                           <User className="h-4 w-4 text-muted-foreground" />
-                          {item.teacherName || (item.subject?.teacher?.firstName 
-                            ? `${item.subject.teacher.firstName} ${item.subject.teacher.lastName}` 
-                            : 'Не назначен')}
+                          {item.teacherName ||
+                            (item.subject?.teacher?.firstName
+                              ? `${item.subject.teacher.firstName} ${item.subject.teacher.lastName}`
+                              : 'Не назначен')}
                         </div>
                       </TableCell>
                     </TableRow>
@@ -352,51 +172,6 @@ export default function Schedule() {
     );
   };
 
-  // Форматирование выбранной даты в понятный формат
-  const formattedDate = format(selectedDate, 'dd MMMM yyyy', { locale: ru });
-  
-  // Функция обновления даты 
-  const handleDateChange = (date: Date | undefined) => {
-    if (date) {
-      setSelectedDate(date);
-      setIsCalendarOpen(false);
-    }
-  };
-  
-  // Функция обновления периода просмотра
-  const handlePeriodChange = (value: string) => {
-    setViewPeriod(value as ViewPeriod);
-  };
-  
-  // Переход на следующий/предыдущий период
-  const navigatePeriod = (direction: 'prev' | 'next') => {
-    const today = new Date(selectedDate);
-    let newDate;
-    
-    switch(viewPeriod) {
-      case 'day':
-        newDate = direction === 'prev' 
-          ? addDays(today, -1) 
-          : addDays(today, 1);
-        break;
-      case 'week':
-        newDate = direction === 'prev' 
-          ? addDays(today, -7) 
-          : addDays(today, 7);
-        break;
-      case 'month':
-        newDate = new Date(today.getFullYear(), today.getMonth() + (direction === 'prev' ? -1 : 1), today.getDate());
-        break;
-      case 'year':
-        newDate = new Date(today.getFullYear() + (direction === 'prev' ? -1 : 1), today.getMonth(), today.getDate());
-        break;
-      default:
-        newDate = today;
-    }
-    
-    setSelectedDate(newDate);
-  };
-  
   return (
     <div className="container mx-auto py-6">
       <div className="flex justify-between items-center mb-6">
@@ -404,19 +179,19 @@ export default function Schedule() {
         <div className="flex gap-2">
           {userIsAdmin && (
             <>
-              <Button 
+              <Button
                 variant="outline"
-                onClick={() => window.location.href = "/admin/imported-files"}
+                onClick={() => (window.location.href = '/admin/imported-files')}
                 aria-label="Перейти к менеджеру файлов"
               >
                 <FileText className="mr-2 h-4 w-4" />
                 Менеджер файлов
               </Button>
-              <Button 
-                variant={activeTab === "import" ? "default" : "outline"}
-                onClick={() => setActiveTab(activeTab === "schedule" ? "import" : "schedule")}
+              <Button
+                variant={activeTab === 'import' ? 'default' : 'outline'}
+                onClick={() => setActiveTab(activeTab === 'schedule' ? 'import' : 'schedule')}
               >
-                {activeTab === "schedule" ? (
+                {activeTab === 'schedule' ? (
                   <>
                     <Upload className="mr-2 h-4 w-4" />
                     Импорт расписания
@@ -432,20 +207,20 @@ export default function Schedule() {
           )}
         </div>
       </div>
-      
-      {activeTab === "schedule" ? (
+
+      {activeTab === 'schedule' ? (
         <>
           <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center gap-4">
             <div className="flex items-center gap-2">
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 size="sm"
                 onClick={() => navigatePeriod('prev')}
                 disabled={viewPeriod === 'all'}
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
-              
+
               <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
                 <PopoverTrigger asChild>
                   <Button variant="outline" className="min-w-[240px] justify-start text-left font-normal">
@@ -462,9 +237,9 @@ export default function Schedule() {
                   />
                 </PopoverContent>
               </Popover>
-              
-              <Button 
-                variant="outline" 
+
+              <Button
+                variant="outline"
                 size="sm"
                 onClick={() => navigatePeriod('next')}
                 disabled={viewPeriod === 'all'}
@@ -472,12 +247,9 @@ export default function Schedule() {
                 <ChevronRight className="h-4 w-4" />
               </Button>
             </div>
-            
+
             <div className="flex items-center gap-2">
-              <Select
-                value={viewPeriod}
-                onValueChange={handlePeriodChange}
-              >
+              <Select value={viewPeriod} onValueChange={handlePeriodChange}>
                 <SelectTrigger className="w-[180px]">
                   <SelectValue placeholder="Выберите период" />
                 </SelectTrigger>
@@ -516,7 +288,7 @@ export default function Schedule() {
               </Select>
             </div>
           </div>
-          
+
           {renderContent()}
         </>
       ) : (
