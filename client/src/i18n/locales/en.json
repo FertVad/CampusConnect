@@ -465,7 +465,12 @@
     "sendSuccess": "Message sent",
     "sendError": "Error sending message: {{message}}",
     "connectionLost": "Connection lost. Reconnecting...",
-    "reconnected": "Reconnected"
+    "reconnected": "Reconnected",
+    "disabled": {
+      "title": "Chat Temporarily Disabled",
+      "message": "Chat functionality is temporarily disabled",
+      "description": "The chat system is currently under maintenance."
+    }
   },
   "notifications": {
     "title": "Notifications",
@@ -630,6 +635,7 @@
     "notImplemented": "Not implemented",
     "goBack": "Go back",
     "goHome": "Go home",
-    "contactSupport": "Contact support"
+    "contactSupport": "Contact support",
+    "pageMissingHint": "Did you forget to add the page to the router?"
   }
 }
