@@ -119,11 +119,7 @@ const StudentCard: React.FC<StudentCardProps> = ({
   const { data: tasks = [], isLoading: isTasksLoading } = useQuery({
     queryKey: ['/api/users', student.id, 'tasks'],
     queryFn: async () => {
-      const response = await apiRequest('GET', `/api/users/${student.id}/tasks`);
-      if (!response.ok) {
-        throw new Error('Не удалось загрузить задачи');
-      }
-      return response.json() as Promise<TaskDetail[]>;
+      return await apiRequest(`/api/users/${student.id}/tasks`) as TaskDetail[];
     },
     staleTime: 5 * 60 * 1000, // 5 минут
     enabled: !!student.id

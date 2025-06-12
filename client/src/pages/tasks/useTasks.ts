@@ -67,7 +67,7 @@ export function useTasks() {
 
   const createTaskMutation = useMutation({
     mutationFn: async (data: InsertTask) => {
-      const result = await apiRequest('POST', '/api/tasks', data);
+      const result = await apiRequest('/api/tasks', 'POST', data);
       return result;
     },
     onSuccess: () => {
@@ -89,7 +89,7 @@ export function useTasks() {
 
   const updateTaskStatusMutation = useMutation({
     mutationFn: async ({ id, status }: { id: number; status: string }) => {
-      const result = await apiRequest('PUT', `/api/tasks/${id}`, { status });
+      const result = await apiRequest(`/api/tasks/${id}`, 'PUT', { status });
       return result;
     },
     onSuccess: () => {
@@ -111,7 +111,7 @@ export function useTasks() {
 
   const deleteTaskMutation = useMutation({
     mutationFn: async (id: number) => {
-      const result = await apiRequest('DELETE', `/api/tasks/${id}`);
+      const result = await apiRequest(`/api/tasks/${id}`, 'DELETE');
       return result;
     },
     onSuccess: () => {
@@ -142,7 +142,7 @@ export function useTasks() {
       executorId?: number;
     }) => {
       const { id, ...taskData } = data;
-      const result = await apiRequest('PUT', `/api/tasks/${id}`, taskData);
+      const result = await apiRequest(`/api/tasks/${id}`, 'PUT', taskData);
       return result;
     },
     onSuccess: () => {

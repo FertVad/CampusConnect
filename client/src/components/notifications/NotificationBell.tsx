@@ -54,7 +54,7 @@ export const NotificationBell = () => {
   // Обработчик для отметки уведомления как прочитанное
   const markAsRead = async (id: number) => {
     try {
-      await apiRequest('PATCH', `/api/notifications/${id}/read`);
+      await apiRequest(`/api/notifications/${id}/read`, 'PATCH');
       queryClient.invalidateQueries({ queryKey: ['/api/notifications'] });
     } catch (error) {
       console.error('Failed to mark notification as read:', error);
@@ -64,7 +64,7 @@ export const NotificationBell = () => {
   // Помечаем все уведомления как прочитанные
   const markAllAsRead = async () => {
     try {
-      await apiRequest('PATCH', '/api/notifications/read-all');
+      await apiRequest('/api/notifications/read-all', 'PATCH');
       queryClient.invalidateQueries({ queryKey: ['/api/notifications'] });
     } catch (error) {
       console.error('Failed to mark all notifications as read:', error);

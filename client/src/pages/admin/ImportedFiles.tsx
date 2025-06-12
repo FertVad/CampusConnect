@@ -54,7 +54,7 @@ const ImportedFiles = () => {
       setIsProcessing(prev => ({ ...prev, [id]: true }));
       
       try {
-        await apiRequest('DELETE', `/api/imported-files/${id}`, {});
+        await apiRequest(`/api/imported-files/${id}`, 'DELETE');
         toast({
           title: 'Файл удален',
           description: 'Файл был успешно удален из системы',

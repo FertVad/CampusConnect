@@ -36,12 +36,7 @@ const UserDetail: React.FC = () => {
   const { data: user, isLoading, error } = useQuery({
     queryKey: ['/api/users', id],
     queryFn: async () => {
-      // Сначала получим базовую информацию о пользователе
-      const response = await apiRequest('GET', `/api/users/${id}`);
-      if (!response.ok) {
-        throw new Error('Не удалось загрузить данные пользователя');
-      }
-      return response.json() as Promise<User>;
+      return await apiRequest(`/api/users/${id}`) as User;
     }
   });
   
@@ -79,44 +74,8 @@ const UserDetail: React.FC = () => {
         // Загружаем дополнительные данные с сервера
         if (url) {
           try {
-            // Добавим параметр для предотвращения кеширования
             const cacheBuster = `?_t=${Date.now()}`;
-            const response = await apiRequest('GET', `${url}${cacheBuster}`);
-            
-            if (response.ok) {
-              // Сначала проверяем тип содержимого ответа
-              const contentType = response.headers.get('content-type');
-              
-              // Проверка, что ответ - это JSON, а не HTML
-              if (contentType && contentType.includes('application/json')) {
-                const jsonData = await response.json();
-                roleDetails = jsonData;
-              } else {
-                // Если не JSON - попробуем прочитать как текст и преобразовать
-                const responseText = await response.text();
-                
-                // Проверяем, не является ли ответ HTML (часто при ошибке аутентификации)
-                if (responseText && responseText.trim() && !responseText.includes('<!DOCTYPE html>')) {
-                  try {
-                    // Попытка парсинга JSON из текста
-                    const detailData = JSON.parse(responseText);
-                    roleDetails = detailData;
-                  } catch (parseError) {
-                    console.error('❌ Error parsing response as JSON:', parseError);
-                    
-                    // Добавим повторный запрос в случае ошибки сессии
-                    if (responseText.includes('<!DOCTYPE html>')) {
-                      // Не используем данные из этого ответа
-                    }
-                  }
-                } else {
-                }
-              }
-            } else {
-              
-              if (response.status === 401) {
-              }
-            }
+            roleDetails = await apiRequest(`${url}${cacheBuster}`);
           } catch (fetchError) {
             console.error('❌ Network error during fetch:', fetchError);
           }

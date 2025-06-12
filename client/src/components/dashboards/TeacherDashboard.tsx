@@ -67,7 +67,7 @@ const TeacherDashboard = () => {
   
   // Mark notification as read
   const handleMarkAsRead = async (id: number) => {
-    await apiRequest('PUT', `/api/notifications/${id}/read`, {});
+    await apiRequest(`/api/notifications/${id}/read`, 'PUT', {});
   };
   
   // Mark all notifications as read

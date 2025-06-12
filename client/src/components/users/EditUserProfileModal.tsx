@@ -140,35 +140,7 @@ const EditUserProfileModal: React.FC<EditUserProfileModalProps> = ({
       const userUpdateUrlWithCache = `/api/users/${user.id}${cacheBuster}`;
       
       // Отправляем запрос на обновление профиля
-      const response = await apiRequest('PUT', userUpdateUrlWithCache, formData);
-      
-      if (!response.ok) {
-        let errorMessage = 'Ошибка при обновлении профиля';
-        try {
-          // Проверяем тип содержимого ответа
-          const contentType = response.headers.get('content-type');
-          
-          if (contentType && contentType.includes('application/json')) {
-            const errorData = await response.json();
-            if (errorData && errorData.message) {
-              errorMessage = errorData.message;
-            }
-          } else {
-            // Проверяем текст ответа для HTML-страниц и других форматов
-            const errorText = await response.text();
-            
-            if (errorText.includes('<!DOCTYPE html>')) {
-              errorMessage = 'Ошибка авторизации. Пожалуйста, войдите снова';
-            } else {
-              errorMessage = response.statusText || errorMessage;
-            }
-          }
-        } catch (e) {
-          // Если не удалось распарсить ответ, используем statusText
-          errorMessage = response.statusText || errorMessage;
-        }
-        throw new Error(errorMessage);
-      }
+      await apiRequest(userUpdateUrlWithCache, 'PUT', formData);
 
       // Если роль изменилась, отправляем дополнительный запрос для обновления роли
       if (canChangeRole && data.role !== user.role) {
@@ -176,35 +148,9 @@ const EditUserProfileModal: React.FC<EditUserProfileModalProps> = ({
         const roleCacheBuster = `?_t=${Date.now()}`;
         const roleUrl = `/api/users/${user.id}/role${roleCacheBuster}`;
         
-        const roleResponse = await apiRequest('PATCH', roleUrl, {
+        await apiRequest(roleUrl, 'PATCH', {
           role: data.role
         });
-        
-        if (!roleResponse.ok) {
-          let errorMessage = 'Ошибка при обновлении роли';
-          try {
-            // Проверяем тип содержимого ответа
-            const contentType = roleResponse.headers.get('content-type');
-            
-            if (contentType && contentType.includes('application/json')) {
-              const errorData = await roleResponse.json();
-              if (errorData && errorData.message) {
-                errorMessage = errorData.message;
-              }
-            } else {
-              // Для не-JSON ответов
-              const errorText = await roleResponse.text();
-              if (errorText.includes('<!DOCTYPE html>')) {
-                errorMessage = 'Ошибка авторизации при обновлении роли';
-              } else {
-                errorMessage = roleResponse.statusText || errorMessage;
-              }
-            }
-          } catch (e) {
-            errorMessage = roleResponse.statusText || errorMessage;
-          }
-          throw new Error(errorMessage);
-        }
       }
 
       // Обновляем дополнительные данные в зависимости от роли
@@ -215,8 +161,9 @@ const EditUserProfileModal: React.FC<EditUserProfileModalProps> = ({
         if (data.major) studentData.major = data.major;
         if (data.course) studentData.course = data.course;
 
-        const studentResponse = await apiRequest('PUT', `/api/students/${user.id}`, studentData);
-        if (!studentResponse.ok) {
+        try {
+          await apiRequest(`/api/students/${user.id}`, 'PUT', studentData);
+        } catch {
           // Обработка ошибки обновления данных студента, но продолжаем работу
         }
       }
@@ -226,8 +173,9 @@ const EditUserProfileModal: React.FC<EditUserProfileModalProps> = ({
         if (data.specialty) teacherData.specialty = data.specialty;
         if (data.experience) teacherData.experience = data.experience;
 
-        const teacherResponse = await apiRequest('PUT', `/api/teachers/${user.id}`, teacherData);
-        if (!teacherResponse.ok) {
+        try {
+          await apiRequest(`/api/teachers/${user.id}`, 'PUT', teacherData);
+        } catch {
           // Обработка ошибки обновления данных преподавателя, но продолжаем работу
         }
       }
@@ -239,8 +187,9 @@ const EditUserProfileModal: React.FC<EditUserProfileModalProps> = ({
         if (data.title) adminData.title = data.title;
         if (data.organization) adminData.organization = data.organization;
 
-        const adminResponse = await apiRequest('PUT', `/api/admins/${user.id}`, adminData);
-        if (!adminResponse.ok) {
+        try {
+          await apiRequest(`/api/admins/${user.id}`, 'PUT', adminData);
+        } catch {
           // Обработка ошибки обновления данных администратора, но продолжаем работу
         }
       }

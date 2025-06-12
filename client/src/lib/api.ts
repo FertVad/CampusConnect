@@ -54,19 +54,17 @@ export async function fetchData<T>(endpoint: string): Promise<T> {
 
 // Generic post function
 export async function postData<T>(endpoint: string, data: any): Promise<T> {
-  const response = await apiRequest('POST', endpoint, data);
-  return await response.json() as T;
+  return await apiRequest(endpoint, 'POST', data) as T;
 }
 
 // Generic put function
 export async function putData<T>(endpoint: string, data: any): Promise<T> {
-  const response = await apiRequest('PUT', endpoint, data);
-  return await response.json() as T;
+  return await apiRequest(endpoint, 'PUT', data) as T;
 }
 
 // Generic delete function
 export async function deleteData(endpoint: string): Promise<void> {
-  await apiRequest('DELETE', endpoint);
+  await apiRequest(endpoint, 'DELETE');
 }
 
 // Upload file with form data - improved Safari compatibility

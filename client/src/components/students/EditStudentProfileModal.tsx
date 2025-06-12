@@ -84,12 +84,7 @@ const EditStudentProfileModal: React.FC<EditStudentProfileModalProps> = ({
   const onSubmit = async (data: FormData) => {
     try {
       // Отправляем запрос на обновление профиля
-      const response = await apiRequest('PUT', `/api/users/${student.id}`, data);
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Ошибка при обновлении профиля');
-      }
+      await apiRequest(`/api/users/${student.id}`, 'PUT', data);
 
       // Инвалидируем кеш для обновления данных на всех страницах
       queryClient.invalidateQueries({ queryKey: ['/api/users'] });

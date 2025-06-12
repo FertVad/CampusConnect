@@ -81,13 +81,9 @@ const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
     
     try {
       setIsUpdating(true);
-      const response = await apiRequest('PATCH', `/api/tasks/${task.id}/status`, {
+      await apiRequest(`/api/tasks/${task.id}/status`, 'PATCH', {
         status: 'completed'
       });
-
-      if (!response.ok) {
-        throw new Error(t('task.statusUpdateFailed', 'Не удалось обновить статус задачи'));
-      }
 
       // Инвалидация кэша задач
       queryClient.invalidateQueries({ queryKey: ['/api/users', userId, 'tasks'] });
