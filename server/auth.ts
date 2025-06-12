@@ -47,13 +47,13 @@ export async function initializeDatabase(): Promise<boolean> {
       const dbStorage = new DatabaseStorage();
 
       // Обновляем хранилище через сеттер
-      setStorage(dbStorage);
+      setStorage(dbStorage as unknown as IStorage);
 
       console.log("Database migration completed successfully");
 
       // Проверяем наличие пользователя-администратора
       console.log("Starting database seeding...");
-      const adminUsers = await dbStorage.getAllAdminUsers();
+      const adminUsers = await dbStorage.getUsersByRole('admin');
 
       if (adminUsers.length === 0) {
         console.log("No admin user found, creating one...");
