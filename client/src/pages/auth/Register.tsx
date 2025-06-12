@@ -42,7 +42,6 @@ const Register = () => {
     defaultValues: {
       firstName: '',
       lastName: '',
-      username: '',
       email: '',
       password: '',
       confirmPassword: '',
@@ -125,18 +124,6 @@ const Register = () => {
                 </div>
               </div>
               
-              <div className="space-y-2">
-                <Label htmlFor="username">Username</Label>
-                <Input
-                  id="username"
-                  placeholder="johndoe"
-                  {...register('username')}
-                  className={errors.username ? 'border-red-500' : ''}
-                />
-                {errors.username && (
-                  <p className="text-red-500 text-xs mt-1">{errors.username.message}</p>
-                )}
-              </div>
               
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>

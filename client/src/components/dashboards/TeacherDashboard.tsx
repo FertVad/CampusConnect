@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import StatusCard from '@/components/cards/StatusCard';
 import AssignmentList from '@/components/assignments/AssignmentList';
-import ClassSchedule from '@/components/schedule/ClassSchedule';
+import ClassSchedule, { ScheduleItemWithSubject } from '@/components/schedule/ClassSchedule';
 import NotificationList from '@/components/notifications/NotificationList';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import { Link } from 'wouter';
 import { apiRequest } from '@/lib/queryClient';
-import { Notification, Assignment, User, Subject, Request, ScheduleItem } from '@shared/schema';
+import { Notification, Assignment, User, Subject, Request } from '@shared/schema';
 import { useAuth } from '@/hooks/use-auth';
 
 const TeacherDashboard = () => {
@@ -29,7 +29,7 @@ const TeacherDashboard = () => {
   });
   
   // Get teacher's schedule
-  const { data: scheduleItems = [] } = useQuery<(ScheduleItem & { subject: { name: string } })[]>({
+  const { data: scheduleItems = [] } = useQuery<ScheduleItemWithSubject[]>({
     queryKey: [`/api/schedule/teacher/${user?.id}`],
   });
   

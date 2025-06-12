@@ -8,7 +8,7 @@ import AssignmentDetails from '@/components/assignments/AssignmentDetails';
 import { Card, CardContent } from '@/components/ui/card';
 import { uploadFile, putData } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
-import { Assignment, Subject, User } from '@shared/schema';
+import { Assignment, Subject, User, Submission } from '@shared/schema';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const AssignmentDetail = () => {
@@ -32,13 +32,13 @@ const AssignmentDetail = () => {
   });
   
   // Get submission for student
-  const { data: submission, isLoading: isLoadingSubmission } = useQuery({
+  const { data: submission, isLoading: isLoadingSubmission } = useQuery<Submission[]>({
     queryKey: [`/api/submissions/assignment/${assignmentId}`],
     enabled: !!assignment && user?.role === 'student',
   });
   
   // Get submissions for teacher
-  const { data: submissions = [], isLoading: isLoadingSubmissions } = useQuery({
+  const { data: submissions = [], isLoading: isLoadingSubmissions } = useQuery<Submission[]>({
     queryKey: [`/api/submissions/assignment/${assignmentId}`],
     enabled: !!assignment && user?.role === 'teacher',
   });
@@ -139,7 +139,13 @@ const AssignmentDetail = () => {
         <AssignmentDetails
           assignment={assignment}
           subject={subject}
-          submission={user?.role === 'student' ? (submission?.length > 0 ? submission[0] : undefined) : submissions[0]}
+          submission={
+            user?.role === 'student'
+              ? submission && submission.length > 0
+                ? submission[0]
+                : undefined
+              : submissions[0]
+          }
           creator={creator}
           isTeacher={user?.role === 'teacher' || user?.role === 'admin'}
           onSubmit={handleSubmit}

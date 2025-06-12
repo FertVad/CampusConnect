@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { insertDocumentSchema } from '@shared/schema';
+import { insertDocumentSchema, Document, User } from '@shared/schema';
 import { uploadFile } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
@@ -36,12 +36,12 @@ const Invoices = () => {
   const [error, setError] = useState<string | null>(null);
   
   // Get documents based on user role
-  const { data: documents = [], isLoading } = useQuery({
+  const { data: documents = [], isLoading } = useQuery<Document[]>({
     queryKey: [user?.role === 'admin' ? '/api/documents' : `/api/documents/user/${user?.id}/type/invoice`],
   });
   
   // Get all users for admin document creation
-  const { data: users = [] } = useQuery({
+  const { data: users = [] } = useQuery<User[]>({
     queryKey: ['/api/users'],
     enabled: user?.role === 'admin',
   });

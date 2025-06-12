@@ -350,15 +350,7 @@ const TasksPage = () => {
 
   // Мутация для создания новой задачи
   const createTaskMutation = useMutation({
-    mutationFn: async (data: {
-      title: string;
-      description?: string;
-      status: string;
-      priority: string;
-      dueDate: string | null;
-      executorId: number;
-      clientId: number;
-    }) => {
+    mutationFn: async (data: InsertTask) => {
       try {
         const result = await apiRequest('POST', '/api/tasks', data);
         return result;
@@ -592,7 +584,7 @@ const TasksPage = () => {
       clientId: user.id // текущий пользователь становится клиентом задачи
     };
     
-    createTaskMutation.mutate(taskData);
+    createTaskMutation.mutate(taskData as InsertTask);
   };
 
   return (
