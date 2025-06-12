@@ -38,7 +38,6 @@ interface UserFormData {
 }
 
 export default function Users() {
-  console.log("Rendering Users component");
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -49,7 +48,6 @@ export default function Users() {
   useEffect(() => {
     // Only redirect if user is defined but not an admin
     if (user && user.role !== 'admin') {
-      console.log('Users: User is not admin, redirecting to dashboard');
       setLocation('/dashboard');
     }
   }, [user, setLocation]);

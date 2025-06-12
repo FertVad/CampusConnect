@@ -150,7 +150,6 @@ const StudentCard: React.FC<StudentCardProps> = ({
   };
   
   const handleTaskStatusChange = (taskId: number, status: string) => {
-    console.log(`Task ${taskId} status changed to ${status}`);
   };
   
   const handleEdit = () => {

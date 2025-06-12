@@ -14,7 +14,6 @@ export const buildSummary = (
   data: CalendarData,
   courses = 4,
 ): SummaryRow[] => {
-  console.log(`[buildSummary] Вызван с данными (${Object.keys(data).length} ячеек) и количеством курсов: ${courses}`);
   
   const rows: Record<ActivityType, SummaryRow> = {} as any;
   const acts: ActivityType[] = ["У","К","П","Э","Д","-"]; // порядок вывода
@@ -27,7 +26,6 @@ export const buildSummary = (
 
   // Убедимся, что data - это объект
   if (!data || typeof data !== 'object') {
-    console.warn('data не является объектом:', data);
     return acts.map(a => rows[a]); // Возвращаем пустые строки
   }
 
@@ -47,7 +45,6 @@ export const buildSummary = (
     }
   });
   
-  console.log(`[buildSummary] Определено максимальное количество недель: ${maxWeeks}`);
   
   for (let c = 1; c <= courses; c++) {
     for (let w = 1; w <= maxWeeks; w++) {
@@ -56,13 +53,11 @@ export const buildSummary = (
       
       // Проверка на наличие значения
       if (!act) {
-        console.warn(`Пустое значение для ${key}:`, act);
         continue;
       }
       
       const row = rows[act];
       if (!row) {
-        console.warn(`Неизвестная активность для ${key}:`, act);
         continue;
       }
       
@@ -76,6 +71,5 @@ export const buildSummary = (
   }
   
   const result = acts.map(a => rows[a]);
-  console.log(`[buildSummary] Итоговые данные сформированы для ${courses} курсов, найдено ${result.reduce((sum, r) => sum + r.grandTotal, 0)} ячеек активности`);
   return result;
 };
