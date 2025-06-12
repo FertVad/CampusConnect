@@ -1,6 +1,4 @@
 import React, { useState } from 'react';
-import { useQuery, useMutation } from '@tanstack/react-query';
-import { useAuth } from '@/hooks/use-auth';
 import { format, formatDistanceToNow } from 'date-fns';
 import {
   Card,
@@ -29,16 +27,9 @@ import {
   Plus,
   Upload
 } from 'lucide-react';
-import { queryClient } from '@/lib/queryClient';
-import { useToast } from '@/hooks/use-toast';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
-import * as z from 'zod';
+import { useAssignments } from './useAssignments';
+import CreateAssignmentDialog from './CreateAssignmentDialog';
+import SubmitAssignmentDialog from './SubmitAssignmentDialog';
 
 // Status badge colors
 const statusColors: Record<string, string> = {
@@ -56,169 +47,22 @@ const statusDisplay: Record<string, string> = {
   graded: 'Graded',
 };
 
-// Create Assignment form schema
-const createAssignmentSchema = z.object({
-  title: z.string().min(5, 'Title must be at least 5 characters'),
-  description: z.string().min(10, 'Description must be at least 10 characters'),
-  subjectId: z.string().min(1, 'Subject is required'),
-  dueDate: z.string().min(1, 'Due date is required'),
-});
-
-// Submit Assignment form schema
-const submitAssignmentSchema = z.object({
-  content: z.string().min(10, 'Submission content must be at least 10 characters'),
-  status: z.enum(['completed']),
-});
-
 export default function Assignments() {
-  const { user } = useAuth();
-  const { toast } = useToast();
-  const isStudent = user?.role === 'student';
-  const isTeacher = user?.role === 'teacher';
-  
+  const {
+    assignments,
+    subjects,
+    isLoading,
+    error,
+    isStudent,
+    isTeacher,
+    selectedAssignment,
+    setSelectedAssignment,
+    createAssignmentMutation,
+    submitAssignmentMutation,
+  } = useAssignments();
+
   const [createAssignmentOpen, setCreateAssignmentOpen] = useState(false);
-  const [selectedAssignment, setSelectedAssignment] = useState<any>(null);
   const [submissionDialogOpen, setSubmissionDialogOpen] = useState(false);
-  
-  // Fetch assignments based on user role
-  const { data: assignments, isLoading, error } = useQuery({
-    queryKey: [isStudent ? '/api/assignments/student' : '/api/assignments/teacher'],
-    queryFn: async () => {
-      const endpoint = isStudent 
-        ? `/api/assignments/student`
-        : `/api/assignments/teacher`;
-      
-      const response = await fetch(endpoint);
-      if (!response.ok) {
-        throw new Error('Failed to fetch assignments');
-      }
-      return await response.json();
-    },
-    enabled: !!user, // Only run query if user is authenticated
-  });
-  
-  // Fetch subjects for teacher assignment creation
-  const { data: subjects } = useQuery({
-    queryKey: ['/api/subjects/teacher'],
-    queryFn: async () => {
-      const response = await fetch('/api/subjects/teacher');
-      if (!response.ok) {
-        throw new Error('Failed to fetch subjects');
-      }
-      return await response.json();
-    },
-    enabled: !!isTeacher, // Only fetch if user is a teacher
-  });
-
-  // Create assignment form
-  const createAssignmentForm = useForm<z.infer<typeof createAssignmentSchema>>({
-    resolver: zodResolver(createAssignmentSchema),
-    defaultValues: {
-      title: '',
-      description: '',
-      subjectId: '',
-      dueDate: '',
-    },
-  });
-
-  // Mutation for creating a new assignment
-  const createAssignmentMutation = useMutation({
-    mutationFn: async (data: z.infer<typeof createAssignmentSchema>) => {
-      const response = await fetch('/api/assignments', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...data,
-          subjectId: parseInt(data.subjectId, 10),
-          createdBy: user!.id,
-        }),
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to create assignment');
-      }
-      
-      return await response.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: 'Assignment Created',
-        description: 'The assignment has been created successfully.',
-      });
-      queryClient.invalidateQueries({ queryKey: ['/api/assignments/teacher'] });
-      setCreateAssignmentOpen(false);
-      createAssignmentForm.reset();
-    },
-    onError: (error: Error) => {
-      toast({
-        title: 'Error',
-        description: error.message,
-        variant: 'destructive',
-      });
-    },
-  });
-  
-  function onCreateAssignmentSubmit(data: z.infer<typeof createAssignmentSchema>) {
-    createAssignmentMutation.mutate(data);
-  }
-
-  // Submission form
-  const submissionForm = useForm<z.infer<typeof submitAssignmentSchema>>({
-    resolver: zodResolver(submitAssignmentSchema),
-    defaultValues: {
-      content: '',
-      status: 'completed',
-    },
-  });
-
-  // Mutation for submitting an assignment
-  const submitAssignmentMutation = useMutation({
-    mutationFn: async (data: z.infer<typeof submitAssignmentSchema> & { assignmentId: number }) => {
-      const response = await fetch('/api/submissions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...data,
-          studentId: user!.id,
-        }),
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to submit assignment');
-      }
-      
-      return await response.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: 'Assignment Submitted',
-        description: 'Your assignment has been submitted successfully.',
-      });
-      queryClient.invalidateQueries({ queryKey: ['/api/assignments/student'] });
-      setSubmissionDialogOpen(false);
-      submissionForm.reset();
-    },
-    onError: (error: Error) => {
-      toast({
-        title: 'Error',
-        description: error.message,
-        variant: 'destructive',
-      });
-    },
-  });
-  
-  function onSubmitAssignment(data: z.infer<typeof submitAssignmentSchema>) {
-    submitAssignmentMutation.mutate({
-      ...data,
-      assignmentId: selectedAssignment.id,
-    });
-  }
   
   // Group assignments by status for student view
   const groupedAssignments = React.useMemo(() => {
@@ -446,165 +290,24 @@ export default function Assignments() {
         </div>
       )}
 
-      {/* Create Assignment Dialog for Teachers */}
       {isTeacher && (
-        <Dialog open={createAssignmentOpen} onOpenChange={setCreateAssignmentOpen}>
-          <DialogContent className="sm:max-w-[550px]">
-            <DialogHeader>
-              <DialogTitle>Create New Assignment</DialogTitle>
-              <DialogDescription>
-                Add a new assignment for your students.
-              </DialogDescription>
-            </DialogHeader>
-            <Form {...createAssignmentForm}>
-              <form onSubmit={createAssignmentForm.handleSubmit(onCreateAssignmentSubmit)} className="space-y-4">
-                <FormField
-                  control={createAssignmentForm.control}
-                  name="title"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Title</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Assignment title" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={createAssignmentForm.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Description</FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          placeholder="Describe the assignment" 
-                          className="min-h-[100px]" 
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={createAssignmentForm.control}
-                  name="subjectId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Subject</FormLabel>
-                      <Select 
-                        onValueChange={field.onChange} 
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a subject" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {subjects?.map((subject: any) => (
-                            <SelectItem key={subject.id} value={subject.id.toString()}>
-                              {subject.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={createAssignmentForm.control}
-                  name="dueDate"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Due Date</FormLabel>
-                      <FormControl>
-                        <Input type="date" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <DialogFooter>
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    onClick={() => setCreateAssignmentOpen(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button 
-                    type="submit" 
-                    disabled={createAssignmentMutation.isPending}
-                  >
-                    {createAssignmentMutation.isPending ? 'Creating...' : 'Create Assignment'}
-                  </Button>
-                </DialogFooter>
-              </form>
-            </Form>
-          </DialogContent>
-        </Dialog>
+        <CreateAssignmentDialog
+          open={createAssignmentOpen}
+          onOpenChange={setCreateAssignmentOpen}
+          subjects={subjects}
+          createAssignment={createAssignmentMutation.mutate}
+          loading={createAssignmentMutation.isPending}
+        />
       )}
 
-      {/* Submit Assignment Dialog for Students */}
       {isStudent && (
-        <Dialog open={submissionDialogOpen} onOpenChange={setSubmissionDialogOpen}>
-          <DialogContent className="sm:max-w-[550px]">
-            <DialogHeader>
-              <DialogTitle>Submit Assignment</DialogTitle>
-              <DialogDescription>
-                {selectedAssignment?.title}
-              </DialogDescription>
-            </DialogHeader>
-            <Form {...submissionForm}>
-              <form onSubmit={submissionForm.handleSubmit(onSubmitAssignment)} className="space-y-4">
-                <FormField
-                  control={submissionForm.control}
-                  name="content"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Submission</FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          placeholder="Enter your assignment submission" 
-                          className="min-h-[150px]" 
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        You can also attach files or links to your work.
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <DialogFooter>
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    onClick={() => setSubmissionDialogOpen(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button 
-                    type="submit" 
-                    disabled={submitAssignmentMutation.isPending}
-                  >
-                    {submitAssignmentMutation.isPending ? 'Submitting...' : 'Submit Assignment'}
-                  </Button>
-                </DialogFooter>
-              </form>
-            </Form>
-          </DialogContent>
-        </Dialog>
+        <SubmitAssignmentDialog
+          open={submissionDialogOpen}
+          onOpenChange={setSubmissionDialogOpen}
+          selected={selectedAssignment}
+          submitAssignment={submitAssignmentMutation.mutate}
+          loading={submitAssignmentMutation.isPending}
+        />
       )}
     </div>
   );
