@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils';
 import { UseFormReturn } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { TaskFormData } from './useTasks';
+import { useEffect } from 'react';
 
 interface Props {
   open: boolean;
@@ -25,10 +26,25 @@ interface Props {
 export default function CreateTaskDialog({ open, onOpenChange, form, onSubmit, loading, users }: Props) {
   const { t } = useTranslation();
 
+  useEffect(() => {
+    console.log('CreateTaskDialog open state changed:', open);
+  }, [open]);
+
+  const handleSubmit = (data: TaskFormData) => {
+    console.log('CreateTaskDialog form submit', data);
+    onSubmit(data);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
-        <Button onClick={() => onOpenChange(true)} type="button">
+        <Button
+          onClick={() => {
+            console.log('CreateTaskDialog trigger button clicked');
+            onOpenChange(true);
+          }}
+          type="button"
+        >
           {t('task.create_new')}
         </Button>
       </DialogTrigger>
@@ -38,7 +54,7 @@ export default function CreateTaskDialog({ open, onOpenChange, form, onSubmit, l
           <DialogDescription>{t('task.new_task_description')}</DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
             <TextField control={form.control} name="title" label={t('task.title')} />
             <TextareaField control={form.control} name="description" label={t('task.description')} />
             <div className="grid grid-cols-2 gap-4">
