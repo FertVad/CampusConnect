@@ -1,18 +1,8 @@
 import { useState, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useToast } from '@/hooks/use-toast';
-import { apiRequest } from '@/lib/queryClient';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/use-auth';
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+
 import {
   Dialog,
   DialogContent,
@@ -45,547 +35,95 @@ import { Badge } from '@/components/ui/badge';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { format } from 'date-fns';
-import { CalendarIcon, CheckCircle, Clock, XCircle, AlertCircle, PauseCircle } from 'lucide-react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
+import { CalendarIcon, CheckCircle, Clock, AlertCircle, PauseCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { insertTaskSchema, type InsertTask } from '@shared/schema';
-
-// Тип для задачи
-type Task = {
-  id: number;
-  title: string;
-  description: string | null;
-  status: 'new' | 'in_progress' | 'completed' | 'on_hold';
-  priority: 'high' | 'medium' | 'low';
-  createdAt: string;
-  updatedAt: string;
-  dueDate: string | null;
-  clientId: number;
-  executorId: number;
-  client?: { firstName: string; lastName: string };
-  executor?: { firstName: string; lastName: string };
-};
-
-type TaskFormData = InsertTask;
-
-// Компонент карточки задачи
-const TaskCard = ({ 
-  task, 
-  onStatusChange,
-  onEditClick,
-  onDeleteClick,
-  onViewDetails
-}: { 
-  task: Task, 
-  onStatusChange: (id: number, status: string) => void,
-  onEditClick?: (task: Task) => void,
-  onDeleteClick?: (task: Task) => void,
-  onViewDetails?: (task: Task) => void
-}) => {
-  const { t } = useTranslation();
-  const { user } = useAuth();
-  const isExecutor = user?.id === task.executorId;
-  const isClient = user?.id === task.clientId;
-  const isCreator = isClient; // Creator is the client
-  const isAdmin = user?.role === 'admin';
-  
-  // Получаем статус и цвет
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'new':
-        return <Badge variant="outline" className="bg-blue-100/70 text-blue-700 border-blue-200 dark:bg-blue-950/50 dark:text-blue-400 dark:border-blue-800">{t('task.status.new')}</Badge>;
-      case 'in_progress':
-        return <Badge variant="outline" className="bg-amber-100/70 text-amber-700 border-amber-200 dark:bg-amber-950/50 dark:text-amber-400 dark:border-amber-800">{t('task.status.in_progress')}</Badge>;
-      case 'completed':
-        return <Badge variant="outline" className="bg-green-100/70 text-green-700 border-green-200 dark:bg-green-950/50 dark:text-green-400 dark:border-green-800">{t('task.status.completed')}</Badge>;
-      case 'on_hold':
-        return <Badge variant="outline" className="bg-gray-100/70 text-gray-700 border-gray-200 dark:bg-gray-800/50 dark:text-gray-400 dark:border-gray-700">{t('task.status.on_hold')}</Badge>;
-      default:
-        return <Badge variant="outline">{status}</Badge>;
-    }
-  };
-  
-  const getPriorityBadge = (priority: string) => {
-    switch (priority) {
-      case 'high':
-        return <Badge variant="outline" className="bg-red-100/70 text-red-700 border-red-200 dark:bg-red-950/50 dark:text-red-400 dark:border-red-800">{t('task.priority.high')}</Badge>;
-      case 'medium':
-        return <Badge variant="outline" className="bg-orange-100/70 text-orange-700 border-orange-200 dark:bg-orange-950/50 dark:text-orange-400 dark:border-orange-800">{t('task.priority.medium')}</Badge>;
-      case 'low':
-        return <Badge variant="outline" className="bg-green-100/70 text-green-700 border-green-200 dark:bg-green-950/50 dark:text-green-400 dark:border-green-800">{t('task.priority.low')}</Badge>;
-      default:
-        return <Badge variant="outline">{priority}</Badge>;
-    }
-  };
-
-  // Получаем иконку статуса
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'new':
-        return <AlertCircle className="h-4 w-4 text-blue-500" />;
-      case 'in_progress':
-        return <Clock className="h-4 w-4 text-yellow-500" />;
-      case 'completed':
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case 'on_hold':
-        return <PauseCircle className="h-4 w-4 text-gray-500" />;
-      default:
-        return null;
-    }
-  };
-
-  // Форматирование даты
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return t('task.no_date');
-    const date = new Date(dateString);
-    return format(date, 'PP');
-  };
-
-  // Информация о постановщике и исполнителе
-  const clientName = task.client 
-    ? `${task.client.firstName} ${task.client.lastName}` 
-    : t('task.not_assigned');
-    
-  const executorName = task.executor 
-    ? `${task.executor.firstName} ${task.executor.lastName}` 
-    : t('task.not_assigned');
-
-  return (
-    <Card 
-      className="h-full flex flex-col border border-gray-200 dark:border-gray-800 shadow-sm bg-white dark:bg-gray-900 cursor-pointer hover:border-primary hover:shadow-md transition-all duration-200 card-hover"
-      onClick={(e) => {
-        // Предотвращаем всплытие события с Select и кнопок
-        if (
-          e.target instanceof HTMLElement && 
-          (e.target.closest('button') || e.target.closest('[role="combobox"]'))
-        ) {
-          return;
-        }
-        
-        // Открываем детали задачи
-        onViewDetails && onViewDetails(task);
-      }}
-    >
-      <CardHeader className="pb-2 space-y-2">
-        <div className="flex justify-between items-start">
-          <CardTitle className="text-lg break-words" title={task.title}>{task.title}</CardTitle>
-          <div className="flex gap-1">
-            {getPriorityBadge(task.priority)}
-            {getStatusBadge(task.status)}
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent className="flex-grow">
-        <p className="text-sm mb-3 line-clamp-3" title={task.description || t('task.no_description')}>
-          {task.description || t('task.no_description')}
-        </p>
-        
-        <div className="space-y-2 text-sm">
-          <div className="flex items-center justify-between text-muted-foreground">
-            <span>{t('task.client')}:</span>
-            <span className="font-medium text-foreground">{clientName}</span>
-          </div>
-          
-          <div className="flex items-center justify-between text-muted-foreground">
-            <span>{t('task.executor')}:</span>
-            <span className="font-medium text-foreground">{executorName}</span>
-          </div>
-          
-          {task.dueDate && (
-            <div className="flex items-center justify-between text-muted-foreground">
-              <span>{t('task.due_date')}:</span>
-              <span className="font-medium text-foreground">{formatDate(task.dueDate)}</span>
-            </div>
-          )}
-        </div>
-      </CardContent>
-      <CardFooter className="flex flex-col gap-2 pt-2 border-t border-gray-200 dark:border-gray-800">
-        <div className="flex justify-between w-full items-center">
-          <div className="text-xs text-muted-foreground">
-            {t('task.created')}: {formatDate(task.createdAt)}
-          </div>
-          <div className="text-xs text-muted-foreground">
-            ID: {task.id}
-          </div>
-        </div>
-        
-        <div className="flex flex-row gap-2 w-full">
-          {/* Status dropdown for executors and admins */}
-          {(isExecutor || isAdmin) && (
-            <Select
-              defaultValue={task.status}
-              onValueChange={(value) => onStatusChange(task.id, value)}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder={t('task.change_status')} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="new">
-                  <div className="flex items-center gap-2">
-                    <AlertCircle className="h-4 w-4 text-blue-500" />
-                    {t('task.status.new')}
-                  </div>
-                </SelectItem>
-                <SelectItem value="in_progress">
-                  <div className="flex items-center gap-2">
-                    <Clock className="h-4 w-4 text-yellow-500" />
-                    {t('task.status.in_progress')}
-                  </div>
-                </SelectItem>
-                <SelectItem value="completed">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-green-500" />
-                    {t('task.status.completed')}
-                  </div>
-                </SelectItem>
-                <SelectItem value="on_hold">
-                  <div className="flex items-center gap-2">
-                    <PauseCircle className="h-4 w-4 text-gray-500" />
-                    {t('task.status.on_hold')}
-                  </div>
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          )}
-          
-          {/* Edit button only for task creators (clients) and admins */}
-          {(isCreator || isAdmin) && (
-            <>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="flex-shrink-0 h-10" 
-                title={t('task.edit_task')} 
-                onClick={() => onEditClick && onEditClick(task)}
-              >
-                <span className="sr-only">{t('task.edit_task')}</span>
-                {/* Edit icon */}
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 20h9"></path>
-                  <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
-                </svg>
-              </Button>
-              
-              {/* Delete button only for task creators (clients) and admins */}
-              <Button 
-                variant="destructive" 
-                size="sm" 
-                className="flex-shrink-0 h-10" 
-                title={t('task.delete_task')} 
-                onClick={() => onDeleteClick && onDeleteClick(task)}
-              >
-                <span className="sr-only">{t('task.delete_task')}</span>
-                {/* Trash icon */}
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M3 6h18"></path>
-                  <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
-                  <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
-                </svg>
-              </Button>
-            </>
-          )}
-        </div>
-      </CardFooter>
-    </Card>
-  );
-};
+import TaskCard from '@/components/tasks/TaskCard';
+import { useTasks, Task, TaskFormData } from './useTasks';
 
 // Основной компонент страницы задач
 const TasksPage = () => {
   const { t } = useTranslation();
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
   const { user } = useAuth();
-  const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
-  const [currentTask, setCurrentTask] = useState<Task | null>(null);
-  const [statusFilter, setStatusFilter] = useState<string | null>(null);
+  const {
+    tasks,
+    tasksLoading,
+    users,
+    form,
+    editForm,
+    createTask,
+    editTask,
+    changeStatus,
+    removeTask,
+    createTaskMutation,
+    updateTaskMutation,
+    deleteTaskMutation,
+  } = useTasks();
 
-  // Получаем список пользователей для назначения исполнителей
-  const { data: users, isLoading: usersLoading } = useQuery<{ id: number, firstName: string, lastName: string, role: string }[]>({
-    queryKey: ['/api/users'],
-    enabled: !!user,
-    staleTime: 1000 * 60 * 5, // 5 минут
-  });
+  const filteredTasks = statusFilter ? tasks?.filter((task) => task.status === statusFilter) : tasks;
 
-  // Получаем задачи текущего пользователя в зависимости от роли
-  const { data: tasks, isLoading: tasksLoading } = useQuery<Task[]>({
-    queryKey: ['/api/tasks'],
-    enabled: !!user
-  });
-
-  // Фильтрация задач по статусу
-  const filteredTasks = statusFilter 
-    ? tasks?.filter(task => task.status === statusFilter) 
-    : tasks;
-
-  // Форма создания новой задачи
-  const form = useForm<TaskFormData>({
-    resolver: zodResolver(insertTaskSchema),
-    defaultValues: {
-      title: '',
-      description: '',
-      status: 'new',
-      priority: 'medium',
-      executorId: 0,
-      dueDate: null
-    }
-  });
-  
-  // Форма редактирования задачи
-  const editForm = useForm<TaskFormData>({
-    resolver: zodResolver(insertTaskSchema),
-    defaultValues: {
-      title: '',
-      description: '',
-      status: 'new',
-      priority: 'medium',
-      executorId: 0,
-      dueDate: null
-    }
-  });
-
-  // Мутация для создания новой задачи
-  const createTaskMutation = useMutation({
-    mutationFn: async (data: InsertTask) => {
-      try {
-        const result = await apiRequest('POST', '/api/tasks', data);
-        return result;
-      } catch (error) {
-        console.error('API error details:', error);
-        throw error;
-      }
-    },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['/api/tasks'] });
-      toast({
-        title: t('task.created_success'),
-        description: t('task.created_description'),
-      });
-      setCreateDialogOpen(false);
-      form.reset();
-    },
-    onError: (error: any) => {
-      console.error('Error creating task:', error);
-      // Показываем более подробную информацию об ошибке, если она доступна
-      const errorMessage = error?.message || error?.error?.message || t('task.try_again');
-      toast({
-        title: t('task.error_creating'),
-        description: errorMessage,
-        variant: 'destructive',
-      });
-    }
-  });
-
-  // Мутация для обновления статуса задачи
-  const updateTaskStatusMutation = useMutation({
-    mutationFn: async ({ id, status }: { id: number, status: string }) => {
-      try {
-        const result = await apiRequest('PUT', `/api/tasks/${id}`, { status });
-        return result;
-      } catch (error) {
-        console.error('API error details for task update:', error);
-        throw error;
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/tasks'] });
-      toast({
-        title: t('task.status_updated'),
-        description: t('task.status_updated_description'),
-      });
-    },
-    onError: (error: any) => {
-      console.error('Error updating task status:', error);
-      // Показываем более детальную информацию об ошибке
-      const errorMessage = error?.message || error?.error?.message || t('task.try_again');
-      toast({
-        title: t('task.error_updating'),
-        description: errorMessage,
-        variant: 'destructive',
-      });
-    }
-  });
-  
-  // Мутация для удаления задачи
-  const deleteTaskMutation = useMutation({
-    mutationFn: async (id: number) => {
-      try {
-        const result = await apiRequest('DELETE', `/api/tasks/${id}`);
-        return result;
-      } catch (error) {
-        console.error('API error details for task deletion:', error);
-        throw error;
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/tasks'] });
-      toast({
-        title: t('task.deleted_success'),
-        description: t('task.deleted_description'),
-      });
-      setDeleteDialogOpen(false);
-      setCurrentTask(null);
-    },
-    onError: (error: any) => {
-      console.error('Error deleting task:', error);
-      const errorMessage = error?.message || error?.error?.message || t('task.try_again');
-      toast({
-        title: t('task.error_deleting'),
-        description: errorMessage,
-        variant: 'destructive',
-      });
-    }
-  });
-
-  // Мутация для полного обновления задачи (для создателей и админов)
-  const updateTaskMutation = useMutation({
-    mutationFn: async (data: {
-      id: number,
-      title?: string;
-      description?: string;
-      status?: string;
-      priority?: string;
-      dueDate?: string | null;
-      executorId?: number;
-    }) => {
-      try {
-        const { id, ...taskData } = data;
-        const result = await apiRequest('PUT', `/api/tasks/${id}`, taskData);
-        return result;
-      } catch (error) {
-        console.error('API error details for full task update:', error);
-        throw error;
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/tasks'] });
-      toast({
-        title: t('task.updated'),
-        description: t('task.updated_description'),
-      });
-      // Close the edit dialog
-      setEditDialogOpen(false);
-      // Reset edit form
-      editForm.reset();
-    },
-    onError: (error: any) => {
-      console.error('Error updating task:', error);
-      const errorMessage = error?.message || error?.error?.message || t('task.try_again');
-      toast({
-        title: t('task.error_updating'),
-        description: errorMessage,
-        variant: 'destructive',
-      });
-    }
-  });
-
-  // Обработчик изменения статуса
   const handleStatusChange = (id: number, status: string) => {
-    updateTaskStatusMutation.mutate({ id, status });
+    changeStatus(id, status);
   };
-  
-  // Обработчик для открытия диалога редактирования задачи
+
   const handleEditClick = (task: Task) => {
-    
-    // Установить текущую задачу
     setCurrentTask(task);
-    
-    // Заполнить форму существующими данными
     editForm.reset({
       title: task.title,
       description: task.description || '',
       status: task.status,
       priority: task.priority,
       executorId: task.executorId,
-      dueDate: task.dueDate ? new Date(task.dueDate) : null
+      dueDate: task.dueDate ? new Date(task.dueDate) : null,
     });
-    
-    // Открыть диалог
     setEditDialogOpen(true);
   };
-  
-  // Обработчик для открытия диалога удаления задачи
+
   const handleDeleteClick = (task: Task) => {
     setCurrentTask(task);
     setDeleteDialogOpen(true);
   };
-  
-  // Обработчик подтверждения удаления задачи
+
   const handleDeleteConfirm = () => {
-    if (!currentTask?.id) {
-      console.error('No current task to delete');
-      return;
+    if (currentTask) {
+      removeTask(currentTask.id);
     }
-    
-    deleteTaskMutation.mutate(currentTask.id);
   };
-  
-  // Обработчик для просмотра деталей задачи
+
   const handleViewDetails = (task: Task) => {
     setCurrentTask(task);
     setDetailDialogOpen(true);
   };
-  
-  // Обработчик отправки формы редактирования
+
   const onEditSubmit = (data: TaskFormData) => {
-    if (!currentTask?.id) {
-      console.error('No current task to edit');
-      return;
-    }
-    
-    // Проверяем наличие ошибок
-    if (editForm.formState.errors && Object.keys(editForm.formState.errors).length > 0) {
-      return;
-    }
-    
-    // Создаем объект для обновления
-    const taskData = {
-      id: currentTask.id,
-      title: data.title,
-      description: data.description || '',
-      status: data.status,
-      priority: data.priority,
-      dueDate: data.dueDate ? data.dueDate.toISOString() : null,
-      executorId: data.executorId
-    };
-    
-    updateTaskMutation.mutate(taskData);
+    if (!currentTask) return;
+    editTask(currentTask.id, data);
   };
 
-  // Обработчик отправки формы создания задачи
   const onSubmit = (data: TaskFormData) => {
-    // Проверяем наличие ошибок
-    if (form.formState.errors && Object.keys(form.formState.errors).length > 0) {
-      return; // Прерываем отправку при наличии ошибок
-    }
-    
-    // Проверяем критические данные
-    if (!user?.id) {
-      toast({
-        title: t('task.error_creating'),
-        description: t('auth.user_not_found'),
-        variant: 'destructive',
-      });
-      return;
-    }
-    
-    // Преобразуем дату в ISO-строку и создаем объект с типами, которые ожидает мутация
-    const taskData = {
-      title: data.title,
-      description: data.description || '',
-      status: data.status,
-      priority: data.priority,
-      dueDate: data.dueDate ? data.dueDate.toISOString() : null,
-      executorId: data.executorId,
-      clientId: user.id // текущий пользователь становится клиентом задачи
-    };
-    
-    createTaskMutation.mutate(taskData as InsertTask);
+    createTask(data);
   };
+
+  useEffect(() => {
+    if (createTaskMutation.isSuccess) {
+      setCreateDialogOpen(false);
+      form.reset();
+    }
+  }, [createTaskMutation.isSuccess]);
+
+  useEffect(() => {
+    if (updateTaskMutation.isSuccess) {
+      setEditDialogOpen(false);
+      editForm.reset();
+    }
+  }, [updateTaskMutation.isSuccess]);
+
+  useEffect(() => {
+    if (deleteTaskMutation.isSuccess) {
+      setDeleteDialogOpen(false);
+      setCurrentTask(null);
+    }
+  }, [deleteTaskMutation.isSuccess]);
+
 
   return (
     <div className="container py-8 px-8">
