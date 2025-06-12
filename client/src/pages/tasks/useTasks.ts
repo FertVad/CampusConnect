@@ -31,7 +31,7 @@ export function useTasks() {
   const { user } = useAuth();
 
   const { data: users, isLoading: usersLoading } = useQuery<{ id: number; firstName: string; lastName: string; role: string }[]>({
-    queryKey: ['/api/users'],
+    queryKey: [user?.role === 'admin' ? '/api/users' : '/api/users/chat'],
     enabled: !!user,
     staleTime: 1000 * 60 * 5,
   });
