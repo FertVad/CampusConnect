@@ -25,6 +25,7 @@ import * as expressSession from 'express-session';
 import createMemoryStore from "memorystore";
 import PgStoreFactory from 'connect-pg-simple';
 import { logger } from "./utils/logger";
+import { getOrSet } from "./utils/cache";
 
 const MemoryStore = createMemoryStore(session);
 
@@ -464,7 +465,9 @@ export class MemStorage implements IStorage {
   
   // Schedule
   async getScheduleItems(): Promise<ScheduleItem[]> {
-    return Array.from(this.scheduleItems.values());
+    return getOrSet('scheduleItems', async () => {
+      return Array.from(this.scheduleItems.values());
+    });
   }
   
   async getScheduleItem(id: number): Promise<ScheduleItem | undefined> {
@@ -1495,7 +1498,9 @@ export class MemStorage implements IStorage {
   
   // Curriculum Plans
   async getCurriculumPlans(): Promise<CurriculumPlan[]> {
-    return Array.from(this.curriculumPlans.values());
+    return getOrSet('curriculumPlans', async () => {
+      return Array.from(this.curriculumPlans.values());
+    });
   }
 
   async getCurriculumPlan(id: number): Promise<CurriculumPlan | undefined> {
