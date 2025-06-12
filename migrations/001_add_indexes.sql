@@ -1,0 +1,27 @@
+-- Add frequently-used indexes
+CREATE INDEX IF NOT EXISTS idx_schedule_items_subject_id ON schedule_items (subject_id);
+CREATE INDEX IF NOT EXISTS idx_assignments_created_by ON assignments (created_by);
+CREATE INDEX IF NOT EXISTS idx_assignments_subject_id ON assignments (subject_id);
+CREATE INDEX IF NOT EXISTS idx_enrollments_student_id ON enrollments (student_id);
+CREATE INDEX IF NOT EXISTS idx_enrollments_subject_id ON enrollments (subject_id);
+CREATE INDEX IF NOT EXISTS idx_submissions_assignment_id ON submissions (assignment_id);
+CREATE INDEX IF NOT EXISTS idx_submissions_student_id ON submissions (student_id);
+CREATE INDEX IF NOT EXISTS idx_grades_student_id ON grades (student_id);
+CREATE INDEX IF NOT EXISTS idx_grades_subject_id ON grades (subject_id);
+CREATE INDEX IF NOT EXISTS idx_grades_assignment_id ON grades (assignment_id);
+CREATE INDEX IF NOT EXISTS idx_requests_student_id ON requests (student_id);
+CREATE INDEX IF NOT EXISTS idx_documents_user_id ON documents (user_id);
+CREATE INDEX IF NOT EXISTS idx_documents_created_by ON documents (created_by);
+CREATE INDEX IF NOT EXISTS idx_messages_from_user_id ON messages (from_user_id);
+CREATE INDEX IF NOT EXISTS idx_messages_to_user_id ON messages (to_user_id);
+CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications (user_id);
+CREATE INDEX IF NOT EXISTS idx_courses_specialty_id ON courses (specialty_id);
+CREATE INDEX IF NOT EXISTS idx_groups_course_id ON groups (course_id);
+CREATE INDEX IF NOT EXISTS idx_schedule_entries_group_id ON schedule_entries (group_id);
+CREATE INDEX IF NOT EXISTS idx_schedule_entries_subject_id ON schedule_entries (subject_id);
+CREATE INDEX IF NOT EXISTS idx_schedule_entries_teacher_id ON schedule_entries (teacher_id);
+CREATE INDEX IF NOT EXISTS idx_imported_files_uploaded_by ON imported_files (uploaded_by);
+CREATE INDEX IF NOT EXISTS idx_activity_logs_user_id ON activity_logs (user_id);
+CREATE INDEX IF NOT EXISTS idx_tasks_client_id ON tasks (client_id);
+CREATE INDEX IF NOT EXISTS idx_tasks_executor_id ON tasks (executor_id);
+CREATE INDEX IF NOT EXISTS idx_curriculum_plans_created_by ON curriculum_plans (created_by);
