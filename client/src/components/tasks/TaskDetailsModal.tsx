@@ -4,7 +4,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { StatusBadge, PriorityBadge } from './TaskBadges';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
@@ -49,49 +49,7 @@ const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
   const { user } = useAuth();
   const [isUpdating, setIsUpdating] = useState(false);
   
-  // Получение статуса задачи в виде текста
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'in_progress': 
-        return t('task.status.inProgress', 'В процессе');
-      case 'completed': 
-        return t('task.status.completed', 'Выполнено');
-      case 'on_hold': 
-        return t('task.status.onHold', 'На паузе');
-      default: 
-        return t('task.status.new', 'Новая');
-    }
-  };
 
-  // Получение класса для статуса
-  const getStatusBadgeClass = (status: string) => {
-    switch (status) {
-      case 'new':
-        return "bg-blue-50 text-blue-600 border-blue-200 dark:bg-blue-950/50 dark:text-blue-400 dark:border-blue-800";
-      case 'in_progress':
-        return "bg-yellow-50 text-yellow-600 border-yellow-200 dark:bg-yellow-950/50 dark:text-yellow-400 dark:border-yellow-800";
-      case 'completed':
-        return "bg-green-50 text-green-600 border-green-200 dark:bg-green-950/50 dark:text-green-400 dark:border-green-800";
-      case 'on_hold':
-        return "bg-gray-50 text-gray-600 border-gray-200 dark:bg-gray-800/50 dark:text-gray-400 dark:border-gray-700";
-      default:
-        return "";
-    }
-  };
-  
-  // Получение класса для приоритета
-  const getPriorityBadgeClass = (priority: string = 'medium') => {
-    switch (priority) {
-      case 'high':
-        return "bg-red-50 text-red-600 border-red-200 dark:bg-red-950/50 dark:text-red-400 dark:border-red-800";
-      case 'medium':
-        return "bg-orange-50 text-orange-600 border-orange-200 dark:bg-orange-950/50 dark:text-orange-400 dark:border-orange-800";
-      case 'low':
-        return "bg-green-50 text-green-600 border-green-200 dark:bg-green-950/50 dark:text-green-400 dark:border-green-800";
-      default:
-        return "";
-    }
-  };
 
   // Форматирование даты
   const formatDateString = (dateString?: string) => {
@@ -175,17 +133,8 @@ const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
             {task.title}
           </DialogTitle>
           <div className="flex flex-wrap gap-2 mt-2">
-            {task.priority && (
-              <Badge variant="outline" className={getPriorityBadgeClass(task.priority)}>
-                {task.priority === 'high' ? t('task.priority.high', 'Высокий') :
-                 task.priority === 'medium' ? t('task.priority.medium', 'Средний') :
-                 t('task.priority.low', 'Низкий')}
-              </Badge>
-            )}
-            
-            <Badge variant="outline" className={getStatusBadgeClass(task.status)}>
-              {getStatusText(task.status)}
-            </Badge>
+            {task.priority && <PriorityBadge priority={task.priority} />}
+            <StatusBadge status={task.status} />
           </div>
         </DialogHeader>
         

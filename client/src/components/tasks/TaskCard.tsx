@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/use-auth';
-import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { StatusBadge, PriorityBadge } from './TaskBadges';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -29,61 +29,6 @@ const TaskCard = ({ task, onStatusChange, onEditClick, onDeleteClick, onViewDeta
   const isCreator = isClient;
   const isAdmin = user?.role === 'admin';
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'new':
-        return (
-          <Badge variant="outline" className="bg-blue-100/70 text-blue-700 border-blue-200 dark:bg-blue-950/50 dark:text-blue-400 dark:border-blue-800">
-            {t('task.status.new')}
-          </Badge>
-        );
-      case 'in_progress':
-        return (
-          <Badge variant="outline" className="bg-amber-100/70 text-amber-700 border-amber-200 dark:bg-amber-950/50 dark:text-amber-400 dark:border-amber-800">
-            {t('task.status.in_progress')}
-          </Badge>
-        );
-      case 'completed':
-        return (
-          <Badge variant="outline" className="bg-green-100/70 text-green-700 border-green-200 dark:bg-green-950/50 dark:text-green-400 dark:border-green-800">
-            {t('task.status.completed')}
-          </Badge>
-        );
-      case 'on_hold':
-        return (
-          <Badge variant="outline" className="bg-gray-100/70 text-gray-700 border-gray-200 dark:bg-gray-800/50 dark:text-gray-400 dark:border-gray-700">
-            {t('task.status.on_hold')}
-          </Badge>
-        );
-      default:
-        return <Badge variant="outline">{status}</Badge>;
-    }
-  };
-
-  const getPriorityBadge = (priority: string) => {
-    switch (priority) {
-      case 'high':
-        return (
-          <Badge variant="outline" className="bg-red-100/70 text-red-700 border-red-200 dark:bg-red-950/50 dark:text-red-400 dark:border-red-800">
-            {t('task.priority.high')}
-          </Badge>
-        );
-      case 'medium':
-        return (
-          <Badge variant="outline" className="bg-orange-100/70 text-orange-700 border-orange-200 dark:bg-orange-950/50 dark:text-orange-400 dark:border-orange-800">
-            {t('task.priority.medium')}
-          </Badge>
-        );
-      case 'low':
-        return (
-          <Badge variant="outline" className="bg-green-100/70 text-green-700 border-green-200 dark:bg-green-950/50 dark:text-green-400 dark:border-green-800">
-            {t('task.priority.low')}
-          </Badge>
-        );
-      default:
-        return <Badge variant="outline">{priority}</Badge>;
-    }
-  };
 
   const handleCardClick = (e: React.MouseEvent) => {
     if (e.target instanceof HTMLElement && (e.target.closest('button') || e.target.closest('[role="combobox"]'))) {
@@ -103,8 +48,8 @@ const TaskCard = ({ task, onStatusChange, onEditClick, onDeleteClick, onViewDeta
             {task.title}
           </CardTitle>
           <div className="flex gap-1">
-            {getPriorityBadge(task.priority)}
-            {getStatusBadge(task.status)}
+            <PriorityBadge priority={task.priority} />
+            <StatusBadge status={task.status} />
           </div>
         </div>
       </CardHeader>
