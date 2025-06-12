@@ -1,9 +1,13 @@
 # CampusConnect Setup
 
 This project can store all data in a single Supabase (PostgreSQL) database.
-Follow the steps below to configure the connection.
+Follow the steps below to configure the connection and run the app locally.
 
-## 1. Create a Supabase project
+## 1. Install dependencies
+
+Run `npm install` to install all server and client packages.
+
+## 2. Create a Supabase project
 
 From the Supabase dashboard create a new project and obtain the **connection string**
 for the Postgres database. It should look similar to:
@@ -12,20 +16,22 @@ for the Postgres database. It should look similar to:
 postgresql://USER:PASSWORD@HOST:PORT/DATABASE
 ```
 
-## 2. Configure environment variables
+## 3. Configure environment variables
 
 Create a `.env` file in the project root (you can copy `.env.example`).
-Provide the connection string and a session secret:
+Provide the connection string and a session secret. You can also adjust caching and logging via the variables `CACHE_TTL` and `LOG_LEVEL`.
 
 ```
 SUPABASE_DATABASE_URL=postgresql://USER:PASSWORD@HOST:PORT/DATABASE
 SESSION_SECRET=your-session-secret
+CACHE_TTL=60
+LOG_LEVEL=info
 ```
 
 The `DATABASE_URL` variable is also used by the migration tool. You can set it to
 same value or leave it unset if you only use `SUPABASE_DATABASE_URL`.
 
-## 3. Apply the database schema
+## 4. Apply the database schema
 
 Run the following command once to create all tables in Supabase:
 
@@ -41,6 +47,10 @@ script:
 psql "$SUPABASE_DATABASE_URL" -f server/db/session-table.sql
 ```
 
+## 5. Seed sample data (optional)
+
+Run `npm run db:seed` to apply the migrations and insert demo records.
+
 ### Migrations
 
 If you change `shared/schema.ts` later (for example to add indexes), generate a
@@ -51,12 +61,16 @@ npx drizzle-kit generate --config=drizzle.config.ts
 psql "$SUPABASE_DATABASE_URL" -f migrations/<generated_file>.sql
 ```
 
-## 4. Start the development server
+## 6. Start the development server
 
-After the variables are set and the schema is applied you can start the app:
+After the variables are set and the schema is applied you can start the client and server together or separately:
 
 ```
 npm run dev
+
+# or run them individually
+npm run dev:server
+npm run dev:client
 ```
 
 The server will automatically use `SupabaseStorage` for all data access.
