@@ -3,6 +3,9 @@ import * as schema from '@shared/schema';
 import { eq, and, or, desc, asc, sql, isNotNull } from 'drizzle-orm';
 import { aliasedTable } from 'drizzle-orm/alias';
 import { IStorage } from '../storage';
+import { UsersRepository } from './users/repository';
+import { SubjectsRepository } from './subjects/repository';
+import { TasksRepository } from './tasks/repository';
 import session from 'express-session';
 import createMemoryStore from 'memorystore';
 import pg from 'pg';
@@ -35,6 +38,9 @@ const PgSession = connectPgSimple(session);
  */
 export class SupabaseStorage {
   sessionStore: session.Store;
+  private usersRepo = new UsersRepository();
+  private subjectsRepo = new SubjectsRepository();
+  private tasksRepo = new TasksRepository();
 
   constructor() {
     // Use MemoryStore for session storage for better reliability in Replit environment
@@ -49,80 +55,35 @@ export class SupabaseStorage {
 
   // User management
   async getUsers(): Promise<User[]> {
-    return db.select().from(schema.users);
+    return this.usersRepo.getUsers();
   }
 
   async getUser(id: number): Promise<User | undefined> {
-    const users = await db.select()
-      .from(schema.users)
-      .where(eq(schema.users.id, id))
-      .limit(1);
-    return users[0];
+    return this.usersRepo.getUser(id);
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
-    const users = await db.select()
-      .from(schema.users)
-      .where(eq(schema.users.email, email))
-      .limit(1);
-    return users[0];
+    return this.usersRepo.getUserByEmail(email);
   }
   
   async getUsersByRole(role: string): Promise<User[]> {
-    return db.select()
-      .from(schema.users)
-      .where(eq(schema.users.role, role as any));
+    return this.usersRepo.getUsersByRole(role);
   }
 
   async createUser(userData: InsertUser): Promise<User> {
-    // Hash the password before storing it
-    const hashedPassword = await this.hashPassword(userData.password);
-    
-    const [user] = await db.insert(schema.users)
-      .values({
-        ...userData,
-        password: hashedPassword
-      })
-      .returning();
-    
-    return user;
+    return this.usersRepo.createUser(userData);
   }
 
   async updateUser(id: number, userData: Partial<InsertUser>): Promise<User | undefined> {
-    // If password is being updated, hash it
-    if (userData.password) {
-      userData.password = await this.hashPassword(userData.password);
-    }
-    
-    const [user] = await db.update(schema.users)
-      .set(userData)
-      .where(eq(schema.users.id, id))
-      .returning();
-    
-    return user;
+    return this.usersRepo.updateUser(id, userData);
   }
 
   async deleteUser(id: number): Promise<boolean> {
-    const result = await db.delete(schema.users)
-      .where(eq(schema.users.id, id));
-
-    return (result.rowCount ?? 0) > 0;
+    return this.usersRepo.deleteUser(id);
   }
 
   async authenticate(credentials: LoginCredentials): Promise<User | undefined> {
-    const user = await this.getUserByEmail(credentials.email);
-    
-    if (!user) {
-      return undefined;
-    }
-    
-    const isValid = await this.comparePasswords(credentials.password, user.password);
-    
-    if (!isValid) {
-      return undefined;
-    }
-    
-    return user;
+    return this.usersRepo.authenticate(credentials);
   }
 
   // Helper methods for password hashing
@@ -137,45 +98,27 @@ export class SupabaseStorage {
 
   // Subjects
   async getSubjects(): Promise<Subject[]> {
-    return db.select().from(schema.subjects);
+    return this.subjectsRepo.getSubjects();
   }
 
   async getSubject(id: number): Promise<Subject | undefined> {
-    const subjects = await db.select()
-      .from(schema.subjects)
-      .where(eq(schema.subjects.id, id))
-      .limit(1);
-    return subjects[0];
+    return this.subjectsRepo.getSubject(id);
   }
 
   async getSubjectsByTeacher(teacherId: number): Promise<Subject[]> {
-    return db.select()
-      .from(schema.subjects)
-      .where(eq(schema.subjects.teacherId, teacherId));
+    return this.subjectsRepo.getSubjectsByTeacher(teacherId);
   }
 
   async createSubject(subjectData: InsertSubject): Promise<Subject> {
-    const [subject] = await db.insert(schema.subjects)
-      .values(subjectData)
-      .returning();
-    
-    return subject;
+    return this.subjectsRepo.createSubject(subjectData);
   }
 
   async updateSubject(id: number, subjectData: Partial<InsertSubject>): Promise<Subject | undefined> {
-    const [subject] = await db.update(schema.subjects)
-      .set(subjectData)
-      .where(eq(schema.subjects.id, id))
-      .returning();
-    
-    return subject;
+    return this.subjectsRepo.updateSubject(id, subjectData);
   }
 
   async deleteSubject(id: number): Promise<boolean> {
-    const result = await db.delete(schema.subjects)
-      .where(eq(schema.subjects.id, id));
-
-    return (result.rowCount ?? 0) > 0;
+    return this.subjectsRepo.deleteSubject(id);
   }
 
   // Enrollments
@@ -879,561 +822,39 @@ export class SupabaseStorage {
   
   // Tasks
   async getTasks(): Promise<(Task & { client?: UserSummary; executor?: UserSummary })[]> {
-    try {
-      // Create distinct aliases for the user tables
-      const clientsTable = aliasedTable(schema.users, 'clients');
-      const executorsTable = aliasedTable(schema.users, 'executors');
-      
-      const result = await db.select({
-        id: schema.tasks.id,
-        title: schema.tasks.title,
-        description: schema.tasks.description,
-        status: schema.tasks.status,
-        priority: schema.tasks.priority,
-        createdAt: schema.tasks.createdAt,
-        updatedAt: schema.tasks.updatedAt,
-        dueDate: schema.tasks.dueDate,
-        clientId: schema.tasks.clientId,
-        executorId: schema.tasks.executorId,
-        // Client fields
-        clientFirstName: clientsTable.firstName,
-        clientLastName: clientsTable.lastName,
-        clientEmail: clientsTable.email,
-        clientRole: clientsTable.role,
-        // Executor fields
-        executorFirstName: executorsTable.firstName,
-        executorLastName: executorsTable.lastName,
-        executorEmail: executorsTable.email,
-        executorRole: executorsTable.role
-      })
-      .from(schema.tasks)
-      .leftJoin(clientsTable, eq(schema.tasks.clientId, clientsTable.id))
-      .leftJoin(executorsTable, eq(schema.tasks.executorId, executorsTable.id))
-      .orderBy(
-        // Order by status priority (new → in_progress → on_hold → completed)
-        sql`CASE 
-          WHEN ${schema.tasks.status} = 'new' THEN 1
-          WHEN ${schema.tasks.status} = 'in_progress' THEN 2
-          WHEN ${schema.tasks.status} = 'on_hold' THEN 3
-          WHEN ${schema.tasks.status} = 'completed' THEN 4
-          ELSE 5
-        END`,
-        // Then by priority (high → medium → low)
-        sql`CASE 
-          WHEN ${schema.tasks.priority} = 'high' THEN 1
-          WHEN ${schema.tasks.priority} = 'medium' THEN 2
-          WHEN ${schema.tasks.priority} = 'low' THEN 3
-          ELSE 4
-        END`,
-        // Finally by creation date (newest first)
-        desc(schema.tasks.createdAt)
-      );
-      
-      // Format the results to include client and executor objects
-      return result.map(task => {
-        // Base task properties
-        const baseTask = {
-          id: task.id,
-          title: task.title,
-          description: task.description,
-          status: task.status,
-          priority: task.priority,
-          createdAt: task.createdAt,
-          updatedAt: task.updatedAt,
-          dueDate: task.dueDate,
-          clientId: task.clientId,
-          executorId: task.executorId
-        };
-        
-        // Add client info if available (all fields must be present)
-        let client: UserSummary | undefined = undefined;
-        if (task.clientFirstName && task.clientLastName && task.clientEmail && task.clientRole) {
-          client = {
-            id: task.clientId,
-            firstName: task.clientFirstName,
-            lastName: task.clientLastName,
-            email: task.clientEmail,
-            role: task.clientRole
-          };
-        }
-        
-        // Add executor info if available (all fields must be present)
-        let executor: UserSummary | undefined = undefined;
-        if (task.executorFirstName && task.executorLastName && task.executorEmail && task.executorRole) {
-          executor = {
-            id: task.executorId,
-            firstName: task.executorFirstName,
-            lastName: task.executorLastName,
-            email: task.executorEmail,
-            role: task.executorRole
-          };
-        }
-        
-        return {
-          ...baseTask,
-          client,
-          executor
-        };
-      });
-    } catch (error) {
-      console.error('Error in getTasks:', error);
-      throw error;
-    }
+    return this.tasksRepo.getTasks();
   }
-  
-  async getTask(id: number): Promise<(Task & { client?: UserSummary; executor?: UserSummary }) | undefined> {
-    try {
-      // Create distinct aliases for the user tables
-      const clientsTable = aliasedTable(schema.users, 'clients');
-      const executorsTable = aliasedTable(schema.users, 'executors');
-      
-      const result = await db.select({
-        id: schema.tasks.id,
-        title: schema.tasks.title,
-        description: schema.tasks.description,
-        status: schema.tasks.status,
-        priority: schema.tasks.priority,
-        createdAt: schema.tasks.createdAt,
-        updatedAt: schema.tasks.updatedAt,
-        dueDate: schema.tasks.dueDate,
-        clientId: schema.tasks.clientId,
-        executorId: schema.tasks.executorId,
-        // Client fields
-        clientFirstName: clientsTable.firstName,
-        clientLastName: clientsTable.lastName,
-        clientEmail: clientsTable.email,
-        clientRole: clientsTable.role,
-        // Executor fields
-        executorFirstName: executorsTable.firstName,
-        executorLastName: executorsTable.lastName,
-        executorEmail: executorsTable.email,
-        executorRole: executorsTable.role
-      })
-      .from(schema.tasks)
-      .leftJoin(clientsTable, eq(schema.tasks.clientId, clientsTable.id))
-      .leftJoin(executorsTable, eq(schema.tasks.executorId, executorsTable.id))
-      .where(eq(schema.tasks.id, id))
-      .limit(1);
-      
-      if (result.length === 0) return undefined;
-      
-      const task = result[0];
-      
-      // Base task properties
-      const baseTask = {
-        id: task.id,
-        title: task.title,
-        description: task.description,
-        status: task.status,
-        priority: task.priority,
-        createdAt: task.createdAt,
-        updatedAt: task.updatedAt,
-        dueDate: task.dueDate,
-        clientId: task.clientId,
-        executorId: task.executorId
-      };
-      
-      // Add client info if available (all fields must be present)
-      let client: UserSummary | undefined = undefined;
-      if (task.clientFirstName && task.clientLastName && task.clientEmail && task.clientRole) {
-        client = {
-          id: task.clientId,
-          firstName: task.clientFirstName,
-          lastName: task.clientLastName,
-          email: task.clientEmail,
-          role: task.clientRole
-        };
-      }
-      
-      // Add executor info if available (all fields must be present)
-      let executor: UserSummary | undefined = undefined;
-      if (task.executorFirstName && task.executorLastName && task.executorEmail && task.executorRole) {
-        executor = {
-          id: task.executorId,
-          firstName: task.executorFirstName,
-          lastName: task.executorLastName,
-          email: task.executorEmail,
-          role: task.executorRole
-        };
-      }
-      
-      return {
-        ...baseTask,
-        client,
-        executor
-      };
-    } catch (error) {
-      console.error('Error in getTask:', error);
-      throw error;
-    }
-  }
-  
-  async getTasksByClient(clientId: number): Promise<(Task & { client?: UserSummary; executor?: UserSummary })[]> {
-    try {
-      // Create distinct aliases for the user tables
-      const clientsTable = aliasedTable(schema.users, 'clients');
-      const executorsTable = aliasedTable(schema.users, 'executors');
-      
-      const result = await db.select({
-        id: schema.tasks.id,
-        title: schema.tasks.title,
-        description: schema.tasks.description,
-        status: schema.tasks.status,
-        priority: schema.tasks.priority,
-        createdAt: schema.tasks.createdAt,
-        updatedAt: schema.tasks.updatedAt,
-        dueDate: schema.tasks.dueDate,
-        clientId: schema.tasks.clientId,
-        executorId: schema.tasks.executorId,
-        // Client fields
-        clientFirstName: clientsTable.firstName,
-        clientLastName: clientsTable.lastName,
-        clientEmail: clientsTable.email,
-        clientRole: clientsTable.role,
-        // Executor fields
-        executorFirstName: executorsTable.firstName,
-        executorLastName: executorsTable.lastName,
-        executorEmail: executorsTable.email,
-        executorRole: executorsTable.role
-      })
-      .from(schema.tasks)
-      .leftJoin(clientsTable, eq(schema.tasks.clientId, clientsTable.id))
-      .leftJoin(executorsTable, eq(schema.tasks.executorId, executorsTable.id))
-      .where(eq(schema.tasks.clientId, clientId))
-      .orderBy(
-        // Order by status priority (new → in_progress → on_hold → completed)
-        sql`CASE 
-          WHEN ${schema.tasks.status} = 'new' THEN 1
-          WHEN ${schema.tasks.status} = 'in_progress' THEN 2
-          WHEN ${schema.tasks.status} = 'on_hold' THEN 3
-          WHEN ${schema.tasks.status} = 'completed' THEN 4
-          ELSE 5
-        END`,
-        // Then by priority (high → medium → low)
-        sql`CASE 
-          WHEN ${schema.tasks.priority} = 'high' THEN 1
-          WHEN ${schema.tasks.priority} = 'medium' THEN 2
-          WHEN ${schema.tasks.priority} = 'low' THEN 3
-          ELSE 4
-        END`,
-        // Finally by creation date (newest first)
-        desc(schema.tasks.createdAt)
-      );
-      
-      // Format the results to include client and executor objects
-      return result.map(task => {
-        // Base task properties
-        const baseTask = {
-          id: task.id,
-          title: task.title,
-          description: task.description,
-          status: task.status,
-          priority: task.priority,
-          createdAt: task.createdAt,
-          updatedAt: task.updatedAt,
-          dueDate: task.dueDate,
-          clientId: task.clientId,
-          executorId: task.executorId
-        };
-        
-        // Add client info if available (all fields must be present)
-        let client: UserSummary | undefined = undefined;
-        if (task.clientFirstName && task.clientLastName && task.clientEmail && task.clientRole) {
-          client = {
-            id: task.clientId,
-            firstName: task.clientFirstName,
-            lastName: task.clientLastName,
-            email: task.clientEmail,
-            role: task.clientRole
-          };
-        }
-        
-        // Add executor info if available (all fields must be present)
-        let executor: UserSummary | undefined = undefined;
-        if (task.executorFirstName && task.executorLastName && task.executorEmail && task.executorRole) {
-          executor = {
-            id: task.executorId,
-            firstName: task.executorFirstName,
-            lastName: task.executorLastName,
-            email: task.executorEmail,
-            role: task.executorRole
-          };
-        }
-        
-        return {
-          ...baseTask,
-          client,
-          executor
-        };
-      });
-    } catch (error) {
-      console.error('Error in getTasksByClient:', error);
-      throw error;
-    }
-  }
-  
-  async getTasksByExecutor(executorId: number): Promise<(Task & { client?: UserSummary; executor?: UserSummary })[]> {
-    try {
-      // Create distinct aliases for the user tables
-      const clientsTable = aliasedTable(schema.users, 'clients');
-      const executorsTable = aliasedTable(schema.users, 'executors');
-      
-      const result = await db.select({
-        id: schema.tasks.id,
-        title: schema.tasks.title,
-        description: schema.tasks.description,
-        status: schema.tasks.status,
-        priority: schema.tasks.priority,
-        createdAt: schema.tasks.createdAt,
-        updatedAt: schema.tasks.updatedAt,
-        dueDate: schema.tasks.dueDate,
-        clientId: schema.tasks.clientId,
-        executorId: schema.tasks.executorId,
-        // Client fields
-        clientFirstName: clientsTable.firstName,
-        clientLastName: clientsTable.lastName,
-        clientEmail: clientsTable.email,
-        clientRole: clientsTable.role,
-        // Executor fields
-        executorFirstName: executorsTable.firstName,
-        executorLastName: executorsTable.lastName,
-        executorEmail: executorsTable.email,
-        executorRole: executorsTable.role
-      })
-      .from(schema.tasks)
-      .leftJoin(clientsTable, eq(schema.tasks.clientId, clientsTable.id))
-      .leftJoin(executorsTable, eq(schema.tasks.executorId, executorsTable.id))
-      .where(eq(schema.tasks.executorId, executorId))
-      .orderBy(
-        // Order by status priority (new → in_progress → on_hold → completed)
-        sql`CASE 
-          WHEN ${schema.tasks.status} = 'new' THEN 1
-          WHEN ${schema.tasks.status} = 'in_progress' THEN 2
-          WHEN ${schema.tasks.status} = 'on_hold' THEN 3
-          WHEN ${schema.tasks.status} = 'completed' THEN 4
-          ELSE 5
-        END`,
-        // Then by priority (high → medium → low)
-        sql`CASE 
-          WHEN ${schema.tasks.priority} = 'high' THEN 1
-          WHEN ${schema.tasks.priority} = 'medium' THEN 2
-          WHEN ${schema.tasks.priority} = 'low' THEN 3
-          ELSE 4
-        END`,
-        // Finally by creation date (newest first)
-        desc(schema.tasks.createdAt)
-      );
-      
-      // Format the results to include client and executor objects
-      return result.map(task => {
-        // Base task properties
-        const baseTask = {
-          id: task.id,
-          title: task.title,
-          description: task.description,
-          status: task.status,
-          priority: task.priority,
-          createdAt: task.createdAt,
-          updatedAt: task.updatedAt,
-          dueDate: task.dueDate,
-          clientId: task.clientId,
-          executorId: task.executorId
-        };
-        
-        // Add client info if available (all fields must be present)
-        let client: UserSummary | undefined = undefined;
-        if (task.clientFirstName && task.clientLastName && task.clientEmail && task.clientRole) {
-          client = {
-            id: task.clientId,
-            firstName: task.clientFirstName,
-            lastName: task.clientLastName,
-            email: task.clientEmail,
-            role: task.clientRole
-          };
-        }
-        
-        // Add executor info if available (all fields must be present)
-        let executor: UserSummary | undefined = undefined;
-        if (task.executorFirstName && task.executorLastName && task.executorEmail && task.executorRole) {
-          executor = {
-            id: task.executorId,
-            firstName: task.executorFirstName,
-            lastName: task.executorLastName,
-            email: task.executorEmail,
-            role: task.executorRole
-          };
-        }
-        
-        return {
-          ...baseTask,
-          client,
-          executor
-        };
-      });
-    } catch (error) {
-      console.error('Error in getTasksByExecutor:', error);
-      throw error;
-    }
-  }
-  
-  async getTasksByStatus(status: string): Promise<Task[]> {
-    try {
-      return await db.select().from(schema.tasks)
-        .where(eq(schema.tasks.status, status as any))
-        .orderBy(desc(schema.tasks.createdAt));
-    } catch (error) {
-      console.error('Error in getTasksByStatus:', error);
-      throw error;
-    }
-  }
-  
-  async getTasksDueSoon(days: number): Promise<(Task & { client?: UserSummary; executor?: UserSummary })[]> {
-    try {
-      const now = new Date();
-      const future = new Date();
-      future.setDate(now.getDate() + days);
-      
-      // Create distinct aliases for the user tables
-      const clientsTable = aliasedTable(schema.users, 'clients');
-      const executorsTable = aliasedTable(schema.users, 'executors');
-      
-      const result = await db.select({
-        id: schema.tasks.id,
-        title: schema.tasks.title,
-        description: schema.tasks.description,
-        status: schema.tasks.status,
-        priority: schema.tasks.priority,
-        createdAt: schema.tasks.createdAt,
-        updatedAt: schema.tasks.updatedAt,
-        dueDate: schema.tasks.dueDate,
-        clientId: schema.tasks.clientId,
-        executorId: schema.tasks.executorId,
-        // Client fields
-        clientFirstName: clientsTable.firstName,
-        clientLastName: clientsTable.lastName,
-        clientEmail: clientsTable.email,
-        clientRole: clientsTable.role,
-        // Executor fields
-        executorFirstName: executorsTable.firstName,
-        executorLastName: executorsTable.lastName,
-        executorEmail: executorsTable.email,
-        executorRole: executorsTable.role
-      })
-      .from(schema.tasks)
-      .leftJoin(clientsTable, eq(schema.tasks.clientId, clientsTable.id))
-      .leftJoin(executorsTable, eq(schema.tasks.executorId, executorsTable.id))
-      .where(
-        and(
-          // Only tasks that aren't completed
-          or(
-            eq(schema.tasks.status, 'new'),
-            eq(schema.tasks.status, 'in_progress'),
-            eq(schema.tasks.status, 'on_hold')
-          ),
-          // And their due date is within the specified number of days
-          and(
-            // dueDate is not null - using isNotNull() instead of notNull()
-            isNotNull(schema.tasks.dueDate),
-            // dueDate <= future
-            sql`${schema.tasks.dueDate} <= ${future.toISOString()}`
-          )
-        )
-      )
-      .orderBy(
-        // First by due date (ascending)
-        asc(schema.tasks.dueDate),
-        // Then by priority (high → medium → low)
-        sql`CASE 
-          WHEN ${schema.tasks.priority} = 'high' THEN 1
-          WHEN ${schema.tasks.priority} = 'medium' THEN 2
-          WHEN ${schema.tasks.priority} = 'low' THEN 3
-          ELSE 4
-        END`
-      );
-        
-      // Format the results to include client and executor objects
-      return result.map(task => {
-        // Base task properties
-        const baseTask = {
-          id: task.id,
-          title: task.title,
-          description: task.description,
-          status: task.status,
-          priority: task.priority,
-          createdAt: task.createdAt,
-          updatedAt: task.updatedAt,
-          dueDate: task.dueDate,
-          clientId: task.clientId,
-          executorId: task.executorId
-        };
-        
-        // Add client info if available (all fields must be present)
-        let client: UserSummary | undefined = undefined;
-        if (task.clientFirstName && task.clientLastName && task.clientEmail && task.clientRole) {
-          client = {
-            id: task.clientId,
-            firstName: task.clientFirstName,
-            lastName: task.clientLastName,
-            email: task.clientEmail,
-            role: task.clientRole
-          };
-        }
-        
-        // Add executor info if available (all fields must be present)
-        let executor: UserSummary | undefined = undefined;
-        if (task.executorFirstName && task.executorLastName && task.executorEmail && task.executorRole) {
-          executor = {
-            id: task.executorId,
-            firstName: task.executorFirstName,
-            lastName: task.executorLastName,
-            email: task.executorEmail,
-            role: task.executorRole
-          };
-        }
-        
-        return {
-          ...baseTask,
-          client,
-          executor
-        };
-      });
-    } catch (error) {
-      console.error('Error in getTasksDueSoon:', error);
-      throw error;
-    }
-  }
-  
-  async createTask(taskData: InsertTask): Promise<Task> {
-    const [task] = await db.insert(schema.tasks)
-      .values(taskData)
-      .returning();
-    
-    return task;
-  }
-  
-  async updateTask(id: number, taskData: Partial<InsertTask>): Promise<Task | undefined> {
-    try {
-      // Используем новый объект Date вместо строки ISO для updatedAt
-      const [task] = await db.update(schema.tasks)
-        .set({
-          ...taskData,
-          updatedAt: new Date() // Передаем объект Date напрямую
-        })
-        .where(eq(schema.tasks.id, id))
-        .returning();
-      
-      return task;
-    } catch (error) {
-      console.error('Error updating task in DB:', error);
-      throw error; // Передаем ошибку дальше для обработки
-    }
-  }
-  
-  async deleteTask(id: number): Promise<boolean> {
-    const result = await db.delete(schema.tasks)
-      .where(eq(schema.tasks.id, id));
 
-    return (result.rowCount ?? 0) > 0;
+  async getTask(id: number): Promise<(Task & { client?: UserSummary; executor?: UserSummary }) | undefined> {
+    return this.tasksRepo.getTask(id);
+  }
+
+  async getTasksByClient(clientId: number): Promise<(Task & { client?: UserSummary; executor?: UserSummary })[]> {
+    return this.tasksRepo.getTasksByClient(clientId);
+  }
+
+  async getTasksByExecutor(executorId: number): Promise<(Task & { client?: UserSummary; executor?: UserSummary })[]> {
+    return this.tasksRepo.getTasksByExecutor(executorId);
+  }
+
+  async getTasksByStatus(status: string): Promise<Task[]> {
+    return this.tasksRepo.getTasksByStatus(status);
+  }
+
+  async getTasksDueSoon(days: number): Promise<(Task & { client?: UserSummary; executor?: UserSummary })[]> {
+    return this.tasksRepo.getTasksDueSoon(days);
+  }
+
+  async createTask(taskData: InsertTask): Promise<Task> {
+    return this.tasksRepo.createTask(taskData);
+  }
+
+  async updateTask(id: number, taskData: Partial<InsertTask>): Promise<Task | undefined> {
+    return this.tasksRepo.updateTask(id, taskData);
+  }
+
+  async deleteTask(id: number): Promise<boolean> {
+    return this.tasksRepo.deleteTask(id);
   }
 
   // Методы для работы с учебными планами
