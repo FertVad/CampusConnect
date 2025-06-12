@@ -3,6 +3,7 @@ import { getStorage } from "../storage";
 import { insertTaskSchema } from "@shared/schema";
 import { z } from "zod";
 import type { RouteContext } from "./index";
+import { logger } from "../utils/logger";
 
 export function registerTaskRoutes(app: Express, { authenticateUser, requireRole }: RouteContext) {
 // Tasks Routes
@@ -11,9 +12,9 @@ app.get('/api/tasks', authenticateUser, async (req, res) => {
     const tasks = await getStorage().getTasks();
     res.json(tasks);
   } catch (error) {
-    console.error('Error fetching tasks:', error);
+    logger.error('Error fetching tasks:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.error('Detailed error:', errorMessage);
+    logger.error('Detailed error:', errorMessage);
     res.status(500).json({ 
       message: "Error fetching tasks", 
       details: errorMessage,
@@ -34,9 +35,9 @@ app.get('/api/tasks/client/:clientId', authenticateUser, async (req, res) => {
     const tasks = await getStorage().getTasksByClient(clientId);
     res.json(tasks);
   } catch (error) {
-    console.error('Error fetching client tasks:', error);
+    logger.error('Error fetching client tasks:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.error('Detailed error:', errorMessage);
+    logger.error('Detailed error:', errorMessage);
     res.status(500).json({ 
       message: "Error fetching client tasks", 
       details: errorMessage,
@@ -57,9 +58,9 @@ app.get('/api/tasks/executor/:executorId', authenticateUser, async (req, res) =>
     const tasks = await getStorage().getTasksByExecutor(executorId);
     res.json(tasks);
   } catch (error) {
-    console.error('Error fetching executor tasks:', error);
+    logger.error('Error fetching executor tasks:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.error('Detailed error:', errorMessage);
+    logger.error('Detailed error:', errorMessage);
     res.status(500).json({ 
       message: "Error fetching executor tasks", 
       details: errorMessage,
@@ -94,9 +95,9 @@ app.get('/api/tasks/status/:status', authenticateUser, async (req, res) => {
     
     res.json(tasks);
   } catch (error) {
-    console.error('Error fetching tasks by status:', error);
+    logger.error('Error fetching tasks by status:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.error('Detailed error:', errorMessage);
+    logger.error('Detailed error:', errorMessage);
     res.status(500).json({ 
       message: "Error fetching tasks by status", 
       details: errorMessage,
@@ -129,9 +130,9 @@ app.get('/api/tasks/due-soon/:days', authenticateUser, async (req, res) => {
     
     res.json(tasks);
   } catch (error) {
-    console.error('Error fetching due soon tasks:', error);
+    logger.error('Error fetching due soon tasks:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.error('Detailed error:', errorMessage);
+    logger.error('Detailed error:', errorMessage);
     res.status(500).json({ 
       message: "Error fetching tasks due soon", 
       details: errorMessage,
@@ -147,9 +148,9 @@ app.post('/api/tasks', authenticateUser, async (req, res) => {
       dueDate: z.string().nullable().transform(val => val ? new Date(val) : null)
     });
     
-    console.log('Received task data:', req.body);
+    logger.info('Received task data:', req.body);
     const taskData = modifiedTaskSchema.parse(req.body);
-    console.log('Parsed task data:', taskData);
+    logger.info('Parsed task data:', taskData);
     
     // Устанавливаем текущего пользователя как клиента, если не указано иное
     if (!taskData.clientId) {
@@ -185,9 +186,9 @@ app.post('/api/tasks', authenticateUser, async (req, res) => {
         timestamp: new Date().toISOString()
       });
     }
-    console.error('Error creating task:', error);
+    logger.error('Error creating task:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.error('Detailed error:', errorMessage);
+    logger.error('Detailed error:', errorMessage);
     res.status(500).json({ 
       message: "Error creating task", 
       details: errorMessage,
@@ -237,9 +238,9 @@ app.delete('/api/tasks/:id', authenticateUser, async (req, res) => {
       taskId: taskId
     });
   } catch (error) {
-    console.error('Error deleting task:', error);
+    logger.error('Error deleting task:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.error('Detailed error:', errorMessage);
+    logger.error('Detailed error:', errorMessage);
     res.status(500).json({ 
       message: "Error deleting task", 
       details: errorMessage,
@@ -360,9 +361,9 @@ app.put('/api/tasks/:id', authenticateUser, async (req, res) => {
         timestamp: new Date().toISOString() 
       });
     }
-    console.error('Error updating task:', error);
+    logger.error('Error updating task:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.error('Detailed error:', errorMessage);
+    logger.error('Detailed error:', errorMessage);
     res.status(500).json({ 
       message: "Error updating task", 
       details: errorMessage,
@@ -405,9 +406,9 @@ app.get('/api/tasks/:id', authenticateUser, async (req, res) => {
     
     res.json(task);
   } catch (error) {
-    console.error('Error fetching task:', error);
+    logger.error('Error fetching task:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.error('Detailed error:', errorMessage);
+    logger.error('Detailed error:', errorMessage);
     res.status(500).json({ 
       message: "Error fetching task", 
       details: errorMessage,
@@ -441,7 +442,7 @@ app.get('/api/users/:id/tasks', authenticateUser, async (req, res) => {
     
     res.json(uniqueTasks);
   } catch (error) {
-    console.error('Error getting tasks for user:', error);
+    logger.error('Error getting tasks for user:', error);
     res.status(500).json({ message: "Server error" });
   }
 });
@@ -460,7 +461,7 @@ app.get('/api/users/:id/notifications', authenticateUser, async (req, res) => {
     const notifications = await getStorage().getNotificationsByUser(userId);
     res.json(notifications);
   } catch (error) {
-    console.error('Error getting notifications for user:', error);
+    logger.error('Error getting notifications for user:', error);
     res.status(500).json({ message: "Server error" });
   }
 });
@@ -502,12 +503,12 @@ app.patch('/api/tasks/:id/status', authenticateUser, async (req, res) => {
         relatedType: 'task'
       });
       
-      console.log(`DB: Created notification for user ${task.clientId}`);
+      logger.info(`DB: Created notification for user ${task.clientId}`);
     }
     
     res.json(updatedTask);
   } catch (error) {
-    console.error('Error updating task status:', error);
+    logger.error('Error updating task status:', error);
     res.status(500).json({ message: "Server error" });
   }
 });
