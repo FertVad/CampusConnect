@@ -9,7 +9,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { postData } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
-import { Grade, User } from '@shared/schema';
+import { Grade, User, Subject } from '@shared/schema';
 import { z } from 'zod';
 import { insertGradeSchema } from '@shared/schema';
 
@@ -27,7 +27,7 @@ const Grades = () => {
   });
   
   // Get all subjects
-  const { data: subjects = [] } = useQuery({
+  const { data: subjects = [] } = useQuery<Subject[]>({
     queryKey: ['/api/subjects'],
   });
   

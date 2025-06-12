@@ -12,7 +12,6 @@ export interface SubjectWithTeacher extends Subject {
 
 export interface ScheduleItemWithSubject extends ScheduleItem {
   subject: SubjectWithTeacher;
-  teacherName?: string;
 }
 
 interface ClassScheduleProps {

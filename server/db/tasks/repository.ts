@@ -1,6 +1,6 @@
 import { db } from '../index';
 import * as schema from '@shared/schema';
-import { eq, and, desc, asc, sql, isNotNull } from 'drizzle-orm';
+import { eq, and, or, desc, asc, sql, isNotNull } from 'drizzle-orm';
 import { aliasedTable } from 'drizzle-orm/alias';
 import { Task, InsertTask, UserSummary } from '@shared/schema';
 

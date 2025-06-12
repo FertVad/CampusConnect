@@ -5,7 +5,7 @@ const ttl = Number(process.env.CACHE_TTL ?? 60);
 export const cache = new NodeCache({ stdTTL: ttl });
 
 export async function getOrSet<T>(key: string, fn: () => Promise<T>): Promise<T> {
-  const cached = cache.get<T>(key);
+  const cached = cache.get(key) as T | undefined;
   if (cached !== undefined) {
     return cached;
   }
