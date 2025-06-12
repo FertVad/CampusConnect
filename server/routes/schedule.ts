@@ -56,13 +56,36 @@ app.get('/api/subjects/teacher', authenticateUser, async (req, res) => {
     if (!req.user || (req.user!.role !== 'teacher' && req.user!.role !== 'admin')) {
       return res.status(403).json({ message: "Access denied" });
     }
-    
+
     const subjects = await getStorage().getSubjectsByTeacher(req.user!.id);
     res.json(subjects);
   } catch (error) {
     res.status(500).json({ message: "Server error" });
   }
 });
+
+  // Get subjects taught by a specific teacher
+  app.get('/api/subjects/teacher/:teacherId', authenticateUser, async (req, res) => {
+    try {
+      const teacherId = parseInt(req.params.teacherId);
+
+      // Ensure the teacher exists
+      const teacher = await getStorage().getUser(teacherId);
+      if (!teacher || teacher.role !== 'teacher') {
+        return res.status(404).json({ message: "Teacher not found" });
+      }
+
+      // Allow only the requested teacher or admins
+      if (req.user!.id !== teacherId && req.user!.role !== 'admin') {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+
+      const subjects = await getStorage().getSubjectsByTeacher(teacherId);
+      res.json(subjects);
+    } catch (error) {
+      res.status(500).json({ message: "Server error" });
+    }
+  });
 
 app.post('/api/subjects', authenticateUser, requireRole(['admin']), async (req, res) => {
   try {

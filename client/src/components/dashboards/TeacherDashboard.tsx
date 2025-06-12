@@ -27,7 +27,8 @@ const TeacherDashboard = () => {
 
   // Get teacher's classes/subjects
   const { data: subjects = [] } = useQuery<Subject[]>({
-    queryKey: ['/api/subjects/teacher'],
+    queryKey: [`/api/subjects/teacher/${user?.id}`],
+    enabled: !!user?.id,
   });
 
   // Get teacher's schedule

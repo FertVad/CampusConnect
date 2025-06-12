@@ -37,9 +37,9 @@ export function useAssignments() {
   });
 
   const { data: subjects } = useQuery({
-    queryKey: ['/api/subjects/teacher'],
+    queryKey: [`/api/subjects/teacher/${user?.id}`],
     queryFn: async () => {
-      const response = await fetch('/api/subjects/teacher');
+      const response = await fetch(`/api/subjects/teacher/${user!.id}`);
       if (!response.ok) throw new Error('Failed to fetch subjects');
       return await response.json();
     },
