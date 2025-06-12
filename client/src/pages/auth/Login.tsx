@@ -1,156 +1,103 @@
-import React, { useState, useEffect } from 'react';
-import { useLocation, Link } from 'wouter';
+import React, { useEffect } from 'react';
+import { useAuth } from '@/hooks/use-auth';
+import { useLocation } from 'wouter';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
-import { AlertCircle } from 'lucide-react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { loginSchema, type LoginCredentials } from '@shared/schema';
-import { useAuth } from '@/hooks/use-auth';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Loader2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { createLoginSchema, type LoginData } from './schema';
 
+interface LoginProps {
+  onTabChange: (tab: string) => void;
+}
 
-const Login = () => {
-  const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [_, setLocation] = useLocation();
-  const { user, loginMutation } = useAuth();
+export default function Login({ onTabChange }: LoginProps) {
+  const { loginMutation } = useAuth();
+  const [, setLocation] = useLocation();
+  const { t } = useTranslation();
 
-  // Redirect to dashboard if user is already logged in
-  useEffect(() => {
-    if (user) {
-      setLocation('/dashboard');
-    }
-  }, [user, setLocation]);
-
-  const { register, handleSubmit, formState: { errors } } = useForm<LoginCredentials>({
+  const loginSchema = createLoginSchema(t);
+  const form = useForm<LoginData>({
     resolver: zodResolver(loginSchema),
-    defaultValues: {
-      email: '',
-      password: ''
-    }
+    defaultValues: { email: '', password: '' },
   });
 
-  const onSubmit = async (data: LoginCredentials) => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      
-      await loginMutation.mutateAsync(data);
-      setLocation('/dashboard');
-    } catch (err) {
-      console.error('Login error:', err);
-      setError('Invalid email or password. Please try again.');
-    } finally {
-      setIsLoading(false);
+  function onSubmit(data: LoginData) {
+    loginMutation.mutate(data);
+  }
+
+  const prevSuccessRef = React.useRef(false);
+  useEffect(() => {
+    if (loginMutation.isSuccess && !prevSuccessRef.current) {
+      prevSuccessRef.current = true;
+      setTimeout(() => setLocation('/'), 100);
     }
-  };
+    if (!loginMutation.isSuccess) {
+      prevSuccessRef.current = false;
+    }
+  }, [loginMutation.isSuccess, setLocation]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-neutral-50 p-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <div className="inline-block bg-primary p-3 rounded-lg mb-4">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-            </svg>
-          </div>
-          <h1 className="text-3xl font-bold font-heading text-neutral-800">EduPortal</h1>
-          <p className="text-neutral-500 mt-2">College Management System</p>
-        </div>
-        
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-xl font-heading">Sign In</CardTitle>
-            <CardDescription>
-              Enter your credentials to access your account
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {error && (
-              <Alert variant="destructive" className="mb-4">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
-            
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  {...register('email')}
-                  placeholder="Enter your email"
-                  className={errors.email ? "border-error" : ""}
-                />
-                {errors.email && (
-                  <p className="text-sm text-error">{errors.email.message}</p>
-                )}
-              </div>
-              
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <Label htmlFor="password">Password</Label>
-                  <a href="#" className="text-xs text-primary hover:underline">
-                    Forgot password?
-                  </a>
-                </div>
-                <Input
-                  id="password"
-                  type="password"
-                  {...register('password')}
-                  placeholder="Enter your password"
-                  className={errors.password ? "border-error" : ""}
-                />
-                {errors.password && (
-                  <p className="text-sm text-error">{errors.password.message}</p>
-                )}
-              </div>
-              
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? 'Signing in...' : 'Sign In'}
-              </Button>
-            </form>
-          </CardContent>
-          <CardFooter className="flex flex-col space-y-4">
-            <div className="text-sm text-center w-full text-neutral-500 mb-4">
-              Don't have an account?{' '}
-              <Link href="/register" className="text-primary hover:underline">
-                Sign up
-              </Link>
-            </div>
-            <div className="text-sm text-center text-neutral-500">
-              <p>Demo Accounts:</p>
-              <div className="flex justify-center flex-wrap gap-2 mt-2">
-                <Badge variant="outline" className="cursor-pointer hover:bg-neutral-100" onClick={() => {
-                  register('email').onChange({ target: { value: 'admin@example.com' } });
-                  register('password').onChange({ target: { value: 'admin123' } });
-                }}>
-                  Admin
-                </Badge>
-                <Badge variant="outline" className="cursor-pointer hover:bg-neutral-100" onClick={() => {
-                  register('email').onChange({ target: { value: 'david@example.com' } });
-                  register('password').onChange({ target: { value: 'teacher123' } });
-                }}>
-                  Teacher
-                </Badge>
-                <Badge variant="outline" className="cursor-pointer hover:bg-neutral-100" onClick={() => {
-                  register('email').onChange({ target: { value: 'alex@example.com' } });
-                  register('password').onChange({ target: { value: 'student123' } });
-                }}>
-                  Student
-                </Badge>
-              </div>
-            </div>
-          </CardFooter>
-        </Card>
-      </div>
-    </div>
+    <Card className="glass border-0 shadow-none">
+      <CardHeader>
+        <CardTitle className="text-2xl bg-gradient-to-r from-indigo-400 to-emerald-300 text-transparent bg-clip-text">
+          {t('auth.login.title')}
+        </CardTitle>
+        <CardDescription>{t('auth.login.subtitle')}</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('auth.login.email')}</FormLabel>
+                  <FormControl>
+                    <Input placeholder="email@example.com" className="glass" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('auth.login.password')}</FormLabel>
+                  <FormControl>
+                    <Input type="password" placeholder="********" className="glass" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <Button type="submit" className="w-full bg-primary hover:bg-primary/80" disabled={loginMutation.isPending}>
+              {loginMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  {t('auth.login.loggingIn')}
+                </>
+              ) : (
+                t('auth.login.signIn')
+              )}
+            </Button>
+          </form>
+        </Form>
+      </CardContent>
+      <CardFooter className="flex justify-center text-sm">
+        <span className="text-muted-foreground">{t('auth.login.noAccount')}</span>
+        <Button variant="link" className="px-2 text-indigo-400 hover:text-indigo-300" onClick={() => onTabChange('register')}>
+          {t('auth.login.createAccount')}
+        </Button>
+      </CardFooter>
+    </Card>
   );
-};
+}
 
-export default Login;
