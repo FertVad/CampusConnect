@@ -1,6 +1,6 @@
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { StatusBadge, PriorityBadge } from '@/components/tasks/TaskBadges';
 import { format } from 'date-fns';
 import { useTranslation } from 'react-i18next';
 import { Task } from './useTasks';
@@ -26,32 +26,8 @@ export default function TaskDetailsDialog({ open, onOpenChange, task, onEdit, on
           <div className="flex flex-wrap gap-2 mt-2">
             {task && (
               <>
-                {(() => {
-                  switch (task.priority) {
-                    case 'high':
-                      return <Badge variant="outline" className="bg-red-50 text-red-600 border-red-200">{t('task.priority.high')}</Badge>;
-                    case 'medium':
-                      return <Badge variant="outline" className="bg-orange-50 text-orange-600 border-orange-200">{t('task.priority.medium')}</Badge>;
-                    case 'low':
-                      return <Badge variant="outline" className="bg-green-50 text-green-600 border-green-200">{t('task.priority.low')}</Badge>;
-                    default:
-                      return <Badge variant="outline">{task.priority}</Badge>;
-                  }
-                })()}
-                {(() => {
-                  switch (task.status) {
-                    case 'new':
-                      return <Badge variant="outline" className="bg-blue-50 text-blue-600 border-blue-200">{t('task.status.new')}</Badge>;
-                    case 'in_progress':
-                      return <Badge variant="outline" className="bg-yellow-50 text-yellow-600 border-yellow-200">{t('task.status.in_progress')}</Badge>;
-                    case 'completed':
-                      return <Badge variant="outline" className="bg-green-50 text-green-600 border-green-200">{t('task.status.completed')}</Badge>;
-                    case 'on_hold':
-                      return <Badge variant="outline" className="bg-gray-50 text-gray-600 border-gray-200">{t('task.status.on_hold')}</Badge>;
-                    default:
-                      return <Badge variant="outline">{task.status}</Badge>;
-                  }
-                })()}
+                <PriorityBadge priority={task.priority} />
+                <StatusBadge status={task.status} />
               </>
             )}
           </div>
