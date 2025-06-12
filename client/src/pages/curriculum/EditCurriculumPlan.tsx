@@ -179,6 +179,7 @@ function EditCurriculumPlanContent(): React.ReactNode {
 
       // Проверка и логирование унифицированного запроса
       if (planData.calendarJson || planData.planJson) {
+        console.log({
           formFieldsCount: Object.keys(planData).length,
           hasCalendarJson: !!planData.calendarJson,
           hasPlanJson: !!planData.planJson,
@@ -330,9 +331,10 @@ function EditCurriculumPlanContent(): React.ReactNode {
       if (planDataStr) {
         try {
           const parsedPlan = JSON.parse(planDataStr);
+          console.log({
             hasSchemaVersion: !!parsedPlan.schemaVersion,
             hasPlanData: !!parsedPlan.planData,
-            planDataLength: parsedPlan.planData?.length || 0
+            planDataLength: parsedPlan.planData?.length || 0,
           });
         } catch (e) {
           console.error("[saveCurriculum] Error parsing plan data:", e);
@@ -352,12 +354,13 @@ function EditCurriculumPlanContent(): React.ReactNode {
         calendarJson: calendarDataJson,
         planJson: planDataStr,
         // Явно передаем curriculumPlanData как есть для обработки на сервере
-        curriculumPlanData: planDataStr
+        curriculumPlanData: planDataStr,
       };
 
+      console.log({
         formFields: Object.keys(formData).length,
         calendarFields: Object.keys(calendarDataRef.current).length,
-        planDataLength: planDataStr.length
+        planDataLength: planDataStr.length,
       });
 
       // Сохраняем все данные формы через единый PATCH запрос
@@ -738,9 +741,10 @@ function EditCurriculumPlanContent(): React.ReactNode {
 
       // Если мы уходим с вкладки "plan", сохраняем данные учебного плана
       if (activeTab === "plan" && value !== activeTab) {
+        console.log({
           formIsDirty,
           activeTab,
-          newTab: value
+          newTab: value,
         });
 
         // ВАЖНО: Перед проверкой на unsaved changes, отменяем любой отложенный таймер сохранения
@@ -1426,8 +1430,9 @@ function EditCurriculumPlanContent(): React.ReactNode {
                   onPlanChange={(planData) => {
                     // Сохраняем данные через единую функцию saveCurriculum
                     if (planId && !isNaN(planId)) {
+                      console.log({
                         nodesCount: planData.length,
-                        firstNode: planData[0]?.title || 'unknown'
+                        firstNode: planData[0]?.title || 'unknown',
                       });
 
                       // Создаем четкую, структурированную копию данных для JSON
