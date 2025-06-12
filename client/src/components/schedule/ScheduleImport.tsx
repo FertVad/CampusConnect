@@ -74,8 +74,8 @@ export default function ScheduleImport() {
       setImportResult(null);
 
       const rawResponse = await apiRequest(
-        'POST',
         '/api/schedule/import/google-sheets',
+        'POST',
         {
           credentials: JSON.parse(data.credentials),
           spreadsheetId: data.spreadsheetId,

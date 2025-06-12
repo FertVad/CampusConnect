@@ -101,16 +101,14 @@ export default function Users() {
   const { data: users = [], isLoading, error } = useQuery({
     queryKey: ['/api/users'],
     queryFn: async () => {
-      const response = await apiRequest('GET', '/api/users');
-      return response.json() as Promise<User[]>;
+      return await apiRequest('/api/users') as User[];
     }
   });
 
   // Create user mutation
   const createUserMutation = useMutation({
     mutationFn: async (userData: InsertUser) => {
-      const response = await apiRequest('POST', '/api/users', userData);
-      return response.json() as Promise<User>;
+      return await apiRequest('/api/users', 'POST', userData) as User;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/users'] });
@@ -133,8 +131,7 @@ export default function Users() {
   // Update user mutation
   const updateUserMutation = useMutation({
     mutationFn: async ({ id, userData }: { id: number, userData: Partial<InsertUser> }) => {
-      const response = await apiRequest('PUT', `/api/users/${id}`, userData);
-      return response.json() as Promise<User>;
+      return await apiRequest(`/api/users/${id}`, 'PUT', userData) as User;
     },
     onSuccess: () => {
       // Инвалидируем запросы пользователей и уведомлений для немедленного обновления UI
@@ -160,7 +157,7 @@ export default function Users() {
   // Delete user mutation
   const deleteUserMutation = useMutation({
     mutationFn: async (id: number) => {
-      await apiRequest('DELETE', `/api/users/${id}`);
+      await apiRequest(`/api/users/${id}`, 'DELETE');
       return Promise.resolve();
     },
     onSuccess: () => {

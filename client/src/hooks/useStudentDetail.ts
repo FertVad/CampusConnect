@@ -41,8 +41,7 @@ export function useStudentDetail(id: number | string | undefined) {
   } = useQuery({
     queryKey: ['/api/users', userId],
     queryFn: async () => {
-      const response = await apiRequest('GET', `/api/users/${userId}`);
-      return response.json() as Promise<UserData>;
+      return await apiRequest(`/api/users/${userId}`) as UserData;
     },
     enabled: !!userId && !isNaN(userId),
   });
@@ -53,8 +52,7 @@ export function useStudentDetail(id: number | string | undefined) {
   } = useQuery({
     queryKey: ['/api/users', userId, 'notifications'],
     queryFn: async () => {
-      const response = await apiRequest('GET', `/api/users/${userId}/notifications`);
-      return response.json() as Promise<Notification[]>;
+      return await apiRequest(`/api/users/${userId}/notifications`) as Notification[];
     },
     enabled: !!userId && !isNaN(userId),
   });
@@ -65,8 +63,7 @@ export function useStudentDetail(id: number | string | undefined) {
   } = useQuery({
     queryKey: ['/api/users', userId, 'tasks'],
     queryFn: async () => {
-      const response = await apiRequest('GET', `/api/users/${userId}/tasks`);
-      return response.json() as Promise<Task[]>;
+      return await apiRequest(`/api/users/${userId}/tasks`) as Task[];
     },
     enabled: !!userId && !isNaN(userId) && userData?.role === 'student',
   });
@@ -74,8 +71,7 @@ export function useStudentDetail(id: number | string | undefined) {
   const { data: scheduleItems = [] } = useQuery({
     queryKey: ['/api/schedule'],
     queryFn: async () => {
-      const response = await apiRequest('GET', `/api/schedule`);
-      return response.json() as Promise<ScheduleItem[]>;
+      return await apiRequest(`/api/schedule`) as ScheduleItem[];
     },
     enabled: !!userData?.groupId,
   });
