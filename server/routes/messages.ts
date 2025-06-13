@@ -40,10 +40,25 @@ export function registerMessageRoutes(app: Express, { authenticateUser }: RouteC
       if (!Array.isArray(messageIds) || messageIds.length === 0) {
         return res.status(400).json({ message: "Invalid message IDs" });
       }
-      const updatedMessages = await Promise.all(
-        messageIds.map((id: number) => getStorage().updateMessageStatus(id, 'read'))
-      );
-      res.json(updatedMessages.filter(Boolean));
+
+      const updatedMessages = [] as any[];
+      for (const id of messageIds) {
+        const message = await getStorage().getMessage(id);
+        if (!message) {
+          continue;
+        }
+
+        if (message.toUserId !== req.user.id) {
+          return res.status(403).json({ message: "Forbidden" });
+        }
+
+        const updated = await getStorage().updateMessageStatus(id, 'read');
+        if (updated) {
+          updatedMessages.push(updated);
+        }
+      }
+
+      res.json(updatedMessages);
     } catch {
       res.status(500).json({ message: "Server error" });
     }
