@@ -190,7 +190,7 @@ export function registerCurriculumRoutes(app: Express, { authenticateUser, requi
     }
   });
 
-  app.post('/api/curriculum/weeks', authenticateUser, async (req, res) => {
+  app.post('/api/curriculum-plans/weeks', authenticateUser, requireRole(['admin']), async (req, res) => {
     try {
       const { planId, calendarData } = req.body;
       if (!planId) {
