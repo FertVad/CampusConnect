@@ -354,28 +354,34 @@ const AdminDashboard = () => {
             <CardContent className="p-0">
               <div className="grid grid-cols-2 gap-3 p-3">
                 {/* Files */}
+                {/*
                 <div className="w-full">
                   <Link href="/admin/imported-files" className="rounded-lg border bg-card text-card-foreground shadow-sm hover:bg-accent/10 transition-colors p-4 flex flex-col items-center justify-center gap-2 h-full cursor-pointer">
                     <FileText className="h-8 w-8 text-primary" />
                     <span className="text-sm font-medium">{t('schedule.import.fileManager')}</span>
                   </Link>
                 </div>
+                */}
 
                 {/* Users */}
+                {/*
                 <div className="w-full">
                   <Link href="/users" className="rounded-lg border bg-card text-card-foreground shadow-sm hover:bg-accent/10 transition-colors p-4 flex flex-col items-center justify-center gap-2 h-full cursor-pointer">
                     <Users className="h-8 w-8 text-primary" />
                     <span className="text-sm font-medium">{t('common.users')}</span>
                   </Link>
                 </div>
+                */}
 
                 {/* Requests */}
+                {/*
                 <div className="w-full">
                   <Link href="/requests" className="rounded-lg border bg-card text-card-foreground shadow-sm hover:bg-accent/10 transition-colors p-4 flex flex-col items-center justify-center gap-2 h-full cursor-pointer">
                     <FilePlus className="h-8 w-8 text-primary" />
                     <span className="text-sm font-medium">{t('requests.title')}</span>
                   </Link>
                 </div>
+                */}
 
                 {/* Chat */}
                 <div className="w-full">

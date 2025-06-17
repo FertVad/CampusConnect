@@ -30,9 +30,9 @@ const navigationItems = [
   { key: "dashboard.title", href: "/", icon: BookOpen },
   { key: "schedule.title", href: "/schedule", icon: Calendar },
   { key: "assignments.title", href: "/assignments", icon: FileText },
-  { key: "grades.title", href: "/grades", icon: Award },
+  // { key: "grades.title", href: "/grades", icon: Award },
   { key: "chat.title", href: "/chat", icon: MessageSquare },
-  { key: "users.title", href: "/users", icon: Users, adminOnly: true },
+  // { key: "users.title", href: "/users", icon: Users, adminOnly: true },
 ];
 
 export function Navbar() {
