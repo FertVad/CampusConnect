@@ -256,13 +256,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   registerScheduleRoutes(app, ctx);
   registerTaskRoutes(app, ctx);
 
+  // Основные разделы
   registerAssignmentRoutes(app, ctx);
   registerMessageRoutes(app, ctx);
-  registerRequestRoutes(app, ctx);
-  registerDocumentRoutes(app, ctx);
   registerNotificationRoutes(app, ctx);
-  registerActivityLogRoutes(app, ctx);
-  registerCurriculumRoutes(app, ctx);
+
+  // Временное отключение второстепенных модулей
+  // registerRequestRoutes(app, ctx);
+  // registerDocumentRoutes(app, ctx);
+  // registerActivityLogRoutes(app, ctx);
+  // registerCurriculumRoutes(app, ctx);
 
   // Handle unknown /api routes with JSON 404
   app.use('/api', (_req, res) => {
