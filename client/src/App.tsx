@@ -4,23 +4,15 @@ import Dashboard from "@/pages/dashboard/Dashboard";
 import Assignments from "@/pages/assignments/Assignments";
 import AssignmentDetail from "@/pages/assignments/AssignmentDetail";
 import Schedule from "@/pages/schedule/Schedule";
-import Grades from "@/pages/grades/Grades";
-import Users from "@/pages/users/Users";
-import Requests from "@/pages/requests/Requests";
 import Chat from "@/pages/chat/Chat";
-import Invoices from "@/pages/documents/Invoices";
-import Certificates from "@/pages/documents/Certificates";
-import ImportedFiles from "@/pages/admin/ImportedFiles";
 import TasksPage from "@/pages/tasks/Tasks";
-import CurriculumPlans from "@/pages/curriculum/CurriculumPlans";
-import EditCurriculumPlan from "@/pages/curriculum/EditCurriculumPlan";
 import NotFound from "@/pages/not-found";
 import AuthPage from "@/pages/auth-page";
 import { ProtectedRoute } from "@/lib/protected-route";
 import { useAuth } from "@/hooks/use-auth";
 
 import { MainLayout } from "@/components/layout/main-layout";
-import StudentExample from "@/components/students/StudentExample";
+// import StudentExample from "@/components/students/StudentExample";
 
 // Wrap components with MainLayout for protected routes
 const ProtectedDashboard = () => (
@@ -47,23 +39,23 @@ const ProtectedSchedule = () => (
   </MainLayout>
 );
 
-const ProtectedGrades = () => (
-  <MainLayout>
-    <Grades />
-  </MainLayout>
-);
+// const ProtectedGrades = () => (
+//   <MainLayout>
+//     <Grades />
+//   </MainLayout>
+// );
 
-const ProtectedUsers = () => (
-  <MainLayout>
-    <Users />
-  </MainLayout>
-);
+// const ProtectedUsers = () => (
+//   <MainLayout>
+//     <Users />
+//   </MainLayout>
+// );
 
-const ProtectedRequests = () => (
-  <MainLayout>
-    <Requests />
-  </MainLayout>
-);
+// const ProtectedRequests = () => (
+//   <MainLayout>
+//     <Requests />
+//   </MainLayout>
+// );
 
 const ProtectedChat = () => (
   <MainLayout>
@@ -71,17 +63,17 @@ const ProtectedChat = () => (
   </MainLayout>
 );
 
-const ProtectedInvoices = () => (
-  <MainLayout>
-    <Invoices />
-  </MainLayout>
-);
+// const ProtectedInvoices = () => (
+//   <MainLayout>
+//     <Invoices />
+//   </MainLayout>
+// );
 
-const ProtectedCertificates = () => (
-  <MainLayout>
-    <Certificates />
-  </MainLayout>
-);
+// const ProtectedCertificates = () => (
+//   <MainLayout>
+//     <Certificates />
+//   </MainLayout>
+// );
 
 // Tasks page
 const ProtectedTasks = () => (
@@ -91,47 +83,47 @@ const ProtectedTasks = () => (
 );
 
 // Admin pages
-const ProtectedImportedFiles = () => (
-  <MainLayout>
-    <ImportedFiles />
-  </MainLayout>
-);
+// const ProtectedImportedFiles = () => (
+//   <MainLayout>
+//     <ImportedFiles />
+//   </MainLayout>
+// );
 
 // Curriculum plans pages
-const ProtectedCurriculumPlans = () => (
-  <MainLayout>
-    <CurriculumPlans />
-  </MainLayout>
-);
+// const ProtectedCurriculumPlans = () => (
+//   <MainLayout>
+//     <CurriculumPlans />
+//   </MainLayout>
+// );
 
-const ProtectedEditCurriculumPlan = () => (
-  <MainLayout>
-    <EditCurriculumPlan />
-  </MainLayout>
-);
+// const ProtectedEditCurriculumPlan = () => (
+//   <MainLayout>
+//     <EditCurriculumPlan />
+//   </MainLayout>
+// );
 
 // Student profile page
-import StudentDetail from "@/pages/students/StudentDetail";
-const ProtectedStudentDetail = () => (
-  <MainLayout>
-    <StudentDetail />
-  </MainLayout>
-);
+// import StudentDetail from "@/pages/students/StudentDetail";
+// const ProtectedStudentDetail = () => (
+//   <MainLayout>
+//     <StudentDetail />
+//   </MainLayout>
+// );
 
 // User detail page
-import UserDetail from "@/pages/users/UserDetail";
-const ProtectedUserDetail = () => (
-  <MainLayout>
-    <UserDetail />
-  </MainLayout>
-);
+// import UserDetail from "@/pages/users/UserDetail";
+// const ProtectedUserDetail = () => (
+//   <MainLayout>
+//     <UserDetail />
+//   </MainLayout>
+// );
 
 // Student Example component for testing
-const ProtectedStudentExample = () => (
-  <MainLayout>
-    <StudentExample />
-  </MainLayout>
-);
+// const ProtectedStudentExample = () => (
+//   <MainLayout>
+//     <StudentExample />
+//   </MainLayout>
+// );
 
 function App() {
   const { user, isLoading } = useAuth();
@@ -158,36 +150,36 @@ function App() {
       <ProtectedRoute path="/schedule" component={ProtectedSchedule} />
       
       {/* Grades route */}
-      <ProtectedRoute path="/grades" component={ProtectedGrades} />
-      
+      {/** <ProtectedRoute path="/grades" component={ProtectedGrades} /> **/}
+
       {/* User management routes (admin only) */}
-      <ProtectedRoute path="/users" component={ProtectedUsers} adminOnly={true} />
-      <ProtectedRoute path="/users/:id" component={ProtectedUserDetail} adminOnly={true} />
-      
+      {/** <ProtectedRoute path="/users" component={ProtectedUsers} adminOnly={true} /> **/}
+      {/** <ProtectedRoute path="/users/:id" component={ProtectedUserDetail} adminOnly={true} /> **/}
+
       {/* Requests route */}
-      <ProtectedRoute path="/requests" component={ProtectedRequests} />
+      {/** <ProtectedRoute path="/requests" component={ProtectedRequests} /> **/}
       
       {/* Chat route */}
       <ProtectedRoute path="/chat" component={ProtectedChat} />
       <ProtectedRoute path="/chat/:id" component={ProtectedChat} />
       
       {/* Documents routes */}
-      <ProtectedRoute path="/invoices" component={ProtectedInvoices} />
-      <ProtectedRoute path="/certificates" component={ProtectedCertificates} />
+      {/** <ProtectedRoute path="/invoices" component={ProtectedInvoices} /> **/}
+      {/** <ProtectedRoute path="/certificates" component={ProtectedCertificates} /> **/}
       
       {/* Tasks route */}
       <ProtectedRoute path="/tasks" component={ProtectedTasks} />
       
       {/* Admin routes с проверкой на роль admin */}
-      <ProtectedRoute path="/admin/imported-files" component={ProtectedImportedFiles} adminOnly={true} />
-      <ProtectedRoute path="/curriculum-plans" component={ProtectedCurriculumPlans} adminOnly={true} />
-      <ProtectedRoute path="/curriculum-plans/:id/edit" component={ProtectedEditCurriculumPlan} adminOnly={true} />
+      {/** <ProtectedRoute path="/admin/imported-files" component={ProtectedImportedFiles} adminOnly={true} /> **/}
+      {/** <ProtectedRoute path="/curriculum-plans" component={ProtectedCurriculumPlans} adminOnly={true} /> **/}
+      {/** <ProtectedRoute path="/curriculum-plans/:id/edit" component={ProtectedEditCurriculumPlan} adminOnly={true} /> **/}
       
       {/* Маршруты студентов */}
-      <ProtectedRoute path="/students/:id" component={ProtectedStudentDetail} />
-      
+      {/** <ProtectedRoute path="/students/:id" component={ProtectedStudentDetail} /> **/}
+
       {/* Example routes для тестирования компонентов */}
-      <ProtectedRoute path="/examples/students" component={ProtectedStudentExample} />
+      {/** <ProtectedRoute path="/examples/students" component={ProtectedStudentExample} /> **/}
       
       {/* Fallback to 404 */}
       <Route component={NotFound} />
