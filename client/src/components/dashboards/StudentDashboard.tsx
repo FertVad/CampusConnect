@@ -244,9 +244,11 @@ const StudentDashboard = () => {
                 <CardTitle>{t('dashboard.student.requestHistory', 'История заявок')}</CardTitle>
                 <CardDescription>{t('dashboard.student.latestRequests', 'Последние заявки')}</CardDescription>
               </div>
+              {/*
               <Link href="/requests" className="text-sm font-medium text-primary hover:text-primary-dark">
                 {t('common.actions.view', 'Просмотр')}
               </Link>
+              */}
             </CardHeader>
             <CardContent>
               {requests.length === 0 ? (
@@ -270,11 +272,13 @@ const StudentDashboard = () => {
                         {request.createdAt ? new Date(request.createdAt).toLocaleDateString('ru-RU') : ''}
                       </p>
                       <p className="text-xs text-foreground mt-2 line-clamp-2">{request.description}</p>
+                      {/*
                       <div className="mt-2">
                         <Link href={`/requests/${request.id}`} className="text-xs text-primary hover:underline">
                           {t('common.actions.details', 'Подробнее')}
                         </Link>
                       </div>
+                      */}
                     </div>
                   ))}
                 </div>
@@ -322,19 +326,23 @@ const StudentDashboard = () => {
                   </div>
                 </Link>
                 
+                {/*
                 <Link href="/requests/new">
                   <div className="flex flex-col items-center p-3 bg-muted rounded-lg hover:bg-accent hover:text-accent-foreground transition-all">
                     <FileText className="h-6 w-6 mb-2" />
                     <span className="text-xs font-medium">{t('requests.add', 'Создать заявку')}</span>
                   </div>
                 </Link>
+                */}
                 
+                {/*
                 <Link href="/grades">
                   <div className="flex flex-col items-center p-3 bg-muted rounded-lg hover:bg-accent hover:text-accent-foreground transition-all">
                     <BarChart2 className="h-6 w-6 mb-2" />
                     <span className="text-xs font-medium">{t('grades.title', 'Оценки')}</span>
                   </div>
                 </Link>
+                */}
               </div>
             </CardContent>
           </Card>

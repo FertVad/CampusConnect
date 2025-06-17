@@ -345,22 +345,26 @@ const TeacherDashboard = () => {
                         {t('requests.from', 'От: {{studentId}}', { studentId: request.studentId })}
                       </p>
                       <p className="text-xs mt-2 line-clamp-2">{request.description}</p>
+                      {/*
                       <div className="mt-2">
                         <Link href={`/requests/${request.id}`} className="text-xs text-primary hover:underline">
                           {t('requests.review', 'Рассмотреть заявку')}
                         </Link>
                       </div>
+                      */}
                     </div>
                   ))}
                 </div>
               )}
             </CardContent>
             <CardFooter>
+              {/*
               <Button variant="outline" size="sm" asChild className="w-full">
                 <Link href="/requests">
                   {t('requests.viewAll', 'Просмотреть все заявки')}
                 </Link>
               </Button>
+              */}
             </CardFooter>
           </Card>
           
@@ -378,12 +382,14 @@ const TeacherDashboard = () => {
                   </div>
                 </Link>
                 
+                {/*
                 <Link href="/grades">
                   <div className="flex flex-col items-center p-3 bg-muted rounded-lg hover:bg-accent hover:text-accent-foreground transition-all">
                     <BarChart2 className="h-6 w-6 mb-2" />
                     <span className="text-xs font-medium text-center">{t('grades.title', 'Оценки')}</span>
                   </div>
                 </Link>
+                */}
                 
                 <Link href="/chat">
                   <div className="flex flex-col items-center p-3 bg-muted rounded-lg hover:bg-accent hover:text-accent-foreground transition-all">
