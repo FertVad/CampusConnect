@@ -1,9 +1,7 @@
-import passport from "passport";
-import { Strategy as LocalStrategy } from "passport-local";
 import { Express } from "express";
-import session from "express-session";
 import bcrypt from "bcrypt";
 import { User as SelectUser } from "../shared/schema";
+import { supabase } from "./supabaseClient";
 
 // Import storage module and IStorage interface
 import { storage, IStorage, setStorage, getStorage, DatabaseStorage } from "./storage";
@@ -84,133 +82,44 @@ export async function initializeDatabase(): Promise<boolean> {
 }
 
 export function setupAuth(app: Express) {
-  // Configure session - optimized for MemoryStore
-  const isProduction = process.env.NODE_ENV === 'production';
+  // Authentication routes using Supabase
 
-  // Safari-friendly cookie settings and MemoryStore optimization
-  const sessionSettings: session.SessionOptions = {
-    secret: process.env.SESSION_SECRET || "dev-session-secret",
-    resave: true, // Сохранять сессию даже если она не изменилась
-    saveUninitialized: true, // Сохранять новые сессии
-    store: getStorage().sessionStore,
-    name: 'eduportal.sid', // Используем уникальное имя куки
-    cookie: {
-      maxAge: 14 * 24 * 60 * 60 * 1000, // 14 дней
-      httpOnly: true,
-      secure: isProduction, // В разработке не требуем HTTPS
-      sameSite: isProduction ? 'none' : 'lax', // В разработке используем lax для совместимости
-      path: '/',
-      domain: undefined // Использовать домен запроса
-    },
-    proxy: true // Доверяем proxy заголовкам
-  };
-
-  app.set("trust proxy", 1);
-  app.use(session(sessionSettings));
-  app.use(passport.initialize());
-  app.use(passport.session());
-
-  // Configure Passport local strategy with email as username field
-  passport.use(
-    new LocalStrategy({
-      usernameField: 'email', // Use email field instead of username
-      passwordField: 'password'
-    }, async (email, password, done) => {
-      try {
-        const user = await getStorage().getUserByEmail(email);
-        if (!user) {
-          return done(null, false, { message: "Invalid email or password" });
-        }
-
-        const isValid = await comparePasswords(password, user.password);
-        if (!isValid) {
-          return done(null, false, { message: "Invalid email or password" });
-        }
-
-        return done(null, user);
-      } catch (error) {
-        return done(error);
-      }
-    })
-  );
-
-  // Serialize and deserialize user
-  passport.serializeUser((user, done) => {
-    done(null, user.id);
-  });
-
-  passport.deserializeUser(async (id: number, done) => {
+  app.post("/api/register", async (req, res) => {
     try {
-      const user = await getStorage().getUser(id);
-      done(null, user);
+      const { email, password } = req.body;
+      const { data, error } = await supabase.auth.signUp({ email, password });
+      if (error) {
+        return res.status(400).json({ message: error.message });
+      }
+      return res.status(201).json(data);
     } catch (error) {
-      done(error);
+      return res.status(500).json({ message: "Registration failed" });
     }
   });
 
-  // Authentication routes
-  app.post("/api/register", async (req, res, next) => {
+  app.post("/api/login", async (req, res) => {
     try {
-      // Check if email already exists
-      const existingUser = await getStorage().getUserByEmail(req.body.email);
-      if (existingUser) {
-        return res.status(400).json({ message: "Email already exists" });
+      const { email, password } = req.body;
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error || !data.session) {
+        return res.status(401).json({ message: error?.message || "Authentication failed" });
       }
-
-      // Create user (password will be hashed in the storage implementation)
-      const user = await getStorage().createUser(req.body);
-
-      // Auto login after registration
-      req.login(user, (err) => {
-        if (err) return next(err);
-        // Don't expose the password hash to the client
-        const { password, ...userWithoutPassword } = user;
-        return res.status(201).json(userWithoutPassword);
-      });
+      return res.status(200).json(data);
     } catch (error) {
-      next(error);
+      return res.status(500).json({ message: "Login failed" });
     }
   });
 
-  app.post("/api/login", (req, res, next) => {
-    passport.authenticate("local", (err: Error, user: Express.User, info: any) => {
-      if (err) {
-        return next(err);
+  app.post("/api/logout", async (_req, res) => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        return res.status(400).json({ message: error.message });
       }
-
-      if (!user) {
-        return res.status(401).json({ message: info?.message || "Authentication failed" });
-      }
-
-      req.login(user, (err) => {
-        if (err) {
-          return next(err);
-        }
-
-        // Don't expose the password hash to the client
-        const { password, ...userWithoutPassword } = user;
-
-        // Set headers to help with Safari compatibility
-        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-        res.setHeader('Pragma', 'no-cache');
-        res.setHeader('Expires', '0');
-
-        // Ensure the session is saved immediately
-        req.session.save((err) => {
-          if (err) {
-            console.error("Session save error:", err);
-          }
-          return res.status(200).json(userWithoutPassword);
-        });
-      });
-    })(req, res, next);
-  });
-
-  app.post("/api/logout", (req, res, next) => {
-    req.logout((err) => {
-      if (err) return next(err);
-      res.status(200).json({ message: "Logged out successfully" });
-    });
+      return res.status(200).json({ message: "Logged out successfully" });
+    } catch (error) {
+      return res.status(500).json({ message: "Logout failed" });
+    }
   });
 
   app.get("/api/user", (req, res) => {
