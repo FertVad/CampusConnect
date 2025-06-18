@@ -7,9 +7,22 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
   <script>
     // Monkey patch WebSocket to prevent connection errors
-    (function() {
+    (async function() {
       // Store original WebSocket constructor
       const OriginalWebSocket = window.WebSocket;
+
+      // Track whether a Supabase session is currently available
+      let hasSupabaseSession = false;
+
+      // Attempt to read the current session from Supabase if the client exists
+      try {
+        if (window.supabase?.auth?.getSession) {
+          const { data } = await window.supabase.auth.getSession();
+          hasSupabaseSession = !!data.session;
+        }
+      } catch (err) {
+        console.warn('Failed to obtain Supabase session:', err);
+      }
       
       // Helper function to create a fake WebSocket that gracefully fails
       function createFakeSocket(url, reason) {
@@ -56,14 +69,11 @@
             return createFakeSocket(url, 'Malformed WebSocket URL');
           }
           
-          // Block connections with token when user is not authenticated
-          // Get authentication status from localStorage or session storage if available
-          const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true' || 
-                                 sessionStorage.getItem('isAuthenticated') === 'true';
+          // Block connections with token when no Supabase session is present
           const token = new URL(url).searchParams.get('token');
-          
-          if (token && !isAuthenticated) {
-            return createFakeSocket(url, 'Auth token provided but user not authenticated');
+
+          if (token && !hasSupabaseSession) {
+            return createFakeSocket(url, 'Auth token provided but no Supabase session');
           }
           
           // For Replit's Vite plugins and dev tools, handle errors silently
@@ -110,6 +120,7 @@
       // Store authentication status when it changes
       document.addEventListener('authStatusChanged', function(e) {
         if (e.detail && typeof e.detail.isAuthenticated === 'boolean') {
+          hasSupabaseSession = e.detail.isAuthenticated;
           localStorage.setItem('isAuthenticated', e.detail.isAuthenticated);
           sessionStorage.setItem('isAuthenticated', e.detail.isAuthenticated);
         }
