@@ -91,6 +91,11 @@ export default function CreateTaskDialog({ open, onOpenChange, form, onSubmit, l
                 label: `${u.firstName} ${u.lastName} (${t(`role.${u.role}`)})`,
               }))}
             />
+            {!users || users.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                {t('task.no_users_available')}
+              </p>
+            ) : null}
             <FormField
               control={form.control}
               name="dueDate"
@@ -124,7 +129,12 @@ export default function CreateTaskDialog({ open, onOpenChange, form, onSubmit, l
               )}
             />
             <DialogFooter>
-              <Button type="submit" disabled={loading}>{t('task.create')}</Button>
+              <Button
+                type="submit"
+                disabled={loading || !users || users.length === 0}
+              >
+                {t('task.create')}
+              </Button>
             </DialogFooter>
           </form>
         </Form>
