@@ -10,6 +10,8 @@ import NotFound from "@/pages/not-found";
 import AuthPage from "@/pages/auth-page";
 import { ProtectedRoute } from "@/lib/protected-route";
 import { useAuth } from "@/hooks/use-auth";
+import Users from "@/pages/users/Users";
+import UserDetail from "@/pages/users/UserDetail";
 
 import { MainLayout } from "@/components/layout/main-layout";
 // import StudentExample from "@/components/students/StudentExample";
@@ -45,11 +47,11 @@ const ProtectedSchedule = () => (
 //   </MainLayout>
 // );
 
-// const ProtectedUsers = () => (
-//   <MainLayout>
-//     <Users />
-//   </MainLayout>
-// );
+const ProtectedUsers = () => (
+  <MainLayout>
+    <Users />
+  </MainLayout>
+);
 
 // const ProtectedRequests = () => (
 //   <MainLayout>
@@ -111,12 +113,11 @@ const ProtectedTasks = () => (
 // );
 
 // User detail page
-// import UserDetail from "@/pages/users/UserDetail";
-// const ProtectedUserDetail = () => (
-//   <MainLayout>
-//     <UserDetail />
-//   </MainLayout>
-// );
+const ProtectedUserDetail = () => (
+  <MainLayout>
+    <UserDetail />
+  </MainLayout>
+);
 
 // Student Example component for testing
 // const ProtectedStudentExample = () => (
@@ -153,8 +154,8 @@ function App() {
       {/** <ProtectedRoute path="/grades" component={ProtectedGrades} /> **/}
 
       {/* User management routes (admin only) */}
-      {/** <ProtectedRoute path="/users" component={ProtectedUsers} adminOnly={true} /> **/}
-      {/** <ProtectedRoute path="/users/:id" component={ProtectedUserDetail} adminOnly={true} /> **/}
+      <ProtectedRoute path="/users" component={ProtectedUsers} adminOnly={true} />
+      <ProtectedRoute path="/users/:id" component={ProtectedUserDetail} adminOnly={true} />
 
       {/* Requests route */}
       {/** <ProtectedRoute path="/requests" component={ProtectedRequests} /> **/}
