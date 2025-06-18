@@ -16,13 +16,26 @@ for the Postgres database. It should look similar to:
 postgresql://USER:PASSWORD@HOST:PORT/DATABASE
 ```
 
+While in the dashboard open **Settings → API** to find the project URL and API keys:
+
+- **Project URL** – used as `SUPABASE_URL`
+- **anon public** key – used as `SUPABASE_ANON_KEY`
+- **service_role** key – used as `SUPABASE_SERVICE_ROLE_KEY`
+
 ## 3. Configure environment variables
 
 Create a `.env` file in the project root (you can copy `.env.example`).
-Provide the connection string and a session secret. You can also adjust caching and logging via the variables `CACHE_TTL` and `LOG_LEVEL`.
+Provide the connection string, Supabase project URL and keys, and a session secret. You can also adjust caching and logging via the variables `CACHE_TTL` and `LOG_LEVEL`.
 
 ```
 SUPABASE_DATABASE_URL=postgresql://USER:PASSWORD@HOST:PORT/DATABASE
+# Supabase project details
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_ANON_KEY=public-anon-key
+SUPABASE_SERVICE_ROLE_KEY=service-role-key
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=public-anon-key
+
 SESSION_SECRET=your-session-secret
 CACHE_TTL=60
 LOG_LEVEL=info
