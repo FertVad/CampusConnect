@@ -86,11 +86,22 @@ export function setupAuth(app: Express) {
 
   app.post("/api/register", async (req, res) => {
     try {
-      const { email, password } = req.body;
+      const { firstName, lastName, email, password, role } = req.body;
+
       const { data, error } = await supabase.auth.signUp({ email, password });
-      if (error) {
-        return res.status(400).json({ message: error.message });
+      if (error || !data.user) {
+        return res.status(400).json({ message: error?.message || "Registration failed" });
       }
+
+      // Persist additional user details only after successful sign up
+      await getStorage().createUser({
+        firstName,
+        lastName,
+        email,
+        password,
+        role,
+      });
+
       return res.status(201).json(data);
     } catch (error) {
       return res.status(500).json({ message: "Registration failed" });
