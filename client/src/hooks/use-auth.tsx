@@ -7,6 +7,11 @@ import {
 } from "@tanstack/react-query";
 import { User } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
+import { createClient } from '@supabase/supabase-js';
+
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // Helper to dispatch authentication status change events
 const dispatchAuthStatusChanged = (isAuthenticated: boolean) => {
@@ -108,41 +113,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginData) => {
-      const res = await fetch("/api/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Accept": "application/json",
-          "X-Requested-With": "XMLHttpRequest", // Helps with CSRF protection
-          "Cache-Control": "no-cache, no-store, must-revalidate",
-          "Pragma": "no-cache",
-          "Expires": "0"
-        },
-        body: JSON.stringify(credentials),
-        credentials: "include", // Include cookies with the request
+      const { error } = await supabase.auth.signInWithPassword(credentials);
+      if (error) {
+        throw new Error(error.message);
+      }
+      const res = await fetch("/api/user", {
+        method: 'GET',
+        credentials: 'include',
         cache: 'no-store'
       });
-      
       if (!res.ok) {
-        let errorMessage = "Login failed";
-        try {
-          const errorData = await res.json();
-          errorMessage = errorData.message || errorMessage;
-        } catch (e) {
-          console.error("Error parsing error response:", e);
-        }
-        throw new Error(errorMessage);
+        throw new Error('Failed to fetch user data');
       }
-      
-      // Return user data
-      let userData = null;
-      try {
-        userData = await res.json();
-      } catch (e) {
-        console.error("Error parsing login response:", e);
-        throw new Error("Invalid response from server");
-      }
-      return userData;
+      return await res.json();
     },
     onSuccess: (userData: User) => {
       queryClient.setQueryData(["/api/user"], userData);
@@ -164,24 +147,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const registerMutation = useMutation({
     mutationFn: async (userData: RegisterData) => {
-      const res = await fetch("/api/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Accept": "application/json",
-          "X-Requested-With": "XMLHttpRequest", // Helps with CSRF protection
-          "Cache-Control": "no-cache",
-          "Pragma": "no-cache"
-        },
-        body: JSON.stringify(userData),
-        credentials: "include", // Include cookies with the request
-      });
-      
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || "Registration failed");
+      const { email, password } = userData;
+      const { error } = await supabase.auth.signUp({ email, password });
+      if (error) {
+        throw new Error(error.message);
       }
-      
+      const res = await fetch('/api/user', { method: 'GET', credentials: 'include', cache: 'no-store' });
+      if (!res.ok) {
+        throw new Error('Failed to fetch user data');
+      }
       return await res.json();
     },
     onSuccess: (userData: User) => {
@@ -204,29 +178,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
-      const res = await fetch("/api/logout", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Accept": "application/json",
-          "X-Requested-With": "XMLHttpRequest", // Helps with CSRF protection
-          "Cache-Control": "no-cache, no-store, must-revalidate",
-          "Pragma": "no-cache",
-          "Expires": "0"
-        },
-        credentials: "include", // Include cookies with the request
-        cache: 'no-store'
-      });
-      
-      if (!res.ok) {
-        let errorMessage = "Logout failed";
-        try {
-          const errorData = await res.json();
-          errorMessage = errorData.message || errorMessage;
-        } catch (e) {
-          console.error("Error parsing error response:", e);
-        }
-        throw new Error(errorMessage);
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        throw new Error(error.message);
       }
     },
     onSuccess: () => {
@@ -263,6 +217,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
     },
   });
+
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        queryClient.invalidateQueries(["/api/user"]);
+        dispatchAuthStatusChanged(true);
+      } else {
+        queryClient.setQueryData(["/api/user"], null);
+        dispatchAuthStatusChanged(false);
+      }
+    });
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [queryClient]);
 
   // Update authentication status whenever user data changes
   useEffect(() => {
