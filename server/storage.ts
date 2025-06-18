@@ -20,18 +20,12 @@ import {
 } from "@shared/schema";
 import { eq, and, desc, asc } from "drizzle-orm";
 import { db } from "./db";
-import session from "express-session";
-import * as expressSession from 'express-session';
-import createMemoryStore from "memorystore";
-import PgStoreFactory from 'connect-pg-simple';
+
 import { logger } from "./utils/logger";
 import { getOrSet } from "./utils/cache";
 
-const MemoryStore = createMemoryStore(session);
-
 // Storage interface
 export interface IStorage {
-  sessionStore: expressSession.Store;
   // User management
   getUsers(): Promise<User[]>;
   getUser(id: number): Promise<User | undefined>;
@@ -261,8 +255,6 @@ export class MemStorage implements IStorage {
   private taskIdCounter: number;
   private curriculumPlanIdCounter: number;
   
-  sessionStore: expressSession.Store;
-  
   constructor() {
     this.users = new Map();
     this.subjects = new Map();
@@ -307,14 +299,6 @@ export class MemStorage implements IStorage {
     this.activityLogIdCounter = 1;
     this.taskIdCounter = 1;
     this.curriculumPlanIdCounter = 1;
-    
-    // Настройка MemoryStore для длительного хранения сессий
-    this.sessionStore = new MemoryStore({
-      checkPeriod: 86400000, // проверка и удаление устаревших сессий каждые 24ч
-      max: 5000, // максимальное количество сессий в памяти
-      ttl: 14 * 24 * 60 * 60 * 1000, // время жизни сессии - 14 дней
-      stale: false // не возвращать просроченные объекты
-    });
     
     // Add some seed data
     this.seedData();

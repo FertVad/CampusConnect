@@ -6,10 +6,7 @@ import { IStorage } from '../storage';
 import { UsersRepository } from './users/repository';
 import { SubjectsRepository } from './subjects/repository';
 import { TasksRepository } from './tasks/repository';
-import session from 'express-session';
-import createMemoryStore from 'memorystore';
 import pg from 'pg';
-import connectPgSimple from 'connect-pg-simple';
 import { getOrSet } from '../utils/cache';
 
 import * as notificationQueries from './notifications';
@@ -31,27 +28,17 @@ import { log } from '../vite';
 
 type EducationLevel = (typeof schema.educationLevelEnum.enumValues)[number];
 
-const MemoryStore = createMemoryStore(session);
-const PgSession = connectPgSimple(session);
 
 /**
  * Реализация IStorage, использующая базу данных Supabase
  */
 export class SupabaseStorage {
-  sessionStore: session.Store;
   private usersRepo = new UsersRepository();
   private subjectsRepo = new SubjectsRepository();
   private tasksRepo = new TasksRepository();
 
   constructor() {
-    // Use MemoryStore for session storage for better reliability in Replit environment
-    // This is simpler but will lose sessions on server restart
-    this.sessionStore = new MemoryStore({
-      checkPeriod: 86400000, // Prune expired entries every 24h
-      stale: false, // Don't allow stale sessions
-    });
-    
-    log("Using in-memory session storage for better reliability");
+    log("Using in-memory storage for better reliability");
   }
 
   // User management
