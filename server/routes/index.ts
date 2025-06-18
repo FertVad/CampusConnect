@@ -39,10 +39,10 @@ import { registerDocumentRoutes } from "./documents";
 import { registerNotificationRoutes } from "./notifications";
 import { registerActivityLogRoutes } from "./activityLogs";
 import { registerCurriculumRoutes } from "./curriculum";
-// Extend the Express Request interface with session
+import { verifySupabaseJwt } from "../middleware/verifySupabaseJwt";
+// Extend the Express Request interface
 interface Request extends ExpressRequest {
   user?: User;
-  session: any;
 }
 
 // Set up file upload storage
@@ -66,64 +66,12 @@ const upload = multer({
 });
 
 export interface RouteContext {
-  authenticateUser: typeof authenticateUser;
+  authenticateUser: typeof verifySupabaseJwt;
   requireRole: typeof requireRole;
   upload: typeof upload;
 }
 
-// Auth middleware - Use passport.js authentication
-const authenticateUser = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    // Подробное логирование сессии для отладки проблем аутентификации
-    logger.info(`Auth check - Session ID: ${req.sessionID}`);
-    logger.info(`Auth check - Is Authenticated: ${req.isAuthenticated ? req.isAuthenticated() : 'method undefined'}`);
-    logger.info(`Auth check - User: ${req.user ? JSON.stringify({ id: req.user!.id, role: req.user!.role }) : 'undefined'}`);
-    logger.info(`Auth check - Cookies: ${req.headers.cookie}`);
-    logger.info(`Auth check - Session data:`, req.session);
-    
-    // Если пользователь аутентифицирован через passport, пропускаем
-    if (req.isAuthenticated && req.isAuthenticated() && req.user) {
-      logger.info(`User authenticated normally: ${req.user!.id} (${req.user!.role})`);
-      
-      // Принудительно сохраняем сессию при каждом запросе
-      if (req.session) {
-        req.session.touch();
-      }
-      
-      return next();
-    }
-    
-    // Проверяем данные в сессии напрямую
-    if (req.session && req.session.passport && req.session.passport.user) {
-      logger.info(`Auth check - Session contains user ID: ${req.session.passport.user}`);
-      
-      try {
-        // Попытка восстановить пользователя из ID в сессии
-        const userId = req.session.passport.user;
-        const user = await getStorage().getUser(userId);
-        
-        if (user) {
-          logger.info(`Auth check - Recovered user from session: ${user.id} (${user.role})`);
-          (req as any).user = user; // Восстанавливаем пользователя
-          return next();
-        }
-      } catch (err) {
-        logger.error("Error recovering user from session:", err);
-      }
-    }
-    
-    // Делаем финальную проверку cookie для отладки
-    if (!req.headers.cookie || !req.headers.cookie.includes('eduportal.sid')) {
-      logger.warn(`Auth failed - No session cookie found in request`);
-    }
-    
-    // Если все способы восстановления сессии не удались, возвращаем 401
-    return res.status(401).json({ message: "Unauthorized - Please log in" });
-  } catch (error) {
-    logger.error("Auth middleware error:", error);
-    return res.status(500).json({ message: "Internal server error during authentication" });
-  }
-};
+const authenticateUser = verifySupabaseJwt;
 
 // Role check middleware
 const requireRole = (roles: string[]) => {
