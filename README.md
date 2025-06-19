@@ -87,3 +87,13 @@ npm run dev:client
 ```
 
 The server will automatically use `SupabaseStorage` for all data access.
+
+## 7. Run tests
+
+Execute the test suite with:
+
+```bash
+npm test
+```
+
+This command runs Node's built-in test runner using `node --test`.
