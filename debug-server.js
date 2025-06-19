@@ -10,7 +10,7 @@ app.post('/test/create-task', async (req, res) => {
     const { createClient } = await import('@supabase/supabase-js')
     const supabase = createClient(
       process.env.SUPABASE_URL,
-      process.env.SUPABASE_SERVICE_KEY // service key для обхода RLS
+      process.env.SUPABASE_SERVICE_ROLE_KEY // service key для обхода RLS
     )
 
     console.log('🚀 Попытка создать задачу...')
@@ -50,7 +50,7 @@ app.get('/test/tasks', async (req, res) => {
     const { createClient } = await import('@supabase/supabase-js')
     const supabase = createClient(
       process.env.SUPABASE_URL,
-      process.env.SUPABASE_SERVICE_KEY
+      process.env.SUPABASE_SERVICE_ROLE_KEY
     )
 
     const { data, error } = await supabase
