@@ -13,6 +13,13 @@ const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+// Development only logger
+const devLog = (...args: unknown[]) => {
+  if (import.meta.env.DEV) {
+    console.log(...args);
+  }
+};
+
 // Helper to dispatch authentication status change events
 const dispatchAuthStatusChanged = (isAuthenticated: boolean) => {
   try {
@@ -73,18 +80,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return null; // Не делаем запрос, если пользователь наверняка не аутентифицирован
         }
         
-        const res = await fetch("/api/user", {
+        const { data: sessionData } = await supabase.auth.getSession();
+        devLog('Supabase access token:', sessionData.session?.access_token);
+
+        const fetchOptions: RequestInit = {
           method: 'GET',
-          credentials: "include", // Include cookies with the request
+          credentials: "include",
           headers: {
             "Accept": "application/json",
-            "X-Requested-With": "XMLHttpRequest", // Helps with CSRF protection
-            "Cache-Control": "no-cache, no-store, must-revalidate", 
+            "X-Requested-With": "XMLHttpRequest",
+            "Cache-Control": "no-cache, no-store, must-revalidate",
             "Pragma": "no-cache",
             "Expires": "0"
           },
-          cache: 'no-store' // Для современных браузеров - не кэшировать
+          cache: 'no-store'
+        };
+
+        devLog('Fetch /api/user', {
+          method: fetchOptions.method,
+          url: '/api/user',
+          credentials: fetchOptions.credentials,
+          headers: fetchOptions.headers,
         });
+
+        const res = await fetch("/api/user", fetchOptions);
         
         if (res.status === 401) {
           // Если получили 401, очищаем localStorage
@@ -117,11 +136,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (error) {
         throw new Error(error.message);
       }
-      const res = await fetch("/api/user", {
+      const { data: sessionData } = await supabase.auth.getSession();
+      devLog('Supabase access token:', sessionData.session?.access_token);
+
+      const fetchOptions: RequestInit = {
         method: 'GET',
         credentials: 'include',
-        cache: 'no-store'
+        cache: 'no-store',
+      };
+
+      devLog('Fetch /api/user', {
+        method: fetchOptions.method,
+        url: '/api/user',
+        credentials: fetchOptions.credentials,
+        headers: fetchOptions.headers,
       });
+
+      const res = await fetch("/api/user", fetchOptions);
       if (!res.ok) {
         throw new Error('Failed to fetch user data');
       }
@@ -152,7 +183,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (error) {
         throw new Error(error.message);
       }
-      const res = await fetch('/api/user', { method: 'GET', credentials: 'include', cache: 'no-store' });
+      const { data: sessionData } = await supabase.auth.getSession();
+      devLog('Supabase access token:', sessionData.session?.access_token);
+
+      const fetchOptions: RequestInit = {
+        method: 'GET',
+        credentials: 'include',
+        cache: 'no-store',
+      };
+
+      devLog('Fetch /api/user', {
+        method: fetchOptions.method,
+        url: '/api/user',
+        credentials: fetchOptions.credentials,
+        headers: fetchOptions.headers,
+      });
+
+      const res = await fetch('/api/user', fetchOptions);
       if (!res.ok) {
         throw new Error('Failed to fetch user data');
       }
