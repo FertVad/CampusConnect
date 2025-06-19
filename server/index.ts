@@ -3,7 +3,6 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { initializeDatabase } from "./auth";
-import { setStorage, DatabaseStorage, type IStorage } from "./storage";
 
 const app = express();
 app.use(express.json());
@@ -63,23 +62,9 @@ app.use((req, res, next) => {
     // Initialize the database before setting up routes
     log("Initializing database...");
 
-    try {
-      // Попробуем инициализировать SupabaseStorage сразу
-      const dbStorage = new DatabaseStorage();
-      setStorage(dbStorage as unknown as IStorage);
-      log("Database connection successful");
-      log("Using in-memory session storage for better reliability");
-      log("Storage implementation has been updated");
-      log("Successfully initialized database storage");
-      log("Database initialized successfully");
-    } catch (error) {
-      log("Error initializing database storage:", error instanceof Error ? error.message : String(error));
-      log("Warning: Database initialization failed, falling back to in-memory storage");
-      // Fallback на initializeDatabase(), который использует MemStorage
-      const dbInitialized = await initializeDatabase();
-      if (!dbInitialized) {
-        log("Warning: Both database options failed, continuing with in-memory storage");
-      }
+    const dbInitialized = await initializeDatabase();
+    if (!dbInitialized) {
+      log("Warning: Database initialization failed, continuing with in-memory storage");
     }
 
     // Register API routes

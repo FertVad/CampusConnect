@@ -4,6 +4,7 @@ import { User as SelectUser } from "../shared/schema";
 import { supabase } from "./supabaseClient";
 import { verifySupabaseJwt } from "./middleware/verifySupabaseJwt";
 import { logger } from "./utils/logger";
+import { testConnection } from "./db";
 
 // Import storage helpers and interface
 import { IStorage, setStorage, getStorage, DatabaseStorage } from "./storage";
@@ -42,6 +43,13 @@ export async function initializeDatabase(): Promise<boolean> {
   try {
     logger.info("Starting database migration...");
     try {
+      // Проверяем соединение с базой данных
+      const isConnected = await testConnection();
+      if (!isConnected) {
+        logger.error("Failed to connect to the database");
+        return false;
+      }
+
       // Создаем хранилище базы данных Supabase
       logger.info("Creating SupabaseStorage instance...");
       const dbStorage = new DatabaseStorage();
