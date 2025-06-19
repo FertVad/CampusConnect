@@ -221,7 +221,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
-        queryClient.invalidateQueries(["/api/user"]);
+        queryClient.invalidateQueries({ queryKey: ["/api/user"] });
         dispatchAuthStatusChanged(true);
       } else {
         queryClient.setQueryData(["/api/user"], null);
