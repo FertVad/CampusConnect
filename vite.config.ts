@@ -36,7 +36,10 @@ export default defineConfig({
     open: true,
     proxy: {
       // Прокидываем API-запросы на бэкенд
-      '/api': 'http://localhost:5050',
+      '/api': {
+        target: 'http://localhost:5050',
+        changeOrigin: true,
+      },
       // Можно добавить любые другие эндпоинты
     },
   },
