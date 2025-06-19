@@ -4,6 +4,7 @@ import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, 
 import { ru } from 'date-fns/locale';
 import { useAuth } from '@/hooks/use-auth';
 import { isAdmin } from '@/lib/auth';
+import { authFetch } from '@/lib/queryClient';
 
 const DAYS_OF_WEEK = ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
 
@@ -20,7 +21,7 @@ export function useFilteredSchedule() {
   const allSchedule = useQuery({
     queryKey: ['/api/schedule'],
     queryFn: async () => {
-      const response = await fetch('/api/schedule', { credentials: 'include' });
+      const response = await authFetch('/api/schedule');
       if (!response.ok) {
         throw new Error('Не удалось загрузить полное расписание');
       }
@@ -33,7 +34,7 @@ export function useFilteredSchedule() {
     queryKey: [isStudent ? '/api/schedule/student' : '/api/schedule/teacher'],
     queryFn: async () => {
       const endpoint = isStudent ? '/api/schedule/student' : '/api/schedule/teacher';
-      const response = await fetch(endpoint, { credentials: 'include' });
+      const response = await authFetch(endpoint);
       if (!response.ok) {
         throw new Error('Не удалось загрузить расписание');
       }

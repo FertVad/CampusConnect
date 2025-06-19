@@ -1,4 +1,5 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
+import { supabase } from '@/lib/supabase';
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
@@ -34,6 +35,22 @@ async function throwIfResNotOk(res: Response) {
 
 import { getAuthHeaders } from "./auth";
 
+export async function authFetch(url: string, options: RequestInit = {}): Promise<Response> {
+  const { data: sessionData } = await supabase.auth.getSession();
+  const token = sessionData.session?.access_token;
+
+  const headers: HeadersInit = {
+    ...getAuthHeaders(),
+    ...(options.headers ?? {}),
+  };
+
+  if (token) {
+    (headers as Record<string, string>)["Authorization"] = `Bearer ${token}`;
+  }
+
+  return fetch(url, { ...options, headers, credentials: 'include' });
+}
+
 export async function apiRequest(
   url: string,
   method: string = 'GET',
@@ -56,11 +73,10 @@ export async function apiRequest(
     const timeoutId = setTimeout(() => controller.abort(), 30000);
 
     // Более надежный запрос с параметрами безопасности и совместимости
-    const res = await fetch(url, {
+    const res = await authFetch(url, {
       method,
       headers,
       body: data ? JSON.stringify(data) : undefined,
-      credentials: "include", // Всегда включаем учетные данные для cookie сессии
       mode: 'cors', // Для лучшей совместимости
       redirect: 'follow', // Следовать за перенаправлениями
       signal: controller.signal, // Для тайм-аута
@@ -97,7 +113,7 @@ export const getQueryFn: <T>(options: {
   async ({ queryKey }) => {
     try {
       // Запрос с улучшенными заголовками для кросс-браузерной совместимости
-      const res = await fetch(queryKey[0] as string, {
+      const res = await authFetch(queryKey[0] as string, {
         method: 'GET', // Явно указываем метод
         headers: {
           ...getAuthHeaders(),
@@ -107,7 +123,6 @@ export const getQueryFn: <T>(options: {
           'Pragma': 'no-cache',
           'Expires': '0',
         },
-        credentials: "include", // Всегда включаем учетные данные для cookie сессии
         mode: 'cors', // Для лучшей совместимости
         redirect: 'follow', // Следовать перенаправлениям
       });

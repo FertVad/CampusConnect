@@ -7,11 +7,8 @@ import {
 } from "@tanstack/react-query";
 import { User } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
-import { createClient } from '@supabase/supabase-js';
-
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+import { supabase } from '@/lib/supabase';
+import { authFetch } from '@/lib/queryClient';
 
 // Development only logger
 const devLog = (...args: unknown[]) => {
@@ -108,7 +105,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           headers: fetchOptions.headers,
         });
 
-        const res = await fetch("/api/user", fetchOptions);
+        const res = await authFetch("/api/user", fetchOptions);
         
         if (res.status === 401) {
           // Если получили 401, очищаем localStorage
@@ -163,7 +160,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         headers: fetchOptions.headers,
       });
 
-      const res = await fetch("/api/user", fetchOptions);
+      const res = await authFetch("/api/user", fetchOptions);
       if (!res.ok) {
         throw new Error('Failed to fetch user data');
       }
@@ -216,7 +213,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         headers: fetchOptions.headers,
       });
 
-      const res = await fetch('/api/user', fetchOptions);
+      const res = await authFetch('/api/user', fetchOptions);
       if (!res.ok) {
         throw new Error('Failed to fetch user data');
       }

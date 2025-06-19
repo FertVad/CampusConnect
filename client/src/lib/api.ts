@@ -1,4 +1,4 @@
-import { apiRequest } from "./queryClient";
+import { apiRequest, authFetch } from "./queryClient";
 import { getAuthHeaders } from "./auth";
 
 // Generic fetch function for GET requests with improved Safari compatibility
@@ -8,7 +8,7 @@ export async function fetchData<T>(endpoint: string): Promise<T> {
   const timeoutId = setTimeout(() => controller.abort(), 30000);
   
   try {
-    const response = await fetch(endpoint, {
+    const response = await authFetch(endpoint, {
       method: 'GET', // Явно указываем метод
       headers: {
         ...getAuthHeaders(),
@@ -18,7 +18,6 @@ export async function fetchData<T>(endpoint: string): Promise<T> {
         'Pragma': 'no-cache',
         'Expires': '0'
       },
-      credentials: 'include', // Всегда включаем куки
       mode: 'cors', // Для лучшей совместимости
       redirect: 'follow', // Следуем за перенаправлениями
       signal: controller.signal // Для тайм-аута
@@ -86,7 +85,7 @@ export async function uploadFile(endpoint: string, formData: FormData): Promise<
       delete formHeaders['Content-Type'];
     }
     
-    const response = await fetch(endpoint, {
+    const response = await authFetch(endpoint, {
       method: 'POST',
       headers: {
         ...formHeaders,
@@ -96,7 +95,6 @@ export async function uploadFile(endpoint: string, formData: FormData): Promise<
         'Pragma': 'no-cache'
       },
       body: formData,
-      credentials: 'include',
       mode: 'cors',
       redirect: 'follow',
       signal: controller.signal // Для тайм-аута
