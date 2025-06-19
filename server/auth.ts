@@ -3,6 +3,7 @@ import bcrypt from "bcrypt";
 import { User as SelectUser } from "../shared/schema";
 import { supabase } from "./supabaseClient";
 import { verifySupabaseJwt } from "./middleware/verifySupabaseJwt";
+import { logger } from "./utils/logger";
 
 // Import storage module and IStorage interface
 import { storage, IStorage, setStorage, getStorage, DatabaseStorage } from "./storage";
@@ -135,7 +136,11 @@ export function setupAuth(app: Express) {
   });
 
   app.get("/api/user", verifySupabaseJwt, (req, res) => {
+    logger.info("GET /api/user route hit");
+
     if (req.user) {
+      logger.info("Authenticated user:", req.user);
+
       // Не отправляем пароль клиенту
       const { password, ...userWithoutPassword } = req.user as any;
 
@@ -147,6 +152,7 @@ export function setupAuth(app: Express) {
       return res.json(userWithoutPassword);
     }
 
+    logger.info("Returning 401 for /api/user - not authenticated");
     return res.status(401).json({ message: "Not authenticated" });
   });
 }
