@@ -4,7 +4,7 @@ import { User as SelectUser } from "../shared/schema";
 import { supabase } from "./supabaseClient";
 import { verifySupabaseJwt } from "./middleware/verifySupabaseJwt";
 import { logger } from "./utils/logger";
-import { testConnection } from "./db";
+import { testConnection } from "./db/index";
 
 // Import storage helpers and interface
 import { IStorage, setStorage, getStorage, DatabaseStorage } from "./storage";
