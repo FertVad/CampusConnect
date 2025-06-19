@@ -2,6 +2,7 @@ import { Express } from "express";
 import bcrypt from "bcrypt";
 import { User as SelectUser } from "../shared/schema";
 import { supabase } from "./supabaseClient";
+import { verifySupabaseJwt } from "./middleware/verifySupabaseJwt";
 
 // Import storage module and IStorage interface
 import { storage, IStorage, setStorage, getStorage, DatabaseStorage } from "./storage";
@@ -133,9 +134,8 @@ export function setupAuth(app: Express) {
     }
   });
 
-  app.get("/api/user", (req, res) => {
-    // Проверяем метод isAuthenticated и наличие пользователя
-    if (req.isAuthenticated && req.isAuthenticated() && req.user) {
+  app.get("/api/user", verifySupabaseJwt, (req, res) => {
+    if (req.user) {
       // Не отправляем пароль клиенту
       const { password, ...userWithoutPassword } = req.user as any;
 
