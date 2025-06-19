@@ -39,7 +39,7 @@ export class SupabaseStorage {
   private tasksRepo = new TasksRepository();
 
   constructor() {
-    log("Using in-memory storage for better reliability");
+    log("Using Supabase storage");
   }
 
   // User management
