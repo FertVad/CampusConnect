@@ -3,7 +3,7 @@ import { getStorage } from "../storage";
 import { insertSubjectSchema, insertEnrollmentSchema, insertScheduleItemSchema } from "@shared/schema";
 import { parseSheetDataToScheduleItems, fetchSheetData, authenticateWithGoogleSheets } from "../utils/googleSheetsHelper";
 import { parseCsvToScheduleItems, validateScheduleItems, prepareImportResult } from "../utils/csvHelper";
-import { db } from "../db";
+import { db } from "../db/index";
 import { logger } from "../utils/logger";
 import type { RouteContext } from "./index";
 import path from "path";

@@ -20,7 +20,7 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import { eq } from "drizzle-orm";
-import { db } from "../db";
+import { db } from "../db/index";
 import { 
   parseSheetDataToScheduleItems, 
   fetchSheetData, 

@@ -19,7 +19,7 @@ import {
   curriculumPlans
 } from "@shared/schema";
 import { eq, and, desc, asc } from "drizzle-orm";
-import { db } from "./db";
+import { db } from "./db/index";
 
 import { logger } from "./utils/logger";
 import { getOrSet } from "./utils/cache";
