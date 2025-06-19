@@ -5,6 +5,7 @@ import { ScheduleImportError, ScheduleImportResult } from './googleSheetsHelper'
 import * as chardet from 'chardet';
 import fs from 'fs';
 import iconv from 'iconv-lite';
+import { logger } from './logger';
 
 // Функция для нормализации и очистки значений строк
 function normalizeValue(value: string | undefined): string | undefined {
@@ -78,18 +79,18 @@ function detectDelimiter(filePath: string): string {
     
     // Выбираем разделитель с наибольшим количеством вхождений
     if (semicolonCount > commaCount && semicolonCount > tabCount) {
-      console.log('Detected CSV delimiter: semicolon (;)');
+      logger.info('Detected CSV delimiter: semicolon (;)');
       return ';';
     } else if (tabCount > commaCount && tabCount > semicolonCount) {
-      console.log('Detected CSV delimiter: tab (\\t)');
+      logger.info('Detected CSV delimiter: tab (\\t)');
       return '\t';
     } else {
-      console.log('Detected CSV delimiter: comma (,)');
+      logger.info('Detected CSV delimiter: comma (,)');
       return ',';
     }
   } catch (error) {
     console.error('Error detecting CSV delimiter:', error);
-    console.log('Defaulting to comma (,) delimiter');
+    logger.info('Defaulting to comma (,) delimiter');
     return ',';
   }
 }
@@ -111,7 +112,7 @@ export async function parseCsvToScheduleItems(
   
       // Определяем кодировку файла
       const encoding = chardet.detectFileSync(filePath) || 'utf8';
-      console.log(`Detected file encoding: ${encoding}`);
+      logger.info(`Detected file encoding: ${encoding}`);
       
       // Читаем и декодируем весь файл, затем преобразуем в строки для обработки
       const buffer = fs.readFileSync(filePath);
@@ -137,7 +138,7 @@ export async function parseCsvToScheduleItems(
         .pipe(csvParser(parserOptions))
         .on('headers', (headers) => {
           foundHeaders = headers.map((h: string) => h.trim());
-          console.log(`Found CSV headers: ${foundHeaders.join(', ')}`);
+          logger.info(`Found CSV headers: ${foundHeaders.join(', ')}`);
         })
       .on('data', (row) => {
         rowIndex++;
@@ -150,7 +151,7 @@ export async function parseCsvToScheduleItems(
             normalizedRow[key.trim()] = normalizeValue(row[key]);
           }
           
-          console.log('Row data:', normalizedRow);
+          logger.info('Row data:', normalizedRow);
           
           // Попробуем определить формат CSV файла по заголовкам
           let subjectName, dayName, startTime, endTime, roomNumber, teacherName;
@@ -159,7 +160,7 @@ export async function parseCsvToScheduleItems(
           let course, specialty, group;
           
           // Логируем все найденные заголовки
-          console.log('Found column headers:', Object.keys(normalizedRow));
+          logger.info('Found column headers:', Object.keys(normalizedRow));
           
           // Сначала ищем стандартные названия полей - точные совпадения
           if (normalizedRow['Subject'] !== undefined) subjectName = normalizedRow['Subject'];
@@ -187,7 +188,7 @@ export async function parseCsvToScheduleItems(
           
           // Логируем дополнительные поля, если они найдены
           if (course || specialty || group) {
-            console.log(`Additional fields found - Course: ${course}, Specialty: ${specialty}, Group: ${group}`);
+            logger.info(`Additional fields found - Course: ${course}, Specialty: ${specialty}, Group: ${group}`);
           }
           
           // Если не нашли точные совпадения, ищем по содержимому заголовков
@@ -197,7 +198,7 @@ export async function parseCsvToScheduleItems(
               h.toLowerCase().includes('предмет') ||
               h.toLowerCase().includes('дисциплина'));
             if (subjectHeader) {
-              console.log(`Found subject column through partial match: ${subjectHeader}`);
+              logger.info(`Found subject column through partial match: ${subjectHeader}`);
               subjectName = normalizedRow[subjectHeader];
             }
           }
@@ -208,7 +209,7 @@ export async function parseCsvToScheduleItems(
               h.toLowerCase().includes('день') ||
               h.toLowerCase().includes('дата'));
             if (dayHeader) {
-              console.log(`Found day column through partial match: ${dayHeader}`);
+              logger.info(`Found day column through partial match: ${dayHeader}`);
               dayName = normalizedRow[dayHeader];
             }
           }
@@ -220,7 +221,7 @@ export async function parseCsvToScheduleItems(
               h.toLowerCase().includes('начала') ||
               h.toLowerCase().includes('с'));
             if (startHeader) {
-              console.log(`Found start time column through partial match: ${startHeader}`);
+              logger.info(`Found start time column through partial match: ${startHeader}`);
               startTime = normalizedRow[startHeader];
             }
           }
@@ -233,7 +234,7 @@ export async function parseCsvToScheduleItems(
               h.toLowerCase().includes('завершение') ||
               h.toLowerCase().includes('до'));
             if (endHeader) {
-              console.log(`Found end time column through partial match: ${endHeader}`);
+              logger.info(`Found end time column through partial match: ${endHeader}`);
               endTime = normalizedRow[endHeader];
             }
           }
@@ -245,7 +246,7 @@ export async function parseCsvToScheduleItems(
               h.toLowerCase().includes('аудитория') ||
               h.toLowerCase().includes('класс'));
             if (roomHeader) {
-              console.log(`Found room column through partial match: ${roomHeader}`);
+              logger.info(`Found room column through partial match: ${roomHeader}`);
               roomNumber = normalizedRow[roomHeader];
             }
           }
@@ -257,7 +258,7 @@ export async function parseCsvToScheduleItems(
               h.toLowerCase().includes('учитель') ||
               h.toLowerCase().includes('педагог'));
             if (teacherHeader) {
-              console.log(`Found teacher column through partial match: ${teacherHeader}`);
+              logger.info(`Found teacher column through partial match: ${teacherHeader}`);
               teacherName = normalizedRow[teacherHeader];
             }
           }
@@ -343,8 +344,8 @@ export async function parseCsvToScheduleItems(
             item.teacherName = teacherName.trim();
           }
           
-          console.log(`Extracted schedule item: ${JSON.stringify(item)}`);
-          console.log(`CSV Row: Day=${dayName}, Subject=${subjectName}, Start=${startTime}, End=${endTime}, Teacher=${teacherName || 'Not specified'}, Room=${roomNumber || 'Not specified'}`);
+          logger.info(`Extracted schedule item: ${JSON.stringify(item)}`);
+          logger.info(`CSV Row: Day=${dayName}, Subject=${subjectName}, Start=${startTime}, End=${endTime}, Teacher=${teacherName || 'Not specified'}, Room=${roomNumber || 'Not specified'}`);
 
           scheduleItems.push(item);
         } catch (error: any) {

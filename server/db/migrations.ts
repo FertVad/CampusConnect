@@ -2,11 +2,12 @@ import { db } from './index';
 import * as schema from '@shared/schema';
 import { sql } from 'drizzle-orm';
 import bcrypt from 'bcrypt';
+import { logger } from '../utils/logger';
 
 // Function to create all necessary database tables based on schema
 export async function migrateDatabase() {
   try {
-    console.log('Starting database migration...');
+    logger.info('Starting database migration...');
     
     // Create the role enum type
     await db.execute(sql`
@@ -216,7 +217,7 @@ export async function migrateDatabase() {
       );
     `);
 
-    console.log('Database migration completed successfully');
+    logger.info('Database migration completed successfully');
     return true;
   } catch (error) {
     console.error('Database migration failed:', error);
@@ -227,13 +228,13 @@ export async function migrateDatabase() {
 // Seed the database with initial data
 export async function seedDatabase() {
   try {
-    console.log('Starting database seeding...');
+    logger.info('Starting database seeding...');
     
     // Check if admin user exists
     const adminUser = await db.select().from(schema.users).where(sql`email = 'admin@eduportal.com'`).limit(1);
     
     if (adminUser.length > 0) {
-      console.log('Admin user already exists, checking for test users...');
+      logger.info('Admin user already exists, checking for test users...');
       
       // Check if we need to add test users (2 teachers and 3 students)
       const testUsers = await db.select().from(schema.users).where(
@@ -241,13 +242,13 @@ export async function seedDatabase() {
       );
       
       if (testUsers.length === 5) {
-        console.log('Test users already exist, skipping seed');
+        logger.info('Test users already exist, skipping seed');
         return true;
       }
       
-      console.log('Adding missing test users...');
+      logger.info('Adding missing test users...');
     } else {
-      console.log('Creating admin user and test users...');
+      logger.info('Creating admin user and test users...');
     }
     
     // Hash password function (implemented in auth.ts, but we need it here for seeding)
@@ -268,7 +269,7 @@ export async function seedDatabase() {
         role: 'admin',
       }).returning();
       adminUserRecord = newAdmin;
-      console.log('Created admin user');
+      logger.info('Created admin user');
     } else {
       adminUserRecord = adminUser[0];
     }
@@ -290,7 +291,7 @@ export async function seedDatabase() {
         role: 'teacher',
       }).returning();
       teacher1 = newTeacher1;
-      console.log('Created test teacher 1');
+      logger.info('Created test teacher 1');
     } else {
       teacher1 = existingTeacher1[0];
     }
@@ -304,7 +305,7 @@ export async function seedDatabase() {
         role: 'teacher',
       }).returning();
       teacher2 = newTeacher2;
-      console.log('Created test teacher 2');
+      logger.info('Created test teacher 2');
     } else {
       teacher2 = existingTeacher2[0];
     }
@@ -344,7 +345,7 @@ export async function seedDatabase() {
         role: 'student',
       }).returning();
       student1 = newStudent1;
-      console.log('Created test student 1');
+      logger.info('Created test student 1');
     } else {
       student1 = existingStudent1[0];
     }
@@ -358,7 +359,7 @@ export async function seedDatabase() {
         role: 'student',
       }).returning();
       student2 = newStudent2;
-      console.log('Created test student 2');
+      logger.info('Created test student 2');
     } else {
       student2 = existingStudent2[0];
     }
@@ -372,7 +373,7 @@ export async function seedDatabase() {
         role: 'student',
       }).returning();
       student3 = newStudent3;
-      console.log('Created test student 3');
+      logger.info('Created test student 3');
     } else {
       student3 = existingStudent3[0];
     }
@@ -487,7 +488,7 @@ export async function seedDatabase() {
     const curriculumPlans = await db.select().from(schema.curriculumPlans);
     
     if (curriculumPlans.length === 0) {
-      console.log('Adding example curriculum plans...');
+      logger.info('Adding example curriculum plans...');
       
       // Insert some sample curriculum plans
       await db.insert(schema.curriculumPlans).values([
@@ -526,12 +527,12 @@ export async function seedDatabase() {
         }
       ]);
       
-      console.log('Added sample curriculum plans');
+      logger.info('Added sample curriculum plans');
     } else {
-      console.log('Curriculum plans already exist, skipping seed');
+      logger.info('Curriculum plans already exist, skipping seed');
     }
     
-    console.log('Database seeding completed successfully');
+    logger.info('Database seeding completed successfully');
     return true;
   } catch (error) {
     console.error('Database seeding failed:', error);

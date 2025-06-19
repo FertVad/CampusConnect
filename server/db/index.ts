@@ -2,6 +2,7 @@ import { drizzle } from 'drizzle-orm/node-postgres';
 import pkg from 'pg';
 const { Pool } = pkg;
 import * as schema from '@shared/schema';
+import { logger } from '../utils/logger';
 
 // Create a connection pool to Supabase (PostgreSQL)
 const connectionString = process.env.SUPABASE_DATABASE_URL || process.env.DATABASE_URL;
@@ -20,7 +21,7 @@ export const db = drizzle(pool, { schema });
 export async function testConnection() {
   try {
     await pool.query('SELECT NOW()');
-    console.log('Database connection successful');
+    logger.info('Database connection successful');
     return true;
   } catch (error) {
     console.error('Database connection failed:', error);

@@ -1,5 +1,6 @@
 import assert from 'assert';
 import express from 'express';
+import { logger } from '../utils/logger';
 
 const app = express();
 app.use(express.json());
@@ -25,5 +26,5 @@ const resp = await fetch(`http://localhost:${port}/api/curriculum-plans/weeks`, 
   body: JSON.stringify({ planId: 1, calendarData: {} })
 });
 assert.strictEqual(resp.status, 403);
-console.log('Curriculum weeks unauthorized test passed');
+logger.info('Curriculum weeks unauthorized test passed');
 server.close();

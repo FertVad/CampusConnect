@@ -34,6 +34,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { apiRequest } from "@/lib/queryClient";
 import type { CurriculumPlan } from "@shared/schema";
 import { useI18n } from "@/hooks/use-i18n";
+import { logger } from "@/lib/logger";
 
 // Расширенная схема формы для титульного листа учебного плана
 const curriculumFormSchema = z.object({
@@ -179,7 +180,7 @@ function EditCurriculumPlanContent(): React.ReactNode {
 
       // Проверка и логирование унифицированного запроса
       if (planData.calendarJson || planData.planJson) {
-        console.log({
+        logger.info({
           formFieldsCount: Object.keys(planData).length,
           hasCalendarJson: !!planData.calendarJson,
           hasPlanJson: !!planData.planJson,
@@ -331,7 +332,7 @@ function EditCurriculumPlanContent(): React.ReactNode {
       if (planDataStr) {
         try {
           const parsedPlan = JSON.parse(planDataStr);
-          console.log({
+          logger.info({
             hasSchemaVersion: !!parsedPlan.schemaVersion,
             hasPlanData: !!parsedPlan.planData,
             planDataLength: parsedPlan.planData?.length || 0,
@@ -357,7 +358,7 @@ function EditCurriculumPlanContent(): React.ReactNode {
         curriculumPlanData: planDataStr,
       };
 
-      console.log({
+      logger.info({
         formFields: Object.keys(formData).length,
         calendarFields: Object.keys(calendarDataRef.current).length,
         planDataLength: planDataStr.length,
@@ -741,7 +742,7 @@ function EditCurriculumPlanContent(): React.ReactNode {
 
       // Если мы уходим с вкладки "plan", сохраняем данные учебного плана
       if (activeTab === "plan" && value !== activeTab) {
-        console.log({
+        logger.info({
           formIsDirty,
           activeTab,
           newTab: value,
@@ -1430,7 +1431,7 @@ function EditCurriculumPlanContent(): React.ReactNode {
                   onPlanChange={(planData) => {
                     // Сохраняем данные через единую функцию saveCurriculum
                     if (planId && !isNaN(planId)) {
-                      console.log({
+                      logger.info({
                         nodesCount: planData.length,
                         firstNode: planData[0]?.title || 'unknown',
                       });
