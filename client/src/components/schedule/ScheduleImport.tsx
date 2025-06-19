@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { authFetch } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { useForm } from 'react-hook-form';
 import { apiRequest } from '@/lib/queryClient';
@@ -123,10 +124,9 @@ export default function ScheduleImport() {
       const formData = new FormData();
       formData.append('csvFile', selectedFile);
 
-      const response = await fetch('/api/schedule/import/csv', {
+      const response = await authFetch('/api/schedule/import/csv', {
         method: 'POST',
         body: formData,
-        credentials: 'include'
       });
 
       if (!response.ok) {

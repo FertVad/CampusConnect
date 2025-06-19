@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
-import { queryClient as globalClient } from '@/lib/queryClient';
+import { queryClient as globalClient, authFetch } from '@/lib/queryClient';
 import * as z from 'zod';
 
 export const createAssignmentSchema = z.object({
@@ -29,7 +29,7 @@ export function useAssignments() {
     queryKey: [isStudent ? '/api/assignments/student' : '/api/assignments/teacher'],
     queryFn: async () => {
       const endpoint = isStudent ? '/api/assignments/student' : '/api/assignments/teacher';
-      const response = await fetch(endpoint);
+      const response = await authFetch(endpoint);
       if (!response.ok) throw new Error('Failed to fetch assignments');
       return await response.json();
     },
@@ -39,7 +39,7 @@ export function useAssignments() {
   const { data: subjects } = useQuery({
     queryKey: [`/api/subjects/teacher/${user?.id}`],
     queryFn: async () => {
-      const response = await fetch(`/api/subjects/teacher/${user!.id}`);
+      const response = await authFetch(`/api/subjects/teacher/${user!.id}`);
       if (!response.ok) throw new Error('Failed to fetch subjects');
       return await response.json();
     },
@@ -48,7 +48,7 @@ export function useAssignments() {
 
   const createAssignmentMutation = useMutation({
     mutationFn: async (data: z.infer<typeof createAssignmentSchema>) => {
-      const response = await fetch('/api/assignments', {
+      const response = await authFetch('/api/assignments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...data, teacherId: user!.id }),
@@ -70,7 +70,7 @@ export function useAssignments() {
 
   const submitAssignmentMutation = useMutation({
     mutationFn: async (data: z.infer<typeof submitAssignmentSchema> & { assignmentId: number }) => {
-      const response = await fetch('/api/submissions', {
+      const response = await authFetch('/api/submissions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...data, studentId: user!.id }),

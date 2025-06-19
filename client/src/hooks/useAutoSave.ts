@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { authFetch } from '@/lib/queryClient';
 import stableStringify from 'fast-json-stable-stringify';
 
 interface AutoSaveOptions {
@@ -129,13 +130,12 @@ export function useAutoSave<T>(data: T, options: AutoSaveOptions) {
     
     try {
       
-      const response = await fetch(url, {
+      const response = await authFetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(dataToSave),
-        credentials: 'include',
       });
       
       if (!response.ok) {
