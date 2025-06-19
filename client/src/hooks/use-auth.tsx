@@ -12,7 +12,8 @@ import { authFetch } from '@/lib/queryClient';
 import { logger } from '@/lib/logger';
 
 // Development only logger
-const devLog = (...args: unknown[]) => {
+// Expect at least one argument to satisfy TypeScript's tuple requirement
+const devLog = (...args: [unknown, ...unknown[]]) => {
   if (import.meta.env.DEV) {
     logger.info(...args);
   }
