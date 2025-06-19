@@ -96,6 +96,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           cache: 'no-store'
         };
 
+        const token = sessionData.session?.access_token;
+        if (token) {
+          (fetchOptions.headers as Record<string, string>)["Authorization"] = `Bearer ${token}`;
+        }
+
         devLog('Fetch /api/user', {
           method: fetchOptions.method,
           url: '/api/user',
@@ -143,7 +148,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         method: 'GET',
         credentials: 'include',
         cache: 'no-store',
+        headers: {}
       };
+
+      const token = sessionData.session?.access_token;
+      if (token) {
+        (fetchOptions.headers as Record<string, string>)["Authorization"] = `Bearer ${token}`;
+      }
 
       devLog('Fetch /api/user', {
         method: fetchOptions.method,
@@ -190,7 +201,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         method: 'GET',
         credentials: 'include',
         cache: 'no-store',
+        headers: {}
       };
+
+      const token = sessionData.session?.access_token;
+      if (token) {
+        (fetchOptions.headers as Record<string, string>)["Authorization"] = `Bearer ${token}`;
+      }
 
       devLog('Fetch /api/user', {
         method: fetchOptions.method,
