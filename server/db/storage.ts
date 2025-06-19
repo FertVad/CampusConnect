@@ -20,7 +20,6 @@ import {
   LoginCredentials, ImportedFile, InsertImportedFile, ActivityLog, InsertActivityLog,
   Task, InsertTask, UserSummary
 } from '@shared/schema';
-import { testConnection } from './index';
 import bcrypt from 'bcrypt';
 import fs from 'fs';
 import path from 'path';
@@ -913,13 +912,6 @@ export class SupabaseStorage {
 
 // Factory function to create a database-backed storage
 export async function createDatabaseStorage(): Promise<IStorage> {
-  // Test database connection
-  const isConnected = await testConnection();
-  
-  if (!isConnected) {
-    console.error('Failed to connect to the database. Using in-memory storage instead.');
-    throw new Error('Database connection failed');
-  }
-  
+  // Simply create Supabase storage instance
   return new SupabaseStorage() as unknown as IStorage;
 }

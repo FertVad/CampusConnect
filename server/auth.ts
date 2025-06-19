@@ -4,6 +4,7 @@ import { User as SelectUser } from "../shared/schema";
 import { supabase } from "./supabaseClient";
 import { verifySupabaseJwt } from "./middleware/verifySupabaseJwt";
 import { logger } from "./utils/logger";
+import { testConnection } from "./db/index";
 
 // Import storage helpers and interface
 import { IStorage, setStorage, getStorage, DatabaseStorage } from "./storage";
@@ -40,45 +41,48 @@ export async function comparePasswords(supplied: string, stored: string): Promis
 // Initialize the database and switch to Supabase storage
 export async function initializeDatabase(): Promise<boolean> {
   try {
-    logger.info("Starting database migration...");
-    try {
-      // Создаем хранилище базы данных Supabase
-      logger.info("Creating SupabaseStorage instance...");
-      const dbStorage = new DatabaseStorage();
+    logger.info("Testing database connection...");
+    const isConnected = await testConnection();
 
-      // Обновляем хранилище через сеттер
-      setStorage(dbStorage as unknown as IStorage);
-
-      logger.info("Database migration completed successfully");
-
-      // Проверяем наличие пользователя-администратора
-      logger.info("Starting database seeding...");
-      const adminUsers = await dbStorage.getUsersByRole('admin');
-
-      if (adminUsers.length === 0) {
-        logger.info("No admin user found, creating one...");
-        // Создаем admin пользователя, если его нет
-        const hashedPassword = await hashPassword("admin");
-        await dbStorage.createUser({
-          firstName: "Admin",
-          lastName: "User",
-          email: "admin@example.com",
-          password: hashedPassword,
-          role: "admin"
-        });
-        logger.info("Admin user created successfully");
-      } else {
-        logger.info("Admin user already exists, checking for test users...");
-      }
-
-      logger.info("Database connection successful");
-      return true;
-    } catch (err) {
-      console.error("Error during database migration:", err);
+    if (!isConnected) {
+      logger.error("Failed to connect to the database. Using MemStorage.");
       return false;
     }
+
+    logger.info("Starting database migration...");
+
+    // Создаем хранилище базы данных Supabase
+    logger.info("Creating SupabaseStorage instance...");
+    const dbStorage = new DatabaseStorage();
+
+    // Обновляем хранилище через сеттер
+    setStorage(dbStorage as unknown as IStorage);
+
+    logger.info("Database migration completed successfully");
+
+    // Проверяем наличие пользователя-администратора
+    logger.info("Starting database seeding...");
+    const adminUsers = await dbStorage.getUsersByRole('admin');
+
+    if (adminUsers.length === 0) {
+      logger.info("No admin user found, creating one...");
+      const hashedPassword = await hashPassword("admin");
+      await dbStorage.createUser({
+        firstName: "Admin",
+        lastName: "User",
+        email: "admin@example.com",
+        password: hashedPassword,
+        role: "admin"
+      });
+      logger.info("Admin user created successfully");
+    } else {
+      logger.info("Admin user already exists, checking for test users...");
+    }
+
+    logger.info("Database connection successful");
+    return true;
   } catch (error) {
-    console.error("Failed to initialize database:", error);
+    logger.error("Failed to initialize database:", error);
     return false;
   }
 }
