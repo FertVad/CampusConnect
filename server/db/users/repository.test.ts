@@ -1,6 +1,7 @@
 import assert from 'assert';
 import { UsersRepository } from './repository';
 import * as schema from '@shared/schema';
+import { logger } from '../../utils/logger';
 
 function createFakeDb() {
   const state: any = {};
@@ -40,5 +41,5 @@ const repo = new UsersRepository(fakeDb);
   const authMissing = await repo.authenticate({ email: 'missing@example.com', password: 'pass' });
   assert.strictEqual(authMissing, undefined);
 
-  console.log('UsersRepository tests passed');
+  logger.info('UsersRepository tests passed');
 })();

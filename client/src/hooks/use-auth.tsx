@@ -9,11 +9,12 @@ import { User } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/lib/supabase';
 import { authFetch } from '@/lib/queryClient';
+import { logger } from '@/lib/logger';
 
 // Development only logger
 const devLog = (...args: unknown[]) => {
   if (import.meta.env.DEV) {
-    console.log(...args);
+    logger.info(...args);
   }
 };
 

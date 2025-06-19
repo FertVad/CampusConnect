@@ -25,6 +25,7 @@ import bcrypt from 'bcrypt';
 import fs from 'fs';
 import path from 'path';
 import { log } from '../vite';
+import { logger } from '../utils/logger';
 
 type EducationLevel = (typeof schema.educationLevelEnum.enumValues)[number];
 
@@ -694,7 +695,7 @@ export class SupabaseStorage {
 
   async deleteImportedFile(id: number): Promise<boolean> {
     try {
-      console.log(`Deleting imported file with ID: ${id}`);
+      logger.info(`Deleting imported file with ID: ${id}`);
       
       // First check if the imported file exists
       const file = await this.getImportedFile(id);
@@ -703,19 +704,19 @@ export class SupabaseStorage {
         return false;
       }
       
-      console.log(`Found file: ${file.originalName}, now deleting related schedule items`);
+      logger.info(`Found file: ${file.originalName}, now deleting related schedule items`);
       
       try {
         // First, start a transaction to ensure both operations succeed or fail together
         await db.transaction(async (tx) => {
           // Step 1: Delete all schedule items associated with this imported file
-          console.log(`Deleting schedule items with importedFileId = ${id}`);
+          logger.info(`Deleting schedule items with importedFileId = ${id}`);
           const deleteItemsResult = await tx.delete(schema.scheduleItems)
             .where(eq(schema.scheduleItems.importedFileId, id));
-          console.log(`Successfully deleted ${deleteItemsResult.rowCount || 0} schedule items`);
+          logger.info(`Successfully deleted ${deleteItemsResult.rowCount || 0} schedule items`);
           
           // Step 2: Delete the file record
-          console.log(`Now deleting the imported file record with ID: ${id}`);
+          logger.info(`Now deleting the imported file record with ID: ${id}`);
           const result = await tx.delete(schema.importedFiles)
             .where(eq(schema.importedFiles.id, id));
           
@@ -725,7 +726,7 @@ export class SupabaseStorage {
             throw new Error(`Imported file with ID ${id} not found`);
           }
           
-          console.log(`Successfully deleted imported file record with ID: ${id}`);
+          logger.info(`Successfully deleted imported file record with ID: ${id}`);
         });
         
         // If we reach here, the transaction was successful
@@ -857,7 +858,7 @@ export class SupabaseStorage {
   }
 
   async getCurriculumPlan(id: number): Promise<schema.CurriculumPlan | undefined> {
-    console.log(`SupabaseStorage: Getting curriculum plan with ID: ${id}`);
+    logger.info(`SupabaseStorage: Getting curriculum plan with ID: ${id}`);
     const plans = await db.select().from(schema.curriculumPlans)
       .where(eq(schema.curriculumPlans.id, id));
     

@@ -1,5 +1,6 @@
 import express from 'express'
 import dotenv from 'dotenv'
+import { logger } from './server/utils/logger'
 
 dotenv.config()
 const app = express()
@@ -13,7 +14,7 @@ app.post('/test/create-task', async (req, res) => {
       process.env.SUPABASE_SERVICE_ROLE_KEY // service key для обхода RLS
     )
 
-    console.log('🚀 Попытка создать задачу...')
+    logger.info('🚀 Попытка создать задачу...')
 
     const { data, error } = await supabase
       .from('tasks')
@@ -36,7 +37,7 @@ app.post('/test/create-task', async (req, res) => {
       })
     }
 
-    console.log('✅ Задача создана:', data)
+    logger.info('✅ Задача создана:', data)
     res.json({ success: true, data })
 
   } catch (err) {
@@ -64,7 +65,7 @@ app.get('/test/tasks', async (req, res) => {
 })
 
 app.listen(5051, () => {
-  console.log('🔧 Debug server: http://localhost:5051')
-  console.log('📝 POST /test/create-task - создать задачу')
-  console.log('📋 GET /test/tasks - получить задачи')
+  logger.info('🔧 Debug server: http://localhost:5051')
+  logger.info('📝 POST /test/create-task - создать задачу')
+  logger.info('📋 GET /test/tasks - получить задачи')
 })

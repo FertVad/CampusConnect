@@ -29,7 +29,7 @@ export async function comparePasswords(supplied: string, stored: string): Promis
     }
 
     // Fallback for plain text passwords (legacy/seed data)
-    console.log("Warning: Using plain text password comparison (no hash detected)");
+    logger.warn("Warning: Using plain text password comparison (no hash detected)");
     return supplied === stored;
   } catch (error) {
     console.error("Password comparison error:", error);
@@ -40,23 +40,23 @@ export async function comparePasswords(supplied: string, stored: string): Promis
 // Initialize the database and switch to Supabase storage
 export async function initializeDatabase(): Promise<boolean> {
   try {
-    console.log("Starting database migration...");
+    logger.info("Starting database migration...");
     try {
       // Создаем хранилище базы данных Supabase
-      console.log("Creating SupabaseStorage instance...");
+      logger.info("Creating SupabaseStorage instance...");
       const dbStorage = new DatabaseStorage();
 
       // Обновляем хранилище через сеттер
       setStorage(dbStorage as unknown as IStorage);
 
-      console.log("Database migration completed successfully");
+      logger.info("Database migration completed successfully");
 
       // Проверяем наличие пользователя-администратора
-      console.log("Starting database seeding...");
+      logger.info("Starting database seeding...");
       const adminUsers = await dbStorage.getUsersByRole('admin');
 
       if (adminUsers.length === 0) {
-        console.log("No admin user found, creating one...");
+        logger.info("No admin user found, creating one...");
         // Создаем admin пользователя, если его нет
         const hashedPassword = await hashPassword("admin");
         await dbStorage.createUser({
@@ -66,12 +66,12 @@ export async function initializeDatabase(): Promise<boolean> {
           password: hashedPassword,
           role: "admin"
         });
-        console.log("Admin user created successfully");
+        logger.info("Admin user created successfully");
       } else {
-        console.log("Admin user already exists, checking for test users...");
+        logger.info("Admin user already exists, checking for test users...");
       }
 
-      console.log("Database connection successful");
+      logger.info("Database connection successful");
       return true;
     } catch (err) {
       console.error("Error during database migration:", err);

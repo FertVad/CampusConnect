@@ -11,6 +11,7 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { UseFormReturn } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
+import { logger } from '@/lib/logger';
 import { TaskFormData } from './useTasks';
 import { useEffect } from 'react';
 
@@ -27,11 +28,11 @@ export default function CreateTaskDialog({ open, onOpenChange, form, onSubmit, l
   const { t } = useTranslation();
 
   useEffect(() => {
-    console.log('CreateTaskDialog open state changed:', open);
+    logger.info('CreateTaskDialog open state changed:', open);
   }, [open]);
 
   const handleSubmit = (data: TaskFormData) => {
-    console.log('CreateTaskDialog form submit', data);
+    logger.info('CreateTaskDialog form submit', data);
     onSubmit(data);
   };
 
@@ -40,7 +41,7 @@ export default function CreateTaskDialog({ open, onOpenChange, form, onSubmit, l
       <DialogTrigger asChild>
         <Button
           onClick={() => {
-            console.log('CreateTaskDialog trigger button clicked');
+            logger.info('CreateTaskDialog trigger button clicked');
             onOpenChange(true);
           }}
           type="button"
