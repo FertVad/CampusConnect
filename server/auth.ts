@@ -5,8 +5,8 @@ import { supabase } from "./supabaseClient";
 import { verifySupabaseJwt } from "./middleware/verifySupabaseJwt";
 import { logger } from "./utils/logger";
 
-// Import storage module and IStorage interface
-import { storage, IStorage, setStorage, getStorage, DatabaseStorage } from "./storage";
+// Import storage helpers and interface
+import { IStorage, setStorage, getStorage, DatabaseStorage } from "./storage";
 
 declare global {
   namespace Express {

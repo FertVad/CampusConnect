@@ -1684,5 +1684,3 @@ export const setStorage = (newStorage: IStorage): void => {
   logger.info('Storage implementation has been updated');
 };
 
-// Для обратной совместимости экспортируем ссылку на хранилище
-export const storage = _storage;
