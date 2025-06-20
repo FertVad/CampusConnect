@@ -13,16 +13,24 @@ export function registerUserRoutes(app: Express, { authenticateUser, requireRole
     logger.info('GET /api/users route hit');
 
     if (req.user) {
-      // Проверяем роль из JWT token
-      const userRole = (req.user as any).user_metadata?.role;
-      logger.info(`User role from JWT: ${userRole}`);
+      const user = req.user as any;
+      console.log('getUsers - User role check:', {
+        userId: user.id,
+        email: user.email,
+        userMetadata: user.user_metadata,
+        metadataRole: user.user_metadata?.role,
+        directRole: user.role
+      });
+
+      const userRole = user.user_metadata?.role || user.role;
+      console.log('Final role for authorization:', userRole);
 
       if (userRole !== 'admin') {
-        return res.status(403).json({
-          message: 'Forbidden - Admin access required',
-          yourRole: userRole,
-        });
+        console.log('Access denied for user:', user.email, 'Role:', userRole);
+        return res.status(403).json({ message: 'Forbidden - Admin access required' });
       }
+
+      console.log('Admin access granted for user:', user.email);
 
       try {
         const { data: users, error } = await supabase
