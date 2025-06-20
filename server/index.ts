@@ -2,7 +2,8 @@ import 'dotenv/config';
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
-import { initializeDatabase } from "./auth";
+import { initializeDatabase, authRoutes } from "./auth";
+import { verifySupabaseJwt } from "./middleware/verifySupabaseJwt";
 
 const app = express();
 app.use(express.json());
@@ -61,6 +62,9 @@ app.use((req, res, next) => {
 app.get("/api/health", (_req, res) => {
   res.json({ status: "ok", port: 3001, timestamp: new Date() });
 });
+
+// Requests endpoint used by the front-end
+app.get('/api/requests', verifySupabaseJwt, authRoutes.getRequests);
 
 (async () => {
   try {

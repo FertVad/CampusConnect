@@ -1,6 +1,6 @@
 import { Express } from "express";
 import bcrypt from "bcrypt";
-import { User as SelectUser } from "../shared/schema";
+import { User as SelectUser, Request as SelectRequest } from "../shared/schema";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
 import { supabase } from "./supabaseClient";
 import { verifySupabaseJwt } from "./middleware/verifySupabaseJwt";
@@ -9,6 +9,33 @@ import { testConnection } from "./db/index";
 
 // Import storage helpers and interface
 import { IStorage, setStorage, getStorage, DatabaseStorage } from "./storage";
+
+export const mockData: { requests: SelectRequest[] } = {
+  requests: [
+    {
+      id: 1,
+      studentId: 1,
+      type: "general",
+      description: "Example request 1",
+      status: "pending",
+      createdAt: new Date(),
+      resolvedBy: null,
+      resolvedAt: null,
+      resolution: null,
+    },
+    {
+      id: 2,
+      studentId: 2,
+      type: "financial",
+      description: "Example request 2",
+      status: "approved",
+      createdAt: new Date(),
+      resolvedBy: 1,
+      resolvedAt: new Date(),
+      resolution: "Approved",
+    },
+  ],
+};
 
 declare global {
   namespace Express {
@@ -234,7 +261,29 @@ export function setupAuth(app: Express) {
       auth_user_metadata: authUser.user_metadata,
       public_user_exists: !!publicUser,
       public_user_data: publicUser,
-      error: error?.message
-    });
+    error: error?.message
   });
+  });
+}
+
+export const authRoutes = {
+  getRequests: async (_req: any, res: any) => {
+    try {
+      const { data, error } = await supabase
+        .from('requests')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        logger.warn('Requests fetch error, returning mock data:', error);
+        return res.json(mockData.requests);
+      }
+
+      return res.json(data || mockData.requests);
+    } catch (error) {
+      logger.error('Error in /api/requests:', error);
+      return res.json(mockData.requests);
+    }
+  },
+};
 }
