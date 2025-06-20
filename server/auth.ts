@@ -152,23 +152,30 @@ export function setupAuth(app: Express) {
       try {
         // Получаем всех пользователей и ищем по auth_user_id
         const allUsers = await getStorage().getUsers();
-        const user = allUsers.find(u => (u as any).auth_user_id === req.user.id);
+        const dbUser = allUsers.find(u => (u as any).auth_user_id === req.user.id);
 
-        if (!user) {
+        if (!dbUser) {
           logger.error("User not found in public.users for auth_user_id:", req.user.id);
           return res.status(404).json({ message: "User profile not found" });
         }
 
-        logger.info("Found user profile:", user);
+        logger.info("Found user profile:", dbUser);
 
-        // Не отправляем пароль клиенту
-        const { password, ...userWithoutPassword } = user as any;
+        // Формируем данные пользователя, гарантируя camelCase поля
+        const userData = {
+          id: (dbUser as any).id,
+          firstName: (dbUser as any).first_name ?? (dbUser as any).firstName ?? req.user.user_metadata?.first_name ?? "Пользователь",
+          lastName: (dbUser as any).last_name ?? (dbUser as any).lastName ?? req.user.user_metadata?.last_name ?? "",
+          email: (dbUser as any).email,
+          role: (dbUser as any).role,
+          auth_user_id: (dbUser as any).auth_user_id,
+        };
 
         res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
         res.setHeader('Pragma', 'no-cache');
         res.setHeader('Expires', '0');
 
-        return res.json(userWithoutPassword);
+        return res.json(userData);
       } catch (error) {
         logger.error("Error fetching user profile:", error);
         return res.status(500).json({ message: "Server error" });
