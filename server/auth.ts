@@ -10,7 +10,7 @@ import { testConnection } from "./db/index";
 // Import storage helpers and interface
 import { IStorage, setStorage, getStorage, DatabaseStorage } from "./storage";
 
-export const mockData: { requests: SelectRequest[] } = {
+export const mockData: { requests: SelectRequest[]; users: any[] } = {
   requests: [
     {
       id: 1,
@@ -33,6 +33,35 @@ export const mockData: { requests: SelectRequest[] } = {
       resolvedBy: 1,
       resolvedAt: new Date(),
       resolution: "Approved",
+    },
+  ],
+  users: [
+    {
+      id: 1,
+      first_name: 'petr',
+      last_name: 'petrovich',
+      email: 'petr@example.com',
+      role: 'student',
+      password: 'mock',
+      created_at: new Date(),
+    },
+    {
+      id: 2,
+      first_name: 'Vadim',
+      last_name: 'Fertik',
+      email: 'vadim@example.com',
+      role: 'admin',
+      password: 'mock',
+      created_at: new Date(),
+    },
+    {
+      id: 3,
+      first_name: '',
+      last_name: '',
+      email: 'unknown@example.com',
+      role: 'student',
+      password: 'mock',
+      created_at: new Date(),
     },
   ],
 };

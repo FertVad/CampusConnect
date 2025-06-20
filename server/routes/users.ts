@@ -5,6 +5,7 @@ import { z } from "zod";
 import type { RouteContext } from "./index";
 import { logger } from "../utils/logger";
 import { supabase } from "../supabaseClient";
+import { mockData } from "../auth";
 
 export function registerUserRoutes(app: Express, { authenticateUser, requireRole }: RouteContext) {
   // User Routes
@@ -31,13 +32,28 @@ export function registerUserRoutes(app: Express, { authenticateUser, requireRole
 
         if (error) {
           logger.warn('Users fetch error:', error);
-          return res.json([]);
+          // Форматируем mock пользователей
+          const formattedMockUsers = mockData.users.map(user => ({
+            ...user,
+            name: `${user.first_name || user.name || ''} ${user.last_name || ''}`.trim() || 'Неизвестный пользователь'
+          }));
+          return res.json(formattedMockUsers);
         }
 
-        return res.json(users || []);
+        // Форматируем пользователей - объединяем first_name и last_name в name
+        const formattedUsers = (users || []).map(user => ({
+          ...user,
+          name: `${(user as any).first_name || ''} ${(user as any).last_name || ''}`.trim() || 'Неизвестный пользователь'
+        }));
+
+        return res.json(formattedUsers);
       } catch (error) {
         logger.error('Error in /api/users:', error);
-        return res.json([]);
+        const formattedMockUsers = mockData.users.map(user => ({
+          ...user,
+          name: `${user.first_name || user.name || ''} ${user.last_name || ''}`.trim() || 'Неизвестный пользователь'
+        }));
+        return res.json(formattedMockUsers);
       }
     }
 
