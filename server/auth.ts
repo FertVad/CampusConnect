@@ -1,6 +1,7 @@
 import { Express } from "express";
 import bcrypt from "bcrypt";
 import { User as SelectUser } from "../shared/schema";
+import type { User as SupabaseUser } from "@supabase/supabase-js";
 import { supabase } from "./supabaseClient";
 import { verifySupabaseJwt } from "./middleware/verifySupabaseJwt";
 import { logger } from "./utils/logger";
@@ -11,7 +12,9 @@ import { IStorage, setStorage, getStorage, DatabaseStorage } from "./storage";
 
 declare global {
   namespace Express {
-    interface User extends SelectUser { }
+    interface User extends SelectUser {
+      user_metadata?: SupabaseUser['user_metadata'];
+    }
   }
 }
 
@@ -146,16 +149,16 @@ export function setupAuth(app: Express) {
   app.get("/api/user", verifySupabaseJwt, async (req, res) => {
     logger.info("GET /api/user route hit");
 
-    if (req.user) {
-      logger.info("JWT user ID:", req.user.id);
+      if (req.user) {
+        logger.info("JWT user ID:", req.user!.id);
 
       try {
         // Получаем всех пользователей и ищем по auth_user_id
         const allUsers = await getStorage().getUsers();
-        const dbUser = allUsers.find(u => (u as any).auth_user_id === req.user.id);
+        const dbUser = allUsers.find(u => (u as any).auth_user_id === req.user!.id);
 
         if (!dbUser) {
-          logger.error("User not found in public.users for auth_user_id:", req.user.id);
+          logger.error("User not found in public.users for auth_user_id:", req.user!.id);
           return res.status(404).json({ message: "User profile not found" });
         }
 
@@ -164,8 +167,8 @@ export function setupAuth(app: Express) {
         // Формируем данные пользователя, гарантируя camelCase поля
         const userData = {
           id: (dbUser as any).id,
-          firstName: (dbUser as any).first_name ?? (dbUser as any).firstName ?? req.user.user_metadata?.first_name ?? "Пользователь",
-          lastName: (dbUser as any).last_name ?? (dbUser as any).lastName ?? req.user.user_metadata?.last_name ?? "",
+          firstName: (dbUser as any).first_name ?? (dbUser as any).firstName ?? req.user!.user_metadata?.first_name ?? "Пользователь",
+          lastName: (dbUser as any).last_name ?? (dbUser as any).lastName ?? req.user!.user_metadata?.last_name ?? "",
           email: (dbUser as any).email,
           role: (dbUser as any).role,
           auth_user_id: (dbUser as any).auth_user_id,
