@@ -30,7 +30,15 @@ export function useTasks() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
 
-  const { data: users, isLoading: usersLoading } = useQuery<{ id: number; firstName: string; lastName: string; role: string }[]>({
+  const { data: users, isLoading: usersLoading } = useQuery<{
+    id: number;
+    firstName?: string;
+    lastName?: string;
+    first_name?: string;
+    last_name?: string;
+    name?: string;
+    role: string;
+  }[]>({
     queryKey: [user?.role === 'admin' ? '/api/users' : '/api/users/chat'],
     enabled: !!user,
     staleTime: 1000 * 60 * 5,
