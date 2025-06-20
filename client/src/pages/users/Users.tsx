@@ -257,12 +257,23 @@ export default function Users() {
 
   // Format date for display
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    }).format(date);
+    console.log('formatDate input:', dateString, typeof dateString);
+
+    if (!dateString) {
+      return 'Дата не указана';
+    }
+
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) {
+        console.error('Invalid date:', dateString);
+        return 'Некорректная дата';
+      }
+      return date.toLocaleDateString('ru-RU');
+    } catch (error) {
+      console.error('Date formatting error:', error, dateString);
+      return 'Ошибка даты';
+    }
   };
 
   // Generate pagination controls
