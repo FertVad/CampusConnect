@@ -48,10 +48,48 @@ export default function CreateTaskDialog({ open, onOpenChange, form, onSubmit, l
     });
   }, [users]);
 
-  const handleSubmit = (data: TaskFormData) => {
-    console.log('\u{1F501} Form submit triggered');
-    logger.info('CreateTaskDialog form submit', data);
-    onSubmit(data);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const formData = form.getValues();
+    console.log('📝 Submitting task:', formData);
+
+    // temporary check for API endpoint existence
+    console.log('🔍 Testing API endpoint...');
+    fetch('/api/tasks', { method: 'GET' })
+      .then(res => console.log('API exists, status:', res.status))
+      .catch(err => console.log('API not found:', err));
+
+    try {
+      console.log('🚀 Sending request to /api/tasks');
+
+      const response = await fetch('/api/tasks', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          credentials: 'include',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      console.log('📡 Response status:', response.status);
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('✅ Task created successfully:', result);
+
+        // Закрыть диалог и обновить список
+        onOpenChange(false);
+        if (onSubmit) {
+          onSubmit(formData);
+        }
+      } else {
+        const error = await response.text();
+        console.error('❌ Error response:', error);
+      }
+    } catch (error) {
+      console.error('❌ Network error:', error);
+    }
   };
 
   return (
@@ -73,7 +111,7 @@ export default function CreateTaskDialog({ open, onOpenChange, form, onSubmit, l
           <DialogDescription>{t('task.new_task_description')}</DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <TextField control={form.control} name="title" label={t('task.title')} />
             <TextareaField control={form.control} name="description" label={t('task.description')} />
             <div className="grid grid-cols-2 gap-4">
@@ -151,11 +189,7 @@ export default function CreateTaskDialog({ open, onOpenChange, form, onSubmit, l
               <Button
                 type="submit"
                 disabled={loading || !users || users.length === 0}
-                onClick={e => {
-                  console.log('\u{1F534} Create button clicked');
-                  console.log('Form data:', form.getValues());
-                  form.handleSubmit(handleSubmit)(e);
-                }}
+                onClick={handleSubmit}
               >
                 {t('task.create')}
               </Button>
