@@ -88,4 +88,4 @@ npm run dev:client
 
 The server will automatically use `SupabaseStorage` for all data access.
 
-Note: The API is available at http://localhost:5000.
+Note: The API is available at http://localhost:3001.
