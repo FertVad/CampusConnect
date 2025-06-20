@@ -57,6 +57,10 @@ app.use((req, res, next) => {
   next();
 });
 
+app.get("/api/health", (req, res) => {
+  res.json({ status: "ok", port: 5000, timestamp: new Date() });
+});
+
 (async () => {
   try {
     // Initialize the database before setting up routes
@@ -86,7 +90,7 @@ app.use((req, res, next) => {
     // ALWAYS serve the app on port 5000
     // this serves both the API and the client.
     // It is the only port that is not firewalled.
-    const port = 5050;
+    const port = 5000;
     server.listen({
       port,
       host: "0.0.0.0",
