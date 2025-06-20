@@ -143,21 +143,36 @@ export function setupAuth(app: Express) {
     }
   });
 
-  app.get("/api/user", verifySupabaseJwt, (req, res) => {
+  app.get("/api/user", verifySupabaseJwt, async (req, res) => {
     logger.info("GET /api/user route hit");
 
     if (req.user) {
-      logger.info("Authenticated user:", req.user);
+      logger.info("JWT user ID:", req.user.id);
 
-      // Не отправляем пароль клиенту
-      const { password, ...userWithoutPassword } = req.user as any;
+      try {
+        // Получаем всех пользователей и ищем по auth_user_id
+        const allUsers = await getStorage().getUsers();
+        const user = allUsers.find(u => (u as any).auth_user_id === req.user.id);
 
-      // Устанавливаем заголовки для совместимости с Safari
-      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-      res.setHeader('Pragma', 'no-cache');
-      res.setHeader('Expires', '0');
+        if (!user) {
+          logger.error("User not found in public.users for auth_user_id:", req.user.id);
+          return res.status(404).json({ message: "User profile not found" });
+        }
 
-      return res.json(userWithoutPassword);
+        logger.info("Found user profile:", user);
+
+        // Не отправляем пароль клиенту
+        const { password, ...userWithoutPassword } = user as any;
+
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
+
+        return res.json(userWithoutPassword);
+      } catch (error) {
+        logger.error("Error fetching user profile:", error);
+        return res.status(500).json({ message: "Server error" });
+      }
     }
 
     logger.info("Returning 401 for /api/user - not authenticated");
