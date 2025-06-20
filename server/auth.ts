@@ -149,43 +149,92 @@ export function setupAuth(app: Express) {
   app.get("/api/user", verifySupabaseJwt, async (req, res) => {
     logger.info("GET /api/user route hit");
 
-      if (req.user) {
-        logger.info("JWT user ID:", req.user!.id);
+    if (req.user) {
+      const authUserId = req.user.id;
+      logger.info(`JWT user ID: ${authUserId}`);
 
       try {
-        // Получаем всех пользователей и ищем по auth_user_id
-        const allUsers = await getStorage().getUsers();
-        const dbUser = allUsers.find(u => (u as any).auth_user_id === req.user!.id);
+        // Сначала ищем пользователя в public.users
+        const { data: existingUser, error: fetchError } = await supabase
+          .from("users")
+          .select("*")
+          .eq("auth_user_id", authUserId)
+          .single();
 
-        if (!dbUser) {
-          logger.error("User not found in public.users for auth_user_id:", req.user!.id);
-          return res.status(404).json({ message: "User profile not found" });
+        if (fetchError && fetchError.code !== 'PGRST116') {
+          // PGRST116 = "not found", остальные ошибки логируем
+          logger.error("Error fetching user:", fetchError);
+          return res.status(500).json({ message: "Database error" });
         }
 
-        logger.info("Found user profile:", dbUser);
+        let userData = existingUser as any;
 
-        // Формируем данные пользователя, гарантируя camelCase поля
-        const userData = {
-          id: (dbUser as any).id,
-          firstName: (dbUser as any).first_name ?? (dbUser as any).firstName ?? req.user!.user_metadata?.first_name ?? "Пользователь",
-          lastName: (dbUser as any).last_name ?? (dbUser as any).lastName ?? req.user!.user_metadata?.last_name ?? "",
-          email: (dbUser as any).email,
-          role: (dbUser as any).role,
-          auth_user_id: (dbUser as any).auth_user_id,
-        };
+        // Если пользователь не найден - создаем из auth данных
+        if (!userData) {
+          logger.info("User not found in public.users, creating from auth data");
 
-        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-        res.setHeader('Pragma', 'no-cache');
-        res.setHeader('Expires', '0');
+          const { data: newUser, error: insertError } = await supabase
+            .from("users")
+            .insert({
+              auth_user_id: req.user.id,
+              first_name: req.user.user_metadata?.first_name || 'Unknown',
+              last_name: req.user.user_metadata?.last_name || 'User',
+              email: req.user.email,
+              role: req.user.user_metadata?.role || 'student',
+              password: 'supabase_managed'
+            })
+            .select()
+            .single();
 
-        return res.json(userData);
+          if (insertError) {
+            logger.error("Error creating user:", insertError);
+            return res.status(500).json({ message: "Failed to create user profile" });
+          }
+
+          userData = newUser as any;
+          logger.info("Successfully created user in public.users");
+        }
+
+        // Возвращаем данные пользователя
+        return res.json({
+          id: userData.auth_user_id,
+          firstName: userData.first_name,
+          lastName: userData.last_name,
+          email: userData.email,
+          role: userData.role,
+        });
+
       } catch (error) {
-        logger.error("Error fetching user profile:", error);
-        return res.status(500).json({ message: "Server error" });
+        logger.error("Unexpected error in /api/user:", error);
+        return res.status(500).json({ message: "Internal server error" });
       }
     }
 
     logger.info("Returning 401 for /api/user - not authenticated");
     return res.status(401).json({ message: "Not authenticated" });
+  });
+
+  app.get("/api/debug/user-sync", verifySupabaseJwt, async (req, res) => {
+    if (!req.user) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+
+    const authUser = req.user;
+
+    const { data: publicUser, error } = await supabase
+      .from("users")
+      .select("*")
+      .eq("auth_user_id", authUser.id)
+      .single();
+
+    res.json({
+      auth_user_exists: !!authUser,
+      auth_user_id: authUser.id,
+      auth_user_email: authUser.email,
+      auth_user_metadata: authUser.user_metadata,
+      public_user_exists: !!publicUser,
+      public_user_data: publicUser,
+      error: error?.message
+    });
   });
 }
