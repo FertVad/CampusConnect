@@ -151,9 +151,10 @@ export default function CreateTaskDialog({ open, onOpenChange, form, onSubmit, l
               <Button
                 type="submit"
                 disabled={loading || !users || users.length === 0}
-                onClick={() => {
+                onClick={e => {
                   console.log('\u{1F534} Create button clicked');
                   console.log('Form data:', form.getValues());
+                  form.handleSubmit(handleSubmit)(e);
                 }}
               >
                 {t('task.create')}
