@@ -21,7 +21,17 @@ interface Props {
   form: UseFormReturn<TaskFormData>;
   onSubmit: (data: TaskFormData) => void;
   loading: boolean;
-  users: { id: number; firstName: string; lastName: string; role: string }[] | undefined;
+  users:
+    | {
+        id: number;
+        firstName?: string;
+        lastName?: string;
+        first_name?: string;
+        last_name?: string;
+        name?: string;
+        role: string;
+      }[]
+    | undefined;
 }
 
 export default function CreateTaskDialog({ open, onOpenChange, form, onSubmit, loading, users }: Props) {
@@ -31,7 +41,15 @@ export default function CreateTaskDialog({ open, onOpenChange, form, onSubmit, l
     logger.info('CreateTaskDialog open state changed:', open);
   }, [open]);
 
+  useEffect(() => {
+    console.log('\u{1F465} Users for dropdown:', users);
+    users?.forEach(user => {
+      console.log('User:', user.name, user.first_name, user.last_name, user.role);
+    });
+  }, [users]);
+
   const handleSubmit = (data: TaskFormData) => {
+    console.log('\u{1F501} Form submit triggered');
     logger.info('CreateTaskDialog form submit', data);
     onSubmit(data);
   };
@@ -89,7 +107,7 @@ export default function CreateTaskDialog({ open, onOpenChange, form, onSubmit, l
               placeholder={t('task.select_assignee')}
               options={(users || []).map(u => ({
                 value: u.id,
-                label: `${u.firstName} ${u.lastName} (${t(`role.${u.role}`)})`,
+                label: `${u.name || `${u.first_name ?? u.firstName ?? ''} ${u.last_name ?? u.lastName ?? ''}`.trim()} (${u.role})`,
               }))}
             />
             {!users || users.length === 0 ? (
@@ -133,6 +151,10 @@ export default function CreateTaskDialog({ open, onOpenChange, form, onSubmit, l
               <Button
                 type="submit"
                 disabled={loading || !users || users.length === 0}
+                onClick={() => {
+                  console.log('\u{1F534} Create button clicked');
+                  console.log('Form data:', form.getValues());
+                }}
               >
                 {t('task.create')}
               </Button>
