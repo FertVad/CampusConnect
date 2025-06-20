@@ -32,6 +32,8 @@ import { registerUserRoutes } from "./users";
 import { registerScheduleRoutes } from "./schedule";
 import { registerTaskRoutes } from "./tasks";
 
+import { supabase } from "../supabaseClient";
+
 import { registerAssignmentRoutes } from "./assignments";
 import { registerMessageRoutes } from "./messages";
 import { registerRequestRoutes } from "./requests";
@@ -214,6 +216,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // registerDocumentRoutes(app, ctx);
   // registerActivityLogRoutes(app, ctx);
   // registerCurriculumRoutes(app, ctx);
+
+  // Lightweight Supabase-based endpoints
+  app.get('/api/requests', authenticateUser, async (req, res) => {
+    logger.info('GET /api/requests route hit');
+
+    if (req.user) {
+      try {
+        const { data: requests, error } = await supabase
+          .from('requests')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          logger.warn('Requests fetch error, returning empty array:', error);
+          return res.json([]);
+        }
+
+        return res.json(requests || []);
+      } catch (error) {
+        logger.error('Error in /api/requests:', error);
+        return res.json([]);
+      }
+    }
+
+    return res.status(401).json({ message: 'Not authenticated' });
+  });
+
+  app.get('/api/debug/permissions', authenticateUser, async (req, res) => {
+    if (!req.user) {
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
+
+    res.json({
+      user_id: req.user.id,
+      email: req.user.email,
+      role_from_jwt: (req.user as any).user_metadata?.role,
+      app_metadata: (req.user as any).app_metadata,
+      user_metadata: (req.user as any).user_metadata,
+      permissions: {
+        can_access_users: (req.user as any).user_metadata?.role === 'admin',
+        can_create_requests: true,
+        can_view_subjects: true,
+      },
+    });
+  });
 
   // Handle unknown /api routes with JSON 404
   app.use('/api', (_req, res) => {

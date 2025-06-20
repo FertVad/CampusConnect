@@ -4,17 +4,45 @@ import { insertUserSchema } from "@shared/schema";
 import { z } from "zod";
 import type { RouteContext } from "./index";
 import { logger } from "../utils/logger";
+import { supabase } from "../supabaseClient";
 
 export function registerUserRoutes(app: Express, { authenticateUser, requireRole }: RouteContext) {
-// User Routes
-app.get('/api/users', authenticateUser, requireRole(['admin']), async (req, res) => {
-  try {
-    const users = await getStorage().getUsers();
-    res.json(users);
-  } catch (error) {
-    res.status(500).json({ message: "Server error" });
-  }
-});
+  // User Routes
+  app.get('/api/users', authenticateUser, async (req, res) => {
+    logger.info('GET /api/users route hit');
+
+    if (req.user) {
+      // Проверяем роль из JWT token
+      const userRole = (req.user as any).user_metadata?.role;
+      logger.info(`User role from JWT: ${userRole}`);
+
+      if (userRole !== 'admin') {
+        return res.status(403).json({
+          message: 'Forbidden - Admin access required',
+          yourRole: userRole,
+        });
+      }
+
+      try {
+        const { data: users, error } = await supabase
+          .from('users')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          logger.warn('Users fetch error:', error);
+          return res.json([]);
+        }
+
+        return res.json(users || []);
+      } catch (error) {
+        logger.error('Error in /api/users:', error);
+        return res.json([]);
+      }
+    }
+
+    return res.status(401).json({ message: 'Not authenticated' });
+  });
 
 app.get('/api/users/:id', authenticateUser, async (req, res) => {
   try {
