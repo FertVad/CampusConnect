@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
-import { apiRequest } from '@/lib/queryClient';
+import { apiRequest, authFetch } from '@/lib/queryClient';
 import { useLocation } from 'wouter';
 import { useTranslation } from 'react-i18next';
 
@@ -97,13 +97,40 @@ export default function Users() {
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
+  // Debuggable fetch function for users
+  const fetchUsers = async () => {
+    try {
+      console.log('\uD83D\uDD04 Starting to fetch users...');
+      const response = await authFetch('/api/users', {
+        credentials: 'include',
+      });
+
+      console.log('\uD83D\uDCE1 Response received:', response.status, response.ok);
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log('\uD83D\uDCE6 Users data received:', data);
+      console.log('\uD83D\uDCE6 Number of users:', data.length);
+      return data;
+    } catch (error) {
+      console.error('\u274C Error in fetchUsers:', error);
+      throw error;
+    }
+  };
+
   // Fetch users
   const { data: users = [], isLoading, error } = useQuery({
     queryKey: ['/api/users'],
-    queryFn: async () => {
-      return await apiRequest('/api/users') as User[];
-    }
+    queryFn: fetchUsers
   });
+
+  // Log whenever the users data changes
+  useEffect(() => {
+    console.log('\uD83D\uDC65 Users state changed:', users);
+  }, [users]);
 
   // Create user mutation
   const createUserMutation = useMutation({
