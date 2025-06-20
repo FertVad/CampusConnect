@@ -57,8 +57,9 @@ app.use((req, res, next) => {
   next();
 });
 
-app.get("/api/health", (req, res) => {
-  res.json({ status: "ok", port: 5000, timestamp: new Date() });
+// health check endpoint used by deployment scripts
+app.get("/api/health", (_req, res) => {
+  res.json({ status: "ok", port: 3001, timestamp: new Date() });
 });
 
 (async () => {
@@ -87,10 +88,10 @@ app.get("/api/health", (req, res) => {
       serveStatic(app);
     }
 
-    // ALWAYS serve the app on port 5000
-    // this serves both the API and the client.
-    // It is the only port that is not firewalled.
-    const port = 5000;
+  // ALWAYS serve the app on port 3001
+  // this serves both the API and the client.
+  // It avoids conflicts with macOS ControlCenter
+  const port = 3001;
     server.listen({
       port,
       host: "0.0.0.0",

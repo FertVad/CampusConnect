@@ -37,7 +37,7 @@ export default defineConfig({
     proxy: {
       // Прокидываем API-запросы на бэкенд
       '/api': {
-        target: 'http://localhost:5000',
+        target: 'http://localhost:3001',
         changeOrigin: true,
       },
       // Можно добавить любые другие эндпоинты
