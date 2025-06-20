@@ -218,30 +218,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // registerCurriculumRoutes(app, ctx);
 
   // Lightweight Supabase-based endpoints
-  app.get('/api/requests', authenticateUser, async (req, res) => {
-    logger.info('GET /api/requests route hit');
-
-    if (req.user) {
-      try {
-        const { data: requests, error } = await supabase
-          .from('requests')
-          .select('*')
-          .order('created_at', { ascending: false });
-
-        if (error) {
-          logger.warn('Requests fetch error, returning empty array:', error);
-          return res.json([]);
-        }
-
-        return res.json(requests || []);
-      } catch (error) {
-        logger.error('Error in /api/requests:', error);
-        return res.json([]);
-      }
-    }
-
-    return res.status(401).json({ message: 'Not authenticated' });
-  });
 
   app.get('/api/debug/permissions', authenticateUser, async (req, res) => {
     if (!req.user) {
