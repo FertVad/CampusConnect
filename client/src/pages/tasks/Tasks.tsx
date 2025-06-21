@@ -18,6 +18,7 @@ const TasksPage = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  console.log('🟢 Tasks.tsx: Component rendered');
   const {
     tasks,
     tasksLoading,
@@ -32,6 +33,15 @@ const TasksPage = () => {
     updateTaskMutation,
     deleteTaskMutation,
   } = useTasks();
+  console.log('🟢 Tasks.tsx: createTask available:', !!createTask);
+
+  const handleCreateTask = (data: TaskFormData) => {
+    console.log('🟢 Tasks.tsx: handleCreateTask called with:', data);
+    createTask(data);
+    console.log('🟢 Tasks.tsx: createTask called');
+  };
+
+  console.log('🟢 Tasks.tsx: handleCreateTask defined:', !!handleCreateTask);
 
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -78,12 +88,6 @@ const TasksPage = () => {
   const onEditSubmit = (data: TaskFormData) => {
     if (!currentTask) return;
     editTask(currentTask.id, data);
-  };
-
-  const handleCreateTask = (data: TaskFormData) => {
-    console.log('🟢 Tasks.tsx: handleCreateTask called with:', data);
-    createTask(data);
-    console.log('🟢 Tasks.tsx: createTask called');
   };
 
 
