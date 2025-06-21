@@ -11,7 +11,7 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { UseFormReturn } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import { TaskFormData } from './useTasks';
+import { TaskFormData, type UserSummary } from './useTasks';
 
 interface Props {
   open: boolean;
@@ -19,7 +19,7 @@ interface Props {
   form: UseFormReturn<TaskFormData>;
   onSubmit: (data: TaskFormData) => void;
   loading: boolean;
-  users: { id: number; firstName: string; lastName: string; role: string }[] | undefined;
+  users: UserSummary[] | undefined;
 }
 
 export default function EditTaskDialog({ open, onOpenChange, form, onSubmit, loading, users }: Props) {

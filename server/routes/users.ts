@@ -15,13 +15,6 @@ export function registerUserRoutes(app: Express, { authenticateUser, requireRole
   app.get('/api/users', authenticateUser, async (req, res) => {
     logger.info('GET /api/users route hit');
 
-    // Detailed debug logging for troubleshooting role checks
-    console.log('=== getUsers function called ===');
-    console.log('User object:', JSON.stringify(req.user, null, 2));
-    console.log('User metadata:', req.user?.user_metadata);
-    console.log('User role from metadata:', req.user?.user_metadata?.role);
-    console.log('================================');
-
     if (!req.user) {
       return res.status(401).json({ message: 'Not authenticated' });
     }
@@ -42,7 +35,6 @@ export function registerUserRoutes(app: Express, { authenticateUser, requireRole
         .from(schema.users)
         .orderBy(schema.users.firstName, schema.users.lastName);
 
-      console.log('Users for dropdown:', users);
       return res.json(users);
     } catch (error) {
       logger.error('Error in /api/users:', error);

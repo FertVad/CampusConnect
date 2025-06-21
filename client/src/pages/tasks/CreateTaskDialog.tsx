@@ -11,121 +11,30 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { UseFormReturn } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import { logger } from '@/lib/logger';
-import { TaskFormData } from './useTasks';
-import { useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
-import { useAuth } from '@/hooks/use-auth';
-import { useToast } from '@/hooks/use-toast';
+import { TaskFormData, type UserSummary } from './useTasks';
 
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   form: UseFormReturn<TaskFormData>;
   loading: boolean;
-  users:
-    | {
-        id: number;
-        firstName?: string;
-        lastName?: string;
-        first_name?: string;
-        last_name?: string;
-        name?: string;
-        role: string;
-      }[]
-    | undefined;
+  users: UserSummary[] | undefined;
   onSubmit?: (data: TaskFormData) => void;
-  onTaskCreated?: () => void;
 }
 
-export default function CreateTaskDialog({ open, onOpenChange, form, loading, users, onSubmit, onTaskCreated }: Props) {
+export default function CreateTaskDialog({ open, onOpenChange, form, loading, users, onSubmit }: Props) {
   const { t } = useTranslation();
-  const { user } = useAuth();
-  const { toast } = useToast();
 
-  useEffect(() => {
-    logger.info('CreateTaskDialog open state changed:', open);
-  }, [open]);
 
-  useEffect(() => {
-    console.log('\u{1F465} Users for dropdown:', users);
-    users?.forEach(user => {
-      console.log('User:', user.name, user.first_name, user.last_name, user.role);
-    });
-  }, [users]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    const formData = form.getValues();
-    const taskData = {
-      title: formData.title,
-      description: formData.description,
-      status: formData.status,
-      priority: formData.priority,
-      executorId: formData.executorId,
-      dueDate: formData.dueDate,
-      clientId: user?.publicId as number,
-    };
-
-    try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      if (!session) {
-        toast({
-          title: t('task.error_creating'),
-          description: t('errors.unauthorized'),
-          variant: 'destructive',
-        });
-        return;
-      }
-
-      const response = await fetch('/api/tasks', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify(taskData),
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        toast({
-          title: t('task.error_creating'),
-          description: errorText || t('task.try_again'),
-          variant: 'destructive',
-        });
-        return;
-      }
-
-      await response.json();
-
-      toast({
-        title: t('task.created_success'),
-        description: t('task.created_description'),
-      });
-
-      onOpenChange(false);
-      form.reset();
-      onTaskCreated?.();
-    } catch (error) {
-      toast({
-        title: t('task.error_creating'),
-        description: String(error),
-        variant: 'destructive',
-      });
-    }
-  };
+  const handleSubmit = form.handleSubmit(data => {
+    onSubmit?.(data);
+  });
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
         <Button
           onClick={() => {
-            logger.info('CreateTaskDialog trigger button clicked');
             onOpenChange(true);
           }}
           type="button"
@@ -173,7 +82,7 @@ export default function CreateTaskDialog({ open, onOpenChange, form, loading, us
               placeholder={t('task.select_assignee')}
               options={(users || []).map(u => ({
                 value: u.id,
-                label: `${u.name || `${u.first_name ?? u.firstName ?? ''} ${u.last_name ?? u.lastName ?? ''}`.trim()} (${u.role})`,
+                label: `${u.firstName} ${u.lastName} (${t(`role.${u.role}`)})`,
               }))}
             />
             {!users || users.length === 0 ? (

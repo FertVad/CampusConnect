@@ -84,11 +84,6 @@ const TasksPage = () => {
     createTask(data);
   };
 
-  const handleTaskCreated = () => {
-    queryClient.invalidateQueries({ queryKey: ['/api/tasks'] });
-    setCreateDialogOpen(false);
-    form.reset();
-  };
 
   useEffect(() => {
     if (createTaskMutation.isSuccess) {
@@ -122,7 +117,7 @@ const TasksPage = () => {
           form={form}
           loading={createTaskMutation.isPending}
           users={users}
-          onTaskCreated={handleTaskCreated}
+          onSubmit={onSubmit}
         />
       </div>
 
