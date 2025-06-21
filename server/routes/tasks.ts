@@ -161,8 +161,7 @@ app.post('/api/tasks', authenticateUser, async (req, res) => {
 
     const { id: userId, role: userRole } = await getDbUserBySupabaseUser(req.user!);
 
-    console.log('User mapping debug:', {
-      supabaseId: req.user!.id,
+    logger.info('User permissions check:', {
       email: req.user!.email,
       dbUserId: userId,
       dbUserRole: userRole,
@@ -224,21 +223,15 @@ app.delete('/api/tasks/:id', authenticateUser, async (req, res) => {
     }
     
     const { id: userId, role: userRole } = await getDbUserBySupabaseUser(req.user!);
-    const taskClientId = task.clientId;
-    const taskExecutorId = task.executorId;
-    const isAdmin = userRole === 'admin';
-    const isCreator = taskClientId === userId;
-    const isExecutor = taskExecutorId === userId;
-    const canDelete = isAdmin || isCreator;
+    const canDelete = userRole === 'admin' || task.clientId === userId;
 
-    console.log('User mapping debug:', {
-      supabaseId: req.user!.id,
+    logger.info('User permissions check:', {
       email: req.user!.email,
       dbUserId: userId,
       dbUserRole: userRole,
-      taskClientId,
-      taskExecutorId,
-      permissions: { canDelete }
+      taskId: task.id,
+      taskClientId: task.clientId,
+      canDelete
     });
 
     if (!canDelete) {
@@ -248,7 +241,7 @@ app.delete('/api/tasks/:id', authenticateUser, async (req, res) => {
           taskId: task.id,
           userId,
           userRole,
-          taskClientId,
+          taskClientId: task.clientId,
           canDelete
         }
       });
@@ -300,18 +293,18 @@ app.put('/api/tasks/:id', authenticateUser, async (req, res) => {
     const isAdmin = userRole === 'admin';
     const isCreator = task.clientId === userId;
     const isExecutor = task.executorId === userId;
+    const canEdit = isAdmin || isCreator || isExecutor;
 
-    console.log('User mapping debug:', {
-      supabaseId: req.user!.id,
+    logger.info('User permissions check:', {
       email: req.user!.email,
       dbUserId: userId,
       dbUserRole: userRole,
+      taskId: task.id,
       taskClientId: task.clientId,
-      taskExecutorId: task.executorId,
-      permissions: { isAdmin, isCreator, isExecutor }
+      canEdit
     });
 
-    if (!isAdmin && !isCreator) {
+    if (!canEdit) {
       if (isExecutor && Object.keys(req.body).length === 1 && 'status' in req.body) {
         // Executor can only update status
       } else {
