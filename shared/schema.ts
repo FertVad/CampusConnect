@@ -133,6 +133,7 @@ export const notifications = pgTable("notifications", {
   userId: integer("user_id").references(() => users.id).notNull(),
   title: text("title").notNull(),
   content: text("content").notNull(),
+  type: text("type").default('system').notNull(),
   isRead: boolean("is_read").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   relatedId: integer("related_id"),

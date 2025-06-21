@@ -5,6 +5,7 @@ import { z } from "zod";
 import type { RouteContext } from "./index";
 import { logger } from "../utils/logger";
 import { getDbUserBySupabaseUser } from "../utils/userMapping";
+import { NotificationService } from "../services/NotificationService";
 
 export function registerTaskRoutes(app: Express, { authenticateUser, requireRole }: RouteContext) {
 // Tasks Routes
@@ -345,56 +346,28 @@ app.put('/api/tasks/:id', authenticateUser, async (req, res) => {
     
     const updatedTask = await getStorage().updateTask(taskId, taskData);
     
-    // Создаем уведомление о обновлении задачи
-    if (task.status !== taskData.status && taskData.status) {
-      // Специальное уведомление для завершенных задач
-      if (taskData.status === 'completed') {
-        // Уведомляем клиента о завершении задачи
-        await getStorage().createNotification({
-          userId: task.clientId,
-          title: "Task Completed",
-          content: `Task "${task.title}" has been marked as completed`,
-          relatedId: task.id,
-          relatedType: "task"
-        });
-        
-        // Уведомление для администраторов
-        const admins = await getStorage().getUsersByRole('admin');
-        for (const admin of admins) {
-          // Не отправляем уведомление админу, если он уже является клиентом или исполнителем задачи
-          if (admin.id !== task.clientId && admin.id !== task.executorId) {
-            await getStorage().createNotification({
-              userId: admin.id,
-              title: "Task Completed",
-              content: `Task "${task.title}" has been marked as completed`,
-              relatedId: task.id,
-              relatedType: "task"
-            });
-          }
-        }
-      } else {
-        // Обычное уведомление об изменении статуса
-        // Уведомляем клиента, если исполнитель обновил статус
-        if (userId === task.executorId) {
-          await getStorage().createNotification({
-            userId: task.clientId,
-            title: "Task Status Updated",
-            content: `Status of task "${task.title}" has been updated to ${taskData.status}`,
-            relatedId: task.id,
-            relatedType: "task"
-          });
-        } 
-        // Уведомляем исполнителя, если клиент обновил статус
-        else if (userId === task.clientId) {
-          await getStorage().createNotification({
-            userId: task.executorId,
-            title: "Task Status Updated",
-            content: `Status of task "${task.title}" has been updated to ${taskData.status}`,
-            relatedId: task.id,
-            relatedType: "task"
-          });
-        }
-      }
+    // Создание уведомления при изменении статуса
+    if (taskData.status && taskData.status !== task.status) {
+      const statusMessages = {
+        pending: 'Task moved to pending',
+        in_progress: 'Task started and is now in progress',
+        completed: 'Task completed successfully',
+        on_hold: 'Task put on hold',
+        cancelled: 'Task cancelled'
+      } as const;
+
+      const notificationTitle = statusMessages[taskData.status as keyof typeof statusMessages] || 'Task status updated';
+
+      await NotificationService.createNotification({
+        userId: task.clientId,
+        title: notificationTitle,
+        message: `Task "${task.title}" status changed from "${task.status}" to "${taskData.status}"`,
+        type: 'task_update',
+        relatedId: taskId,
+        relatedType: 'task'
+      });
+
+      console.log(`[INFO] Notification created for task ${taskId} status change: ${task.status} -> ${taskData.status}`);
     }
     
     res.json(updatedTask);
@@ -540,19 +513,28 @@ app.patch('/api/tasks/:id/status', authenticateUser, async (req, res) => {
     // Обновляем статус задачи
     const updatedTask = await getStorage().updateTask(taskId, { status });
     
-    // Создаем уведомление о смене статуса задачи
-    if (status === 'completed' && task.clientId) {
-      // Уведомление для клиента о выполнении задачи
-      await getStorage().createNotification({
+    // Создаем уведомление при изменении статуса задачи
+    if (status && status !== task.status) {
+      const statusMessages = {
+        pending: 'Task moved to pending',
+        in_progress: 'Task started and is now in progress',
+        completed: 'Task completed successfully',
+        on_hold: 'Task put on hold',
+        cancelled: 'Task cancelled'
+      } as const;
+
+      const notificationTitle = statusMessages[status as keyof typeof statusMessages] || 'Task status updated';
+
+      await NotificationService.createNotification({
         userId: task.clientId,
-        title: "Задача выполнена",
-        content: `Задача "${task.title}" отмечена как выполненная.`,
-        isRead: false,
+        title: notificationTitle,
+        message: `Task "${task.title}" status changed from "${task.status}" to "${status}"`,
+        type: 'task_update',
         relatedId: taskId,
         relatedType: 'task'
       });
-      
-      logger.info(`DB: Created notification for user ${task.clientId}`);
+
+      console.log(`[INFO] Notification created for task ${taskId} status change: ${task.status} -> ${status}`);
     }
     
     res.json(updatedTask);

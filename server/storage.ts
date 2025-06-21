@@ -919,14 +919,16 @@ export class MemStorage implements IStorage {
       // Convert undefined to null for optional fields
       const relatedId = notificationData.relatedId !== undefined ? notificationData.relatedId : null;
       const relatedType = notificationData.relatedType !== undefined ? notificationData.relatedType : null;
+      const type = notificationData.type ?? 'system';
       
-      const notification: Notification = { 
-        ...notificationData, 
+      const notification: Notification = {
+        ...notificationData,
         id,
         createdAt,
         isRead: false,
         relatedId,
-        relatedType
+        relatedType,
+        type
       };
       
       this.notifications.set(id, notification);

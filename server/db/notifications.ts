@@ -36,7 +36,11 @@ export async function getUnreadNotificationsByUser(userId: number): Promise<Noti
 
 export async function createNotification(notificationData: InsertNotification): Promise<Notification> {
   const [notification] = await db.insert(schema.notifications)
-    .values({ ...notificationData, isRead: false })
+    .values({
+      ...notificationData,
+      isRead: false,
+      createdAt: new Date(),
+    })
     .returning();
   return notification;
 }
