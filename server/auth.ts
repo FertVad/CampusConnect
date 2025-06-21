@@ -4,6 +4,7 @@ import { User as SelectUser, Request as SelectRequest } from "../shared/schema";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
 import { supabase } from "./supabaseClient";
 import { verifySupabaseJwt } from "./middleware/verifySupabaseJwt";
+import type { AuthenticatedUser } from "./types/auth";
 import { logger } from "./utils/logger";
 import { testConnection } from "./db/index";
 
@@ -68,9 +69,7 @@ export const mockData: { requests: SelectRequest[]; users: any[] } = {
 
 declare global {
   namespace Express {
-    interface User extends SelectUser {
-      user_metadata?: SupabaseUser['user_metadata'];
-    }
+    interface User extends AuthenticatedUser {}
   }
 }
 
@@ -204,71 +203,22 @@ export function setupAuth(app: Express) {
 
   app.get("/api/user", verifySupabaseJwt, async (req, res) => {
     logger.info("GET /api/user route hit");
+    logger.info("JWT user ID:", req.user!.id);
 
-    if (req.user) {
-      const authUserId = req.user.id;
-      logger.info(`JWT user ID: ${authUserId}`);
-
-      try {
-        // Сначала ищем пользователя в public.users
-        const { data: existingUser, error: fetchError } = await supabase
-          .from("users")
-          .select("*")
-          .eq("auth_user_id", authUserId)
-          .single();
-
-        if (fetchError && fetchError.code !== 'PGRST116') {
-          // PGRST116 = "not found", остальные ошибки логируем
-          logger.error("Error fetching user:", fetchError);
-          return res.status(500).json({ message: "Database error" });
-        }
-
-        let userData = existingUser as any;
-
-        // Если пользователь не найден - создаем из auth данных
-        if (!userData) {
-          logger.info("User not found in public.users, creating from auth data");
-
-          const { data: newUser, error: insertError } = await supabase
-            .from("users")
-            .insert({
-              auth_user_id: req.user.id,
-              first_name: req.user.user_metadata?.first_name || 'Unknown',
-              last_name: req.user.user_metadata?.last_name || 'User',
-              email: req.user.email,
-              role: req.user.user_metadata?.role || 'student',
-              password: 'supabase_managed'
-            })
-            .select()
-            .single();
-
-          if (insertError) {
-            logger.error("Error creating user:", insertError);
-            return res.status(500).json({ message: "Failed to create user profile" });
-          }
-
-          userData = newUser as any;
-          logger.info("Successfully created user in public.users");
-        }
-
-        // Возвращаем данные пользователя
-        return res.json({
-          id: userData.auth_user_id, // UUID из таблицы auth.users
-          publicId: userData.id, // числовой ID из public.users
-          firstName: userData.first_name,
-          lastName: userData.last_name,
-          email: userData.email,
-          role: userData.role,
-        });
-
-      } catch (error) {
-        logger.error("Unexpected error in /api/user:", error);
-        return res.status(500).json({ message: "Internal server error" });
-      }
+    if (!req.user) {
+      return res.status(401).json({ message: "Not authenticated" });
     }
 
-    logger.info("Returning 401 for /api/user - not authenticated");
-    return res.status(401).json({ message: "Not authenticated" });
+    const responseUser = {
+      id: req.user.id,
+      publicId: req.user.publicId,
+      email: req.user.email,
+      firstName: req.user.firstName,
+      lastName: req.user.lastName,
+      role: req.user.role,
+    };
+
+    res.json(responseUser);
   });
 
   app.get("/api/debug/user-sync", verifySupabaseJwt, async (req, res) => {

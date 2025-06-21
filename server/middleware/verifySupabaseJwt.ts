@@ -1,6 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import { createClient } from '@supabase/supabase-js';
 import { logger } from '../utils/logger';
+import { getDbUserBySupabaseUser } from '../utils/userMapping';
+import type { AuthenticatedUser } from '../types/auth';
 
 const SUPABASE_URL = process.env.SUPABASE_URL || '';
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || '';
@@ -40,7 +42,18 @@ export async function verifySupabaseJwt(req: Request, res: Response, next: NextF
       return res.status(401).json({ message: 'Unauthorized' });
     }
 
-    (req as any).user = data.user;
+    const dbUser = await getDbUserBySupabaseUser(data.user);
+
+    const mergedUser: AuthenticatedUser = {
+      id: data.user.id,
+      email: data.user.email || '',
+      publicId: dbUser.id,
+      firstName: dbUser.firstName,
+      lastName: dbUser.lastName,
+      role: dbUser.role,
+    };
+
+    (req as any).user = mergedUser;
     next();
   } catch (err) {
     next(err);

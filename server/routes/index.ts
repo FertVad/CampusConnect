@@ -42,9 +42,11 @@ import { registerNotificationRoutes } from "./notifications";
 import { registerActivityLogRoutes } from "./activityLogs";
 import { registerCurriculumRoutes } from "./curriculum";
 import { verifySupabaseJwt } from "../middleware/verifySupabaseJwt";
+import { requireRole } from "../middleware/requireRole";
+import type { AuthenticatedUser } from "../types/auth";
 // Extend the Express Request interface
 interface Request extends ExpressRequest {
-  user?: User;
+  user?: AuthenticatedUser;
 }
 
 // Set up file upload storage
@@ -75,20 +77,6 @@ export interface RouteContext {
 
 const authenticateUser = verifySupabaseJwt;
 
-// Role check middleware
-const requireRole = (roles: string[]) => {
-  return (req: Request, res: Response, next: NextFunction) => {
-    if (!req.user) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
-    
-    if (!roles.includes(req.user!.role)) {
-      return res.status(403).json({ message: "Forbidden - Insufficient permissions" });
-    }
-    
-    next();
-  };
-};
 
 // Вспомогательная функция для получения ID преподавателя по умолчанию
 async function getDefaultTeacherId(): Promise<number> {
@@ -250,7 +238,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 declare global {
   namespace Express {
     interface Request {
-      user?: User;
+      user?: AuthenticatedUser;
     }
   }
 }

@@ -6,6 +6,9 @@ import {
   useQueryClient
 } from "@tanstack/react-query";
 
+// Строгие типы ролей
+export type UserRole = 'admin' | 'teacher' | 'student';
+
 // Тип пользователя, возвращаемого эндпоинтом /api/user
 export interface AuthUser {
   id: string; // UUID из auth.users
@@ -13,7 +16,7 @@ export interface AuthUser {
   firstName: string;
   lastName: string;
   email: string;
-  role: string;
+  role: UserRole;
 }
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/lib/supabase';
