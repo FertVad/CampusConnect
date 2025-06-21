@@ -156,19 +156,31 @@ app.post('/api/tasks', authenticateUser, async (req, res) => {
     logger.info('🔍 AUTH DEBUG - req.user:', req.user);
     logger.info('🔍 AUTH DEBUG - req.user.id:', req.user?.id);
     logger.info('🔍 AUTH DEBUG - req.user.role:', req.user?.role);
+
+    // Получить пользователя из базы данных по Supabase UUID
+    const user = await getStorage().getUserByAuthId(req.user!.id);
+
+    logger.info('🔍 AUTH DEBUG - database user:', user);
+
+    if (!user) {
+      return res.status(401).json({
+        message: "User not found in database"
+      });
+    }
+
     logger.info('🔍 AUTH DEBUG - taskData.clientId:', taskData.clientId);
-    logger.info('🔍 AUTH DEBUG - comparison result:', req.user!.role !== 'admin' && taskData.clientId !== req.user!.id);
+    logger.info('🔍 AUTH DEBUG - comparison result:', user.role !== 'admin' && taskData.clientId !== user.id);
     
     // Устанавливаем текущего пользователя как клиента, если не указано иное
     if (!taskData.clientId) {
-      taskData.clientId = req.user!.id;
+      taskData.clientId = user.id;
     }
-    
+
     // Администраторы могут создавать задачи от имени любого пользователя
     // Обычные пользователи могут создавать задачи только от своего имени
-    if (req.user!.role !== 'admin' && taskData.clientId !== req.user!.id) {
-      return res.status(403).json({ 
-        message: "Forbidden - You can only create tasks on your own behalf", 
+    if (user.role !== 'admin' && taskData.clientId !== user.id) {
+      return res.status(403).json({
+        message: "Forbidden - You can only create tasks on your own behalf",
         details: "Regular users can only create tasks where they are the client"
       });
     }
