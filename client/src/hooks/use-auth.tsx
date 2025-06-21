@@ -5,7 +5,16 @@ import {
   UseMutationResult,
   useQueryClient
 } from "@tanstack/react-query";
-import { User } from "@shared/schema";
+
+// Тип пользователя, возвращаемого эндпоинтом /api/user
+export interface AuthUser {
+  id: string; // UUID из auth.users
+  publicId: number; // числовой ID из public.users
+  firstName: string;
+  lastName: string;
+  email: string;
+  role: string;
+}
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/lib/supabase';
 import { authFetch } from '@/lib/queryClient';
@@ -36,13 +45,13 @@ const dispatchAuthStatusChanged = (isAuthenticated: boolean) => {
 };
 
 type AuthContextType = {
-  user: User | null;
+  user: AuthUser | null;
   isLoading: boolean;
   error: Error | null;
   isAuthenticated: boolean;
-  loginMutation: UseMutationResult<User, Error, LoginData>;
+  loginMutation: UseMutationResult<AuthUser, Error, LoginData>;
   logoutMutation: UseMutationResult<void, Error, void>;
-  registerMutation: UseMutationResult<User, Error, RegisterData>;
+  registerMutation: UseMutationResult<AuthUser, Error, RegisterData>;
 };
 
 type LoginData = {
@@ -69,7 +78,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     data: user,
     error,
     isLoading,
-  } = useQuery<User | null, Error>({
+  } = useQuery<AuthUser | null, Error>({
     queryKey: ["/api/user"],
     queryFn: async () => {
       try {
@@ -168,7 +177,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       return await res.json();
     },
-    onSuccess: (userData: User) => {
+    onSuccess: (userData: AuthUser) => {
       queryClient.setQueryData(["/api/user"], userData);
       // Explicitly set authentication status to true
       dispatchAuthStatusChanged(true);
@@ -231,7 +240,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       return await res.json();
     },
-    onSuccess: (userData: User) => {
+    onSuccess: (userData: AuthUser) => {
       queryClient.setQueryData(["/api/user"], userData);
       // Set authentication status to true for new users
       dispatchAuthStatusChanged(true);

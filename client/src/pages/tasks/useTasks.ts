@@ -183,7 +183,7 @@ export function useTasks() {
       ...data,
       description: data.description || '',
       dueDate: data.dueDate ? data.dueDate.toISOString() : null,
-      clientId: 1, // Используем ID из public.users для текущего пользователя
+      clientId: user?.publicId as number, // Используем ID из public.users для текущего пользователя
     } as InsertTask;
     createTaskMutation.mutate(taskData);
   };
