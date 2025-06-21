@@ -52,8 +52,13 @@ export default function CreateTaskDialog({ open, onOpenChange, form, onSubmit, l
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const formData = form.getValues();
-    console.log('📝 Submitting task:', formData);
+    const rawData = form.getValues();
+    const taskData = {
+      ...rawData,
+      clientId: 1,
+    };
+    console.log('📝 Submitting task:', taskData);
+    console.log('📋 Task data being sent:', JSON.stringify(taskData, null, 2));
 
     // temporary check for API endpoint existence
     console.log('🔍 Testing API endpoint...');
@@ -79,7 +84,7 @@ export default function CreateTaskDialog({ open, onOpenChange, form, onSubmit, l
           'Content-Type': 'application/json',
           ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(taskData),
       });
 
       console.log('📡 Response status:', response.status);
@@ -91,7 +96,7 @@ export default function CreateTaskDialog({ open, onOpenChange, form, onSubmit, l
         // Закрыть диалог и обновить список
         onOpenChange(false);
         if (onSubmit) {
-          onSubmit(formData);
+          onSubmit(taskData);
         }
       } else {
         const error = await response.text();
