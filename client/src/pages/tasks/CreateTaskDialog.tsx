@@ -16,12 +16,12 @@ import { TaskFormData } from './useTasks';
 import { useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/use-auth';
+import { useToast } from '@/hooks/use-toast';
 
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   form: UseFormReturn<TaskFormData>;
-  onSubmit: (data: TaskFormData) => void;
   loading: boolean;
   users:
     | {
@@ -34,11 +34,14 @@ interface Props {
         role: string;
       }[]
     | undefined;
+  onSubmit?: (data: TaskFormData) => void;
+  onTaskCreated?: () => void;
 }
 
-export default function CreateTaskDialog({ open, onOpenChange, form, onSubmit, loading, users }: Props) {
+export default function CreateTaskDialog({ open, onOpenChange, form, loading, users, onSubmit, onTaskCreated }: Props) {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const { toast } = useToast();
 
   useEffect(() => {
     logger.info('CreateTaskDialog open state changed:', open);
@@ -64,47 +67,56 @@ export default function CreateTaskDialog({ open, onOpenChange, form, onSubmit, l
       dueDate: formData.dueDate,
       clientId: user?.publicId as number,
     };
-    console.log('📝 Submitting task:', taskData);
-    console.log('📋 Task data being sent:', JSON.stringify(taskData, null, 2));
 
     try {
-      console.log('🚀 Sending request to /api/tasks');
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
 
-      const { data: { session } } = await supabase.auth.getSession();
-      console.log('🔑 Session:', session ? 'Found' : 'Not found');
-
-      const token = session?.access_token ||
-        localStorage.getItem('supabase.auth.token') ||
-        document.cookie.split('; ').find(row => row.startsWith('auth-token='))?.split('=')[1];
-      console.log('🔑 Using auth token:', token ? 'Token found' : 'No token');
+      if (!session) {
+        toast({
+          title: t('task.error_creating'),
+          description: t('errors.unauthorized'),
+          variant: 'destructive',
+        });
+        return;
+      }
 
       const response = await fetch('/api/tasks', {
         method: 'POST',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+          Authorization: `Bearer ${session.access_token}`,
         },
         body: JSON.stringify(taskData),
       });
 
-      console.log('📡 Response status:', response.status);
-
-      if (response.ok) {
-        const result = await response.json();
-        console.log('✅ Task created successfully:', result);
-
-        // Закрыть диалог и обновить список
-        onOpenChange(false);
-        if (onSubmit) {
-          onSubmit(taskData);
-        }
-      } else {
-        const error = await response.text();
-        console.error('❌ Error response:', error);
+      if (!response.ok) {
+        const errorText = await response.text();
+        toast({
+          title: t('task.error_creating'),
+          description: errorText || t('task.try_again'),
+          variant: 'destructive',
+        });
+        return;
       }
+
+      await response.json();
+
+      toast({
+        title: t('task.created_success'),
+        description: t('task.created_description'),
+      });
+
+      onOpenChange(false);
+      form.reset();
+      onTaskCreated?.();
     } catch (error) {
-      console.error('❌ Network error:', error);
+      toast({
+        title: t('task.error_creating'),
+        description: String(error),
+        variant: 'destructive',
+      });
     }
   };
 
@@ -205,7 +217,6 @@ export default function CreateTaskDialog({ open, onOpenChange, form, onSubmit, l
               <Button
                 type="submit"
                 disabled={loading || !users || users.length === 0}
-                onClick={handleSubmit}
               >
                 {t('task.create')}
               </Button>

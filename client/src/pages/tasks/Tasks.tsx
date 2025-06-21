@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/use-auth';
 
@@ -16,6 +17,7 @@ import { useTasks, Task, TaskFormData } from './useTasks';
 const TasksPage = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const {
     tasks,
     tasksLoading,
@@ -82,6 +84,12 @@ const TasksPage = () => {
     createTask(data);
   };
 
+  const handleTaskCreated = () => {
+    queryClient.invalidateQueries({ queryKey: ['/api/tasks'] });
+    setCreateDialogOpen(false);
+    form.reset();
+  };
+
   useEffect(() => {
     if (createTaskMutation.isSuccess) {
       setCreateDialogOpen(false);
@@ -112,9 +120,9 @@ const TasksPage = () => {
           open={createDialogOpen}
           onOpenChange={setCreateDialogOpen}
           form={form}
-          onSubmit={onSubmit}
           loading={createTaskMutation.isPending}
           users={users}
+          onTaskCreated={handleTaskCreated}
         />
       </div>
 
