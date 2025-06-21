@@ -52,10 +52,15 @@ export default function CreateTaskDialog({ open, onOpenChange, form, onSubmit, l
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const rawData = form.getValues();
+    const formData = form.getValues();
     const taskData = {
-      ...rawData,
-      clientId: 1,
+      title: formData.title,
+      description: formData.description,
+      status: formData.status,
+      priority: formData.priority,
+      executorId: formData.executorId,
+      dueDate: formData.dueDate,
+      // Убрать clientId полностью - пусть API сам его определит
     };
     console.log('📝 Submitting task:', taskData);
     console.log('📋 Task data being sent:', JSON.stringify(taskData, null, 2));
