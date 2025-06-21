@@ -636,6 +636,11 @@
     "goBack": "Go back",
     "goHome": "Go home",
     "contactSupport": "Contact support",
-    "pageMissingHint": "Did you forget to add the page to the router?"
+  "pageMissingHint": "Did you forget to add the page to the router?"
+  },
+  "roles": {
+    "admin": "Administrator",
+    "teacher": "Teacher",
+    "student": "Student"
   }
 }

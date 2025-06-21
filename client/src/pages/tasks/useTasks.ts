@@ -37,12 +37,10 @@ const taskFormSchema = z.object({
 export type TaskFormData = z.infer<typeof taskFormSchema>;
 
 export function useTasks() {
-  console.log('🟡 useTasks: Hook called');
   const { t } = useTranslation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user } = useAuth();
-  console.log('🟡 useTasks: user from context:', user);
 
   const { data: users, isLoading: usersLoading } = useQuery<UserSummary[]>({
     queryKey: [user?.role === 'admin' ? '/api/users' : '/api/users/chat'],
@@ -81,13 +79,10 @@ export function useTasks() {
 
   const createTaskMutation = useMutation({
     mutationFn: async (data: InsertTask) => {
-      console.log('🟠 Mutation: starting POST with data:', data);
       const result = await apiRequest('/api/tasks', 'POST', data);
-      console.log('🟠 Mutation: POST result:', result);
       return result;
     },
     onSuccess: () => {
-      console.log('✅ Mutation: SUCCESS');
       queryClient.invalidateQueries({ queryKey: ['/api/tasks'] });
       toast({
         title: t('task.created_success'),
@@ -95,7 +90,6 @@ export function useTasks() {
       });
     },
     onError: (error: any) => {
-      console.log('❌ Mutation: ERROR:', error);
       const errorMessage = error?.message || error?.error?.message || t('task.try_again');
       toast({
         title: t('task.error_creating'),
@@ -181,11 +175,7 @@ export function useTasks() {
   });
 
   const createTask = (data: TaskFormData) => {
-    console.log('🟡 useTasks: createTask called with:', data);
-    console.log('🟡 useTasks: user:', user);
-
     if (!user?.id) {
-      console.log('❌ useTasks: No user ID!');
       toast({
         title: t('task.error_creating'),
         description: t('auth.user_not_found'),
@@ -201,11 +191,9 @@ export function useTasks() {
       clientId: user?.publicId as number,
     } as InsertTask;
 
-    console.log('🟡 useTasks: taskData prepared:', taskData);
     createTaskMutation.mutate(taskData);
-    console.log('🟡 useTasks: mutation called');
   };
-  console.log('🟡 useTasks: createTask function defined:', !!createTask);
+
 
   const editTask = (id: number, data: TaskFormData) => {
     const taskData = {
