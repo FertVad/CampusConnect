@@ -5,7 +5,9 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
-import { insertTaskSchema, type InsertTask } from '@shared/schema';
+import { insertTaskSchema, type InsertTask, type UserSummary as SharedUserSummary } from '@shared/schema';
+
+export type UserSummary = SharedUserSummary;
 
 export interface Task {
   id: number;
@@ -30,15 +32,7 @@ export function useTasks() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
 
-  const { data: users, isLoading: usersLoading } = useQuery<{
-    id: number;
-    firstName?: string;
-    lastName?: string;
-    first_name?: string;
-    last_name?: string;
-    name?: string;
-    role: string;
-  }[]>({
+  const { data: users, isLoading: usersLoading } = useQuery<UserSummary[]>({
     queryKey: [user?.role === 'admin' ? '/api/users' : '/api/users/chat'],
     enabled: !!user,
     staleTime: 1000 * 60 * 5,
