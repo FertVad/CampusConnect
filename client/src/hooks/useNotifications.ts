@@ -1,9 +1,13 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useEffect } from 'react';
 import { apiRequest } from '@/lib/queryClient';
+import { supabase, setupRealtimeSubscription } from '@/lib/supabase';
 import type { Notification } from '@/types/notifications';
+import { useAuth } from '@/hooks/use-auth';
 
 export function useNotifications() {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   // Fetch notifications for the current user
   const {
@@ -51,6 +55,47 @@ export function useNotifications() {
   });
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
+
+  useEffect(() => {
+    let subscription: any = null;
+
+    const setupSubscription = async () => {
+      const session = await setupRealtimeSubscription(() => {
+        subscription = supabase
+          .channel('notifications')
+          .on('postgres_changes', {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'notifications',
+            filter: `userId=eq.${user?.publicId}`,
+          }, () => {
+            console.log('New notification received via realtime');
+            queryClient.invalidateQueries({ queryKey: ['/api/notifications'] });
+          })
+          .on('postgres_changes', {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'notifications',
+            filter: `userId=eq.${user?.publicId}`,
+          }, () => {
+            console.log('Notification updated via realtime');
+            queryClient.invalidateQueries({ queryKey: ['/api/notifications'] });
+          })
+          .subscribe();
+      });
+      return session;
+    };
+
+    if (user?.publicId) {
+      setupSubscription();
+    }
+
+    return () => {
+      if (subscription) {
+        subscription.unsubscribe();
+      }
+    };
+  }, [user?.publicId, queryClient]);
 
   return {
     notifications,
