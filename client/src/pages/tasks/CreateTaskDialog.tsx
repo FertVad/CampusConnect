@@ -60,7 +60,7 @@ export default function CreateTaskDialog({ open, onOpenChange, form, onSubmit, l
       priority: formData.priority,
       executorId: formData.executorId,
       dueDate: formData.dueDate,
-      // Убрать clientId полностью - пусть API сам его определит
+      clientId: 1 as number,
     };
     console.log('📝 Submitting task:', taskData);
     console.log('📋 Task data being sent:', JSON.stringify(taskData, null, 2));
