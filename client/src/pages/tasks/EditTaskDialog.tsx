@@ -4,6 +4,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { TextField } from '@/components/forms/TextField';
 import { TextareaField } from '@/components/forms/TextareaField';
 import { SelectField } from '@/components/forms/SelectField';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { CalendarIcon } from 'lucide-react';
@@ -61,15 +62,35 @@ export default function EditTaskDialog({ open, onOpenChange, form, onSubmit, loa
                 ]}
               />
             </div>
-            <SelectField
+            <FormField
               control={form.control}
               name="executorId"
-              label={t('task.assignee')}
-              placeholder={t('task.select_assignee')}
-              options={(users || []).map(u => ({
-                value: u.id,
-                label: `${u.firstName} ${u.lastName} (${t(`roles.${u.role}`)})`,
-              }))}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('task.assignee')}</FormLabel>
+                  <Select
+                    onValueChange={value => field.onChange(parseInt(value))}
+                    defaultValue={field.value ? String(field.value) : undefined}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder={t('task.select_assignee')} />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {users?.map(user => (
+                        <SelectItem key={user.id} value={user.id.toString()}>
+                          {user.firstName} {user.lastName}
+                          <span className="text-gray-500 text-sm ml-2">
+                            ({t(`roles.${user.role}`)})
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
             <FormField
               control={form.control}
