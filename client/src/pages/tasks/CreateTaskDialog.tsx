@@ -65,12 +65,6 @@ export default function CreateTaskDialog({ open, onOpenChange, form, onSubmit, l
     console.log('📝 Submitting task:', taskData);
     console.log('📋 Task data being sent:', JSON.stringify(taskData, null, 2));
 
-    // temporary check for API endpoint existence
-    console.log('🔍 Testing API endpoint...');
-    fetch('/api/tasks', { method: 'GET' })
-      .then(res => console.log('API exists, status:', res.status))
-      .catch(err => console.log('API not found:', err));
-
     try {
       console.log('🚀 Sending request to /api/tasks');
 
