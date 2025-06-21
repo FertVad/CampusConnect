@@ -14,6 +14,7 @@ import { useTranslation } from 'react-i18next';
 import { logger } from '@/lib/logger';
 import { TaskFormData } from './useTasks';
 import { useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
 
 interface Props {
   open: boolean;
@@ -63,11 +64,20 @@ export default function CreateTaskDialog({ open, onOpenChange, form, onSubmit, l
     try {
       console.log('🚀 Sending request to /api/tasks');
 
+      const { data: { session } } = await supabase.auth.getSession();
+      console.log('🔑 Session:', session ? 'Found' : 'Not found');
+
+      const token = session?.access_token ||
+        localStorage.getItem('supabase.auth.token') ||
+        document.cookie.split('; ').find(row => row.startsWith('auth-token='))?.split('=')[1];
+      console.log('🔑 Using auth token:', token ? 'Token found' : 'No token');
+
       const response = await fetch('/api/tasks', {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
-          credentials: 'include',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
         },
         body: JSON.stringify(formData),
       });
