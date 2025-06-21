@@ -6,6 +6,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { insertTaskSchema, type InsertTask, type UserSummary as SharedUserSummary } from '@shared/schema';
+import { z } from 'zod';
 
 export type UserSummary = SharedUserSummary;
 
@@ -24,7 +25,16 @@ export interface Task {
   executor?: { firstName: string; lastName: string };
 }
 
-export type TaskFormData = InsertTask;
+const taskFormSchema = z.object({
+  title: z.string().min(1),
+  description: z.string().optional(),
+  priority: z.enum(['high', 'medium', 'low']),
+  status: z.enum(['new', 'in_progress', 'on_hold']),
+  executorId: z.number(),
+  dueDate: z.date().nullable().optional(),
+});
+
+export type TaskFormData = z.infer<typeof taskFormSchema>;
 
 export function useTasks() {
   console.log('🟡 useTasks: Hook called');
@@ -46,7 +56,7 @@ export function useTasks() {
   });
 
   const form = useForm<TaskFormData>({
-    resolver: zodResolver(insertTaskSchema),
+    resolver: zodResolver(taskFormSchema),
     defaultValues: {
       title: '',
       description: '',
@@ -58,7 +68,7 @@ export function useTasks() {
   });
 
   const editForm = useForm<TaskFormData>({
-    resolver: zodResolver(insertTaskSchema),
+    resolver: zodResolver(taskFormSchema),
     defaultValues: {
       title: '',
       description: '',
