@@ -12,10 +12,6 @@ export async function verifySupabaseJwt(req: Request, res: Response, next: NextF
     let token: string | undefined;
 
     const authHeader = req.headers.authorization;
-    if (process.env.NODE_ENV === 'development') {
-      logger.info('verifySupabaseJwt received Authorization header:', authHeader);
-      logger.info('verifySupabaseJwt received cookies:', req.headers.cookie);
-    }
     if (authHeader?.startsWith('Bearer ')) {
       token = authHeader.slice(7);
     }
@@ -30,9 +26,6 @@ export async function verifySupabaseJwt(req: Request, res: Response, next: NextF
       }
     }
 
-    if (process.env.NODE_ENV === 'development') {
-      logger.info('verifySupabaseJwt extracted token:', token);
-    }
 
     if (!token) {
       return res.status(401).json({ message: 'Unauthorized' });
