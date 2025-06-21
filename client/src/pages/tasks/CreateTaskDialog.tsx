@@ -15,6 +15,7 @@ import { logger } from '@/lib/logger';
 import { TaskFormData } from './useTasks';
 import { useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/hooks/use-auth';
 
 interface Props {
   open: boolean;
@@ -37,6 +38,7 @@ interface Props {
 
 export default function CreateTaskDialog({ open, onOpenChange, form, onSubmit, loading, users }: Props) {
   const { t } = useTranslation();
+  const { user } = useAuth();
 
   useEffect(() => {
     logger.info('CreateTaskDialog open state changed:', open);
@@ -60,7 +62,7 @@ export default function CreateTaskDialog({ open, onOpenChange, form, onSubmit, l
       priority: formData.priority,
       executorId: formData.executorId,
       dueDate: formData.dueDate,
-      clientId: 1 as number,
+      clientId: user?.publicId as number,
     };
     console.log('📝 Submitting task:', taskData);
     console.log('📋 Task data being sent:', JSON.stringify(taskData, null, 2));

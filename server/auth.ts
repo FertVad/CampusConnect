@@ -253,7 +253,8 @@ export function setupAuth(app: Express) {
 
         // Возвращаем данные пользователя
         return res.json({
-          id: userData.auth_user_id,
+          id: userData.auth_user_id, // UUID из таблицы auth.users
+          publicId: userData.id, // числовой ID из public.users
           firstName: userData.first_name,
           lastName: userData.last_name,
           email: userData.email,
