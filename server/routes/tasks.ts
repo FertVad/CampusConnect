@@ -10,6 +10,16 @@ const supabaseUrl = process.env.SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+// Helper to map Supabase user email to internal numeric user ID
+async function getUserByEmail(email: string) {
+  try {
+    return await getStorage().getUserByEmail(email);
+  } catch (error) {
+    logger.error('Error fetching user by email:', error);
+    return undefined;
+  }
+}
+
 export function registerTaskRoutes(app: Express, { authenticateUser, requireRole }: RouteContext) {
 // Tasks Routes
 app.get('/api/tasks', authenticateUser, async (req, res) => {
@@ -244,17 +254,29 @@ app.delete('/api/tasks/:id', authenticateUser, async (req, res) => {
     }
     
     // Проверяем права на удаление
-    const user = req.user!;
-    const userId = Number(user.id);
-    const taskClientId = Number(task.clientId);
-    const canDelete = user.role === 'admin' || taskClientId === userId;
+    const supabaseUser = req.user!;
+    const dbUser = await getUserByEmail(supabaseUser.email);
+    if (!dbUser) {
+      return res.status(401).json({ message: 'User not found in database' });
+    }
+    const userId = dbUser.id;
+    const taskClientId = task.clientId;
+    const taskExecutorId = task.executorId;
+    const canDelete =
+      supabaseUser.role === 'admin' ||
+      taskClientId === userId ||
+      taskExecutorId === userId;
     console.log('DELETE permission check:', {
       taskId: task.id,
+      supabaseId: supabaseUser.id,
+      email: supabaseUser.email,
       userId,
-      userRole: user.role,
+      userRole: supabaseUser.role,
       taskClientId,
-      isAdmin: user.role === 'admin',
+      taskExecutorId,
+      isAdmin: supabaseUser.role === 'admin',
       isCreator: taskClientId === userId,
+      isExecutor: taskExecutorId === userId,
       canDelete
     });
 
@@ -264,7 +286,7 @@ app.delete('/api/tasks/:id', authenticateUser, async (req, res) => {
         details: {
           taskId: task.id,
           userId,
-          userRole: user.role,
+          userRole: supabaseUser.role,
           taskClientId,
           canDelete
         }
