@@ -27,6 +27,14 @@ export class UsersRepository {
     return users[0];
   }
 
+  async getUserByAuthId(authUserId: string): Promise<User | undefined> {
+    const users = await this.database.select()
+      .from(schema.users)
+      .where(eq(schema.users.authUserId, authUserId))
+      .limit(1);
+    return users[0];
+  }
+
   async getUsersByRole(role: string): Promise<User[]> {
     return this.database.select()
       .from(schema.users)

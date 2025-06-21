@@ -54,6 +54,10 @@ export class SupabaseStorage {
   async getUserByEmail(email: string): Promise<User | undefined> {
     return this.usersRepo.getUserByEmail(email);
   }
+
+  async getUserByAuthId(authUserId: string): Promise<User | undefined> {
+    return this.usersRepo.getUserByAuthId(authUserId);
+  }
   
   async getUsersByRole(role: string): Promise<User[]> {
     return this.usersRepo.getUsersByRole(role);
