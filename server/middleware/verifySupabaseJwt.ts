@@ -34,10 +34,6 @@ export async function verifySupabaseJwt(req: Request, res: Response, next: NextF
     }
 
     const { data, error } = await supabase.auth.getUser(token);
-    if (process.env.NODE_ENV === 'development') {
-      logger.info('verifySupabaseJwt getUser error:', error);
-      logger.info('verifySupabaseJwt getUser data:', data);
-    }
     if (error || !data?.user) {
       return res.status(401).json({ message: 'Unauthorized' });
     }
@@ -56,6 +52,7 @@ export async function verifySupabaseJwt(req: Request, res: Response, next: NextF
     (req as any).user = mergedUser;
     next();
   } catch (err) {
-    next(err);
+    console.error('Auth middleware error:', err);
+    return res.status(401).json({ error: 'Authentication failed' });
   }
 }
