@@ -155,11 +155,13 @@ app.post('/api/tasks', authenticateUser, async (req, res) => {
       dueDate: z.string().nullable().transform(val => val ? new Date(val) : null)
     });
     
-    logger.info('Received task data:', req.body);
+    logger.info('Request body:', req.body);
     const taskData = modifiedTaskSchema.parse(req.body);
     logger.info('Parsed task data:', taskData);
+    const dbUser = await getDbUserBySupabaseUser(req.user!);
+    logger.info("DB user:", dbUser);
 
-    const { id: userId, role: userRole } = await getDbUserBySupabaseUser(req.user!);
+    const { id: userId, role: userRole } = dbUser;
 
     logger.info('User permissions check:', {
       email: req.user!.email,
@@ -289,7 +291,10 @@ app.put('/api/tasks/:id', authenticateUser, async (req, res) => {
       });
     }
     
-    const { id: userId, role: userRole } = await getDbUserBySupabaseUser(req.user!);
+    logger.info("Request body:", req.body);
+    const dbUser = await getDbUserBySupabaseUser(req.user!);
+    logger.info("DB user:", dbUser);
+    const { id: userId, role: userRole } = dbUser;
     const isAdmin = userRole === 'admin';
     const isCreator = task.clientId === userId;
     const isExecutor = task.executorId === userId;

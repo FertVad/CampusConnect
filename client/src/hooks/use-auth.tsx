@@ -89,7 +89,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
         
         const { data: sessionData } = await supabase.auth.getSession();
-        devLog('Supabase access token:', sessionData.session?.access_token);
+        // devLog('Supabase access token:', sessionData.session?.access_token);
 
         const fetchOptions: RequestInit = {
           method: 'GET',
@@ -150,7 +150,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw new Error(error.message);
       }
       const { data: sessionData } = await supabase.auth.getSession();
-      devLog('Supabase access token:', sessionData.session?.access_token);
+      // devLog('Supabase access token:', sessionData.session?.access_token);
 
       const fetchOptions: RequestInit = {
         method: 'GET',
@@ -213,7 +213,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw new Error(error.message);
       }
       const { data: sessionData } = await supabase.auth.getSession();
-      devLog('Supabase access token:', sessionData.session?.access_token);
+      // devLog('Supabase access token:', sessionData.session?.access_token);
 
       const fetchOptions: RequestInit = {
         method: 'GET',
