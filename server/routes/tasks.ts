@@ -157,17 +157,26 @@ app.post('/api/tasks', authenticateUser, async (req, res) => {
     logger.info('🔍 AUTH DEBUG - req.user.id:', req.user?.id);
     logger.info('🔍 AUTH DEBUG - req.user.role:', req.user?.role);
 
-    // Получить пользователя из таблицы public.users по email
-    const users = await getStorage().getUsers(); // Получить всех пользователей
+    // Получить пользователей и найти по email
+    const users = await getStorage().getUsers();
     const user = users.find(u => u.email === req.user!.email);
 
     logger.info('🔍 AUTH DEBUG - supabase user email:', req.user!.email);
-    logger.info('🔍 AUTH DEBUG - all users from public.users:', users.map(u => ({ id: u.id, email: u.email, role: u.role })));
-    logger.info('🔍 AUTH DEBUG - found user:', user);
+    logger.info('🔍 AUTH DEBUG - ALL users from database:', JSON.stringify(users, null, 2));
+    logger.info('🔍 AUTH DEBUG - searching for email:', req.user!.email);
+    logger.info('🔍 AUTH DEBUG - found user:', JSON.stringify(user, null, 2));
 
     if (!user) {
+      // Попробовать найти по partial match
+      const partialMatch = users.find(u => u.email && u.email.includes('fertik'));
+      logger.info('🔍 AUTH DEBUG - partial match attempt:', partialMatch);
+
       return res.status(401).json({
-        message: "User not found in public.users table"
+        message: "User not found in public.users table",
+        debug: {
+          searchEmail: req.user!.email,
+          availableEmails: users.map(u => u.email)
+        }
       });
     }
 
