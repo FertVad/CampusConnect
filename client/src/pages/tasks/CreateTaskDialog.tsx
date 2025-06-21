@@ -27,7 +27,9 @@ export default function CreateTaskDialog({ open, onOpenChange, form, loading, us
 
 
   const handleSubmit = form.handleSubmit(data => {
+    console.log('🔵 CreateTaskDialog: handleSubmit called with:', data);
     onSubmit?.(data);
+    console.log('🔵 CreateTaskDialog: onSubmit called');
   });
 
   return (

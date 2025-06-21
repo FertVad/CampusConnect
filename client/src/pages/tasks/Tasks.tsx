@@ -80,8 +80,10 @@ const TasksPage = () => {
     editTask(currentTask.id, data);
   };
 
-  const onSubmit = (data: TaskFormData) => {
+  const handleCreateTask = (data: TaskFormData) => {
+    console.log('🟢 Tasks.tsx: handleCreateTask called with:', data);
     createTask(data);
+    console.log('🟢 Tasks.tsx: createTask called');
   };
 
 
@@ -117,7 +119,7 @@ const TasksPage = () => {
           form={form}
           loading={createTaskMutation.isPending}
           users={users}
-          onSubmit={onSubmit}
+          onSubmit={handleCreateTask}
         />
       </div>
 
