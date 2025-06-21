@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils';
 import { UseFormReturn } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { TaskFormData, type UserSummary } from './useTasks';
+import React from 'react';
 
 interface Props {
   open: boolean;
@@ -25,12 +26,33 @@ interface Props {
 export default function CreateTaskDialog({ open, onOpenChange, form, loading, users, onSubmit }: Props) {
   const { t } = useTranslation();
 
-
-  const handleSubmit = form.handleSubmit(data => {
-    console.log('🔵 CreateTaskDialog: handleSubmit called with:', data);
-    onSubmit?.(data);
-    console.log('🔵 CreateTaskDialog: onSubmit called');
+  // Render logs
+  console.log('🟦 CreateTaskDialog: Component rendered');
+  console.log('🟦 CreateTaskDialog: Props:', {
+    open,
+    loading,
+    users: users?.length,
+    onSubmit: !!onSubmit,
   });
+  console.log('🟦 CreateTaskDialog: Form state:', form.formState);
+  console.log('🟦 CreateTaskDialog: Form errors:', form.formState.errors);
+
+  const handleSubmit = form.handleSubmit(
+    (data) => {
+      console.log('🔵 CreateTaskDialog: handleSubmit SUCCESS with:', data);
+      onSubmit?.(data);
+      console.log('🔵 CreateTaskDialog: onSubmit called');
+    },
+    (errors) => {
+      console.log('❌ CreateTaskDialog: handleSubmit VALIDATION ERRORS:', errors);
+    }
+  );
+
+  const handleButtonClick = (e: React.FormEvent) => {
+    console.log('🔷 CreateTaskDialog: Button clicked!');
+    console.log('🔷 CreateTaskDialog: Form isValid:', form.formState.isValid);
+    console.log('🔷 CreateTaskDialog: Button disabled:', loading || !users || users.length === 0);
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -128,6 +150,7 @@ export default function CreateTaskDialog({ open, onOpenChange, form, loading, us
               <Button
                 type="submit"
                 disabled={loading || !users || users.length === 0}
+                onClick={handleButtonClick}
               >
                 {t('task.create')}
               </Button>

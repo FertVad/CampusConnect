@@ -27,10 +27,12 @@ export interface Task {
 export type TaskFormData = InsertTask;
 
 export function useTasks() {
+  console.log('🟡 useTasks: Hook called');
   const { t } = useTranslation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  console.log('🟡 useTasks: user from context:', user);
 
   const { data: users, isLoading: usersLoading } = useQuery<UserSummary[]>({
     queryKey: [user?.role === 'admin' ? '/api/users' : '/api/users/chat'],
@@ -75,6 +77,7 @@ export function useTasks() {
       return result;
     },
     onSuccess: () => {
+      console.log('✅ Mutation: SUCCESS');
       queryClient.invalidateQueries({ queryKey: ['/api/tasks'] });
       toast({
         title: t('task.created_success'),
@@ -82,6 +85,7 @@ export function useTasks() {
       });
     },
     onError: (error: any) => {
+      console.log('❌ Mutation: ERROR:', error);
       const errorMessage = error?.message || error?.error?.message || t('task.try_again');
       toast({
         title: t('task.error_creating'),
@@ -191,6 +195,7 @@ export function useTasks() {
     createTaskMutation.mutate(taskData);
     console.log('🟡 useTasks: mutation called');
   };
+  console.log('🟡 useTasks: createTask function defined:', !!createTask);
 
   const editTask = (id: number, data: TaskFormData) => {
     const taskData = {
