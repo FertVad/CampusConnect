@@ -10,8 +10,9 @@ export function registerNotificationRoutes(app: Express, { authenticateUser, req
       const userId = req.user!.id;
       const notifications = await getStorage().getNotificationsByUser(userId);
       res.json(notifications);
-    } catch {
-      res.status(500).json({ message: "Server error" });
+    } catch (error) {
+      console.error('Notifications error:', error);
+      return res.json([]);
     }
   });
 

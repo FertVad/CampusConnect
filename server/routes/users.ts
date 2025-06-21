@@ -6,6 +6,9 @@ import type { RouteContext } from "./index";
 import { logger } from "../utils/logger";
 import { supabase } from "../supabaseClient";
 import { mockData } from "../auth";
+import { db } from "../db/index";
+import * as schema from "@shared/schema";
+import { getDbUserBySupabaseUser } from "../utils/userMapping";
 
 export function registerUserRoutes(app: Express, { authenticateUser, requireRole }: RouteContext) {
   // User Routes
@@ -19,61 +22,38 @@ export function registerUserRoutes(app: Express, { authenticateUser, requireRole
     console.log('User role from metadata:', req.user?.user_metadata?.role);
     console.log('================================');
 
-    if (req.user) {
-      const user = req.user as any;
-      console.log('getUsers - User role check:', {
-        userId: user.id,
-        email: user.email,
-        userMetadata: user.user_metadata,
-        metadataRole: user.user_metadata?.role,
-        directRole: user.role
-      });
-
-      const userRole = user.user_metadata?.role || user.role;
-      console.log('Final role for authorization:', userRole);
-
-      // Temporarily bypass role check for debugging
-      // if (userRole !== 'admin') {
-      //   console.log('Access denied for user:', user.email, 'Role:', userRole);
-      //   return res.status(403).json({ message: 'Forbidden - Admin access required' });
-      // }
-
-      console.log('Admin access granted for user:', user.email);
-
-      try {
-        const { data: users, error } = await supabase
-          .from('users')
-          .select('*')
-          .order('created_at', { ascending: false });
-
-        if (error) {
-          logger.warn('Users fetch error:', error);
-          // Форматируем mock пользователей
-          const formattedMockUsers = mockData.users.map(user => ({
-            ...user,
-            name: `${user.first_name || user.name || ''} ${user.last_name || ''}`.trim() || 'Неизвестный пользователь'
-          }));
-          return res.json(formattedMockUsers);
-        }
-
-        // Форматируем пользователей - объединяем first_name и last_name в name
-        const formattedUsers = (users || []).map(user => ({
-          ...user,
-          name: `${(user as any).first_name || ''} ${(user as any).last_name || ''}`.trim() || 'Неизвестный пользователь'
-        }));
-
-        return res.json(formattedUsers);
-      } catch (error) {
-        logger.error('Error in /api/users:', error);
-        const formattedMockUsers = mockData.users.map(user => ({
-          ...user,
-          name: `${user.first_name || user.name || ''} ${user.last_name || ''}`.trim() || 'Неизвестный пользователь'
-        }));
-        return res.json(formattedMockUsers);
-      }
+    if (!req.user) {
+      return res.status(401).json({ message: 'Not authenticated' });
     }
 
-    return res.status(401).json({ message: 'Not authenticated' });
+    try {
+      const { role } = await getDbUserBySupabaseUser(req.user);
+      if (role !== 'admin') {
+        return res.status(403).json({ message: 'Forbidden - Admin access required' });
+      }
+
+      const users = await db
+        .select({
+          id: schema.users.id,
+          firstName: schema.users.firstName,
+          lastName: schema.users.lastName,
+          role: schema.users.role,
+        })
+        .from(schema.users)
+        .orderBy(schema.users.firstName, schema.users.lastName);
+
+      console.log('Users for dropdown:', users);
+      return res.json(users);
+    } catch (error) {
+      logger.error('Error in /api/users:', error);
+      const formattedMockUsers = mockData.users.map(user => ({
+        id: user.id,
+        firstName: user.first_name,
+        lastName: user.last_name,
+        role: user.role,
+      }));
+      return res.json(formattedMockUsers);
+    }
   });
 
 app.get('/api/users/:id', authenticateUser, async (req, res) => {
