@@ -157,14 +157,17 @@ app.post('/api/tasks', authenticateUser, async (req, res) => {
     logger.info('🔍 AUTH DEBUG - req.user.id:', req.user?.id);
     logger.info('🔍 AUTH DEBUG - req.user.role:', req.user?.role);
 
-    // Получить пользователя из базы данных по Supabase UUID
-    const user = await getStorage().getUserByAuthId(req.user!.id);
+    // Получить пользователя из таблицы public.users по email
+    const users = await getStorage().getUsers(); // Получить всех пользователей
+    const user = users.find(u => u.email === req.user!.email);
 
-    logger.info('🔍 AUTH DEBUG - database user:', user);
+    logger.info('🔍 AUTH DEBUG - supabase user email:', req.user!.email);
+    logger.info('🔍 AUTH DEBUG - all users from public.users:', users.map(u => ({ id: u.id, email: u.email, role: u.role })));
+    logger.info('🔍 AUTH DEBUG - found user:', user);
 
     if (!user) {
       return res.status(401).json({
-        message: "User not found in database"
+        message: "User not found in public.users table"
       });
     }
 
