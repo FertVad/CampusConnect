@@ -20,8 +20,11 @@ export function useNotifications() {
     queryFn: async () => {
       return await apiRequest('/api/notifications') as Notification[];
     },
-    refetchInterval: 30000, // Refresh every 30 seconds
-    staleTime: 10000, // Data is fresh for 10 seconds
+    refetchInterval: 30000,
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: true,
+    staleTime: 0,
+    cacheTime: 1000 * 60 * 2,
   });
 
   // Mark a single notification as read

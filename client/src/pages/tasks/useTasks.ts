@@ -106,6 +106,11 @@ export function useTasks() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/tasks'] });
+      // also refresh notifications when status changes
+      queryClient.invalidateQueries({ queryKey: ['/api/notifications'] });
+      setTimeout(() => {
+        queryClient.refetchQueries({ queryKey: ['/api/notifications'] });
+      }, 500);
       toast({
         title: t('task.status_updated'),
         description: t('task.status_updated_description'),
@@ -159,6 +164,12 @@ export function useTasks() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/tasks'] });
+      // invalidate notifications so new updates appear instantly
+      queryClient.invalidateQueries({ queryKey: ['/api/notifications'] });
+      // perform a delayed refetch to ensure UI is up to date
+      setTimeout(() => {
+        queryClient.refetchQueries({ queryKey: ['/api/notifications'] });
+      }, 500);
       toast({
         title: t('task.updated'),
         description: t('task.updated_description'),
