@@ -4,21 +4,7 @@ import { insertTaskSchema } from "@shared/schema";
 import { z } from "zod";
 import type { RouteContext } from "./index";
 import { logger } from "../utils/logger";
-import { createClient } from "@supabase/supabase-js";
-
-const supabaseUrl = process.env.SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
-// Helper to map Supabase user email to internal numeric user ID
-async function getUserByEmail(email: string) {
-  try {
-    return await getStorage().getUserByEmail(email);
-  } catch (error) {
-    logger.error('Error fetching user by email:', error);
-    return undefined;
-  }
-}
+import { getDbUserBySupabaseUser } from "../utils/userMapping";
 
 export function registerTaskRoutes(app: Express, { authenticateUser, requireRole }: RouteContext) {
 // Tasks Routes
@@ -42,8 +28,10 @@ app.get('/api/tasks/client/:clientId', authenticateUser, async (req, res) => {
   try {
     const clientId = parseInt(req.params.clientId);
     
+    const { id: userId, role: userRole } = await getDbUserBySupabaseUser(req.user!);
+    const isAdmin = userRole === 'admin';
     // Только клиент или администратор может просматривать задачи клиента
-    if (req.user!.role !== 'admin' && req.user!.id !== clientId) {
+    if (!isAdmin && userId !== clientId) {
       return res.status(403).json({ message: "Forbidden - You can only view your own tasks" });
     }
     
@@ -65,8 +53,10 @@ app.get('/api/tasks/executor/:executorId', authenticateUser, async (req, res) =>
   try {
     const executorId = parseInt(req.params.executorId);
     
+    const { id: userId, role: userRole } = await getDbUserBySupabaseUser(req.user!);
+    const isAdmin = userRole === 'admin';
     // Только исполнитель или администратор может просматривать задачи исполнителя
-    if (req.user!.role !== 'admin' && req.user!.id !== executorId) {
+    if (!isAdmin && userId !== executorId) {
       return res.status(403).json({ message: "Forbidden - You can only view tasks assigned to you" });
     }
     
@@ -98,11 +88,12 @@ app.get('/api/tasks/status/:status', authenticateUser, async (req, res) => {
     }
     
     const tasks = await getStorage().getTasksByStatus(status);
-    
+
+    const { id: userId, role: userRole } = await getDbUserBySupabaseUser(req.user!);
+
     // Если пользователь не админ, фильтруем только те задачи, которые относятся к нему
-    if (req.user!.role !== 'admin') {
-      const userId = req.user!.id;
-      const filteredTasks = tasks.filter(task => 
+    if (userRole !== 'admin') {
+      const filteredTasks = tasks.filter(task =>
         task.clientId === userId || task.executorId === userId
       );
       return res.json(filteredTasks);
@@ -133,11 +124,12 @@ app.get('/api/tasks/due-soon/:days', authenticateUser, async (req, res) => {
     }
     
     const tasks = await getStorage().getTasksDueSoon(days);
-    
+
+    const { id: userId, role: userRole } = await getDbUserBySupabaseUser(req.user!);
+
     // Если пользователь не админ, фильтруем только те задачи, которые относятся к нему
-    if (req.user!.role !== 'admin') {
-      const userId = req.user!.id;
-      const filteredTasks = tasks.filter(task => 
+    if (userRole !== 'admin') {
+      const filteredTasks = tasks.filter(task =>
         task.clientId === userId || task.executorId === userId
       );
       return res.json(filteredTasks);
@@ -167,43 +159,21 @@ app.post('/api/tasks', authenticateUser, async (req, res) => {
     const taskData = modifiedTaskSchema.parse(req.body);
     logger.info('Parsed task data:', taskData);
 
-    // Дополнительное логирование для проверки авторизации
-    logger.info('🔍 AUTH DEBUG - req.user:', req.user);
-    logger.info('🔍 AUTH DEBUG - req.user.id:', req.user?.id);
-    logger.info('🔍 AUTH DEBUG - req.user.role:', req.user?.role);
+    const { id: userId, role: userRole } = await getDbUserBySupabaseUser(req.user!);
 
-    // Прямой запрос к таблице public.users
-    const { data: users, error } = await supabase
-      .from('users')
-      .select('*')
-      .eq('email', req.user!.email);
+    console.log('User mapping debug:', {
+      supabaseId: req.user!.id,
+      email: req.user!.email,
+      dbUserId: userId,
+      dbUserRole: userRole,
+      taskClientId: taskData.clientId
+    });
 
-    logger.info('🔍 DIRECT DB - query result:', users);
-    logger.info('🔍 DIRECT DB - query error:', error);
-
-    if (error || !users || users.length === 0) {
-      return res.status(401).json({
-        message: "User not found in database",
-        debug: {
-          searchEmail: req.user!.email,
-          error: error?.message
-        }
-      });
-    }
-
-    const user = users[0];
-    logger.info('🔍 DIRECT DB - found user:', user);
-
-    logger.info('🔍 AUTH DEBUG - taskData.clientId:', taskData.clientId);
-    logger.info('🔍 AUTH DEBUG - comparison result:', user.role !== 'admin' && taskData.clientId !== user.id);
-    
-    // Устанавливаем текущего пользователя как клиента, если не указано иное
     if (!taskData.clientId) {
-      taskData.clientId = user.id;
+      taskData.clientId = userId;
     }
 
-    // Использовать роль из базы
-    if (user.role !== 'admin' && taskData.clientId !== user.id) {
+    if (userRole !== 'admin' && taskData.clientId !== userId) {
       return res.status(403).json({
         message: "Forbidden - You can only create tasks on your own behalf"
       });
@@ -253,31 +223,22 @@ app.delete('/api/tasks/:id', authenticateUser, async (req, res) => {
       });
     }
     
-    // Проверяем права на удаление
-    const supabaseUser = req.user!;
-    const dbUser = await getUserByEmail(supabaseUser.email);
-    if (!dbUser) {
-      return res.status(401).json({ message: 'User not found in database' });
-    }
-    const userId = dbUser.id;
+    const { id: userId, role: userRole } = await getDbUserBySupabaseUser(req.user!);
     const taskClientId = task.clientId;
     const taskExecutorId = task.executorId;
-    const canDelete =
-      supabaseUser.role === 'admin' ||
-      taskClientId === userId ||
-      taskExecutorId === userId;
-    console.log('DELETE permission check:', {
-      taskId: task.id,
-      supabaseId: supabaseUser.id,
-      email: supabaseUser.email,
-      userId,
-      userRole: supabaseUser.role,
+    const isAdmin = userRole === 'admin';
+    const isCreator = taskClientId === userId;
+    const isExecutor = taskExecutorId === userId;
+    const canDelete = isAdmin || isCreator;
+
+    console.log('User mapping debug:', {
+      supabaseId: req.user!.id,
+      email: req.user!.email,
+      dbUserId: userId,
+      dbUserRole: userRole,
       taskClientId,
       taskExecutorId,
-      isAdmin: supabaseUser.role === 'admin',
-      isCreator: taskClientId === userId,
-      isExecutor: taskExecutorId === userId,
-      canDelete
+      permissions: { canDelete }
     });
 
     if (!canDelete) {
@@ -286,7 +247,7 @@ app.delete('/api/tasks/:id', authenticateUser, async (req, res) => {
         details: {
           taskId: task.id,
           userId,
-          userRole: supabaseUser.role,
+          userRole,
           taskClientId,
           canDelete
         }
@@ -297,7 +258,7 @@ app.delete('/api/tasks/:id', authenticateUser, async (req, res) => {
     await getStorage().deleteTask(taskId);
     
     // Уведомляем исполнителя о удалении задачи, если задача была назначена
-    if (task.executorId && task.executorId !== req.user!.id) {
+    if (task.executorId && task.executorId !== userId) {
       await getStorage().createNotification({
         userId: task.executorId,
         title: "Task Deleted",
@@ -335,16 +296,28 @@ app.put('/api/tasks/:id', authenticateUser, async (req, res) => {
       });
     }
     
-    // Check permission to edit the task
-    // Only the task creator (client) or admin can edit the task
-    if (req.user!.role !== 'admin' && req.user!.id !== task.clientId) {
-      // Allow executor to change status only, not other fields
-      if (req.user!.id === task.executorId && Object.keys(req.body).length === 1 && 'status' in req.body) {
+    const { id: userId, role: userRole } = await getDbUserBySupabaseUser(req.user!);
+    const isAdmin = userRole === 'admin';
+    const isCreator = task.clientId === userId;
+    const isExecutor = task.executorId === userId;
+
+    console.log('User mapping debug:', {
+      supabaseId: req.user!.id,
+      email: req.user!.email,
+      dbUserId: userId,
+      dbUserRole: userRole,
+      taskClientId: task.clientId,
+      taskExecutorId: task.executorId,
+      permissions: { isAdmin, isCreator, isExecutor }
+    });
+
+    if (!isAdmin && !isCreator) {
+      if (isExecutor && Object.keys(req.body).length === 1 && 'status' in req.body) {
         // Executor can only update status
       } else {
-        return res.status(403).json({ 
+        return res.status(403).json({
           message: "Forbidden - Only task creators or admins can edit tasks",
-          details: "Task executors can only update the status field" 
+          details: "Task executors can only update the status field"
         });
       }
     }
@@ -357,7 +330,7 @@ app.put('/api/tasks/:id', authenticateUser, async (req, res) => {
     const taskData = modifiedUpdateTaskSchema.parse(req.body);
     
     // Ограничиваем поля, которые может изменить исполнитель
-    if (req.user!.role !== 'admin' && req.user!.id === task.executorId && req.user!.id !== task.clientId) {
+    if (!isAdmin && isExecutor && !isCreator) {
       // Исполнитель может изменить только статус и, возможно, добавить описание
       const allowedFields = ['status', 'description'];
       const providedFields = Object.keys(taskData);
@@ -404,7 +377,7 @@ app.put('/api/tasks/:id', authenticateUser, async (req, res) => {
       } else {
         // Обычное уведомление об изменении статуса
         // Уведомляем клиента, если исполнитель обновил статус
-        if (req.user!.id === task.executorId) {
+        if (userId === task.executorId) {
           await getStorage().createNotification({
             userId: task.clientId,
             title: "Task Status Updated",
@@ -414,7 +387,7 @@ app.put('/api/tasks/:id', authenticateUser, async (req, res) => {
           });
         } 
         // Уведомляем исполнителя, если клиент обновил статус
-        else if (req.user!.id === task.clientId) {
+        else if (userId === task.clientId) {
           await getStorage().createNotification({
             userId: task.executorId,
             title: "Task Status Updated",
@@ -470,9 +443,10 @@ app.get('/api/tasks/:id', authenticateUser, async (req, res) => {
       });
     }
     
+    const { id: currentUserId, role: currentUserRole } = await getDbUserBySupabaseUser(req.user!);
     // Проверяем, имеет ли пользователь право на просмотр этой задачи
-    if (req.user!.role !== 'admin' && req.user!.id !== task.clientId && req.user!.id !== task.executorId) {
-      return res.status(403).json({ 
+    if (currentUserRole !== 'admin' && currentUserId !== task.clientId && currentUserId !== task.executorId) {
+      return res.status(403).json({
         message: "Forbidden",
         details: "You can only view tasks where you are the client, executor, or an admin"
       });
@@ -496,9 +470,10 @@ app.get('/api/users/:id/tasks', authenticateUser, async (req, res) => {
   try {
     const userId = parseInt(req.params.id);
     
+    const { id: currentUserId, role: currentUserRole } = await getDbUserBySupabaseUser(req.user!);
     // Админ может видеть задачи любых пользователей
     // Другие пользователи - только свои
-    if (req.user?.role !== 'admin' && req.user?.id !== userId) {
+    if (currentUserRole !== 'admin' && currentUserId !== userId) {
       return res.status(403).json({ message: "Forbidden" });
     }
     
@@ -526,9 +501,10 @@ app.get('/api/users/:id/notifications', authenticateUser, async (req, res) => {
   try {
     const userId = parseInt(req.params.id);
     
+    const { id: currentUserId, role: currentUserRole } = await getDbUserBySupabaseUser(req.user!);
     // Админ может видеть уведомления любых пользователей
     // Другие пользователи - только свои
-    if (req.user?.role !== 'admin' && req.user?.id !== userId) {
+    if (currentUserRole !== 'admin' && currentUserId !== userId) {
       return res.status(403).json({ message: "Forbidden" });
     }
     
@@ -557,8 +533,9 @@ app.patch('/api/tasks/:id/status', authenticateUser, async (req, res) => {
       return res.status(404).json({ message: "Task not found" });
     }
     
+    const { id: currentUserId, role: currentUserRole } = await getDbUserBySupabaseUser(req.user!);
     // Проверяем права доступа: только админ, клиент или исполнитель задачи могут менять статус
-    if (req.user?.role !== 'admin' && req.user?.id !== task.clientId && req.user?.id !== task.executorId) {
+    if (currentUserRole !== 'admin' && currentUserId !== task.clientId && currentUserId !== task.executorId) {
       return res.status(403).json({ message: "Forbidden" });
     }
     
