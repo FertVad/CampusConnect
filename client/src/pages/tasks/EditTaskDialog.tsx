@@ -68,7 +68,7 @@ export default function EditTaskDialog({ open, onOpenChange, form, onSubmit, loa
               placeholder={t('task.select_assignee')}
               options={(users || []).map(u => ({
                 value: u.id,
-                label: `${u.firstName} ${u.lastName} (${t(`role.${u.role}`)})`,
+                label: `${u.firstName} ${u.lastName} (${t(`roles.${u.role}`)})`,
               }))}
             />
             <FormField

@@ -26,33 +26,13 @@ interface Props {
 export default function CreateTaskDialog({ open, onOpenChange, form, loading, users, onSubmit }: Props) {
   const { t } = useTranslation();
 
-  // Render logs
-  console.log('🟦 CreateTaskDialog: Component rendered');
-  console.log('🟦 CreateTaskDialog: Props:', {
-    open,
-    loading,
-    users: users?.length,
-    onSubmit: !!onSubmit,
-  });
-  console.log('🟦 CreateTaskDialog: Form state:', form.formState);
-  console.log('🟦 CreateTaskDialog: Form errors:', form.formState.errors);
 
   const handleSubmit = form.handleSubmit(
     (data) => {
-      console.log('🔵 CreateTaskDialog: handleSubmit SUCCESS with:', data);
       onSubmit?.(data);
-      console.log('🔵 CreateTaskDialog: onSubmit called');
     },
-    (errors) => {
-      console.log('❌ CreateTaskDialog: handleSubmit VALIDATION ERRORS:', errors);
-    }
+    () => {}
   );
-
-  const handleButtonClick = (e: React.FormEvent) => {
-    console.log('🔷 CreateTaskDialog: Button clicked!');
-    console.log('🔷 CreateTaskDialog: Form isValid:', form.formState.isValid);
-    console.log('🔷 CreateTaskDialog: Button disabled:', loading || !users || users.length === 0);
-  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -106,7 +86,7 @@ export default function CreateTaskDialog({ open, onOpenChange, form, loading, us
               placeholder={t('task.select_assignee')}
               options={(users || []).map(u => ({
                 value: u.id,
-                label: `${u.firstName} ${u.lastName} (${t(`role.${u.role}`)})`,
+                label: `${u.firstName} ${u.lastName} (${t(`roles.${u.role}`)})`,
               }))}
             />
             {!users || users.length === 0 ? (
@@ -150,7 +130,6 @@ export default function CreateTaskDialog({ open, onOpenChange, form, loading, us
               <Button
                 type="submit"
                 disabled={loading || !users || users.length === 0}
-                onClick={handleButtonClick}
               >
                 {t('task.create')}
               </Button>
