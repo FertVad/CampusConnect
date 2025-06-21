@@ -69,7 +69,9 @@ export function useTasks() {
 
   const createTaskMutation = useMutation({
     mutationFn: async (data: InsertTask) => {
+      console.log('🟠 Mutation: starting POST with data:', data);
       const result = await apiRequest('/api/tasks', 'POST', data);
+      console.log('🟠 Mutation: POST result:', result);
       return result;
     },
     onSuccess: () => {
@@ -165,7 +167,11 @@ export function useTasks() {
   });
 
   const createTask = (data: TaskFormData) => {
+    console.log('🟡 useTasks: createTask called with:', data);
+    console.log('🟡 useTasks: user:', user);
+
     if (!user?.id) {
+      console.log('❌ useTasks: No user ID!');
       toast({
         title: t('task.error_creating'),
         description: t('auth.user_not_found'),
@@ -173,13 +179,17 @@ export function useTasks() {
       });
       return;
     }
+
     const taskData = {
       ...data,
       description: data.description || '',
       dueDate: data.dueDate ? data.dueDate.toISOString() : null,
-      clientId: user?.publicId as number, // Используем ID из public.users для текущего пользователя
+      clientId: user?.publicId as number,
     } as InsertTask;
+
+    console.log('🟡 useTasks: taskData prepared:', taskData);
     createTaskMutation.mutate(taskData);
+    console.log('🟡 useTasks: mutation called');
   };
 
   const editTask = (id: number, data: TaskFormData) => {
