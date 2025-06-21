@@ -244,11 +244,30 @@ app.delete('/api/tasks/:id', authenticateUser, async (req, res) => {
     }
     
     // Проверяем права на удаление
-    // Только создатель задачи (клиент) или администратор может удалить задачу
-    if (req.user!.role !== 'admin' && req.user!.id !== task.clientId) {
-      return res.status(403).json({ 
-        message: "Forbidden - Only task creators or admins can delete tasks",
-        details: "You don't have permission to delete this task" 
+    const user = req.user!;
+    const userId = Number(user.id);
+    const taskClientId = Number(task.clientId);
+    const canDelete = user.role === 'admin' || taskClientId === userId;
+    console.log('DELETE permission check:', {
+      taskId: task.id,
+      userId,
+      userRole: user.role,
+      taskClientId,
+      isAdmin: user.role === 'admin',
+      isCreator: taskClientId === userId,
+      canDelete
+    });
+
+    if (!canDelete) {
+      return res.status(403).json({
+        message: 'Forbidden - Only task creators or admins can delete tasks',
+        details: {
+          taskId: task.id,
+          userId,
+          userRole: user.role,
+          taskClientId,
+          canDelete
+        }
       });
     }
     
