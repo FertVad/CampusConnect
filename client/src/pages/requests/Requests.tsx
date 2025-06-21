@@ -10,8 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { postData, putData } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { Request, User } from '@shared/schema';
-import { z } from 'zod';
-import { insertRequestSchema } from '@shared/schema';
+import { type RequestFormData } from '@/components/requests/RequestForm';
 import { useLocation } from 'wouter';
 
 const Requests = () => {
@@ -37,7 +36,7 @@ const Requests = () => {
   
   // Mutation for creating requests (student)
   const createRequestMutation = useMutation({
-    mutationFn: (data: z.infer<typeof insertRequestSchema>) => {
+    mutationFn: (data: RequestFormData) => {
       return postData('/api/requests', data);
     },
     onSuccess: () => {
@@ -79,7 +78,7 @@ const Requests = () => {
     },
   });
   
-  const handleSubmitRequest = async (data: z.infer<typeof insertRequestSchema>) => {
+  const handleSubmitRequest = async (data: RequestFormData) => {
     await createRequestMutation.mutateAsync(data);
   };
   

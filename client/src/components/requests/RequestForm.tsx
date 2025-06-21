@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { insertRequestSchema } from '@shared/schema';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -10,20 +9,22 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
-// Extended schema with validation rules for forms
-const requestFormSchema = insertRequestSchema.extend({
+// Schema for the request form (studentId is added automatically on the server)
+export const requestFormSchema = z.object({
   type: z.string().min(3, "Request type is required"),
   description: z.string().min(10, "Description must be at least 10 characters"),
 });
 
+export type RequestFormData = z.infer<typeof requestFormSchema>;
+
 interface RequestFormProps {
-  onSubmit: (data: z.infer<typeof requestFormSchema>) => Promise<void>;
+  onSubmit: (data: RequestFormData) => Promise<void>;
 }
 
 const RequestForm: React.FC<RequestFormProps> = ({ onSubmit }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  const form = useForm<z.infer<typeof requestFormSchema>>({
+  const form = useForm<RequestFormData>({
     resolver: zodResolver(requestFormSchema),
     defaultValues: {
       type: '',
@@ -39,7 +40,7 @@ const RequestForm: React.FC<RequestFormProps> = ({ onSubmit }) => {
     { value: 'other', label: 'Other' },
   ];
   
-  const handleSubmit = async (data: z.infer<typeof requestFormSchema>) => {
+  const handleSubmit = async (data: RequestFormData) => {
     try {
       setIsSubmitting(true);
       await onSubmit(data);
