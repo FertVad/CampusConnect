@@ -151,6 +151,13 @@ app.post('/api/tasks', authenticateUser, async (req, res) => {
     logger.info('Received task data:', req.body);
     const taskData = modifiedTaskSchema.parse(req.body);
     logger.info('Parsed task data:', taskData);
+
+    // Дополнительное логирование для проверки авторизации
+    logger.info('🔍 AUTH DEBUG - req.user:', req.user);
+    logger.info('🔍 AUTH DEBUG - req.user.id:', req.user?.id);
+    logger.info('🔍 AUTH DEBUG - req.user.role:', req.user?.role);
+    logger.info('🔍 AUTH DEBUG - taskData.clientId:', taskData.clientId);
+    logger.info('🔍 AUTH DEBUG - comparison result:', req.user!.role !== 'admin' && taskData.clientId !== req.user!.id);
     
     // Устанавливаем текущего пользователя как клиента, если не указано иное
     if (!taskData.clientId) {
