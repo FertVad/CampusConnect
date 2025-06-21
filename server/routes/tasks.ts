@@ -4,6 +4,11 @@ import { insertTaskSchema } from "@shared/schema";
 import { z } from "zod";
 import type { RouteContext } from "./index";
 import { logger } from "../utils/logger";
+import { createClient } from "@supabase/supabase-js";
+
+const supabaseUrl = process.env.SUPABASE_URL!;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 export function registerTaskRoutes(app: Express, { authenticateUser, requireRole }: RouteContext) {
 // Tasks Routes
@@ -157,28 +162,27 @@ app.post('/api/tasks', authenticateUser, async (req, res) => {
     logger.info('🔍 AUTH DEBUG - req.user.id:', req.user?.id);
     logger.info('🔍 AUTH DEBUG - req.user.role:', req.user?.role);
 
-    // Получить пользователей и найти по email
-    const users = await getStorage().getUsers();
-    const user = users.find(u => u.email === req.user!.email);
+    // Прямой запрос к таблице public.users
+    const { data: users, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('email', req.user!.email);
 
-    logger.info('🔍 AUTH DEBUG - supabase user email:', req.user!.email);
-    logger.info('🔍 AUTH DEBUG - ALL users from database:', JSON.stringify(users, null, 2));
-    logger.info('🔍 AUTH DEBUG - searching for email:', req.user!.email);
-    logger.info('🔍 AUTH DEBUG - found user:', JSON.stringify(user, null, 2));
+    logger.info('🔍 DIRECT DB - query result:', users);
+    logger.info('🔍 DIRECT DB - query error:', error);
 
-    if (!user) {
-      // Попробовать найти по partial match
-      const partialMatch = users.find(u => u.email && u.email.includes('fertik'));
-      logger.info('🔍 AUTH DEBUG - partial match attempt:', partialMatch);
-
+    if (error || !users || users.length === 0) {
       return res.status(401).json({
-        message: "User not found in public.users table",
+        message: "User not found in database",
         debug: {
           searchEmail: req.user!.email,
-          availableEmails: users.map(u => u.email)
+          error: error?.message
         }
       });
     }
+
+    const user = users[0];
+    logger.info('🔍 DIRECT DB - found user:', user);
 
     logger.info('🔍 AUTH DEBUG - taskData.clientId:', taskData.clientId);
     logger.info('🔍 AUTH DEBUG - comparison result:', user.role !== 'admin' && taskData.clientId !== user.id);
@@ -188,12 +192,10 @@ app.post('/api/tasks', authenticateUser, async (req, res) => {
       taskData.clientId = user.id;
     }
 
-    // Администраторы могут создавать задачи от имени любого пользователя
-    // Обычные пользователи могут создавать задачи только от своего имени
+    // Использовать роль из базы
     if (user.role !== 'admin' && taskData.clientId !== user.id) {
       return res.status(403).json({
-        message: "Forbidden - You can only create tasks on your own behalf",
-        details: "Regular users can only create tasks where they are the client"
+        message: "Forbidden - You can only create tasks on your own behalf"
       });
     }
     
