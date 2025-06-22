@@ -136,12 +136,12 @@ export function Sidebar() {
   };
 
   return (
-    <div 
+    <div
       ref={sidebarRef}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       className={cn(
-        "fixed left-0 top-0 bottom-0 z-[1000] h-full flex flex-col glass-sidebar shadow-xl",
+        "fixed left-0 top-0 bottom-0 z-[1000] h-full glass-sidebar shadow-xl hidden md:flex md:flex-col",
         isCollapsed ? "w-16" : "w-64"
       )}
     >
