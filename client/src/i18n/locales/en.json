@@ -533,7 +533,13 @@
     "scheduleChangedContent": "Schedule has been changed: {{info}}",
     "userProfileUpdatedByAdmin": "Your profile has been updated by an administrator.",
     "adminUpdatedUserProfile": "You have updated user profile for {{name}}.",
-    "adminNotificationUserUpdated": "User profile for {{name}} has been updated."
+    "adminNotificationUserUpdated": "User profile for {{name}} has been updated.",
+    "taskStatusChangedContent": "Task '{{name}}' status changed from '{{oldStatus}}' to '{{newStatus}}'",
+    "statuses": {
+      "completed": "completed",
+      "in_progress": "in progress",
+      "new": "new"
+    }
   },
   "settings": {
     "title": "Settings",

@@ -581,7 +581,13 @@
     "scheduleChangedContent": "Изменения в расписании: {{info}}",
     "userProfileUpdatedByAdmin": "Ваш профиль был обновлён администратором.",
     "adminUpdatedUserProfile": "Вы обновили профиль пользователя {{name}}.",
-  "adminNotificationUserUpdated": "Профиль пользователя {{name}} был обновлён."
+    "adminNotificationUserUpdated": "Профиль пользователя {{name}} был обновлён.",
+    "taskStatusChangedContent": "Статус задачи '{{name}}' изменен с '{{oldStatus}}' на '{{newStatus}}'",
+    "statuses": {
+      "completed": "завершена",
+      "in_progress": "выполняется",
+      "new": "новая"
+    }
   },
   "roles": {
     "admin": "Администратор",
