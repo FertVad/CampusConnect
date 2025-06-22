@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./index.css";
@@ -7,66 +7,25 @@ import { queryClient } from "./lib/queryClient";
 import { Toaster } from "./components/ui/toaster";
 import { AuthProvider } from "@/hooks/use-auth";
 import { ThemeProvider } from "@/components/theme/theme-provider";
+import { ErrorBoundary } from "@/components/errors/ErrorBoundary";
 
 // Import i18n configuration
 import "./i18n/i18n";
 
-// Wrap App in a special error boundary
-function AppWithErrorHandling() {
-  const [error, setError] = useState<Error | null>(null);
-
-  // Reset error on retry
-  const handleRetry = () => {
-    setError(null);
-    window.location.reload();
-  };
-
-  // If we caught an error, show a simple error screen
-  if (error) {
-    // Import necessary i18n components at the top level
-    const { t } = require('react-i18next');
-
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-gray-50">
-        <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-md">
-          <h1 className="mb-4 text-xl font-bold text-red-600">{t('errors.internalServerError')}</h1>
-          <p className="mb-4 text-gray-700">
-            {t('errors.connectionError')}
-          </p>
-          <div className="p-3 mb-4 overflow-auto bg-gray-100 rounded text-sm">
-            <code>{error.message}</code>
-          </div>
-          <button
-            onClick={handleRetry}
-            className="w-full px-4 py-2 text-white bg-blue-600 rounded hover:bg-blue-700"
-          >
-            {t('common.actions.refresh')}
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // Otherwise, try to render the app
-  try {
-    return (
-      <React.StrictMode>
-        <ThemeProvider defaultTheme="dark">
-          <QueryClientProvider client={queryClient}>
-            <AuthProvider>
-              <App />
-              <Toaster />
-            </AuthProvider>
-          </QueryClientProvider>
-        </ThemeProvider>
-      </React.StrictMode>
-    );
-  } catch (err) {
-    // If app rendering fails, update the error state
-    console.error("Error rendering application:", err);
-    setError(err instanceof Error ? err : new Error(String(err)));
-    return null;
-  }
+// Providers wrapped with Error Boundary
+function AppWithProviders() {
+  return (
+    <ErrorBoundary>
+      <ThemeProvider defaultTheme="dark">
+        <QueryClientProvider client={queryClient}>
+          <AuthProvider>
+            <App />
+            <Toaster />
+          </AuthProvider>
+        </QueryClientProvider>
+      </ThemeProvider>
+    </ErrorBoundary>
+  );
 }
 
 // Ensure the DOM is fully loaded before attempting to mount React
@@ -93,7 +52,7 @@ function safelyInitializeApp() {
     const renderApp = () => {
       root.render(
         <React.StrictMode>
-          <AppWithErrorHandling />
+          <AppWithProviders />
         </React.StrictMode>
       );
 
