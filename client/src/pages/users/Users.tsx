@@ -463,15 +463,15 @@ export default function Users() {
               <p>No users found matching your criteria.</p>
             </div>
           ) : (
-            <div className="rounded-md border">
+            <div className="rounded-md border table-responsive">
               <Table>
                 <TableCaption>A list of all users in the system.</TableCaption>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Name</TableHead>
-                    <TableHead>Email</TableHead>
+                    <TableHead className="hide-lg">Email</TableHead>
                     <TableHead>Role</TableHead>
-                    <TableHead>Created</TableHead>
+                    <TableHead className="hide-md">Created</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -488,7 +488,7 @@ export default function Users() {
                       <TableCell className="font-medium">
                         {user.firstName} {user.lastName}
                       </TableCell>
-                      <TableCell>{user.email}</TableCell>
+                      <TableCell className="hide-lg">{user.email}</TableCell>
                       <TableCell>
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                           user.role === 'director'
@@ -502,7 +502,7 @@ export default function Users() {
                           {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
                         </span>
                       </TableCell>
-                      <TableCell>{formatDate(user.createdAt)}</TableCell>
+                      <TableCell className="hide-md">{formatDate(user.createdAt)}</TableCell>
                       <TableCell className="text-right space-x-2">
                         <Button
                           variant="outline"

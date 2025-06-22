@@ -1347,7 +1347,7 @@ export const CurriculumPlanTable = React.forwardRef<
 
       >
         <div className="relative bg-white dark:bg-slate-900 shadow-md rounded-lg overflow-hidden">
-          <div className="overflow-x-auto overflow-y-auto max-h-[80vh]">
+          <div className="table-responsive overflow-x-auto overflow-y-auto max-h-[80vh]">
             <table className="w-full text-sm text-left border-collapse">
               <thead className="sticky top-0 z-20">
                 {/* Первый уровень заголовка: Дисциплины и курсы */}

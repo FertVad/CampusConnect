@@ -990,3 +990,45 @@ tfoot {
 .dark .summary-table td {
   border-color: rgba(100, 116, 139, 0.3);
 }
+
+/* Responsive table helpers */
+@media (max-width: 1024px) {
+  .hide-lg {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .hide-md {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .hide-sm {
+    display: none;
+  }
+}
+
+.table-responsive {
+  position: relative;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+.table-responsive::-webkit-scrollbar {
+  height: 6px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+  background-color: rgba(100, 116, 139, 0.4);
+  border-radius: 3px;
+}
+
+.table-responsive table th:first-child,
+.table-responsive table td:first-child {
+  position: sticky;
+  left: 0;
+  background-color: inherit;
+}
