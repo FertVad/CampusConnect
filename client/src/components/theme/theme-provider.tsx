@@ -37,8 +37,15 @@ export function ThemeProvider({
 
   const [theme, setTheme] = useState<Theme>(defaultTheme);
   const [isInitialized, setIsInitialized] = useState(false);
+
+  const resolvedTheme: "light" | "dark" =
+    theme === "system"
+      ? typeof window !== "undefined" &&
+        window.matchMedia("(prefers-color-scheme: dark)").matches
+        ? "dark"
+        : "light"
+      : (theme as "light" | "dark");
   
-  const [resolvedTheme, setResolvedTheme] = useState<"light" | "dark">("dark");
 
   useEffect(() => {
     const storedTheme = getStoredTheme();
@@ -84,9 +91,6 @@ export function ThemeProvider({
     // Add new theme class
     root.classList.add(resolvedValue);
     root.style.colorScheme = resolvedValue;
-    
-    // Update state
-    setResolvedTheme(resolvedValue);
     
     // Remove transition class after change is complete
     setTimeout(() => {
