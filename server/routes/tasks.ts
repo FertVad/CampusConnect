@@ -350,21 +350,21 @@ app.put('/api/tasks/:id', authenticateUser, async (req, res) => {
     // Создание уведомления при изменении статуса
     if (taskData.status && taskData.status !== task.status) {
       const statusMessages = {
-        pending: 'Задача перемещена в ожидание',
-        in_progress: 'Задача начата и теперь выполняется',
-        completed: 'Задача успешно завершена',
-        on_hold: 'Задача приостановлена',
-        cancelled: 'Задача отменена'
+        pending: 'Task moved to pending',
+        in_progress: 'Task started and is now in progress',
+        completed: 'Task completed successfully',
+        on_hold: 'Task put on hold',
+        cancelled: 'Task cancelled'
       } as const;
 
       const notificationTitle =
         statusMessages[taskData.status as keyof typeof statusMessages] ||
-        'Статус задачи обновлен';
+        'Task Status Updated';
 
       await NotificationService.createNotification({
         userId: task.clientId,
         title: notificationTitle,
-        message: `Статус задачи "${task.title}" изменен с "${getTaskStatusLabel(task.status)}" на "${getTaskStatusLabel(taskData.status)}"`,
+        message: `Task "${task.title}" status changed from "${task.status}" to "${taskData.status}"`,
         type: 'task_update',
         relatedId: taskId,
         relatedType: 'task'
@@ -519,21 +519,21 @@ app.patch('/api/tasks/:id/status', authenticateUser, async (req, res) => {
     // Создаем уведомление при изменении статуса задачи
     if (status && status !== task.status) {
       const statusMessages = {
-        pending: 'Задача перемещена в ожидание',
-        in_progress: 'Задача начата и теперь выполняется',
-        completed: 'Задача успешно завершена',
-        on_hold: 'Задача приостановлена',
-        cancelled: 'Задача отменена'
+        pending: 'Task moved to pending',
+        in_progress: 'Task started and is now in progress',
+        completed: 'Task completed successfully',
+        on_hold: 'Task put on hold',
+        cancelled: 'Task cancelled'
       } as const;
 
       const notificationTitle =
         statusMessages[status as keyof typeof statusMessages] ||
-        'Статус задачи обновлен';
+        'Task Status Updated';
 
       await NotificationService.createNotification({
         userId: task.clientId,
         title: notificationTitle,
-        message: `Статус задачи "${task.title}" изменен с "${getTaskStatusLabel(task.status)}" на "${getTaskStatusLabel(status)}"`,
+        message: `Task "${task.title}" status changed from "${task.status}" to "${status}"`,
         type: 'task_update',
         relatedId: taskId,
         relatedType: 'task'
