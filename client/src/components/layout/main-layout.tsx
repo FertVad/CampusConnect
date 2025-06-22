@@ -10,6 +10,7 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
+  SheetDescription,
   SheetTrigger,
   SheetClose,
 } from "@/components/ui/sheet";
@@ -82,8 +83,11 @@ export function MainLayout({ children, title, subtitle }: MainLayoutProps) {
                 <SheetContent side="left" className="glass-sidebar px-0 sm:max-w-xs">
                   <SheetHeader className="px-6">
                     <SheetTitle className="text-left text-lg bg-gradient-to-r from-indigo-400 to-emerald-300 text-transparent bg-clip-text">
-                      College MS
+                      {t('navigation_menu')}
                     </SheetTitle>
+                    <SheetDescription>
+                      {t('navigation_menu_description')}
+                    </SheetDescription>
                   </SheetHeader>
                   <nav className="flex flex-col gap-4 mt-10 px-6">
                     {navigationItems.map((item) => {

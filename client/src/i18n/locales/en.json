@@ -674,5 +674,7 @@
     "student": "Student"
   },
   "error": "Error",
-  "unexpected_error": "An unexpected error occurred"
+  "unexpected_error": "An unexpected error occurred",
+  "navigation_menu": "Navigation Menu",
+  "navigation_menu_description": "Access different sections of the application"
 }
