@@ -11,9 +11,7 @@
     "start": "NODE_ENV=production node dist/index.js",
     "check": "tsc -p tsconfig.check.json",
     "db:push": "drizzle-kit push",
-    "db:seed": "tsx server/db/seed.ts",
-    "audit:localization": "node scripts/localization-audit.js",
-    "audit:loc": "npm run audit:localization"
+    "db:seed": "tsx server/db/seed.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

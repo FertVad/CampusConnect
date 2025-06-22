@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Notification } from '@shared/schema';
 import { getRelativeTime } from '@/lib/utils';
 import { 
@@ -23,6 +24,7 @@ const NotificationList: React.FC<NotificationListProps> = ({
   onMarkAllAsRead,
   onViewAll
 }) => {
+  const { t } = useTranslation();
   const getNotificationIcon = (type: string) => {
     switch (type) {
       case 'message':
@@ -48,12 +50,12 @@ const NotificationList: React.FC<NotificationListProps> = ({
   return (
     <div className="bg-white rounded-lg shadow-sm border border-neutral-100">
       <div className="px-6 py-4 border-b border-neutral-100 flex justify-between items-center">
-        <h2 className="text-lg font-medium font-heading text-neutral-700">Notifications</h2>
+        <h2 className="text-lg font-medium font-heading text-neutral-700">{t('notifications.title')}</h2>
         <button 
           className="text-xs font-medium text-primary hover:text-primary-dark"
           onClick={onMarkAllAsRead}
         >
-          Mark All as Read
+          {t('notifications.markAllAsRead')}
         </button>
       </div>
       
@@ -61,7 +63,7 @@ const NotificationList: React.FC<NotificationListProps> = ({
         <div className="space-y-4">
           {notifications.length === 0 ? (
             <div className="text-center py-4 text-neutral-500">
-              No notifications to display
+              {t('notifications.no_notifications')}
             </div>
           ) : (
             notifications.map((notification) => (
@@ -92,7 +94,7 @@ const NotificationList: React.FC<NotificationListProps> = ({
             className="text-sm font-medium text-primary hover:text-primary-dark"
             onClick={onViewAll}
           >
-            View All Notifications
+            {t('notifications.viewAll')}
           </button>
         </div>
       )}
