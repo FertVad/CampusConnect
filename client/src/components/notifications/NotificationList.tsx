@@ -25,6 +25,22 @@ const NotificationList: React.FC<NotificationListProps> = ({
   onViewAll
 }) => {
   const { t } = useTranslation();
+
+  const translateStatus = (status: string) =>
+    t(`notifications.statuses.${status}`, status);
+
+  const translateContent = (notification: Notification) => {
+    const statusChangeMatch = notification.content.match(/Task ['"]?(.*?)['"]? status changed from ['"]?(.*?)['"]? to ['"]?(.*?)['"]?$/i);
+    if (statusChangeMatch) {
+      const [, name, oldStatus, newStatus] = statusChangeMatch;
+      return t('notifications.taskStatusChangedContent', {
+        name,
+        oldStatus: translateStatus(oldStatus),
+        newStatus: translateStatus(newStatus)
+      });
+    }
+    return notification.content;
+  };
   const getNotificationIcon = (type: string) => {
     switch (type) {
       case 'message':
@@ -79,7 +95,7 @@ const NotificationList: React.FC<NotificationListProps> = ({
                   {getNotificationIcon(notification.relatedType || 'default')}
                 </div>
                 <div>
-                  <p className="text-sm text-neutral-700">{notification.content}</p>
+                  <p className="text-sm text-neutral-700">{translateContent(notification)}</p>
                   <p className="text-xs text-neutral-500 mt-1">{getRelativeTime(notification.createdAt ?? new Date())}</p>
                 </div>
               </div>

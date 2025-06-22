@@ -79,18 +79,31 @@ export const NotificationBell = () => {
     });
   };
   
+  const translateTaskStatus = (status: string) =>
+    t(`notifications.statuses.${status}`, status);
+
   // Функция для перевода содержимого уведомлений
   const translateNotificationContent = (notification: Notification) => {
     // Уведомления о задачах
     if (notification.title === "Task Status Updated" && notification.content.includes("has been updated to")) {
       const taskTitle = notification.content.match(/Task "(.*?)" has been updated to/)?.[1] || "";
       const status = notification.content.match(/updated to (.*?)$/)?.[1] || "";
-      const translatedStatus = t(`task.status.${status}`, status);
+      const translatedStatus = translateTaskStatus(status);
       return t('notifications.taskStatusUpdateContent', {
         title: taskTitle,
         status: translatedStatus
       });
-    } 
+    }
+
+    const statusChangeMatch = notification.content.match(/Task ['"]?(.*?)['"]? status changed from ['"]?(.*?)['"]? to ['"]?(.*?)['"]?$/i);
+    if (statusChangeMatch) {
+      const [, name, oldStatus, newStatus] = statusChangeMatch;
+      return t('notifications.taskStatusChangedContent', {
+        name,
+        oldStatus: translateTaskStatus(oldStatus),
+        newStatus: translateTaskStatus(newStatus)
+      });
+    }
     
     if (notification.title === "Task Completed" && notification.content.includes("has been marked as completed")) {
       const taskTitle = notification.content.match(/Task "(.*?)" has been marked as completed/)?.[1] || "";
