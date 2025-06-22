@@ -153,7 +153,7 @@ const StudentCard: React.FC<StudentCardProps> = ({ student, onClick }) => {
             {student.note && (
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-amber-500">
+                  <Button variant="ghost" size="icon" className="h-11 w-11 text-amber-500">
                     <Bookmark size={16} />
                   </Button>
                 </PopoverTrigger>
@@ -293,11 +293,11 @@ const StudentCard: React.FC<StudentCardProps> = ({ student, onClick }) => {
         </CardContent>
 
         <CardFooter className="pt-2 flex justify-between">
-          <Button variant="outline" size="sm" onClick={handleClick}>
+          <Button variant="outline" onClick={handleClick}>
             <Info className="mr-2 h-4 w-4" />
             {t('actions.details', 'Подробнее')}
           </Button>
-          <Button variant="ghost" size="sm" onClick={handleEditClick}>
+          <Button variant="ghost" onClick={handleEditClick}>
             <Edit className="mr-2 h-4 w-4" />
             {t('actions.edit', 'Редактировать')}
           </Button>

@@ -290,7 +290,6 @@ export default function CurriculumPlans() {
                   <CardFooter className="pt-4 flex justify-between">
                     <Button
                       variant="outline"
-                      size="sm"
                       onClick={(e) => {
                         e.stopPropagation(); // Предотвращаем всплытие события
                         navigate(`/curriculum-plans/${plan.id}/edit`);
@@ -301,7 +300,6 @@ export default function CurriculumPlans() {
                     </Button>
                     <Button
                       variant="destructive"
-                      size="sm"
                       onClick={(e) => {
                         e.stopPropagation(); // Предотвращаем всплытие события
                         handleDeleteClick(plan);

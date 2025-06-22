@@ -121,14 +121,14 @@ const TaskCard = ({ task, onStatusChange, onEditClick, onDeleteClick, onViewDeta
           )}
           {(isCreator || isAdmin) && (
             <>
-              <Button variant="outline" size="sm" className="flex-shrink-0 h-10" title={t('task.edit_task')} onClick={() => onEditClick && onEditClick(task)}>
+              <Button variant="outline" className="flex-shrink-0 h-11" title={t('task.edit_task')} onClick={() => onEditClick && onEditClick(task)}>
                 <span className="sr-only">{t('task.edit_task')}</span>
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M12 20h9"></path>
                   <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
                 </svg>
               </Button>
-              <Button variant="destructive" size="sm" className="flex-shrink-0 h-10" title={t('task.delete_task')} onClick={() => onDeleteClick && onDeleteClick(task)}>
+              <Button variant="destructive" className="flex-shrink-0 h-11" title={t('task.delete_task')} onClick={() => onDeleteClick && onDeleteClick(task)}>
                 <span className="sr-only">{t('task.delete_task')}</span>
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M3 6h18"></path>

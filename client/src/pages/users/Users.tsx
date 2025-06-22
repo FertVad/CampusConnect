@@ -506,7 +506,6 @@ export default function Users() {
                       <TableCell className="text-right space-x-2">
                         <Button
                           variant="outline"
-                          size="sm"
                           onClick={(e) => {
                             e.stopPropagation(); // Предотвращаем всплытие клика на строку
                             openEditDialog(user);
@@ -516,7 +515,6 @@ export default function Users() {
                         </Button>
                         <Button
                           variant="outline"
-                          size="sm"
                           onClick={(e) => {
                             e.stopPropagation(); // Предотвращаем всплытие клика на строку
                             setUserToDelete(user);

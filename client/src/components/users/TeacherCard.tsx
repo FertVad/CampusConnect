@@ -140,10 +140,9 @@ const TeacherCard: React.FC<TeacherCardProps> = ({ teacher, onClick, onEdit }) =
             
             {/* Кнопка редактирования (только для админов/директоров) */}
             {canEdit && (
-              <Button 
-                size="sm" 
-                variant="outline" 
-                className="h-8" 
+              <Button
+                variant="outline"
+                className="h-11"
                 onClick={handleEdit}
               >
                 <Edit className="h-4 w-4 mr-1" />

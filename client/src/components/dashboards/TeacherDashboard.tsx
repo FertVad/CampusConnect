@@ -241,7 +241,7 @@ const TeacherDashboard = () => {
               )}
             </CardContent>
             <CardFooter>
-              <Button variant="outline" size="sm" asChild>
+              <Button variant="outline" asChild>
                 <Link href="/schedule">
                   {t('schedule.viewFull', 'Просмотреть полное расписание')}
                 </Link>
@@ -304,12 +304,12 @@ const TeacherDashboard = () => {
               )}
             </CardContent>
             <CardFooter className="flex justify-between">
-              <Button variant="outline" size="sm" asChild>
+              <Button variant="outline" asChild>
                 <Link href="/assignments">
                   {t('assignments.viewAll', 'Все задания')}
                 </Link>
               </Button>
-              <Button size="sm" asChild>
+              <Button asChild>
                 <Link href="/assignments/new">
                   <PlusCircle className="h-4 w-4 mr-2" />
                   {t('dashboard.teacher.assignNewTask', 'Назначить задание')}
@@ -348,7 +348,7 @@ const TeacherDashboard = () => {
                           </p>
                         </div>
                       </div>
-                      <Button variant="ghost" size="sm" asChild>
+                      <Button variant="ghost" asChild>
                         <Link href={`/chat/${student.id}`}>
                           <MessageSquare className="h-4 w-4 mr-1" />
                           {t('chat.contact', 'Связаться')}
@@ -423,7 +423,7 @@ const TeacherDashboard = () => {
             </CardContent>
             <CardFooter>
               {/*
-              <Button variant="outline" size="sm" asChild className="w-full">
+              <Button variant="outline" asChild className="w-full">
                 <Link href="/requests">
                   {t('requests.viewAll', 'Просмотреть все заявки')}
                 </Link>

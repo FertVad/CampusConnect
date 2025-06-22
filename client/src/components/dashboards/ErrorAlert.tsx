@@ -20,7 +20,7 @@ export default function ErrorAlert({ error, onRetry }: ErrorAlertProps) {
           <AlertDescription>{message}</AlertDescription>
         </div>
       </div>
-      <Button size="sm" onClick={onRetry}>{t('common.actions.retry', 'Повторить')}</Button>
+      <Button onClick={onRetry}>{t('common.actions.retry', 'Повторить')}</Button>
     </Alert>
   );
 }

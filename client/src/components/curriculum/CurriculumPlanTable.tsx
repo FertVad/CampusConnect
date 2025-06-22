@@ -1328,9 +1328,8 @@ export const CurriculumPlanTable = React.forwardRef<
               Выбрано элементов: {selectedNodes.size}
             </span>
             {/* Кнопка "Удалить выбранное" удалена, так как она дублирует функциональность */}
-            <Button 
-              variant="outline" 
-              size="sm"
+            <Button
+              variant="outline"
               onClick={() => clearSelection()}
             >
               <X size={16} className="mr-2" />

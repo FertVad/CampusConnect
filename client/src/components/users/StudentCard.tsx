@@ -195,10 +195,9 @@ const StudentCard: React.FC<StudentCardProps> = ({
             
             {/* Кнопка редактирования (только для админов/директоров) */}
             {canEdit && (
-              <Button 
-                size="sm" 
-                variant="outline" 
-                className="h-8" 
+              <Button
+                variant="outline"
+                className="h-11"
                 onClick={handleEdit}
               >
                 <Edit className="h-4 w-4 mr-1" />
@@ -382,7 +381,7 @@ const StudentCard: React.FC<StudentCardProps> = ({
                   ))}
                   
                   {activeTasks.length > 3 && (
-                    <Button variant="ghost" size="sm" className="w-full mt-2">
+                    <Button variant="ghost" className="w-full mt-2">
                       <span>{t('task.viewAll', 'Показать все')} ({activeTasks.length})</span>
                       <ChevronRight className="h-4 w-4 ml-1" />
                     </Button>
@@ -415,7 +414,7 @@ const StudentCard: React.FC<StudentCardProps> = ({
                           </p>
                         </div>
                       </div>
-                      <Button variant="ghost" size="sm">
+                      <Button variant="ghost">
                         {t('common.download', 'Скачать')}
                       </Button>
                     </div>
