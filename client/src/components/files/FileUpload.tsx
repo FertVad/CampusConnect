@@ -1,9 +1,11 @@
 import React, { useState, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { AlertCircle, Check, File, UploadCloud, X } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { formatFileSize } from '@/lib/utils';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useToast } from '@/hooks/use-toast';
 
 interface FileUploadProps {
   onUpload: (formData: FormData) => Promise<any>;
@@ -14,7 +16,7 @@ interface FileUploadProps {
   className?: string;
 }
 
-const FileUpload: React.FC<FileUploadProps> = ({ 
+const FileUpload: React.FC<FileUploadProps> = ({
   onUpload, 
   fieldName = 'file',
   acceptedFileTypes = '*',
@@ -27,8 +29,11 @@ const FileUpload: React.FC<FileUploadProps> = ({
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  
+
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const { t } = useTranslation();
+  const { toast } = useToast();
   
   const maxFileSizeBytes = maxFileSizeMB * 1024 * 1024;
   
@@ -122,8 +127,12 @@ const FileUpload: React.FC<FileUploadProps> = ({
         setUploading(false);
       }, 1000);
     } catch (err) {
-      console.error('Upload error:', err);
       setError('Upload failed. Please try again.');
+      toast({
+        title: t('error'),
+        description: err instanceof Error ? err.message : t('unexpected_error'),
+        variant: 'destructive'
+      });
       setUploading(false);
       setProgress(0);
     }

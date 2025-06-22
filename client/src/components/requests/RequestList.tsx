@@ -1,26 +1,51 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Request, User } from '@shared/schema';
 import { formatDate, getStatusColor } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
-import { useState } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useToast } from '@/hooks/use-toast';
 
 interface RequestListProps {
   requests: Request[];
   users?: User[];
   isAdmin?: boolean;
   onUpdateStatus?: (requestId: number, status: 'approved' | 'rejected', resolution: string) => Promise<void>;
+  isLoading?: boolean;
+  error?: Error | null;
+  onRetry?: () => void;
 }
 
-const RequestList: React.FC<RequestListProps> = ({ requests, users = [], isAdmin = false, onUpdateStatus }) => {
+const RequestList: React.FC<RequestListProps> = ({
+  requests,
+  users = [],
+  isAdmin = false,
+  onUpdateStatus,
+  isLoading = false,
+  error,
+  onRetry,
+}) => {
   const [selectedRequest, setSelectedRequest] = useState<Request | null>(null);
   const [resolution, setResolution] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [actionType, setActionType] = useState<'approved' | 'rejected'>('approved');
+  const { toast } = useToast();
+  const { t } = useTranslation();
+
+  useEffect(() => {
+    if (error) {
+      toast({
+        title: t('error'),
+        description: error.message || t('unexpected_error'),
+        variant: 'destructive'
+      });
+    }
+  }, [error, toast, t]);
   
   const getStudentName = (studentId: number) => {
     const student = users.find(user => user.id === studentId);
@@ -48,7 +73,11 @@ const RequestList: React.FC<RequestListProps> = ({ requests, users = [], isAdmin
       await onUpdateStatus(selectedRequest.id, actionType, resolution);
       setIsDialogOpen(false);
     } catch (error) {
-      console.error('Error processing request:', error);
+      toast({
+        title: t('error'),
+        description: error instanceof Error ? error.message : t('unexpected_error'),
+        variant: 'destructive'
+      });
     } finally {
       setIsProcessing(false);
     }
@@ -56,9 +85,28 @@ const RequestList: React.FC<RequestListProps> = ({ requests, users = [], isAdmin
   
   return (
     <div className="space-y-6">
-      {requests.length === 0 ? (
+      {isLoading ? (
+        Array.from({ length: 3 }).map((_, idx) => (
+          <Card key={idx} className="animate-pulse">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-4 w-16" />
+            </CardHeader>
+            <CardContent>
+              <Skeleton className="h-20 w-full" />
+            </CardContent>
+          </Card>
+        ))
+      ) : error ? (
+        <div className="text-center p-8 bg-white rounded-lg shadow-sm border border-neutral-100">
+          <p className="text-neutral-500 mb-4">{t('error')}</p>
+          {onRetry && (
+            <Button onClick={onRetry}>{t('common.actions.retry')}</Button>
+          )}
+        </div>
+      ) : requests.length === 0 ? (
         <div className="text-center p-8 bg-white rounded-lg shadow-sm border border-neutral-100 text-neutral-500">
-          No requests available
+          {t('requests.noRequests', 'No requests available')}
         </div>
       ) : (
         requests.map((request) => (

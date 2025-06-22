@@ -24,7 +24,12 @@ const Requests = () => {
   const requestIdFromHash = location.includes('#') ? parseInt(location.split('#')[1]) : null;
   
   // Get requests based on user role
-  const { data: requests = [], isLoading } = useQuery<Request[]>({
+  const {
+    data: requests = [],
+    isLoading,
+    error,
+    refetch,
+  } = useQuery<Request[]>({
     queryKey: [user?.role === 'student' ? `/api/requests/student/${user?.id}` : '/api/requests'],
   });
   
@@ -47,7 +52,6 @@ const Requests = () => {
       });
     },
     onError: (error) => {
-      console.error('Error submitting request:', error);
       toast({
         variant: 'destructive',
         title: 'Failed to Submit Request',
@@ -69,7 +73,6 @@ const Requests = () => {
       });
     },
     onError: (error) => {
-      console.error('Error updating request status:', error);
       toast({
         variant: 'destructive',
         title: 'Failed to Update Request',
@@ -119,19 +122,12 @@ const Requests = () => {
           </TabsContent>
           
           <TabsContent value="history" className="pt-4">
-            {isLoading ? (
-              <Card>
-                <CardContent className="p-8 text-center">
-                  <div className="animate-pulse flex flex-col items-center">
-                    <div className="h-8 w-8 bg-neutral-200 rounded-full mb-4"></div>
-                    <div className="h-4 bg-neutral-200 rounded w-3/4 mb-2"></div>
-                    <div className="h-4 bg-neutral-200 rounded w-1/2"></div>
-                  </div>
-                </CardContent>
-              </Card>
-            ) : (
-              <RequestList requests={requests} />
-            )}
+            <RequestList
+              requests={requests}
+              isLoading={isLoading}
+              error={error as Error | null}
+              onRetry={refetch}
+            />
           </TabsContent>
         </Tabs>
       ) : (
@@ -142,45 +138,27 @@ const Requests = () => {
           </TabsList>
           
           <TabsContent value="pending" className="pt-4">
-            {isLoading ? (
-              <Card>
-                <CardContent className="p-8 text-center">
-                  <div className="animate-pulse flex flex-col items-center">
-                    <div className="h-8 w-8 bg-neutral-200 rounded-full mb-4"></div>
-                    <div className="h-4 bg-neutral-200 rounded w-3/4 mb-2"></div>
-                    <div className="h-4 bg-neutral-200 rounded w-1/2"></div>
-                  </div>
-                </CardContent>
-              </Card>
-            ) : (
-              <RequestList 
-                requests={requests.filter(r => r.status === 'pending')} 
-                users={users}
-                isAdmin={isAdmin}
-                onUpdateStatus={handleUpdateRequestStatus}
-              />
-            )}
+            <RequestList
+              requests={requests.filter(r => r.status === 'pending')}
+              users={users}
+              isAdmin={isAdmin}
+              onUpdateStatus={handleUpdateRequestStatus}
+              isLoading={isLoading}
+              error={error as Error | null}
+              onRetry={refetch}
+            />
           </TabsContent>
           
           <TabsContent value="all" className="pt-4">
-            {isLoading ? (
-              <Card>
-                <CardContent className="p-8 text-center">
-                  <div className="animate-pulse flex flex-col items-center">
-                    <div className="h-8 w-8 bg-neutral-200 rounded-full mb-4"></div>
-                    <div className="h-4 bg-neutral-200 rounded w-3/4 mb-2"></div>
-                    <div className="h-4 bg-neutral-200 rounded w-1/2"></div>
-                  </div>
-                </CardContent>
-              </Card>
-            ) : (
-              <RequestList 
-                requests={requests} 
-                users={users}
-                isAdmin={isAdmin}
-                onUpdateStatus={handleUpdateRequestStatus}
-              />
-            )}
+            <RequestList
+              requests={requests}
+              users={users}
+              isAdmin={isAdmin}
+              onUpdateStatus={handleUpdateRequestStatus}
+              isLoading={isLoading}
+              error={error as Error | null}
+              onRetry={refetch}
+            />
           </TabsContent>
         </Tabs>
       )}

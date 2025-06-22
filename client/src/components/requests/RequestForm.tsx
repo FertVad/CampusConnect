@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -8,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useToast } from '@/hooks/use-toast';
 
 // Schema for the request form (studentId is added automatically on the server)
 export const requestFormSchema = z.object({
@@ -23,6 +25,8 @@ interface RequestFormProps {
 
 const RequestForm: React.FC<RequestFormProps> = ({ onSubmit }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { t } = useTranslation();
+  const { toast } = useToast();
   
   const form = useForm<RequestFormData>({
     resolver: zodResolver(requestFormSchema),
@@ -45,8 +49,16 @@ const RequestForm: React.FC<RequestFormProps> = ({ onSubmit }) => {
       setIsSubmitting(true);
       await onSubmit(data);
       form.reset();
+      toast({
+        title: t('requests.addSuccess', 'Request added successfully'),
+        variant: 'default'
+      });
     } catch (error) {
-      console.error('Error submitting request:', error);
+      toast({
+        title: t('error'),
+        description: error instanceof Error ? error.message : t('unexpected_error'),
+        variant: 'destructive'
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -60,6 +72,7 @@ const RequestForm: React.FC<RequestFormProps> = ({ onSubmit }) => {
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+            <fieldset disabled={isSubmitting} className="space-y-4">
             <FormField
               control={form.control}
               name="type"
@@ -125,6 +138,7 @@ const RequestForm: React.FC<RequestFormProps> = ({ onSubmit }) => {
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting ? 'Submitting...' : 'Submit Request'}
             </Button>
+            </fieldset>
           </form>
         </Form>
       </CardContent>

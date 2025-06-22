@@ -6,6 +6,8 @@ import { WeekCell, getFirstWorkdayOfSeptember, buildAcademicWeeks } from "@/util
 import { format } from "date-fns";
 import { ru } from "date-fns/locale/ru";
 import { useAutoSave } from "@/hooks/useAutoSave";
+import { useToast } from '@/hooks/use-toast';
+import { useTranslation } from 'react-i18next';
 import { SaveButton } from "@/components/ui/save-button";
 import CourseRow from "./CourseRow";
 import { X } from "lucide-react";
@@ -66,6 +68,8 @@ export function AcademicCalendarTable({
   planId = '',
   autosavePaused = false
 }: AcademicCalendarTableProps) {
+  const { toast } = useToast();
+  const { t } = useTranslation();
   // Получаем количество лет и месяцев обучения из глобального хранилища
   const { 
     yearsOfStudy: storeYearsOfStudy, 
@@ -173,7 +177,11 @@ export function AcademicCalendarTable({
       // Данные успешно сохранены
     },
     onError: (error) => {
-      console.error('[AcademicCalendarTable] Ошибка автосохранения:', error.message);
+      toast({
+        title: t('error'),
+        description: error.message || t('unexpected_error'),
+        variant: 'destructive',
+      });
     }
   });
   
