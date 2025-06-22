@@ -266,7 +266,6 @@ export const NotificationBell = () => {
           {unreadCount > 0 && (
             <Button
               variant="ghost"
-              size="sm"
               onClick={markAllAsRead}
               className="text-xs text-sidebar-foreground/80 hover:text-sidebar-foreground p-1 px-2 rounded-md hover:bg-sidebar-accent/10 border-none outline-none"
             >
@@ -329,7 +328,6 @@ export const NotificationBell = () => {
                     {!notification.isRead && (
                       <Button
                         variant="ghost"
-                        size="sm"
                         onClick={(e) => {
                           e.stopPropagation(); // Предотвращаем всплытие события клика
                           markAsRead(notification.id);

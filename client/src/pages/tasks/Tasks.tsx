@@ -154,14 +154,12 @@ const TasksPage = () => {
         <div className="flex flex-wrap gap-2">
           <Button
             variant={statusFilter === null ? "default" : "outline"}
-            size="sm"
             onClick={() => setStatusFilter(null)}
           >
             {t('task.all')}
           </Button>
           <Button
             variant={statusFilter === 'new' ? "default" : "outline"}
-            size="sm"
             onClick={() => setStatusFilter('new')}
             className="flex items-center gap-2"
           >
@@ -170,7 +168,6 @@ const TasksPage = () => {
           </Button>
           <Button
             variant={statusFilter === 'in_progress' ? "default" : "outline"}
-            size="sm"
             onClick={() => setStatusFilter('in_progress')}
             className="flex items-center gap-2"
           >
@@ -179,7 +176,6 @@ const TasksPage = () => {
           </Button>
           <Button
             variant={statusFilter === 'completed' ? "default" : "outline"}
-            size="sm"
             onClick={() => setStatusFilter('completed')}
             className="flex items-center gap-2"
           >
@@ -188,7 +184,6 @@ const TasksPage = () => {
           </Button>
           <Button
             variant={statusFilter === 'on_hold' ? "default" : "outline"}
-            size="sm"
             onClick={() => setStatusFilter('on_hold')}
             className="flex items-center gap-2"
           >

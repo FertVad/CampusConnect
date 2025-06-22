@@ -145,16 +145,14 @@ export function Navbar() {
                         {t('settings.language')}
                       </div>
                       <div className="flex gap-2">
-                        <Button 
-                          variant={i18n.resolvedLanguage === 'ru' ? 'default' : 'outline'} 
-                          size="sm"
+                        <Button
+                          variant={i18n.resolvedLanguage === 'ru' ? 'default' : 'outline'}
                           onClick={() => i18n.changeLanguage('ru')}
                         >
                           {t('settings.languages.ru')}
                         </Button>
-                        <Button 
-                          variant={i18n.resolvedLanguage === 'en' ? 'default' : 'outline'} 
-                          size="sm"
+                        <Button
+                          variant={i18n.resolvedLanguage === 'en' ? 'default' : 'outline'}
                           onClick={() => i18n.changeLanguage('en')}
                         >
                           {t('settings.languages.en')}

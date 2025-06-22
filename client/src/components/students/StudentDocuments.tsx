@@ -72,7 +72,7 @@ const StudentDocuments: React.FC<StudentDocumentsProps> = ({ userId, documents, 
         </p>
         {/* Заглушка для будущей функциональности загрузки */}
         {/*
-        <Button variant="outline" size="sm" className="mt-4">
+        <Button variant="outline" className="mt-4">
           <Upload className="mr-2 h-4 w-4" />
           {t('documents.upload', 'Загрузить файл')}
         </Button>
@@ -97,7 +97,7 @@ const StudentDocuments: React.FC<StudentDocumentsProps> = ({ userId, documents, 
           </div>
           
           {doc.fileUrl && (
-            <Button variant="ghost" size="sm" asChild>
+            <Button variant="ghost" asChild>
               <a href={doc.fileUrl} download target="_blank" rel="noopener noreferrer">
                 <Download className="h-4 w-4" />
               </a>

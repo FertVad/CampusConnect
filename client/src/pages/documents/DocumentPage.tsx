@@ -233,7 +233,7 @@ export default function DocumentPage({ documentType, title, icon: Icon }: Docume
                     )}
                   </CardContent>
                   <CardFooter className="flex justify-end">
-                    <Button variant="outline" size="sm" asChild>
+                    <Button variant="outline" asChild>
                       <a href={document.fileUrl || '#'} target="_blank" rel="noopener noreferrer">
                         <DownloadCloud className="h-4 w-4 mr-2" />
                         Download
