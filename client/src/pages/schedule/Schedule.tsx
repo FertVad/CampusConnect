@@ -125,12 +125,13 @@ export default function Schedule() {
               </CardDescription>
             </CardHeader>
             <CardContent>
+              <div className="table-responsive">
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Предмет</TableHead>
                     <TableHead>Время</TableHead>
-                    <TableHead>Кабинет</TableHead>
+                    <TableHead className="hide-md">Кабинет</TableHead>
                     <TableHead>Преподаватель</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -146,7 +147,7 @@ export default function Schedule() {
                           {formatTime(item.startTime)} - {formatTime(item.endTime)}
                         </div>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="hide-md">
                         <div className="flex items-center gap-1">
                           <MapPin className="h-4 w-4 text-muted-foreground" />
                           {item.roomNumber || 'Не назначен'}
@@ -165,6 +166,7 @@ export default function Schedule() {
                   ))}
                 </TableBody>
               </Table>
+              </div>
             </CardContent>
           </Card>
         ))}

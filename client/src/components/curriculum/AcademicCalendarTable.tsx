@@ -753,7 +753,7 @@ export function AcademicCalendarTable({
       </div>
 
       <div className="rounded-md overflow-hidden border shadow-sm dark:border-slate-700">
-        <div className="overflow-auto max-h-[500px] custom-scrollbar calendar-wrapper" ref={scrollWrapperRef}>
+        <div className="table-responsive overflow-auto max-h-[500px] custom-scrollbar calendar-wrapper" ref={scrollWrapperRef}>
           <div className="min-w-max relative">
             <table className="w-full border-collapse" ref={tableRef}>
               <thead ref={headerRef}>

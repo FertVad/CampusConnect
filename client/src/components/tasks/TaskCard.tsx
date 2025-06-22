@@ -54,17 +54,17 @@ const TaskCard = ({ task, onStatusChange, onEditClick, onDeleteClick, onViewDeta
         </div>
       </CardHeader>
       <CardContent className="flex-grow">
-        <p className="text-sm mb-3 line-clamp-3" title={task.description || t('task.no_description')}>
+        <p className="text-sm mb-3 line-clamp-3 hide-md" title={task.description || t('task.no_description')}>
           {task.description || t('task.no_description')}
         </p>
         <div className="space-y-2 text-sm">
-          <div className="flex items-center justify-between text-muted-foreground">
+          <div className="flex items-center justify-between text-muted-foreground hide-sm">
             <span>{t('task.client')}:</span>
             <span className="font-medium text-foreground">
               {task.client ? `${task.client.firstName} ${task.client.lastName}` : t('task.not_assigned')}
             </span>
           </div>
-          <div className="flex items-center justify-between text-muted-foreground">
+          <div className="flex items-center justify-between text-muted-foreground hide-sm">
             <span>{t('task.executor')}:</span>
             <span className="font-medium text-foreground">
               {task.executor ? `${task.executor.firstName} ${task.executor.lastName}` : t('task.not_assigned')}

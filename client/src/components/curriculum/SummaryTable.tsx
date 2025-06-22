@@ -42,7 +42,8 @@ export const SummaryTable: React.FC<{ summary: SummaryRow[]; courses: number }> 
   }, [data, courses]);
   
   return (
-    <table className="summary-table w-full border-collapse text-sm">
+    <div className="table-responsive">
+      <table className="summary-table w-full border-collapse text-sm">
       <thead>
         <tr>
           <th rowSpan={2} className="sticky left-0 z-10 bg-slate-800 text-white px-3 py-1">Вид</th>
@@ -115,6 +116,7 @@ export const SummaryTable: React.FC<{ summary: SummaryRow[]; courses: number }> 
           <td className="text-center font-bold bg-slate-200 dark:bg-slate-600/40">{weeksPerSemester.total}</td>
         </tr>
       </tbody>
-    </table>
+      </table>
+    </div>
   );
 };
