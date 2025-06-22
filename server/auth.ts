@@ -1,6 +1,7 @@
 import { Express } from "express";
 import bcrypt from "bcrypt";
-import { User as SelectUser, Request as SelectRequest } from "../shared/schema";
+import { User as SelectUser, Request as SelectRequest, loginSchema, registerSchema } from "../shared/schema";
+import { z } from "zod";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
 import { supabase } from "./supabaseClient";
 import { verifySupabaseJwt } from "./middleware/verifySupabaseJwt";
@@ -154,37 +155,49 @@ export function setupAuth(app: Express) {
 
   app.post("/api/register", async (req, res) => {
     try {
-      const { firstName, lastName, email, password, role } = req.body;
+      const validated = registerSchema.parse(req.body);
 
-      const { data, error } = await supabase.auth.signUp({ email, password });
+      const { data, error } = await supabase.auth.signUp({
+        email: validated.email,
+        password: validated.password,
+      });
       if (error || !data.user) {
         return res.status(400).json({ message: error?.message || "Registration failed" });
       }
 
       // Persist additional user details only after successful sign up
       await getStorage().createUser({
-        firstName,
-        lastName,
-        email,
-        password,
-        role,
+        firstName: validated.firstName,
+        lastName: validated.lastName,
+        email: validated.email,
+        password: validated.password,
+        role: validated.role,
       });
 
       return res.status(201).json(data);
     } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Validation error", errors: error.errors });
+      }
       return res.status(500).json({ message: "Registration failed" });
     }
   });
 
   app.post("/api/login", async (req, res) => {
     try {
-      const { email, password } = req.body;
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      const validated = loginSchema.parse(req.body);
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: validated.email,
+        password: validated.password,
+      });
       if (error || !data.session) {
         return res.status(401).json({ message: error?.message || "Authentication failed" });
       }
       return res.status(200).json(data);
     } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Validation error", errors: error.errors });
+      }
       return res.status(500).json({ message: "Login failed" });
     }
   });

@@ -412,8 +412,17 @@ export type InsertCurriculumPlan = z.infer<typeof insertCurriculumPlanSchema>;
 
 // Login schema
 export const loginSchema = z.object({
-  email: z.string().email("Valid email is required"),
-  password: z.string().min(1, "Password is required"),
+  email: z.string().trim().email("Valid email is required"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+});
+
+export const registerSchema = z.object({
+  firstName: z.string().trim().min(1, "First name is required").max(50, "First name must be at most 50 characters"),
+  lastName: z.string().trim().min(1, "Last name is required").max(50, "Last name must be at most 50 characters"),
+  email: z.string().trim().email("Valid email is required"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+  role: z.enum(["student", "teacher", "admin", "director"]),
 });
 
 export type LoginCredentials = z.infer<typeof loginSchema>;
+export type RegisterCredentials = z.infer<typeof registerSchema>;
