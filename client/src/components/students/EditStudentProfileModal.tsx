@@ -13,6 +13,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
 import {
@@ -118,6 +119,7 @@ const EditStudentProfileModal: React.FC<EditStudentProfileModalProps> = ({
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>{t('student.edit.title', 'Редактирование профиля студента')}</DialogTitle>
+          <DialogDescription>{t('modals.edit_profile_description')}</DialogDescription>
         </DialogHeader>
         
         <Form {...form}>

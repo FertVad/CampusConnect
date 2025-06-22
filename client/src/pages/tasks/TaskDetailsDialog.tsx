@@ -1,4 +1,4 @@
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { StatusBadge, PriorityBadge } from '@/components/tasks/TaskBadges';
 import { format } from 'date-fns';
@@ -23,6 +23,9 @@ export default function TaskDetailsDialog({ open, onOpenChange, task, onEdit, on
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl">{task?.title}</DialogTitle>
+          <DialogDescription>
+            {t('modals.task_details_description')}
+          </DialogDescription>
           <div className="flex flex-wrap gap-2 mt-2">
             {task && (
               <>

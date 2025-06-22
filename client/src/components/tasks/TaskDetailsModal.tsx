@@ -5,7 +5,7 @@ import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
 import { StatusBadge, PriorityBadge } from './TaskBadges';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
@@ -127,6 +127,9 @@ const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
           <DialogTitle className="text-xl">
             {task.title}
           </DialogTitle>
+          <DialogDescription>
+            {t('modals.task_details_description')}
+          </DialogDescription>
           <div className="flex flex-wrap gap-2 mt-2">
             {task.priority && <PriorityBadge priority={task.priority} />}
             <StatusBadge status={task.status} />

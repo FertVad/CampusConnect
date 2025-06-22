@@ -13,6 +13,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
 import {
@@ -279,6 +280,7 @@ const EditUserProfileModal: React.FC<EditUserProfileModalProps> = ({
           <DialogTitle>
             {t('user.edit.title', 'Редактирование профиля')} - {getRoleTitle(user.role)}
           </DialogTitle>
+          <DialogDescription>{t('modals.edit_profile_description')}</DialogDescription>
         </DialogHeader>
         
         <Form {...form}>

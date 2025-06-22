@@ -20,7 +20,8 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { useTranslation } from 'react-i18next';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -495,6 +496,7 @@ export const CurriculumPlanTable = React.forwardRef<
   Props
 >(function CurriculumPlanTable(props, ref) {
   const { courses, extraMonths, initialData, onPlanChange, onDirtyChange } = props;
+  const { t } = useTranslation();
   // Состояние для времени последнего изменения (для debounce)
   const lastChangeTime = useRef<number>(0);
   // Идентификатор таймера автосохранения
@@ -1562,6 +1564,7 @@ export const CurriculumPlanTable = React.forwardRef<
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Редактирование названия</DialogTitle>
+            <DialogDescription>{t('modals.edit_name_description')}</DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
