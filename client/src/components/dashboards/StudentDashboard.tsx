@@ -16,6 +16,8 @@ import { calculateGPA } from '@/lib/utils';
 import { Assignment, Notification, Request, Grade, Submission } from '@shared/schema';
 import { apiRequest } from '@/lib/queryClient';
 import { useAuth } from '@/hooks/use-auth';
+import DashboardSkeleton from './DashboardSkeleton';
+import ErrorAlert from './ErrorAlert';
 
 // Extend Assignment type to include submission info
 interface AssignmentWithSubmission extends Assignment {
@@ -27,27 +29,52 @@ const StudentDashboard = () => {
   const { t } = useTranslation();
   
   // Get student assignments
-  const { data: assignments = [] } = useQuery<AssignmentWithSubmission[]>({
+  const {
+    data: assignments = [],
+    isLoading: isAssignmentsLoading,
+    error: assignmentsError,
+    refetch: refetchAssignments,
+  } = useQuery<AssignmentWithSubmission[]>({
     queryKey: ['/api/assignments/student/' + user?.id],
   });
   
   // Get student grades
-  const { data: grades = [] } = useQuery<Grade[]>({
+  const {
+    data: grades = [],
+    isLoading: isGradesLoading,
+    error: gradesError,
+    refetch: refetchGrades,
+  } = useQuery<Grade[]>({
     queryKey: ['/api/grades/student/' + user?.id],
   });
   
   // Get schedule
-  const { data: scheduleItems = [] } = useQuery<ScheduleItemWithSubject[]>({
+  const {
+    data: scheduleItems = [],
+    isLoading: isScheduleLoading,
+    error: scheduleError,
+    refetch: refetchSchedule,
+  } = useQuery<ScheduleItemWithSubject[]>({
     queryKey: ['/api/schedule/student/' + user?.id],
   });
   
   // Get requests
-  const { data: requests = [] } = useQuery<Request[]>({
+  const {
+    data: requests = [],
+    isLoading: isRequestsLoading,
+    error: requestsError,
+    refetch: refetchRequests,
+  } = useQuery<Request[]>({
     queryKey: ['/api/requests/student/' + user?.id],
   });
   
   // Get notifications
-  const { data: notifications = [] } = useQuery<Notification[]>({
+  const {
+    data: notifications = [],
+    isLoading: isNotificationsLoading,
+    error: notificationsError,
+    refetch: refetchNotifications,
+  } = useQuery<Notification[]>({
     queryKey: ['/api/notifications'],
     enabled: !!user?.id,
     staleTime: 2 * 60 * 1000, // Данные считаются свежими в течение 2 минут
@@ -111,12 +138,42 @@ const StudentDashboard = () => {
   
   // Calculate attendance percentage (dummy for now)
   const attendancePercentage = 94;
-  
+
   // Calculate completion rate of assignments
-  const completedTasks = assignments.filter(a => 
+  const completedTasks = assignments.filter(a =>
     a.submission && (a.submission.status === 'completed' || a.submission.status === 'graded')
   ).length;
   const completionRate = Math.round((completedTasks / Math.max(assignments.length, 1)) * 100);
+
+  const isLoading =
+    isAssignmentsLoading ||
+    isGradesLoading ||
+    isScheduleLoading ||
+    isNotificationsLoading ||
+    isRequestsLoading;
+
+  const error =
+    assignmentsError ||
+    gradesError ||
+    scheduleError ||
+    notificationsError ||
+    requestsError;
+
+  if (isLoading) {
+    return <DashboardSkeleton />;
+  }
+
+  if (error) {
+    const handleRetry = () => {
+      refetchAssignments();
+      refetchGrades();
+      refetchSchedule();
+      refetchNotifications();
+      refetchRequests();
+    };
+
+    return <ErrorAlert error={error} onRetry={handleRetry} />;
+  }
   
   return (
     <div className="space-y-6">
