@@ -481,8 +481,6 @@
     "created_description": "Задача создана и назначена выбранному пользователю",
     "updated_success": "Задача успешно обновлена",
     "updated_description": "Задача была обновлена",
-    "updated": "Задача обновлена",
-    "updated_description": "Задача была обновлена",
     "deleted_success": "Задача успешно удалена",
     "deleted_description": "Задача была удалена",
     "status_updated": "Статус обновлен",
