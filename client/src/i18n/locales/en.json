@@ -536,9 +536,10 @@
     "adminNotificationUserUpdated": "User profile for {{name}} has been updated.",
     "taskStatusChangedContent": "Task '{{name}}' status changed from '{{oldStatus}}' to '{{newStatus}}'",
     "statuses": {
-      "completed": "completed",
-      "in_progress": "in progress",
-      "new": "new"
+      "completed": "Completed",
+      "in_progress": "In Progress",
+      "new": "New",
+      "on_hold": "On Hold"
     }
   },
   "settings": {

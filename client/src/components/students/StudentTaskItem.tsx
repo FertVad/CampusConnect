@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { getTaskStatusLabel } from '@/lib/taskStatus';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { Card } from '@/components/ui/card';
@@ -34,18 +35,7 @@ const StudentTaskItem: React.FC<StudentTaskItemProps> = ({
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Получение статуса задачи в виде текста
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'in_progress': 
-        return t('task.status.inProgress', 'В процессе');
-      case 'completed': 
-        return t('task.status.completed', 'Выполнено');
-      case 'on_hold': 
-        return t('task.status.onHold', 'На паузе');
-      default: 
-        return t('task.status.new', 'Новая');
-    }
-  };
+  const getStatusText = (status: string) => getTaskStatusLabel(status, t);
 
   // Получение цвета для статуса
   const getStatusColor = (status: string) => {

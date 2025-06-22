@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
+import { getTaskStatusLabel } from '@/lib/taskStatus';
 import { useQuery } from '@tanstack/react-query';
 import { UserData } from './UserCard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -369,10 +370,7 @@ const StudentCard: React.FC<StudentCardProps> = ({
                             'bg-green-50 text-green-600 border-green-200 dark:bg-green-950/50 dark:text-green-400 dark:border-green-800'
                           }
                         >
-                          {task.status === 'new' ? t('task.status.new', 'Новая') :
-                           task.status === 'in_progress' ? t('task.status.inProgress', 'В процессе') :
-                           task.status === 'on_hold' ? t('task.status.onHold', 'На паузе') :
-                           t('task.status.completed', 'Выполнено')}
+                          {getTaskStatusLabel(task.status, t)}
                         </Badge>
                       </div>
                       {task.description && (

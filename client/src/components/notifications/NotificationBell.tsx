@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { apiRequest } from '@/lib/queryClient';
 import { formatDistanceToNow } from 'date-fns';
 import { ru, enUS } from 'date-fns/locale';
+import { getTaskStatusLabel } from '@/lib/taskStatus';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 // Определение типа для уведомлений
@@ -80,7 +81,7 @@ export const NotificationBell = () => {
   };
   
   const translateTaskStatus = (status: string) =>
-    t(`notifications.statuses.${status}`, status);
+    getTaskStatusLabel(status, t);
 
   // Функция для перевода содержимого уведомлений
   const translateNotificationContent = (notification: Notification) => {

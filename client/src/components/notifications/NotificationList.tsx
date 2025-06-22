@@ -2,6 +2,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Notification } from '@shared/schema';
 import { getRelativeTime } from '@/lib/utils';
+import { getTaskStatusLabel } from '@/lib/taskStatus';
 import { 
   Bell, 
   MessageSquare, 
@@ -27,7 +28,7 @@ const NotificationList: React.FC<NotificationListProps> = ({
   const { t } = useTranslation();
 
   const translateStatus = (status: string) =>
-    t(`notifications.statuses.${status}`, status);
+    getTaskStatusLabel(status, t);
 
   const translateContent = (notification: Notification) => {
     const statusChangeMatch = notification.content.match(/Task ['"]?(.*?)['"]? status changed from ['"]?(.*?)['"]? to ['"]?(.*?)['"]?$/i);
