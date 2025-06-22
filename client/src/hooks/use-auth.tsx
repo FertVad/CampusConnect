@@ -180,10 +180,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       return await res.json();
     },
-    onSuccess: (userData: AuthUser) => {
+    onSuccess: async (userData: AuthUser) => {
       queryClient.setQueryData(["/api/user"], userData);
       // Explicitly set authentication status to true
       dispatchAuthStatusChanged(true);
+      // invalidate notifications cache
+      queryClient.invalidateQueries({ queryKey: ['/api/notifications'] });
+      // Установить Supabase сессию для Real-time
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (sessionData.session) {
+        await supabase.auth.setSession({
+          access_token: sessionData.session.access_token,
+          refresh_token: sessionData.session.refresh_token,
+        });
+      }
       toast({
         title: "Login successful",
         description: `Welcome back, ${userData.firstName}!`,
