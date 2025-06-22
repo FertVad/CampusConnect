@@ -6,6 +6,7 @@ import type { RouteContext } from "./index";
 import { logger } from "../utils/logger";
 import { getDbUserBySupabaseUser } from "../utils/userMapping";
 import { NotificationService } from "../services/NotificationService";
+import { getTaskStatusLabel } from '@shared/utils';
 
 export function registerTaskRoutes(app: Express, { authenticateUser, requireRole }: RouteContext) {
 // Tasks Routes
@@ -363,7 +364,7 @@ app.put('/api/tasks/:id', authenticateUser, async (req, res) => {
       await NotificationService.createNotification({
         userId: task.clientId,
         title: notificationTitle,
-        message: `Статус задачи "${task.title}" изменен с "${task.status}" на "${taskData.status}"`,
+        message: `Статус задачи "${task.title}" изменен с "${getTaskStatusLabel(task.status)}" на "${getTaskStatusLabel(taskData.status)}"`,
         type: 'task_update',
         relatedId: taskId,
         relatedType: 'task'
@@ -532,7 +533,7 @@ app.patch('/api/tasks/:id/status', authenticateUser, async (req, res) => {
       await NotificationService.createNotification({
         userId: task.clientId,
         title: notificationTitle,
-        message: `Статус задачи "${task.title}" изменен с "${task.status}" на "${status}"`,
+        message: `Статус задачи "${task.title}" изменен с "${getTaskStatusLabel(task.status)}" на "${getTaskStatusLabel(status)}"`,
         type: 'task_update',
         relatedId: taskId,
         relatedType: 'task'
