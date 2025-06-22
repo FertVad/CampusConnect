@@ -25,11 +25,26 @@ export function ThemeProvider({
   storageKey = "ui-theme",
   ...props
 }: ThemeProviderProps) {
-  const [theme, setTheme] = useState<Theme>(
-    () => (localStorage.getItem(storageKey) as Theme) || defaultTheme
-  );
+  const getStoredTheme = (): Theme => {
+    if (typeof window === "undefined") return defaultTheme;
+    try {
+      const stored = localStorage.getItem(storageKey);
+      return (stored as Theme) || defaultTheme;
+    } catch (error) {
+      return defaultTheme;
+    }
+  };
+
+  const [theme, setTheme] = useState<Theme>(defaultTheme);
+  const [isInitialized, setIsInitialized] = useState(false);
   
   const [resolvedTheme, setResolvedTheme] = useState<"light" | "dark">("dark");
+
+  useEffect(() => {
+    const storedTheme = getStoredTheme();
+    setTheme(storedTheme);
+    setIsInitialized(true);
+  }, [storageKey, defaultTheme]);
 
   // Handle system preference changes
   useEffect(() => {
@@ -83,10 +98,19 @@ export function ThemeProvider({
     updateTheme(theme);
   }, [theme]);
 
+  useEffect(() => {
+    if (isInitialized && typeof window !== "undefined") {
+      try {
+        localStorage.setItem(storageKey, theme);
+      } catch (error) {
+        console.warn("Failed to save theme:", error);
+      }
+    }
+  }, [theme, storageKey, isInitialized]);
+
   // Toggle between light and dark (ignoring system)
   const toggleTheme = () => {
     const newTheme = resolvedTheme === "dark" ? "light" : "dark";
-    localStorage.setItem(storageKey, newTheme);
     setTheme(newTheme);
   };
 
@@ -94,7 +118,6 @@ export function ThemeProvider({
     theme,
     resolvedTheme,
     setTheme: (newTheme: Theme) => {
-      localStorage.setItem(storageKey, newTheme);
       setTheme(newTheme);
     },
     toggleTheme,
