@@ -20,6 +20,7 @@
       "import": "Import",
       "export": "Export",
       "refresh": "Refresh",
+      "retry": "Retry",
       "confirm": "Confirm",
       "reject": "Reject",
       "approve": "Approve"

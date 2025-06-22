@@ -23,30 +23,52 @@ interface Task {
 }
 import { Button } from '@/components/ui/button';
 import { useTranslation } from 'react-i18next';
+import DashboardSkeleton from './DashboardSkeleton';
+import ErrorAlert from './ErrorAlert';
 
 const AdminDashboard = () => {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
 
   // Get all users with refetch on window focus and interval
-  const { data: users = [], isLoading: isLoadingUsers } = useQuery<User[]>({
+  const {
+    data: users = [],
+    isLoading: isLoadingUsers,
+    error: usersError,
+    refetch: refetchUsers,
+  } = useQuery<User[]>({
     queryKey: ['/api/users'],
     refetchOnWindowFocus: true,
     refetchInterval: 30000, // Refresh every 30 seconds
   });
 
   // Get all subjects
-  const { data: subjects = [] } = useQuery<any[]>({
+  const {
+    data: subjects = [],
+    isLoading: isSubjectsLoading,
+    error: subjectsError,
+    refetch: refetchSubjects,
+  } = useQuery<any[]>({
     queryKey: ['/api/subjects'],
   });
 
   // Get pending requests
-  const { data: requests = [] } = useQuery<Request[]>({
+  const {
+    data: requests = [],
+    isLoading: isRequestsLoading,
+    error: requestsError,
+    refetch: refetchRequests,
+  } = useQuery<Request[]>({
     queryKey: ['/api/requests'],
   });
 
   // Get all tasks
-  const { data: tasks = [], isLoading: isLoadingTasks } = useQuery<Task[]>({
+  const {
+    data: tasks = [],
+    isLoading: isLoadingTasks,
+    error: tasksError,
+    refetch: refetchTasks,
+  } = useQuery<Task[]>({
     queryKey: ['/api/tasks'],
     refetchOnWindowFocus: true,
     refetchInterval: 30000, // Refresh every 30 seconds
@@ -139,6 +161,28 @@ const AdminDashboard = () => {
         return <Users className="h-6 w-6" />;
     }
   };
+
+  const isLoading =
+    isLoadingUsers ||
+    isSubjectsLoading ||
+    isRequestsLoading ||
+    isLoadingTasks;
+
+  const error = usersError || subjectsError || requestsError || tasksError;
+
+  if (isLoading) {
+    return <DashboardSkeleton />;
+  }
+
+  if (error) {
+    const handleRetry = () => {
+      refetchUsers();
+      refetchSubjects();
+      refetchRequests();
+      refetchTasks();
+    };
+    return <ErrorAlert error={error} onRetry={handleRetry} />;
+  }
 
   return (
     <div className="space-y-6">

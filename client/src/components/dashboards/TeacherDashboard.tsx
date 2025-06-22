@@ -18,6 +18,8 @@ import { Link } from 'wouter';
 import { apiRequest } from '@/lib/queryClient';
 import { Notification, Assignment, User, Subject, Request } from '@shared/schema';
 import { useAuth } from '@/hooks/use-auth';
+import DashboardSkeleton from './DashboardSkeleton';
+import ErrorAlert from './ErrorAlert';
 
 const TeacherDashboard = () => {
   const { user } = useAuth();
@@ -26,30 +28,55 @@ const TeacherDashboard = () => {
   const isAdmin = user?.role === 'admin';
 
   // Get teacher's classes/subjects
-  const { data: subjects = [] } = useQuery<Subject[]>({
+  const {
+    data: subjects = [],
+    isLoading: isSubjectsLoading,
+    error: subjectsError,
+    refetch: refetchSubjects,
+  } = useQuery<Subject[]>({
     queryKey: [`/api/subjects/teacher/${user?.id}`],
     enabled: !!user?.id,
   });
 
   // Get teacher's schedule
-  const { data: scheduleItems = [] } = useQuery<ScheduleItemWithSubject[]>({
+  const {
+    data: scheduleItems = [],
+    isLoading: isScheduleLoading,
+    error: scheduleError,
+    refetch: refetchSchedule,
+  } = useQuery<ScheduleItemWithSubject[]>({
     queryKey: ['/api/schedule/teacher'],
   });
 
   // Get teacher's assignments
-  const { data: assignments = [] } = useQuery<Assignment[]>({
+  const {
+    data: assignments = [],
+    isLoading: isAssignmentsLoading,
+    error: assignmentsError,
+    refetch: refetchAssignments,
+  } = useQuery<Assignment[]>({
     queryKey: ['/api/assignments/teacher'],
   });
 
   // Get all students for teacher's classes
-  const { data: allStudents = [] } = useQuery<User[]>({
+  const {
+    data: allStudents = [],
+    isLoading: isStudentsLoading,
+    error: studentsError,
+    refetch: refetchStudents,
+  } = useQuery<User[]>({
     queryKey: ['/api/users'],
     select: (data) => data.filter(user => user.role === 'student'),
     enabled: isAdmin,
   });
   
   // Get notifications
-  const { data: notifications = [] } = useQuery<Notification[]>({
+  const {
+    data: notifications = [],
+    isLoading: isNotificationsLoading,
+    error: notificationsError,
+    refetch: refetchNotifications,
+  } = useQuery<Notification[]>({
     queryKey: ['/api/notifications'],
     enabled: !!user?.id,
     staleTime: 2 * 60 * 1000, // Данные считаются свежими в течение 2 минут
@@ -60,7 +87,12 @@ const TeacherDashboard = () => {
   });
   
   // Get pending requests (that teachers should handle)
-  const { data: requests = [] } = useQuery<Request[]>({
+  const {
+    data: requests = [],
+    isLoading: isRequestsLoading,
+    error: requestsError,
+    refetch: refetchRequests,
+  } = useQuery<Request[]>({
     queryKey: ['/api/requests'],
     select: (data) => data.filter(r => r.status === 'pending'),
   });
@@ -107,6 +139,38 @@ const TeacherDashboard = () => {
   const totalPendingSubmissions = pendingSubmissionsByAssignment.reduce(
     (sum, item) => sum + item.stats.needsGrading, 0
   );
+
+  const isLoading =
+    isSubjectsLoading ||
+    isScheduleLoading ||
+    isAssignmentsLoading ||
+    isStudentsLoading ||
+    isNotificationsLoading ||
+    isRequestsLoading;
+
+  const error =
+    subjectsError ||
+    scheduleError ||
+    assignmentsError ||
+    studentsError ||
+    notificationsError ||
+    requestsError;
+
+  if (isLoading) {
+    return <DashboardSkeleton />;
+  }
+
+  if (error) {
+    const handleRetry = () => {
+      refetchSubjects();
+      refetchSchedule();
+      refetchAssignments();
+      refetchStudents();
+      refetchNotifications();
+      refetchRequests();
+    };
+    return <ErrorAlert error={error} onRetry={handleRetry} />;
+  }
   
   return (
     <div className="space-y-6">
