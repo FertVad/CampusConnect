@@ -9,54 +9,39 @@ import translationEN from './locales/en.json';
 // Define the resources for each language
 const resources = {
   ru: {
-    translation: translationRU
+    translation: translationRU,
   },
   en: {
-    translation: translationEN
-  }
+    translation: translationEN,
+  },
 };
 
-// Initialize i18n configuration
+// Initialize i18n configuration SYNCHRONOUSLY
 i18n
-  // Detect user language
   .use(LanguageDetector)
-  // Pass the i18n instance to react-i18next
   .use(initReactI18next)
-  // Initialize i18next
   .init({
     resources,
-    fallbackLng: 'ru', // Default language if detection fails
+    fallbackLng: 'ru',
     defaultNS: 'translation',
-    lng: 'ru', // Set Russian as the default language
-    keySeparator: '.', // Use dots for nested keys
+    lng: 'ru',
+    keySeparator: '.',
     interpolation: {
-      escapeValue: false // React already escapes values
+      escapeValue: false,
     },
     detection: {
       order: ['localStorage', 'navigator', 'htmlTag'],
       caches: ['localStorage'],
     },
     react: {
-      useSuspense: false, // Disable suspense mode for better Safari compatibility
+      useSuspense: false,
     },
-    returnNull: false, // Return empty string instead of null (safer for Safari)
-    returnEmptyString: false, // Return key instead of empty string (safer for Safari)
-    saveMissing: true, // Report missing translation keys
+    returnNull: false,
+    returnEmptyString: false,
+    saveMissing: true,
     missingKeyHandler: (lng, ns, key) => {
-    }
-  })
-  .catch(error => {
-    console.error('Failed to initialize i18n:', error);
-    
-    // No need to override the t function, i18next will return the key if translation is missing
+      console.warn(`Missing translation: ${key} for language: ${lng}`);
+    },
   });
-
-// Log when i18n is initialized
-i18n.on('initialized', () => {
-});
-
-// Log when language changes
-i18n.on('languageChanged', (lng) => {
-});
 
 export default i18n;
