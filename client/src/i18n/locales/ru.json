@@ -584,9 +584,10 @@
     "adminNotificationUserUpdated": "Профиль пользователя {{name}} был обновлён.",
     "taskStatusChangedContent": "Статус задачи '{{name}}' изменен с '{{oldStatus}}' на '{{newStatus}}'",
     "statuses": {
-      "completed": "завершена",
-      "in_progress": "выполняется",
-      "new": "новая"
+      "completed": "Завершена",
+      "in_progress": "В работе",
+      "new": "Новая",
+      "on_hold": "Приостановлена"
     }
   },
   "roles": {
