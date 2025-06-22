@@ -658,7 +658,15 @@
     "goBack": "Go back",
     "goHome": "Go home",
     "contactSupport": "Contact support",
-  "pageMissingHint": "Did you forget to add the page to the router?"
+    "pageMissingHint": "Did you forget to add the page to the router?"
+  },
+  "modals": {
+    "edit_profile_description": "Update student personal information and settings",
+    "task_details_description": "View and manage task information and attachments",
+    "grade_form_description": "Enter and save student grades for assignments",
+    "delete_confirmation_description": "This action cannot be undone",
+    "command_dialog_description": "Search and run available commands",
+    "edit_name_description": "Update the name and save changes"
   },
   "roles": {
     "admin": "Administrator",

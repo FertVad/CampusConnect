@@ -590,8 +590,16 @@
       "completed": "Завершена",
       "in_progress": "В работе",
       "new": "Новая",
-      "on_hold": "Приостановлена"
+    "on_hold": "Приостановлена"
     }
+  },
+  "modals": {
+    "edit_profile_description": "Обновите личные данные студента и настройки",
+    "task_details_description": "Просмотр и управление информацией и вложениями задачи",
+    "grade_form_description": "Введите и сохраните оценки студентов за задания",
+    "delete_confirmation_description": "Это действие нельзя отменить",
+    "command_dialog_description": "Поиск и выполнение доступных команд",
+    "edit_name_description": "Измените название и сохраните изменения"
   },
   "roles": {
     "admin": "Администратор",
