@@ -1,4 +1,5 @@
 import React from 'react';
+import { Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
@@ -69,6 +70,7 @@ const EditUserProfileModal: React.FC<EditUserProfileModalProps> = ({
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user: currentUser } = useAuth();
+  const [isSaving, setIsSaving] = React.useState(false);
 
   // Определяем, может ли текущий пользователь изменять роли
   const canChangeRole = currentUser?.role === 'director';
@@ -123,6 +125,7 @@ const EditUserProfileModal: React.FC<EditUserProfileModalProps> = ({
   // Обработчик отправки формы
   const onSubmit = async (data: FormData) => {
     try {
+      setIsSaving(true);
       // Формируем данные для отправки в зависимости от роли
       // Удаляем проблемные или нерелевантные поля из данных, отправляемых на сервер
       // Например, не отправляем 'role', 'password', и другие поля, которые не должны изменяться
@@ -249,6 +252,8 @@ const EditUserProfileModal: React.FC<EditUserProfileModalProps> = ({
         description: error instanceof Error ? error.message : t('user.updateFailed', 'Не удалось обновить профиль'),
         variant: 'destructive',
       });
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -268,7 +273,7 @@ const EditUserProfileModal: React.FC<EditUserProfileModalProps> = ({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && !isSaving && onClose()}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
@@ -529,11 +534,18 @@ const EditUserProfileModal: React.FC<EditUserProfileModalProps> = ({
             )}
             
             <DialogFooter className="mt-6">
-              <Button type="button" variant="outline" onClick={onClose}>
+              <Button type="button" variant="outline" onClick={onClose} disabled={isSaving}>
                 {t('actions.cancel', 'Отмена')}
               </Button>
-              <Button type="submit">
-                {t('actions.save', 'Сохранить')}
+              <Button type="submit" disabled={isSaving}>
+                {isSaving ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    {t('actions.saving', 'Сохранение...')}
+                  </>
+                ) : (
+                  t('actions.save', 'Сохранить')
+                )}
               </Button>
             </DialogFooter>
           </form>

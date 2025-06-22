@@ -1,4 +1,5 @@
 import React from 'react';
+import { Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
@@ -51,6 +52,7 @@ const EditStudentProfileModal: React.FC<EditStudentProfileModalProps> = ({
   const { t } = useTranslation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [isSaving, setIsSaving] = React.useState(false);
 
   // Схема валидации для формы
   const formSchema = z.object({
@@ -83,6 +85,7 @@ const EditStudentProfileModal: React.FC<EditStudentProfileModalProps> = ({
   // Обработчик отправки формы
   const onSubmit = async (data: FormData) => {
     try {
+      setIsSaving(true);
       // Отправляем запрос на обновление профиля
       await apiRequest(`/api/users/${student.id}`, 'PUT', data);
 
@@ -107,11 +110,13 @@ const EditStudentProfileModal: React.FC<EditStudentProfileModalProps> = ({
         description: error instanceof Error ? error.message : 'Не удалось обновить профиль',
         variant: 'destructive',
       });
+    } finally {
+      setIsSaving(false);
     }
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && !isSaving && onClose()}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>{t('student.edit.title', 'Редактирование профиля студента')}</DialogTitle>
@@ -235,11 +240,18 @@ const EditStudentProfileModal: React.FC<EditStudentProfileModalProps> = ({
             </div>
             
             <DialogFooter className="mt-6">
-              <Button type="button" variant="outline" onClick={onClose}>
+              <Button type="button" variant="outline" onClick={onClose} disabled={isSaving}>
                 {t('actions.cancel', 'Отмена')}
               </Button>
-              <Button type="submit">
-                {t('actions.save', 'Сохранить')}
+              <Button type="submit" disabled={isSaving}>
+                {isSaving ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    {t('actions.saving', 'Сохранение...')}
+                  </>
+                ) : (
+                  t('actions.save', 'Сохранить')
+                )}
               </Button>
             </DialogFooter>
           </form>
