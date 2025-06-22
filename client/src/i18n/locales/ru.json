@@ -607,5 +607,7 @@
     "student": "Студент"
   },
   "error": "Ошибка",
-  "unexpected_error": "Произошла непредвиденная ошибка"
+  "unexpected_error": "Произошла непредвиденная ошибка",
+  "navigation_menu": "Меню навигации",
+  "navigation_menu_description": "Доступ к различным разделам приложения"
 }
