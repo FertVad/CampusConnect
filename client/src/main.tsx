@@ -10,21 +10,24 @@ import { ThemeProvider } from "@/components/theme/theme-provider";
 import { ErrorBoundary } from "@/components/errors/ErrorBoundary";
 
 // Import i18n configuration
-import "./i18n/i18n";
+import { I18nextProvider } from "react-i18next";
+import i18n from "./i18n/i18n";
 
 // Providers wrapped with Error Boundary
 function AppWithProviders() {
   return (
-    <ErrorBoundary>
+    <I18nextProvider i18n={i18n}>
       <ThemeProvider defaultTheme="dark">
         <QueryClientProvider client={queryClient}>
           <AuthProvider>
-            <App />
-            <Toaster />
+            <ErrorBoundary>
+              <App />
+              <Toaster />
+            </ErrorBoundary>
           </AuthProvider>
         </QueryClientProvider>
       </ThemeProvider>
-    </ErrorBoundary>
+    </I18nextProvider>
   );
 }
 
