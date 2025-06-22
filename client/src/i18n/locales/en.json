@@ -404,7 +404,8 @@
     "approveSuccess": "Request approved successfully",
     "approveError": "Error approving request: {{message}}",
     "rejectSuccess": "Request rejected successfully",
-    "rejectError": "Error rejecting request: {{message}}"
+    "rejectError": "Error rejecting request: {{message}}",
+    "noRequests": "No requests available"
   },
   "documents": {
     "title": "Documents",
@@ -663,5 +664,7 @@
     "admin": "Administrator",
     "teacher": "Teacher",
     "student": "Student"
-  }
+  },
+  "error": "Error",
+  "unexpected_error": "An unexpected error occurred"
 }

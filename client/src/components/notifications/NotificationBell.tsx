@@ -15,6 +15,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { ru, enUS } from 'date-fns/locale';
 import { getTaskStatusLabel } from '@/lib/taskStatus';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useToast } from '@/hooks/use-toast';
 
 // Определение типа для уведомлений
 export interface Notification {
@@ -34,6 +35,7 @@ export const NotificationBell = () => {
   const queryClient = useQueryClient();
   const [isOpen, setIsOpen] = useState(false);
   const [, setLocation] = useLocation();
+  const { toast } = useToast();
 
   // Определяем языковую локаль для форматирования дат
   const dateLocale = i18n.language === 'ru' ? ru : enUS;
@@ -58,7 +60,11 @@ export const NotificationBell = () => {
       await apiRequest(`/api/notifications/${id}/read`, 'PATCH');
       queryClient.invalidateQueries({ queryKey: ['/api/notifications'] });
     } catch (error) {
-      console.error('Failed to mark notification as read:', error);
+      toast({
+        title: t('error'),
+        description: error instanceof Error ? error.message : t('unexpected_error'),
+        variant: 'destructive',
+      });
     }
   };
 
@@ -68,7 +74,11 @@ export const NotificationBell = () => {
       await apiRequest('/api/notifications/read-all', 'PATCH');
       queryClient.invalidateQueries({ queryKey: ['/api/notifications'] });
     } catch (error) {
-      console.error('Failed to mark all notifications as read:', error);
+      toast({
+        title: t('error'),
+        description: error instanceof Error ? error.message : t('unexpected_error'),
+        variant: 'destructive',
+      });
     }
   };
 
@@ -223,7 +233,11 @@ export const NotificationBell = () => {
         setLocation(path);
       }
     } catch (error) {
-      console.error('Error navigating to notification source:', error);
+      toast({
+        title: t('error'),
+        description: error instanceof Error ? error.message : t('unexpected_error'),
+        variant: 'destructive',
+      });
     }
   }, [markAsRead, setLocation, setIsOpen]);
 

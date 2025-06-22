@@ -107,7 +107,6 @@ const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
       // Закрываем модальное окно
       onOpenChange(false);
     } catch (error) {
-      console.error('Error updating task status:', error);
       toast({
         title: t('errors.updateFailed', 'Ошибка обновления'),
         description: error instanceof Error ? error.message : t('task.statusUpdateFailed', 'Не удалось обновить статус задачи'),

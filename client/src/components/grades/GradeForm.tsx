@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { User, Subject, insertGradeSchema } from '@shared/schema';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -6,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useToast } from '@/hooks/use-toast';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -24,6 +26,8 @@ const gradeFormSchema = insertGradeSchema.extend({
 
 const GradeForm: React.FC<GradeFormProps> = ({ students, subjects, onSubmit }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { t } = useTranslation();
+  const { toast } = useToast();
   
   const form = useForm<z.infer<typeof gradeFormSchema>>({
     resolver: zodResolver(gradeFormSchema),
@@ -43,7 +47,11 @@ const GradeForm: React.FC<GradeFormProps> = ({ students, subjects, onSubmit }) =
       await onSubmit(data);
       form.reset();
     } catch (error) {
-      console.error('Error submitting grade:', error);
+      toast({
+        title: t('error'),
+        description: error instanceof Error ? error.message : t('unexpected_error'),
+        variant: 'destructive',
+      });
     } finally {
       setIsSubmitting(false);
     }

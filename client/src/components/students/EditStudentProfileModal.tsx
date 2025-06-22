@@ -103,8 +103,6 @@ const EditStudentProfileModal: React.FC<EditStudentProfileModalProps> = ({
       // Закрываем модальное окно
       onClose();
     } catch (error) {
-      console.error('Error updating profile:', error);
-      // Показываем уведомление об ошибке
       toast({
         title: 'Ошибка',
         description: error instanceof Error ? error.message : 'Не удалось обновить профиль',
