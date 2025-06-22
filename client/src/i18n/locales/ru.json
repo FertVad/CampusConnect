@@ -487,6 +487,13 @@
     "deleted_description": "Задача была удалена",
     "status_updated": "Статус обновлен",
     "status_updated_description": "Статус задачи был обновлен",
+    "statusMessages": {
+      "pending": "Задача перемещена в ожидание",
+      "in_progress": "Задача начата и теперь выполняется",
+      "completed": "Задача успешно завершена",
+      "on_hold": "Задача приостановлена",
+      "cancelled": "Задача отменена"
+    },
     "error_creating": "Ошибка при создании задачи",
     "error_updating": "Ошибка при обновлении задачи",
     "error_deleting": "Ошибка при удалении задачи",
@@ -532,6 +539,7 @@
     },
     "unread": "Непрочитанные",
     "all": "Все",
+    "viewAll": "Все уведомления",
     "loadMore": "Загрузить еще",
     "loading": "Загрузка...",
     "types": {
@@ -560,7 +568,12 @@
       "TaskDeleted": "Задача удалена",
       "NewTaskAssigned": "Назначена новая задача",
       "UserUpdated": "Данные пользователя обновлены",
-      "ScheduleChanged": "Изменения в расписании"
+      "ScheduleChanged": "Изменения в расписании",
+      "Taskmovedtopending": "Задача перемещена в ожидание",
+      "Taskstartedandisnowinprogress": "Задача начата и теперь выполняется",
+      "Taskcompletedsuccessfully": "Задача успешно завершена",
+      "Taskputonhold": "Задача приостановлена",
+      "Taskcancelled": "Задача отменена"
     },
     "taskStatusUpdateContent": "Статус задачи \"{{title}}\" изменен на {{status}}",
     "taskCompletedContent": "Задача \"{{title}}\" отмечена как завершенная",

@@ -490,6 +490,7 @@
     },
     "unread": "Unread",
     "all": "All",
+    "viewAll": "View All Notifications",
     "loadMore": "Load more",
     "types": {
       "assignment": "Assignment",
@@ -517,7 +518,12 @@
       "TaskDeleted": "Task Deleted",
       "NewTaskAssigned": "New Task Assigned",
       "UserUpdated": "User Data Updated",
-      "ScheduleChanged": "Schedule Changed"
+      "ScheduleChanged": "Schedule Changed",
+      "Taskmovedtopending": "Task moved to pending",
+      "Taskstartedandisnowinprogress": "Task started and is now in progress",
+      "Taskcompletedsuccessfully": "Task completed successfully",
+      "Taskputonhold": "Task put on hold",
+      "Taskcancelled": "Task cancelled"
     },
     "taskStatusUpdateContent": "Status of task \"{{title}}\" has been updated to {{status}}",
     "taskCompletedContent": "Task \"{{title}}\" has been marked as completed",
@@ -613,6 +619,13 @@
     "deleted_description": "The task has been deleted",
     "status_updated": "Status updated",
     "status_updated_description": "Task status has been updated",
+    "statusMessages": {
+      "pending": "Task moved to pending",
+      "in_progress": "Task started and is now in progress",
+      "completed": "Task completed successfully",
+      "on_hold": "Task put on hold",
+      "cancelled": "Task cancelled"
+    },
     "error_creating": "Error creating task",
     "error_updating": "Error updating task",
     "error_deleting": "Error deleting task",
