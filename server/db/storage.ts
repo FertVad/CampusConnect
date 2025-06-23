@@ -231,8 +231,12 @@ export class SupabaseStorage {
         schema.subjects,
         eq(schema.scheduleItems.subjectId, schema.subjects.id)
       )
+      .innerJoin(
+        schema.users,
+        eq(schema.subjects.teacherId, schema.users.id)
+      )
       .where(
-        eq(schema.subjects.teacherId, teacherId)
+        eq(schema.users.authUserId, teacherId)
       );
     
     const results = await query;
@@ -287,9 +291,15 @@ export class SupabaseStorage {
   }
 
   async getAssignmentsByTeacher(teacherId: string): Promise<Assignment[]> {
-    return db.select()
+    const results = await db.select()
       .from(schema.assignments)
-      .where(eq(schema.assignments.createdBy, teacherId));
+      .innerJoin(
+        schema.users,
+        eq(schema.assignments.createdBy, schema.users.id)
+      )
+      .where(eq(schema.users.authUserId, teacherId));
+
+    return results.map(r => r.assignments);
   }
 
   async getAssignmentsByStudent(studentId: string): Promise<Assignment[]> {
@@ -407,9 +417,15 @@ export class SupabaseStorage {
   }
 
   async getGradesByStudent(studentId: string): Promise<Grade[]> {
-    return db.select()
+    const results = await db.select()
       .from(schema.grades)
-      .where(eq(schema.grades.studentId, studentId));
+      .innerJoin(
+        schema.users,
+        eq(schema.grades.studentId, schema.users.id)
+      )
+      .where(eq(schema.users.authUserId, studentId));
+
+    return results.map(r => r.grades);
   }
 
   async getGradesBySubject(subjectId: number): Promise<Grade[]> {
@@ -419,14 +435,20 @@ export class SupabaseStorage {
   }
 
   async getGradesByStudentAndSubject(studentId: string, subjectId: number): Promise<Grade[]> {
-    return db.select()
+    const results = await db.select()
       .from(schema.grades)
+      .innerJoin(
+        schema.users,
+        eq(schema.grades.studentId, schema.users.id)
+      )
       .where(
         and(
-          eq(schema.grades.studentId, studentId),
+          eq(schema.users.authUserId, studentId),
           eq(schema.grades.subjectId, subjectId)
         )
       );
+
+    return results.map(r => r.grades);
   }
 
   async createGrade(gradeData: InsertGrade): Promise<Grade> {
