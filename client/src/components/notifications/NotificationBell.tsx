@@ -20,7 +20,7 @@ import { useToast } from '@/hooks/use-toast';
 // Определение типа для уведомлений
 export interface Notification {
   id: number;
-  userId: number;
+  userId: string;
   title: string;
   content: string;
   isRead: boolean;

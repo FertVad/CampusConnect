@@ -16,7 +16,7 @@ export interface Task {
   status: 'new' | 'in_progress' | 'completed' | 'on_hold';
   createdAt: string;
   updatedAt?: string;
-  createdBy?: number;
+  createdBy?: string;
   creatorName?: string;
   dueDate?: string;
   priority?: 'high' | 'medium' | 'low';
@@ -24,7 +24,7 @@ export interface Task {
 
 interface StudentTaskItemProps {
   task: Task;
-  userId: number;
+  userId: string;
 }
 
 const StudentTaskItem: React.FC<StudentTaskItemProps> = ({ 

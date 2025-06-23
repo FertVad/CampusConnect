@@ -13,16 +13,16 @@ import {
 // Интерфейс для данных документа
 export interface Document {
   id: number;
-  userId: number;
+  userId: string;
   title: string;
   type: string;
   fileUrl?: string;
   createdAt: string;
-  createdBy?: number;
+  createdBy?: string;
 }
 
 interface StudentDocumentsProps {
-  userId: number;
+  userId: string;
   documents: Document[];
   isLoading: boolean;
 }

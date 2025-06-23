@@ -32,7 +32,7 @@ const GradeForm: React.FC<GradeFormProps> = ({ students, subjects, onSubmit }) =
   const form = useForm<z.infer<typeof gradeFormSchema>>({
     resolver: zodResolver(gradeFormSchema),
     defaultValues: {
-      studentId: 0,
+      studentId: '',
       subjectId: 0,
       assignmentId: null,
       score: 0,
@@ -73,8 +73,8 @@ const GradeForm: React.FC<GradeFormProps> = ({ students, subjects, onSubmit }) =
                   <FormItem>
                     <FormLabel>Student</FormLabel>
                     <Select
-                      onValueChange={(value) => field.onChange(parseInt(value))}
-                      defaultValue={field.value.toString()}
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
                     >
                       <FormControl>
                         <SelectTrigger>

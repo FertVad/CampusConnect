@@ -32,7 +32,7 @@ interface TaskDetailsModalProps {
   onOpenChange: (open: boolean) => void;
   onStatusChange?: (taskId: number, status: string) => void;
   onAfterStatusChange?: () => void;
-  userId: number;
+  userId: string;
 }
 
 const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({ 

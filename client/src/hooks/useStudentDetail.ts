@@ -31,8 +31,8 @@ interface ScheduleItem {
   };
 }
 
-export function useStudentDetail(id: number | string | undefined) {
-  const userId = Number(id);
+export function useStudentDetail(id: string | undefined) {
+  const userId = id;
 
   const {
     data: userData,
@@ -43,7 +43,7 @@ export function useStudentDetail(id: number | string | undefined) {
     queryFn: async () => {
       return await apiRequest(`/api/users/${userId}`) as UserData;
     },
-    enabled: !!userId && !isNaN(userId),
+    enabled: !!userId,
   });
 
   const {
@@ -54,7 +54,7 @@ export function useStudentDetail(id: number | string | undefined) {
     queryFn: async () => {
       return await apiRequest(`/api/users/${userId}/notifications`) as Notification[];
     },
-    enabled: !!userId && !isNaN(userId),
+    enabled: !!userId,
   });
 
   const {
@@ -65,7 +65,7 @@ export function useStudentDetail(id: number | string | undefined) {
     queryFn: async () => {
       return await apiRequest(`/api/users/${userId}/tasks`) as Task[];
     },
-    enabled: !!userId && !isNaN(userId) && userData?.role === 'student',
+    enabled: !!userId && userData?.role === 'student',
   });
 
   const { data: scheduleItems = [] } = useQuery({

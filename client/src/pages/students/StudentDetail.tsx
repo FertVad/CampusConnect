@@ -12,7 +12,7 @@ import useStudentDetail from '@/hooks/useStudentDetail';
 export default function StudentDetail() {
   const { id } = useParams<{ id: string }>();
   const { t } = useTranslation();
-  const userId = parseInt(id);
+  const userId = id;
   const {
     userData,
     studentData,
