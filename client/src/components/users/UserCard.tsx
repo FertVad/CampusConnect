@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next';
 
 // Базовый интерфейс с данными пользователя
 export interface UserData {
-  id: number;
+  id: string;
   firstName: string;
   lastName: string;
   email: string;
@@ -18,7 +18,7 @@ export interface UserData {
 
 interface UserCardProps {
   user: UserData;
-  onClick?: (id: number) => void;
+  onClick?: (id: string) => void;
 }
 
 const UserCard: React.FC<UserCardProps> = ({ user, onClick }) => {

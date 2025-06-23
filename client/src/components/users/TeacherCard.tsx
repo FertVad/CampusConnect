@@ -34,7 +34,7 @@ export interface Teacher extends UserData {
 
 interface TeacherCardProps {
   teacher: Teacher;
-  onClick?: (id: number) => void;
+  onClick?: (id: string) => void;
   onEdit?: (teacher: Teacher) => void;
 }
 

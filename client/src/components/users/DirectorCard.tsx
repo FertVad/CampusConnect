@@ -22,7 +22,7 @@ export interface Director extends UserData {
 
 interface DirectorCardProps {
   director: Director;
-  onClick?: (id: number) => void;
+  onClick?: (id: string) => void;
   onEdit?: (director: Director) => void;
 }
 

@@ -37,7 +37,7 @@ import { useAuth } from '@/hooks/use-auth';
 
 // Интерфейс для данных пользователя
 export interface UserProfile {
-  id: number;
+  id: string;
   firstName: string;
   lastName: string;
   email: string;
