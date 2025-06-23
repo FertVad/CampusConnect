@@ -8,9 +8,7 @@ export function registerRequestRoutes(app: Express, { authenticateUser, requireR
   // Request Routes
   app.get('/api/requests', authenticateUser, requireRole(['admin', 'teacher']), async (req, res) => {
     try {
-      const requests = req.user!.role === 'admin'
-        ? await getStorage().getRequests()
-        : await getStorage().getPendingRequests();
+      const requests = await getStorage().getRequests();
       res.json(requests);
     } catch {
       res.status(500).json({ message: "Server error" });
@@ -19,7 +17,7 @@ export function registerRequestRoutes(app: Express, { authenticateUser, requireR
 
   app.get('/api/requests/student/:studentId', authenticateUser, async (req, res) => {
     try {
-      const studentId = parseInt(req.params.studentId);
+      const studentId = req.params.studentId;
       if (req.user!.id !== studentId && req.user!.role === 'student') {
         return res.status(403).json({ message: "Forbidden" });
       }
@@ -78,7 +76,7 @@ export function registerRequestRoutes(app: Express, { authenticateUser, requireR
       const updatedRequest = await getStorage().updateRequestStatus(
         requestId,
         status as 'approved' | 'rejected',
-        req.user!.id,
+        req.user!.publicId,
         resolution
       );
 
