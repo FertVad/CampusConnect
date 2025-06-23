@@ -98,7 +98,7 @@ export class SupabaseStorage {
     return this.subjectsRepo.getSubject(id);
   }
 
-  async getSubjectsByTeacher(teacherId: number): Promise<Subject[]> {
+  async getSubjectsByTeacher(teacherId: string): Promise<Subject[]> {
     return this.subjectsRepo.getSubjectsByTeacher(teacherId);
   }
 
@@ -119,7 +119,7 @@ export class SupabaseStorage {
     return db.select().from(schema.enrollments);
   }
 
-  async getEnrollmentsByStudent(studentId: number): Promise<Enrollment[]> {
+  async getEnrollmentsByStudent(studentId: string): Promise<Enrollment[]> {
     return db.select()
       .from(schema.enrollments)
       .where(eq(schema.enrollments.studentId, studentId));
@@ -147,7 +147,7 @@ export class SupabaseStorage {
     return results.map((r) => r.users);
   }
 
-  async getSubjectsByStudent(studentId: number): Promise<Subject[]> {
+  async getSubjectsByStudent(studentId: string): Promise<Subject[]> {
     const results = await db.select({ subjects: schema.subjects })
       .from(schema.subjects)
       .innerJoin(
@@ -198,7 +198,7 @@ export class SupabaseStorage {
       .where(eq(schema.scheduleItems.subjectId, subjectId));
   }
 
-  async getScheduleItemsByStudent(studentId: number): Promise<(ScheduleItem & { subject: Subject })[]> {
+  async getScheduleItemsByStudent(studentId: string): Promise<(ScheduleItem & { subject: Subject })[]> {
     const enrollments = await this.getEnrollmentsByStudent(studentId);
     const subjectIds = enrollments.map(e => e.subjectId);
     
@@ -224,7 +224,7 @@ export class SupabaseStorage {
     }));
   }
 
-  async getScheduleItemsByTeacher(teacherId: number): Promise<(ScheduleItem & { subject: Subject })[]> {
+  async getScheduleItemsByTeacher(teacherId: string): Promise<(ScheduleItem & { subject: Subject })[]> {
     const query = db.select()
       .from(schema.scheduleItems)
       .leftJoin(
@@ -286,13 +286,13 @@ export class SupabaseStorage {
       .where(eq(schema.assignments.subjectId, subjectId));
   }
 
-  async getAssignmentsByTeacher(teacherId: number): Promise<Assignment[]> {
+  async getAssignmentsByTeacher(teacherId: string): Promise<Assignment[]> {
     return db.select()
       .from(schema.assignments)
       .where(eq(schema.assignments.createdBy, teacherId));
   }
 
-  async getAssignmentsByStudent(studentId: number): Promise<Assignment[]> {
+  async getAssignmentsByStudent(studentId: string): Promise<Assignment[]> {
     const subjects = await this.getSubjectsByStudent(studentId);
     const subjectIds = subjects.map(s => s.id);
     
@@ -350,13 +350,13 @@ export class SupabaseStorage {
       .where(eq(schema.submissions.assignmentId, assignmentId));
   }
 
-  async getSubmissionsByStudent(studentId: number): Promise<Submission[]> {
+  async getSubmissionsByStudent(studentId: string): Promise<Submission[]> {
     return db.select()
       .from(schema.submissions)
       .where(eq(schema.submissions.studentId, studentId));
   }
 
-  async getSubmissionByAssignmentAndStudent(assignmentId: number, studentId: number): Promise<Submission | undefined> {
+  async getSubmissionByAssignmentAndStudent(assignmentId: number, studentId: string): Promise<Submission | undefined> {
     const submissions = await db.select()
       .from(schema.submissions)
       .where(
@@ -406,7 +406,7 @@ export class SupabaseStorage {
     return grades[0];
   }
 
-  async getGradesByStudent(studentId: number): Promise<Grade[]> {
+  async getGradesByStudent(studentId: string): Promise<Grade[]> {
     return db.select()
       .from(schema.grades)
       .where(eq(schema.grades.studentId, studentId));
@@ -418,7 +418,7 @@ export class SupabaseStorage {
       .where(eq(schema.grades.subjectId, subjectId));
   }
 
-  async getGradesByStudentAndSubject(studentId: number, subjectId: number): Promise<Grade[]> {
+  async getGradesByStudentAndSubject(studentId: string, subjectId: number): Promise<Grade[]> {
     return db.select()
       .from(schema.grades)
       .where(
@@ -466,7 +466,7 @@ export class SupabaseStorage {
     return requests[0];
   }
 
-  async getRequestsByStudent(studentId: number): Promise<Request[]> {
+  async getRequestsByStudent(studentId: string): Promise<Request[]> {
     return db.select()
       .from(schema.requests)
       .where(eq(schema.requests.studentId, studentId));
@@ -523,13 +523,13 @@ export class SupabaseStorage {
     return documents[0];
   }
 
-  async getDocumentsByUser(userId: number): Promise<Document[]> {
+  async getDocumentsByUser(userId: string): Promise<Document[]> {
     return db.select()
       .from(schema.documents)
       .where(eq(schema.documents.userId, userId));
   }
 
-  async getDocumentsByType(userId: number, type: string): Promise<Document[]> {
+  async getDocumentsByType(userId: string, type: string): Promise<Document[]> {
     return db.select()
       .from(schema.documents)
       .where(
@@ -577,7 +577,7 @@ export class SupabaseStorage {
     return messages[0];
   }
 
-  async getMessagesByUser(userId: number): Promise<Message[]> {
+  async getMessagesByUser(userId: string): Promise<Message[]> {
     return db.select()
       .from(schema.messages)
       .where(
@@ -589,7 +589,7 @@ export class SupabaseStorage {
       .orderBy(desc(schema.messages.sentAt));
   }
 
-  async getMessagesBetweenUsers(fromUserId: number, toUserId: number): Promise<Message[]> {
+  async getMessagesBetweenUsers(fromUserId: string, toUserId: string): Promise<Message[]> {
     return db.select()
       .from(schema.messages)
       .where(
@@ -643,11 +643,11 @@ export class SupabaseStorage {
     return notificationQueries.getNotification(id);
   }
 
-  async getNotificationsByUser(userId: number): Promise<Notification[]> {
+  async getNotificationsByUser(userId: string): Promise<Notification[]> {
     return notificationQueries.getNotificationsByUser(userId);
   }
 
-  async getUnreadNotificationsByUser(userId: number): Promise<Notification[]> {
+  async getUnreadNotificationsByUser(userId: string): Promise<Notification[]> {
     return notificationQueries.getUnreadNotificationsByUser(userId);
   }
 
@@ -664,7 +664,7 @@ export class SupabaseStorage {
     return notificationQueries.deleteNotification(id);
   }
 
-  async markAllNotificationsAsRead(userId: number): Promise<void> {
+  async markAllNotificationsAsRead(userId: string): Promise<void> {
     return notificationQueries.markAllNotificationsAsRead(userId);
   }
 
@@ -682,7 +682,7 @@ export class SupabaseStorage {
     return files[0];
   }
 
-  async getImportedFilesByUser(userId: number): Promise<ImportedFile[]> {
+  async getImportedFilesByUser(userId: string): Promise<ImportedFile[]> {
     return db.select()
       .from(schema.importedFiles)
       .where(eq(schema.importedFiles.uploadedBy, userId))
@@ -802,7 +802,7 @@ export class SupabaseStorage {
     return query;
   }
   
-  async getActivityLogsByUser(userId: number, limit?: number): Promise<ActivityLog[]> {
+  async getActivityLogsByUser(userId: string, limit?: number): Promise<ActivityLog[]> {
     const query = db.select()
       .from(schema.activityLogs)
       .where(eq(schema.activityLogs.userId, userId))
@@ -824,11 +824,11 @@ export class SupabaseStorage {
     return this.tasksRepo.getTask(id);
   }
 
-  async getTasksByClient(clientId: number): Promise<(Task & { client?: UserSummary; executor?: UserSummary })[]> {
+  async getTasksByClient(clientId: string): Promise<(Task & { client?: UserSummary; executor?: UserSummary })[]> {
     return this.tasksRepo.getTasksByClient(clientId);
   }
 
-  async getTasksByExecutor(executorId: number): Promise<(Task & { client?: UserSummary; executor?: UserSummary })[]> {
+  async getTasksByExecutor(executorId: string): Promise<(Task & { client?: UserSummary; executor?: UserSummary })[]> {
     return this.tasksRepo.getTasksByExecutor(executorId);
   }
 

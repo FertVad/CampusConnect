@@ -153,7 +153,7 @@ export class TasksRepository {
     return { ...baseTask, client, executor };
   }
 
-  async getTasksByClient(clientId: number): Promise<(Task & { client?: UserSummary; executor?: UserSummary })[]> {
+  async getTasksByClient(clientId: string): Promise<(Task & { client?: UserSummary; executor?: UserSummary })[]> {
     const clientsTable = aliasedTable(schema.users, 'clients');
     const executorsTable = aliasedTable(schema.users, 'executors');
 
@@ -235,7 +235,7 @@ export class TasksRepository {
     });
   }
 
-  async getTasksByExecutor(executorId: number): Promise<(Task & { client?: UserSummary; executor?: UserSummary })[]> {
+  async getTasksByExecutor(executorId: string): Promise<(Task & { client?: UserSummary; executor?: UserSummary })[]> {
     const clientsTable = aliasedTable(schema.users, 'clients');
     const executorsTable = aliasedTable(schema.users, 'executors');
 

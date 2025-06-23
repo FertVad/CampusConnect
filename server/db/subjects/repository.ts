@@ -16,7 +16,7 @@ export class SubjectsRepository {
     return subjects[0];
   }
 
-  async getSubjectsByTeacher(teacherId: number): Promise<Subject[]> {
+  async getSubjectsByTeacher(teacherId: string): Promise<Subject[]> {
     return db.select()
       .from(schema.subjects)
       .where(eq(schema.subjects.teacherId, teacherId));

@@ -407,7 +407,7 @@ export async function seedDatabase() {
       name: 'Calculus II',
       shortName: 'Calc II',
       description: 'Advanced calculus concepts including integration techniques and applications.',
-      teacherId: teacher1.id,
+      teacherId: teacher1.id.toString(),
       roomNumber: '302',
       color: '#4285F4' // Google Blue
     }).returning();
@@ -416,7 +416,7 @@ export async function seedDatabase() {
       name: 'Chemistry',
       shortName: 'Chem',
       description: 'Introduction to chemical principles and laboratory techniques.',
-      teacherId: teacher2.id,
+      teacherId: teacher2.id.toString(),
       roomNumber: 'Lab 201',
       color: '#34A853' // Google Green
     }).returning();
@@ -425,7 +425,7 @@ export async function seedDatabase() {
       name: 'Physics 101',
       shortName: 'Phys 101',
       description: 'Fundamentals of mechanics, energy, and wave phenomena.',
-      teacherId: teacher3.id,
+      teacherId: teacher3.id.toString(),
       roomNumber: '105',
       color: '#FBBC05' // Google Yellow
     }).returning();
@@ -434,7 +434,7 @@ export async function seedDatabase() {
       name: 'English Literature',
       shortName: 'Eng Lit',
       description: 'Critical analysis of classic and contemporary literature.',
-      teacherId: teacher1.id,
+      teacherId: teacher1.id.toString(),
       roomNumber: '201',
       color: '#EA4335' // Google Red
     }).returning();
@@ -443,21 +443,21 @@ export async function seedDatabase() {
       name: 'World History',
       shortName: 'W. History',
       description: 'Survey of major historical developments across civilizations.',
-      teacherId: teacher2.id,
+      teacherId: teacher2.id.toString(),
       roomNumber: '103',
       color: '#8E44AD' // Purple
     }).returning();
     
     // Create enrollments
     await db.insert(schema.enrollments).values([
-      { studentId: student1.id, subjectId: math.id },
-      { studentId: student1.id, subjectId: chemistry.id },
-      { studentId: student1.id, subjectId: physics.id },
-      { studentId: student1.id, subjectId: literature.id },
-      { studentId: student1.id, subjectId: history.id },
-      { studentId: student2.id, subjectId: math.id },
-      { studentId: student2.id, subjectId: chemistry.id },
-      { studentId: student2.id, subjectId: literature.id },
+      { studentId: student1.id.toString(), subjectId: math.id },
+      { studentId: student1.id.toString(), subjectId: chemistry.id },
+      { studentId: student1.id.toString(), subjectId: physics.id },
+      { studentId: student1.id.toString(), subjectId: literature.id },
+      { studentId: student1.id.toString(), subjectId: history.id },
+      { studentId: student2.id.toString(), subjectId: math.id },
+      { studentId: student2.id.toString(), subjectId: chemistry.id },
+      { studentId: student2.id.toString(), subjectId: literature.id },
     ]);
     
     // Schedule items будут загружены через импорт, поэтому не создаем тестовые данные
@@ -473,7 +473,7 @@ export async function seedDatabase() {
       description: 'Complete the midterm exam covering differential equations and vector calculus.',
       subjectId: math.id,
       dueDate: new Date(tomorrow.getTime()),
-      createdBy: teacher1.id
+      createdBy: teacher1.id.toString()
     }).returning();
     
     const [literatureAssignment] = await db.insert(schema.assignments).values({
@@ -481,7 +481,7 @@ export async function seedDatabase() {
       description: 'Write a 5-page analytical essay on the works of Shakespeare.',
       subjectId: literature.id,
       dueDate: new Date(tomorrow.getTime()),
-      createdBy: teacher1.id
+      createdBy: teacher1.id.toString()
     }).returning();
     
     // Create curriculum plans
@@ -498,7 +498,7 @@ export async function seedDatabase() {
           yearsOfStudy: 4,
           educationLevel: "ВО",
           description: "Бакалавриат по информатике и вычислительной технике",
-          createdBy: adminUserRecord.id,
+          createdBy: adminUserRecord.id.toString(),
           startYear: 2023,
           endYear: 2027,
           educationForm: "Очная"
@@ -509,7 +509,7 @@ export async function seedDatabase() {
           yearsOfStudy: 4,
           educationLevel: "ВО",
           description: "Бакалавриат по экономике",
-          createdBy: adminUserRecord.id,
+          createdBy: adminUserRecord.id.toString(),
           startYear: 2023,
           endYear: 2027,
           educationForm: "Очная"
@@ -520,7 +520,7 @@ export async function seedDatabase() {
           yearsOfStudy: 2,
           educationLevel: "Магистратура",
           description: "Магистратура по прикладной информатике",
-          createdBy: adminUserRecord.id,
+          createdBy: adminUserRecord.id.toString(),
           startYear: 2023,
           endYear: 2025,
           educationForm: "Очная"
