@@ -51,8 +51,11 @@ export function registerAssignmentRoutes(app: Express, { authenticateUser, requi
         return res.status(403).json({ message: "Access denied" });
       }
 
-      const assignments = await getStorage().getAssignmentsByStudent(req.user!.id);
-      const submissions = await getStorage().getSubmissionsByStudent(req.user!.id);
+      // Use the auth.uid() from the verified JWT instead of parsing integers
+      const studentId = req.user!.id;
+
+      const assignments = await getStorage().getAssignmentsByStudent(studentId);
+      const submissions = await getStorage().getSubmissionsByStudent(studentId);
 
       const assignmentsWithSubmissions = assignments.map(assignment => {
         const submission = submissions.find(sub => sub.assignmentId === assignment.id);
