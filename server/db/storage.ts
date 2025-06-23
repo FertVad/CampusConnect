@@ -10,7 +10,6 @@ import pg from 'pg';
 import { getOrSet } from '../utils/cache';
 
 import * as notificationQueries from './notifications';
-import { uuidToId } from './utils';
 
 const { Pool } = pg;
 import {
@@ -138,7 +137,7 @@ export class SupabaseStorage {
       .innerJoin(
         schema.enrollments,
         and(
-          eq(schema.users.id, schema.enrollments.studentId),
+          eq(schema.users.authUserId, schema.enrollments.studentId),
           eq(schema.enrollments.subjectId, subjectId)
         )
       )
@@ -167,7 +166,7 @@ export class SupabaseStorage {
     const [enrollment] = await db.insert(schema.enrollments)
       .values({
         ...enrollmentData,
-        studentId: uuidToId(enrollmentData.studentId),
+        studentId: enrollmentData.studentId,
       })
       .returning();
     
@@ -235,12 +234,8 @@ export class SupabaseStorage {
         schema.subjects,
         eq(schema.scheduleItems.subjectId, schema.subjects.id)
       )
-      .innerJoin(
-        schema.users,
-        eq(schema.subjects.teacherId, schema.users.id)
-      )
       .where(
-        eq(schema.users.authUserId, teacherId)
+        eq(schema.subjects.teacherId, teacherId)
       );
     
     const results = await query;
@@ -297,11 +292,7 @@ export class SupabaseStorage {
   async getAssignmentsByTeacher(teacherId: string): Promise<Assignment[]> {
     const results = await db.select()
       .from(schema.assignments)
-      .innerJoin(
-        schema.users,
-        eq(schema.assignments.createdBy, schema.users.id)
-      )
-      .where(eq(schema.users.authUserId, teacherId));
+      .where(eq(schema.assignments.createdBy, teacherId));
 
     return results.map(r => r.assignments);
   }
@@ -325,7 +316,7 @@ export class SupabaseStorage {
     const [assignment] = await db.insert(schema.assignments)
       .values({
         ...assignmentData,
-        createdBy: uuidToId(assignmentData.createdBy),
+        createdBy: assignmentData.createdBy,
       })
       .returning();
     
@@ -390,7 +381,7 @@ export class SupabaseStorage {
     const [submission] = await db.insert(schema.submissions)
       .values({
         ...submissionData,
-        studentId: uuidToId(submissionData.studentId),
+        studentId: submissionData.studentId,
       })
       .returning();
     
@@ -429,11 +420,7 @@ export class SupabaseStorage {
   async getGradesByStudent(studentId: string): Promise<Grade[]> {
     const results = await db.select()
       .from(schema.grades)
-      .innerJoin(
-        schema.users,
-        eq(schema.grades.studentId, schema.users.id)
-      )
-      .where(eq(schema.users.authUserId, studentId));
+      .where(eq(schema.grades.studentId, studentId));
 
     return results.map(r => r.grades);
   }
@@ -447,13 +434,9 @@ export class SupabaseStorage {
   async getGradesByStudentAndSubject(studentId: string, subjectId: number): Promise<Grade[]> {
     const results = await db.select()
       .from(schema.grades)
-      .innerJoin(
-        schema.users,
-        eq(schema.grades.studentId, schema.users.id)
-      )
       .where(
         and(
-          eq(schema.users.authUserId, studentId),
+          eq(schema.grades.studentId, studentId),
           eq(schema.grades.subjectId, subjectId)
         )
       );
@@ -465,7 +448,7 @@ export class SupabaseStorage {
     const [grade] = await db.insert(schema.grades)
       .values({
         ...gradeData,
-        studentId: uuidToId(gradeData.studentId),
+        studentId: gradeData.studentId,
       })
       .returning();
     
@@ -517,7 +500,7 @@ export class SupabaseStorage {
     const [request] = await db.insert(schema.requests)
       .values({
         ...requestData,
-        studentId: uuidToId(requestData.studentId),
+        studentId: requestData.studentId,
         status: 'pending'
       })
       .returning();
@@ -580,10 +563,8 @@ export class SupabaseStorage {
     const [document] = await db.insert(schema.documents)
       .values({
         ...documentData,
-        userId: uuidToId(documentData.userId),
-        createdBy: documentData.createdBy
-          ? uuidToId(documentData.createdBy)
-          : null,
+        userId: documentData.userId,
+        createdBy: documentData.createdBy ?? null,
       })
       .returning();
     
@@ -653,8 +634,8 @@ export class SupabaseStorage {
     const [message] = await db.insert(schema.messages)
       .values({
         ...messageData,
-        fromUserId: uuidToId(messageData.fromUserId),
-        toUserId: uuidToId(messageData.toUserId),
+        fromUserId: messageData.fromUserId,
+        toUserId: messageData.toUserId,
         status: 'sent'
       })
       .returning();
@@ -737,7 +718,7 @@ export class SupabaseStorage {
     const [file] = await db.insert(schema.importedFiles)
       .values({
         ...fileData,
-        uploadedBy: uuidToId(fileData.uploadedBy),
+        uploadedBy: fileData.uploadedBy,
       })
       .returning();
     
@@ -832,7 +813,7 @@ export class SupabaseStorage {
     const [log] = await db.insert(schema.activityLogs)
       .values({
         ...logData,
-        userId: uuidToId(logData.userId),
+        userId: logData.userId,
       })
       .returning();
     
@@ -933,7 +914,7 @@ export class SupabaseStorage {
       ...planData,
       createdAt: now,
       updatedAt: now,
-      createdBy: planData.createdBy ? uuidToId(planData.createdBy) : null,
+      createdBy: planData.createdBy ?? null,
     };
 
     const result = await db.insert(schema.curriculumPlans)
