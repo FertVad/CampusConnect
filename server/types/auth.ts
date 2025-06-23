@@ -2,7 +2,6 @@ export type UserRole = 'admin' | 'teacher' | 'student';
 
 export interface AuthenticatedUser {
   id: string; // Supabase UUID
-  publicId: number; // Database ID
   email: string;
   firstName: string;
   lastName: string;

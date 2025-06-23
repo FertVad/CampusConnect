@@ -19,8 +19,8 @@ export interface Task {
   createdAt: string;
   updatedAt: string;
   dueDate: string | null;
-  clientId: number;
-  executorId: number;
+  clientId: string;
+  executorId: string;
   client?: { firstName: string; lastName: string };
   executor?: { firstName: string; lastName: string };
 }
@@ -30,7 +30,7 @@ const taskFormSchema = z.object({
   description: z.string().optional(),
   priority: z.enum(['high', 'medium', 'low']),
   status: z.enum(['new', 'in_progress', 'on_hold']),
-  executorId: z.number(),
+  executorId: z.string(),
   dueDate: z.date().nullable().optional(),
 });
 
@@ -60,7 +60,7 @@ export function useTasks() {
       description: '',
       status: 'new',
       priority: 'medium',
-      executorId: 0,
+      executorId: '',
       dueDate: null,
     },
   });
@@ -72,7 +72,7 @@ export function useTasks() {
       description: '',
       status: 'new',
       priority: 'medium',
-      executorId: 0,
+      executorId: '',
       dueDate: null,
     },
   });
@@ -156,7 +156,7 @@ export function useTasks() {
       status?: string;
       priority?: string;
       dueDate?: string | null;
-      executorId?: number;
+      executorId?: string;
     }) => {
       const { id, ...taskData } = data;
       const result = await apiRequest(`/api/tasks/${id}`, 'PUT', taskData);
@@ -199,7 +199,7 @@ export function useTasks() {
       ...data,
       description: data.description || '',
       dueDate: data.dueDate ? data.dueDate.toISOString() : null,
-      clientId: user?.publicId as number,
+      clientId: user?.id,
     } as InsertTask;
 
     createTaskMutation.mutate(taskData);

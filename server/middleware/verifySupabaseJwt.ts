@@ -43,7 +43,6 @@ export async function verifySupabaseJwt(req: Request, res: Response, next: NextF
     const mergedUser: AuthenticatedUser = {
       id: data.user.id,
       email: data.user.email || '',
-      publicId: dbUser.id,
       firstName: dbUser.firstName,
       lastName: dbUser.lastName,
       role: dbUser.role,

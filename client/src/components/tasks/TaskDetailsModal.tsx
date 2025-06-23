@@ -19,8 +19,8 @@ export interface TaskDetail {
   createdAt: string;
   updatedAt?: string;
   dueDate?: string;
-  clientId?: number;
-  executorId?: number;
+  clientId?: string;
+  executorId?: string;
   creatorName?: string;
   executorName?: string;
   priority?: 'high' | 'medium' | 'low';
