@@ -32,7 +32,7 @@ export const subjects = pgTable("subjects", {
   name: text("name").notNull(),
   shortName: text("short_name"),
   description: text("description"),
-  teacherId: integer("teacher_id").references(() => users.id),
+  teacherId: text("teacher_id"),
   roomNumber: text("room_number"),
   color: text("color"), // Цвет для визуального отображения предмета в расписании
 });
@@ -40,7 +40,7 @@ export const subjects = pgTable("subjects", {
 // Student-Subject Enrollment
 export const enrollments = pgTable("enrollments", {
   id: serial("id").primaryKey(),
-  studentId: integer("student_id").references(() => users.id).notNull(),
+  studentId: text("student_id").notNull(),
   subjectId: integer("subject_id").references(() => subjects.id).notNull(),
 });
 
@@ -64,14 +64,14 @@ export const assignments = pgTable("assignments", {
   subjectId: integer("subject_id").references(() => subjects.id).notNull(),
   dueDate: timestamp("due_date").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
-  createdBy: integer("created_by").references(() => users.id).notNull(),
+  createdBy: text("created_by").notNull(),
 });
 
 // Assignment Submissions
 export const submissions = pgTable("submissions", {
   id: serial("id").primaryKey(),
   assignmentId: integer("assignment_id").references(() => assignments.id).notNull(),
-  studentId: integer("student_id").references(() => users.id).notNull(),
+  studentId: text("student_id").notNull(),
   submittedAt: timestamp("submitted_at").defaultNow(),
   content: text("content"),
   fileUrl: text("file_url"),
@@ -83,7 +83,7 @@ export const submissions = pgTable("submissions", {
 // Student Grades
 export const grades = pgTable("grades", {
   id: serial("id").primaryKey(),
-  studentId: integer("student_id").references(() => users.id).notNull(),
+  studentId: text("student_id").notNull(),
   subjectId: integer("subject_id").references(() => subjects.id).notNull(),
   assignmentId: integer("assignment_id").references(() => assignments.id),
   score: integer("score").notNull(),
@@ -96,7 +96,7 @@ export const grades = pgTable("grades", {
 // Student Requests
 export const requests = pgTable("requests", {
   id: serial("id").primaryKey(),
-  studentId: integer("student_id").references(() => users.id).notNull(),
+  studentId: text("student_id").notNull(),
   type: text("type").notNull(),
   description: text("description").notNull(),
   status: requestStatusEnum("status").notNull().default('pending'),
@@ -109,19 +109,19 @@ export const requests = pgTable("requests", {
 // Documents (Invoices, Certificates)
 export const documents = pgTable("documents", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").references(() => users.id).notNull(),
+  userId: text("user_id").notNull(),
   title: text("title").notNull(),
   type: text("type").notNull(),
   fileUrl: text("file_url"),
   createdAt: timestamp("created_at").defaultNow(),
-  createdBy: integer("created_by").references(() => users.id),
+  createdBy: text("created_by"),
 });
 
 // Chat Messages
 export const messages = pgTable("messages", {
   id: serial("id").primaryKey(),
-  fromUserId: integer("from_user_id").references(() => users.id).notNull(),
-  toUserId: integer("to_user_id").references(() => users.id).notNull(),
+  fromUserId: text("from_user_id").notNull(),
+  toUserId: text("to_user_id").notNull(),
   content: text("content").notNull(),
   sentAt: timestamp("sent_at").defaultNow(),
   status: messageStatusEnum("status").notNull().default('sent'),
@@ -130,7 +130,7 @@ export const messages = pgTable("messages", {
 // Notifications
 export const notifications = pgTable("notifications", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").references(() => users.id).notNull(),
+  userId: text("user_id").notNull(),
   title: text("title").notNull(),
   content: text("content").notNull(),
   type: text("type").default('system').notNull(),
@@ -176,7 +176,7 @@ export const scheduleEntries = pgTable("schedule_entries", {
   startTime: time("start_time").notNull(),
   endTime: time("end_time").notNull(),
   subjectId: integer("subject_id").references(() => subjects.id).notNull(),
-  teacherId: integer("teacher_id").references(() => users.id),
+  teacherId: text("teacher_id"),
   roomNumber: varchar("room_number", { length: 50 }),
   createdAt: timestamp("created_at").defaultNow(),
 });
@@ -194,7 +194,7 @@ export const importedFiles = pgTable("imported_files", {
   itemsCount: integer("items_count").notNull().default(0),
   successCount: integer("success_count").notNull().default(0),
   errorCount: integer("error_count").notNull().default(0),
-  uploadedBy: integer("uploaded_by").references(() => users.id).notNull(),
+  uploadedBy: text("uploaded_by").notNull(),
   uploadedAt: timestamp("uploaded_at").defaultNow(),
   errorDetails: text("error_details"),
 });
@@ -204,7 +204,7 @@ export const activityLogs = pgTable("activity_logs", {
   id: serial("id").primaryKey(),
   type: activityTypeEnum("type").notNull(),
   description: text("description").notNull(),
-  userId: integer("user_id").references(() => users.id).notNull(), // Who performed the action
+  userId: text("user_id").notNull(), // Who performed the action
   timestamp: timestamp("timestamp").defaultNow(),
   entityId: integer("entity_id"), // ID of the affected entity (file, user, subject, etc.)
   entityType: text("entity_type"), // Type of the affected entity
@@ -221,8 +221,8 @@ export const tasks = pgTable("tasks", {
   dueDate: timestamp("due_date"),
   priority: taskPriorityEnum("priority").notNull().default('medium'),
   status: taskStatusEnum("status").notNull().default('new'),
-  clientId: integer("client_id").references(() => users.id).notNull(), // кто поставил задачу (заказчик)
-  executorId: integer("executor_id").references(() => users.id).notNull(), // кто исполняет задачу
+  clientId: text("client_id").notNull(), // кто поставил задачу (заказчик)
+  executorId: text("executor_id").notNull(), // кто исполняет задачу
 });
 
 // Учебные планы (Curriculum Plans)
@@ -239,7 +239,7 @@ export const curriculumPlans = pgTable("curriculum_plans", {
   description: text("description"), // Описание учебного плана
   calendarData: text("calendar_data"), // Данные календаря (JSON-строка)
   curriculumPlanData: text("curriculum_plan_data"), // Данные учебного плана (JSON-строка)
-  createdBy: integer("created_by").references(() => users.id), // Кто создал план
+  createdBy: text("created_by"), // Кто создал план
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -340,8 +340,8 @@ export const insertTaskSchema = createInsertSchema(tasks)
     updatedAt: true,
   })
   .extend({
-    executorId: z.number().int().positive(),
-    clientId: z.number().int().positive(),
+    executorId: z.string(),
+    clientId: z.string(),
   });
 
 export const insertCurriculumPlanSchema = createInsertSchema(curriculumPlans).omit({
