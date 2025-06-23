@@ -1,7 +1,6 @@
 import { db } from '../index';
 import * as schema from '@shared/schema';
 import { eq, and, or, desc, asc, sql, isNotNull } from 'drizzle-orm';
-import { uuidToId } from '../utils';
 import { aliasedTable } from 'drizzle-orm/alias';
 import { Task, InsertTask, UserSummary } from '@shared/schema';
 
@@ -31,8 +30,8 @@ export class TasksRepository {
       executorRole: executorsTable.role
     })
     .from(schema.tasks)
-    .leftJoin(clientsTable, eq(schema.tasks.clientId, clientsTable.id))
-    .leftJoin(executorsTable, eq(schema.tasks.executorId, executorsTable.id))
+    .leftJoin(clientsTable, eq(schema.tasks.clientId, clientsTable.authUserId))
+    .leftJoin(executorsTable, eq(schema.tasks.executorId, executorsTable.authUserId))
     .orderBy(
       sql`CASE
           WHEN ${schema.tasks.status} = 'new' THEN 1
@@ -112,8 +111,8 @@ export class TasksRepository {
       executorRole: executorsTable.role
     })
     .from(schema.tasks)
-    .leftJoin(clientsTable, eq(schema.tasks.clientId, clientsTable.id))
-    .leftJoin(executorsTable, eq(schema.tasks.executorId, executorsTable.id))
+    .leftJoin(clientsTable, eq(schema.tasks.clientId, clientsTable.authUserId))
+    .leftJoin(executorsTable, eq(schema.tasks.executorId, executorsTable.authUserId))
     .where(eq(schema.tasks.id, id))
     .limit(1);
 
@@ -179,8 +178,8 @@ export class TasksRepository {
       executorRole: executorsTable.role
     })
     .from(schema.tasks)
-    .leftJoin(clientsTable, eq(schema.tasks.clientId, clientsTable.id))
-    .leftJoin(executorsTable, eq(schema.tasks.executorId, executorsTable.id))
+    .leftJoin(clientsTable, eq(schema.tasks.clientId, clientsTable.authUserId))
+    .leftJoin(executorsTable, eq(schema.tasks.executorId, executorsTable.authUserId))
     .where(eq(schema.tasks.clientId, clientId))
     .orderBy(
       sql`CASE
@@ -261,8 +260,8 @@ export class TasksRepository {
       executorRole: executorsTable.role
     })
     .from(schema.tasks)
-    .leftJoin(clientsTable, eq(schema.tasks.clientId, clientsTable.id))
-    .leftJoin(executorsTable, eq(schema.tasks.executorId, executorsTable.id))
+    .leftJoin(clientsTable, eq(schema.tasks.clientId, clientsTable.authUserId))
+    .leftJoin(executorsTable, eq(schema.tasks.executorId, executorsTable.authUserId))
     .where(eq(schema.tasks.executorId, executorId))
     .orderBy(
       sql`CASE
@@ -352,8 +351,8 @@ export class TasksRepository {
       executorRole: executorsTable.role
     })
     .from(schema.tasks)
-    .leftJoin(clientsTable, eq(schema.tasks.clientId, clientsTable.id))
-    .leftJoin(executorsTable, eq(schema.tasks.executorId, executorsTable.id))
+    .leftJoin(clientsTable, eq(schema.tasks.clientId, clientsTable.authUserId))
+    .leftJoin(executorsTable, eq(schema.tasks.executorId, executorsTable.authUserId))
     .where(
       and(
         or(
@@ -418,8 +417,8 @@ export class TasksRepository {
     const [task] = await db.insert(schema.tasks)
       .values({
         ...taskData,
-        clientId: uuidToId(taskData.clientId),
-        executorId: uuidToId(taskData.executorId),
+        clientId: taskData.clientId,
+        executorId: taskData.executorId,
       })
       .returning();
     return task;
