@@ -12,7 +12,6 @@ export type UserRole = 'admin' | 'teacher' | 'student';
 // Тип пользователя, возвращаемого эндпоинтом /api/user
 export interface AuthUser {
   id: string; // UUID из auth.users
-  publicId: number; // числовой ID из public.users
   firstName: string;
   lastName: string;
   email: string;

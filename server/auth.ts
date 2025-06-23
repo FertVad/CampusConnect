@@ -224,7 +224,6 @@ export function setupAuth(app: Express) {
 
     const responseUser = {
       id: req.user.id,
-      publicId: req.user.id,
       email: req.user.email,
       firstName: req.user.firstName,
       lastName: req.user.lastName,

@@ -16,8 +16,8 @@ interface Task {
   status: 'new' | 'in_progress' | 'completed' | 'on_hold';
   priority: 'high' | 'medium' | 'low';
   dueDate: string | null;
-  clientId: number;
-  executorId: number;
+  clientId: string;
+  executorId: string;
   createdAt: string;
   updatedAt: string;
 }
