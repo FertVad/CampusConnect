@@ -15,7 +15,7 @@ export async function getDbUserBySupabaseUser(supabaseUser: Pick<User, 'email' |
     }
 
     return {
-      id: user.id,
+      id: user.authUserId || user.id,
       firstName: user.firstName,
       lastName: user.lastName,
       email: user.email,
