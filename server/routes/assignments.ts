@@ -32,7 +32,7 @@ export function registerAssignmentRoutes(app: Express, { authenticateUser, requi
 
   app.get('/api/assignments/student/:studentId', authenticateUser, async (req, res) => {
     try {
-      const studentId = parseInt(req.params.studentId);
+      const studentId = req.params.studentId;
 
       if (req.user!.id !== studentId && req.user!.role === 'student') {
         return res.status(403).json({ message: "Forbidden" });
@@ -70,7 +70,7 @@ export function registerAssignmentRoutes(app: Express, { authenticateUser, requi
 
   app.get('/api/assignments/teacher/:teacherId', authenticateUser, async (req, res) => {
     try {
-      const teacherId = parseInt(req.params.teacherId);
+      const teacherId = req.params.teacherId;
 
       if (req.user!.id !== teacherId && req.user!.role !== 'admin') {
         return res.status(403).json({ message: "Forbidden" });
@@ -210,7 +210,7 @@ export function registerAssignmentRoutes(app: Express, { authenticateUser, requi
 
   app.get('/api/submissions/student/:studentId', authenticateUser, async (req, res) => {
     try {
-      const studentId = parseInt(req.params.studentId);
+      const studentId = req.params.studentId;
 
       if (req.user!.id !== studentId && req.user!.role === 'student') {
         return res.status(403).json({ message: "Forbidden" });
@@ -331,7 +331,7 @@ export function registerAssignmentRoutes(app: Express, { authenticateUser, requi
   // Grade Routes
   app.get('/api/grades/student/:studentId', authenticateUser, async (req, res) => {
     try {
-      const studentId = parseInt(req.params.studentId);
+      const studentId = req.params.studentId;
 
       if (req.user!.id !== studentId && req.user!.role === 'student') {
         return res.status(403).json({ message: "Forbidden" });
