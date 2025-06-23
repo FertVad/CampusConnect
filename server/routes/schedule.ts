@@ -269,13 +269,13 @@ app.get('/schedule-template.csv', (req, res) => {
 
 app.get('/api/schedule/student/:studentId', authenticateUser, async (req, res) => {
   try {
-    const studentId = parseInt(req.params.studentId);
-    
+    const studentId = req.params.studentId;
+
     // Students can only view their own schedule unless they're admins/teachers
     if (req.user!.id !== studentId && req.user!.role === 'student') {
       return res.status(403).json({ message: "Forbidden" });
     }
-    
+
     const schedule = await getStorage().getScheduleItemsByStudent(studentId);
     res.json(schedule);
   } catch (error) {
