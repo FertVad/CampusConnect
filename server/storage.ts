@@ -43,17 +43,17 @@ export interface IStorage {
   // Subjects
   getSubjects(): Promise<Subject[]>;
   getSubject(id: number): Promise<Subject | undefined>;
-  getSubjectsByTeacher(teacherId: number): Promise<Subject[]>;
+  getSubjectsByTeacher(teacherId: string): Promise<Subject[]>; // UUID
   createSubject(subject: InsertSubject): Promise<Subject>;
   updateSubject(id: number, subjectData: Partial<InsertSubject>): Promise<Subject | undefined>;
   deleteSubject(id: number): Promise<boolean>;
   
   // Enrollments
   getEnrollments(): Promise<Enrollment[]>;
-  getEnrollmentsByStudent(studentId: number): Promise<Enrollment[]>;
+  getEnrollmentsByStudent(studentId: string): Promise<Enrollment[]>; // UUID
   getEnrollmentsBySubject(subjectId: number): Promise<Enrollment[]>;
   getStudentsBySubject(subjectId: number): Promise<User[]>;
-  getSubjectsByStudent(studentId: number): Promise<Subject[]>;
+  getSubjectsByStudent(studentId: string): Promise<Subject[]>; // UUID
   createEnrollment(enrollment: InsertEnrollment): Promise<Enrollment>;
   deleteEnrollment(id: number): Promise<boolean>;
   
@@ -61,8 +61,8 @@ export interface IStorage {
   getScheduleItems(): Promise<ScheduleItem[]>;
   getScheduleItem(id: number): Promise<ScheduleItem | undefined>;
   getScheduleItemsBySubject(subjectId: number): Promise<ScheduleItem[]>;
-  getScheduleItemsByStudent(studentId: number): Promise<(ScheduleItem & { subject: Subject })[]>;
-  getScheduleItemsByTeacher(teacherId: number): Promise<(ScheduleItem & { subject: Subject })[]>;
+  getScheduleItemsByStudent(studentId: string): Promise<(ScheduleItem & { subject: Subject })[]>; // UUID
+  getScheduleItemsByTeacher(teacherId: string): Promise<(ScheduleItem & { subject: Subject })[]>; // UUID
   createScheduleItem(scheduleItem: InsertScheduleItem): Promise<ScheduleItem>;
   updateScheduleItem(id: number, scheduleItemData: Partial<InsertScheduleItem>): Promise<ScheduleItem | undefined>;
   deleteScheduleItem(id: number): Promise<boolean>;
@@ -71,8 +71,8 @@ export interface IStorage {
   getAssignments(): Promise<Assignment[]>;
   getAssignment(id: number): Promise<Assignment | undefined>;
   getAssignmentsBySubject(subjectId: number): Promise<Assignment[]>;
-  getAssignmentsByTeacher(teacherId: number): Promise<Assignment[]>;
-  getAssignmentsByStudent(studentId: number): Promise<Assignment[]>;
+  getAssignmentsByTeacher(teacherId: string): Promise<Assignment[]>; // UUID
+  getAssignmentsByStudent(studentId: string): Promise<Assignment[]>; // UUID
   createAssignment(assignment: InsertAssignment): Promise<Assignment>;
   updateAssignment(id: number, assignmentData: Partial<InsertAssignment>): Promise<Assignment | undefined>;
   deleteAssignment(id: number): Promise<boolean>;
@@ -81,8 +81,8 @@ export interface IStorage {
   getSubmissions(): Promise<Submission[]>;
   getSubmission(id: number): Promise<Submission | undefined>;
   getSubmissionsByAssignment(assignmentId: number): Promise<Submission[]>;
-  getSubmissionsByStudent(studentId: number): Promise<Submission[]>;
-  getSubmissionByAssignmentAndStudent(assignmentId: number, studentId: number): Promise<Submission | undefined>;
+  getSubmissionsByStudent(studentId: string): Promise<Submission[]>; // UUID
+  getSubmissionByAssignmentAndStudent(assignmentId: number, studentId: string): Promise<Submission | undefined>;
   createSubmission(submission: InsertSubmission): Promise<Submission>;
   updateSubmission(id: number, submissionData: Partial<InsertSubmission>): Promise<Submission | undefined>;
   deleteSubmission(id: number): Promise<boolean>;
@@ -90,9 +90,9 @@ export interface IStorage {
   // Grades
   getGrades(): Promise<Grade[]>;
   getGrade(id: number): Promise<Grade | undefined>;
-  getGradesByStudent(studentId: number): Promise<Grade[]>;
+  getGradesByStudent(studentId: string): Promise<Grade[]>; // UUID
   getGradesBySubject(subjectId: number): Promise<Grade[]>;
-  getGradesByStudentAndSubject(studentId: number, subjectId: number): Promise<Grade[]>;
+  getGradesByStudentAndSubject(studentId: string, subjectId: number): Promise<Grade[]>;
   createGrade(grade: InsertGrade): Promise<Grade>;
   updateGrade(id: number, gradeData: Partial<InsertGrade>): Promise<Grade | undefined>;
   deleteGrade(id: number): Promise<boolean>;
@@ -100,7 +100,7 @@ export interface IStorage {
   // Requests
   getRequests(): Promise<Request[]>;
   getRequest(id: number): Promise<Request | undefined>;
-  getRequestsByStudent(studentId: number): Promise<Request[]>;
+  getRequestsByStudent(studentId: string): Promise<Request[]>; // UUID
   getPendingRequests(): Promise<Request[]>;
   createRequest(request: InsertRequest): Promise<Request>;
   updateRequestStatus(id: number, status: 'pending' | 'approved' | 'rejected', resolvedBy: number, resolution?: string): Promise<Request | undefined>;
@@ -109,8 +109,8 @@ export interface IStorage {
   // Documents
   getDocuments(): Promise<Document[]>;
   getDocument(id: number): Promise<Document | undefined>;
-  getDocumentsByUser(userId: number): Promise<Document[]>;
-  getDocumentsByType(userId: number, type: string): Promise<Document[]>;
+  getDocumentsByUser(userId: string): Promise<Document[]>; // UUID
+  getDocumentsByType(userId: string, type: string): Promise<Document[]>; // UUID
   createDocument(document: InsertDocument): Promise<Document>;
   updateDocument(id: number, documentData: Partial<InsertDocument>): Promise<Document | undefined>;
   deleteDocument(id: number): Promise<boolean>;
@@ -118,8 +118,8 @@ export interface IStorage {
   // Messages
   getMessages(): Promise<Message[]>;
   getMessage(id: number): Promise<Message | undefined>;
-  getMessagesByUser(userId: number): Promise<Message[]>;
-  getMessagesBetweenUsers(fromUserId: number, toUserId: number): Promise<Message[]>;
+  getMessagesByUser(userId: string): Promise<Message[]>; // UUID
+  getMessagesBetweenUsers(fromUserId: string, toUserId: string): Promise<Message[]>; // UUIDs
   createMessage(message: InsertMessage): Promise<Message>;
   updateMessageStatus(id: number, status: 'delivered' | 'read'): Promise<Message | undefined>;
   deleteMessage(id: number): Promise<boolean>;
@@ -127,11 +127,11 @@ export interface IStorage {
   // Notifications
   getNotifications(): Promise<Notification[]>;
   getNotification(id: number): Promise<Notification | undefined>;
-  getNotificationsByUser(userId: number): Promise<Notification[]>;
-  getUnreadNotificationsByUser(userId: number): Promise<Notification[]>;
+  getNotificationsByUser(userId: string): Promise<Notification[]>; // UUID
+  getUnreadNotificationsByUser(userId: string): Promise<Notification[]>; // UUID
   createNotification(notification: InsertNotification): Promise<Notification>;
   markNotificationAsRead(id: number): Promise<Notification | undefined>;
-  markAllNotificationsAsRead(userId: number): Promise<void>;
+  markAllNotificationsAsRead(userId: string): Promise<void>;
   deleteNotification(id: number): Promise<boolean>;
   
   // Специальности
@@ -161,7 +161,7 @@ export interface IStorage {
   getScheduleEntries(): Promise<ScheduleEntry[]>;
   getScheduleEntry(id: number): Promise<ScheduleEntry | undefined>;
   getScheduleEntriesByGroup(groupId: number): Promise<ScheduleEntry[]>;
-  getScheduleEntriesByTeacher(teacherId: number): Promise<ScheduleEntry[]>;
+  getScheduleEntriesByTeacher(teacherId: string): Promise<ScheduleEntry[]>; // UUID
   getScheduleEntriesBySubject(subjectId: number): Promise<ScheduleEntry[]>;
   createScheduleEntry(scheduleEntry: InsertScheduleEntry): Promise<ScheduleEntry>;
   updateScheduleEntry(id: number, scheduleEntryData: Partial<InsertScheduleEntry>): Promise<ScheduleEntry | undefined>;
@@ -169,7 +169,7 @@ export interface IStorage {
   
   // Поиск и обслуживание расписания
   getTeacherByName(fullName: string): Promise<User | undefined>;
-  getOrCreateSubject(name: string, teacherId?: number, roomNumber?: string): Promise<Subject>;
+  getOrCreateSubject(name: string, teacherId?: string, roomNumber?: string): Promise<Subject>;
   getOrCreateSpecialty(name: string, code?: string): Promise<Specialty>;
   getOrCreateCourse(number: number, specialtyId: number, academicYear: string): Promise<Course>;
   getOrCreateGroup(name: string, courseId: number): Promise<Group>;
@@ -177,7 +177,7 @@ export interface IStorage {
   // Импортированные файлы
   getImportedFiles(): Promise<ImportedFile[]>;
   getImportedFile(id: number): Promise<ImportedFile | undefined>;
-  getImportedFilesByUser(userId: number): Promise<ImportedFile[]>;
+  getImportedFilesByUser(userId: string): Promise<ImportedFile[]>; // UUID
   createImportedFile(fileData: InsertImportedFile): Promise<ImportedFile>;
   deleteImportedFile(id: number): Promise<boolean>;
   getImportedFilesByType(type: 'csv' | 'google-sheets'): Promise<ImportedFile[]>;
@@ -186,14 +186,14 @@ export interface IStorage {
   getActivityLogs(limit?: number): Promise<ActivityLog[]>; 
   createActivityLog(logData: InsertActivityLog): Promise<ActivityLog>;
   getActivityLogsByType(type: string, limit?: number): Promise<ActivityLog[]>;
-  getActivityLogsByUser(userId: number, limit?: number): Promise<ActivityLog[]>;
+  getActivityLogsByUser(userId: string, limit?: number): Promise<ActivityLog[]>; // UUID
   
   // Tasks
   getTasks(): Promise<Task[]>;
   getTask(id: number): Promise<Task | undefined>;
   getTaskById(id: number): Promise<Task | null>; // Добавляем другой формат возврата для совместимости
-  getTasksByClient(clientId: number): Promise<Task[]>;
-  getTasksByExecutor(executorId: number): Promise<Task[]>;
+  getTasksByClient(clientId: string): Promise<Task[]>; // UUID
+  getTasksByExecutor(executorId: string): Promise<Task[]>; // UUID
   getTasksByStatus(status: string): Promise<Task[]>;
   getTasksDueSoon(days: number): Promise<Task[]>;
   createTask(taskData: InsertTask): Promise<Task>;
@@ -380,7 +380,7 @@ export class MemStorage implements IStorage {
     return this.subjects.get(id);
   }
   
-  async getSubjectsByTeacher(teacherId: number): Promise<Subject[]> {
+  async getSubjectsByTeacher(teacherId: string): Promise<Subject[]> {
     return Array.from(this.subjects.values()).filter(subject => subject.teacherId === teacherId);
   }
   
@@ -417,7 +417,7 @@ export class MemStorage implements IStorage {
     return Array.from(this.enrollments.values());
   }
   
-  async getEnrollmentsByStudent(studentId: number): Promise<Enrollment[]> {
+  async getEnrollmentsByStudent(studentId: string): Promise<Enrollment[]> {
     return Array.from(this.enrollments.values()).filter(enrollment => enrollment.studentId === studentId);
   }
   
@@ -433,7 +433,7 @@ export class MemStorage implements IStorage {
       .filter(user => user.role === 'student' && studentIds.includes(user.id));
   }
   
-  async getSubjectsByStudent(studentId: number): Promise<Subject[]> {
+  async getSubjectsByStudent(studentId: string): Promise<Subject[]> {
     const enrollments = await this.getEnrollmentsByStudent(studentId);
     const subjectIds = enrollments.map(enrollment => enrollment.subjectId);
     
@@ -468,7 +468,7 @@ export class MemStorage implements IStorage {
       .filter(item => item.subjectId === subjectId);
   }
   
-  async getScheduleItemsByStudent(studentId: number): Promise<(ScheduleItem & { subject: Subject & { teacher?: User } })[]> {
+  async getScheduleItemsByStudent(studentId: string): Promise<(ScheduleItem & { subject: Subject & { teacher?: User } })[]> {
     const subjects = await this.getSubjectsByStudent(studentId);
     const subjectIds = subjects.map(subject => subject.id);
     
@@ -497,7 +497,7 @@ export class MemStorage implements IStorage {
     }));
   }
   
-  async getScheduleItemsByTeacher(teacherId: number): Promise<(ScheduleItem & { subject: Subject & { teacher?: User } })[]> {
+  async getScheduleItemsByTeacher(teacherId: string): Promise<(ScheduleItem & { subject: Subject & { teacher?: User } })[]> {
     const subjects = await this.getSubjectsByTeacher(teacherId);
     const subjectIds = subjects.map(subject => subject.id);
     
@@ -569,7 +569,7 @@ export class MemStorage implements IStorage {
       .filter(assignment => assignment.subjectId === subjectId);
   }
   
-  async getAssignmentsByTeacher(teacherId: number): Promise<Assignment[]> {
+  async getAssignmentsByTeacher(teacherId: string): Promise<Assignment[]> {
     const subjects = await this.getSubjectsByTeacher(teacherId);
     const subjectIds = subjects.map(subject => subject.id);
     
@@ -577,7 +577,7 @@ export class MemStorage implements IStorage {
       .filter(assignment => subjectIds.includes(assignment.subjectId));
   }
   
-  async getAssignmentsByStudent(studentId: number): Promise<Assignment[]> {
+  async getAssignmentsByStudent(studentId: string): Promise<Assignment[]> {
     const subjects = await this.getSubjectsByStudent(studentId);
     const subjectIds = subjects.map(subject => subject.id);
     
@@ -628,12 +628,12 @@ export class MemStorage implements IStorage {
       .filter(submission => submission.assignmentId === assignmentId);
   }
   
-  async getSubmissionsByStudent(studentId: number): Promise<Submission[]> {
+  async getSubmissionsByStudent(studentId: string): Promise<Submission[]> {
     return Array.from(this.submissions.values())
       .filter(submission => submission.studentId === studentId);
   }
   
-  async getSubmissionByAssignmentAndStudent(assignmentId: number, studentId: number): Promise<Submission | undefined> {
+  async getSubmissionByAssignmentAndStudent(assignmentId: number, studentId: string): Promise<Submission | undefined> {
     return Array.from(this.submissions.values()).find(
       submission => submission.assignmentId === assignmentId && submission.studentId === studentId
     );
@@ -679,7 +679,7 @@ export class MemStorage implements IStorage {
     return this.grades.get(id);
   }
   
-  async getGradesByStudent(studentId: number): Promise<Grade[]> {
+  async getGradesByStudent(studentId: string): Promise<Grade[]> {
     return Array.from(this.grades.values())
       .filter(grade => grade.studentId === studentId);
   }
@@ -689,7 +689,7 @@ export class MemStorage implements IStorage {
       .filter(grade => grade.subjectId === subjectId);
   }
   
-  async getGradesByStudentAndSubject(studentId: number, subjectId: number): Promise<Grade[]> {
+  async getGradesByStudentAndSubject(studentId: string, subjectId: number): Promise<Grade[]> {
     return Array.from(this.grades.values())
       .filter(grade => grade.studentId === studentId && grade.subjectId === subjectId);
   }
@@ -739,7 +739,7 @@ export class MemStorage implements IStorage {
     return this.requests.get(id);
   }
   
-  async getRequestsByStudent(studentId: number): Promise<Request[]> {
+  async getRequestsByStudent(studentId: string): Promise<Request[]> {
     return Array.from(this.requests.values())
       .filter(request => request.studentId === studentId);
   }
@@ -796,12 +796,12 @@ export class MemStorage implements IStorage {
     return this.documents.get(id);
   }
   
-  async getDocumentsByUser(userId: number): Promise<Document[]> {
+  async getDocumentsByUser(userId: string): Promise<Document[]> {
     return Array.from(this.documents.values())
       .filter(document => document.userId === userId);
   }
   
-  async getDocumentsByType(userId: number, type: string): Promise<Document[]> {
+  async getDocumentsByType(userId: string, type: string): Promise<Document[]> {
     return Array.from(this.documents.values())
       .filter(document => document.userId === userId && document.type === type);
   }
@@ -846,12 +846,12 @@ export class MemStorage implements IStorage {
     return this.messages.get(id);
   }
   
-  async getMessagesByUser(userId: number): Promise<Message[]> {
+  async getMessagesByUser(userId: string): Promise<Message[]> {
     return Array.from(this.messages.values())
       .filter(message => message.fromUserId === userId || message.toUserId === userId);
   }
   
-  async getMessagesBetweenUsers(fromUserId: number, toUserId: number): Promise<Message[]> {
+  async getMessagesBetweenUsers(fromUserId: string, toUserId: string): Promise<Message[]> {
       return Array.from(this.messages.values())
         .filter(message =>
           (message.fromUserId === fromUserId && message.toUserId === toUserId) ||
@@ -897,13 +897,13 @@ export class MemStorage implements IStorage {
     return this.notifications.get(id);
   }
   
-  async getNotificationsByUser(userId: number): Promise<Notification[]> {
+  async getNotificationsByUser(userId: string): Promise<Notification[]> {
     return Array.from(this.notifications.values())
       .filter((notification) => notification.userId === userId)
       .sort((a, b) => b.createdAt!.getTime() - a.createdAt!.getTime());
   }
   
-  async getUnreadNotificationsByUser(userId: number): Promise<Notification[]> {
+  async getUnreadNotificationsByUser(userId: string): Promise<Notification[]> {
     return Array.from(this.notifications.values())
       .filter((notification) => notification.userId === userId && !notification.isRead)
       .sort((a, b) => b.createdAt!.getTime() - a.createdAt!.getTime());
@@ -954,7 +954,7 @@ export class MemStorage implements IStorage {
     return updatedNotification;
   }
   
-  async markAllNotificationsAsRead(userId: number): Promise<void> {
+  async markAllNotificationsAsRead(userId: string): Promise<void> {
     logger.info(`MEM: Marking all notifications as read for user ${userId}`);
     const userNotifications = Array.from(this.notifications.values())
       .filter(notification => notification.userId === userId && !notification.isRead);
@@ -1094,7 +1094,7 @@ export class MemStorage implements IStorage {
     return Array.from(this.scheduleEntries.values()).filter(entry => entry.groupId === groupId);
   }
   
-  async getScheduleEntriesByTeacher(teacherId: number): Promise<ScheduleEntry[]> {
+  async getScheduleEntriesByTeacher(teacherId: string): Promise<ScheduleEntry[]> {
     const subjects = await this.getSubjectsByTeacher(teacherId);
     const subjectIds = subjects.map(subject => subject.id);
     
@@ -1141,7 +1141,7 @@ export class MemStorage implements IStorage {
     });
   }
   
-  async getOrCreateSubject(name: string, teacherId?: number, roomNumber?: string): Promise<Subject> {
+  async getOrCreateSubject(name: string, teacherId?: string, roomNumber?: string): Promise<Subject> {
     // Ищем предмет по названию и преподавателю (если указан)
     const existingSubject = Array.from(this.subjects.values()).find(subject => {
       if (teacherId) {
@@ -1235,7 +1235,7 @@ export class MemStorage implements IStorage {
     return this.importedFiles.get(id);
   }
   
-  async getImportedFilesByUser(userId: number): Promise<ImportedFile[]> {
+  async getImportedFilesByUser(userId: string): Promise<ImportedFile[]> {
     return Array.from(this.importedFiles.values())
       .filter(file => file.uploadedBy === userId);
   }
@@ -1388,7 +1388,7 @@ export class MemStorage implements IStorage {
     return limit ? logs.slice(0, limit) : logs;
   }
   
-  async getActivityLogsByUser(userId: number, limit?: number): Promise<ActivityLog[]> {
+  async getActivityLogsByUser(userId: string, limit?: number): Promise<ActivityLog[]> {
     const logs = Array.from(this.activityLogs.values())
       .filter(log => log.userId === userId);
     
@@ -1415,12 +1415,12 @@ export class MemStorage implements IStorage {
     return task || null;
   }
   
-  async getTasksByClient(clientId: number): Promise<Task[]> {
+  async getTasksByClient(clientId: string): Promise<Task[]> {
     return Array.from(this.tasks.values())
       .filter(task => task.clientId === clientId);
   }
   
-  async getTasksByExecutor(executorId: number): Promise<Task[]> {
+  async getTasksByExecutor(executorId: string): Promise<Task[]> {
     return Array.from(this.tasks.values())
       .filter(task => task.executorId === executorId);
   }
@@ -1634,7 +1634,7 @@ export class MemStorage implements IStorage {
       yearsOfStudy: 4,
       educationLevel: "ВО",
       description: "Бакалавриат по информатике и вычислительной технике",
-      createdBy: 1
+      createdBy: "1"
     });
     
     this.createCurriculumPlan({
@@ -1643,7 +1643,7 @@ export class MemStorage implements IStorage {
       yearsOfStudy: 4,
       educationLevel: "ВО",
       description: "Бакалавриат по экономике и управлению",
-      createdBy: 1
+      createdBy: "1"
     });
     
     this.createCurriculumPlan({
@@ -1652,7 +1652,7 @@ export class MemStorage implements IStorage {
       yearsOfStudy: 3,
       educationLevel: "СПО",
       description: "Программирование в компьютерных системах (СПО)",
-      createdBy: 1
+      createdBy: "1"
     });
     
     this.createCurriculumPlan({
@@ -1661,7 +1661,7 @@ export class MemStorage implements IStorage {
       yearsOfStudy: 3,
       educationLevel: "СПО",
       description: "Информационные системы и программирование (СПО)",
-      createdBy: 1
+      createdBy: "1"
     });
     
     this.createCurriculumPlan({
@@ -1670,7 +1670,7 @@ export class MemStorage implements IStorage {
       yearsOfStudy: 2,
       educationLevel: "Магистратура",
       description: "Магистратура по прикладной информатике",
-      createdBy: 1
+      createdBy: "1"
     });
   }
 }

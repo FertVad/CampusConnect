@@ -15,14 +15,14 @@ export async function getNotification(id: number): Promise<Notification | undefi
   return notifications[0];
 }
 
-export async function getNotificationsByUser(userId: number): Promise<Notification[]> {
+export async function getNotificationsByUser(userId: string): Promise<Notification[]> {
   return db.select()
     .from(schema.notifications)
     .where(eq(schema.notifications.userId, userId))
     .orderBy(desc(schema.notifications.createdAt));
 }
 
-export async function getUnreadNotificationsByUser(userId: number): Promise<Notification[]> {
+export async function getUnreadNotificationsByUser(userId: string): Promise<Notification[]> {
   return db.select()
     .from(schema.notifications)
     .where(
@@ -59,7 +59,7 @@ export async function deleteNotification(id: number): Promise<boolean> {
   return (result.rowCount || 0) > 0;
 }
 
-export async function markAllNotificationsAsRead(userId: number): Promise<void> {
+export async function markAllNotificationsAsRead(userId: string): Promise<void> {
   await db.update(schema.notifications)
     .set({ isRead: true })
     .where(
