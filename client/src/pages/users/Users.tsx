@@ -27,7 +27,7 @@ import { z } from 'zod';
 
 // Define the User type
 interface User {
-  id: number;
+  id: string;
   firstName: string;
   lastName: string;
   email: string;
@@ -157,7 +157,7 @@ export default function Users() {
 
   // Update user mutation
   const updateUserMutation = useMutation({
-    mutationFn: async ({ id, userData }: { id: number, userData: Partial<InsertUser> }) => {
+    mutationFn: async ({ id, userData }: { id: string, userData: Partial<InsertUser> }) => {
       return await apiRequest(`/api/users/${id}`, 'PUT', userData) as User;
     },
     onSuccess: () => {
@@ -183,7 +183,7 @@ export default function Users() {
 
   // Delete user mutation
   const deleteUserMutation = useMutation({
-    mutationFn: async (id: number) => {
+    mutationFn: async (id: string) => {
       await apiRequest(`/api/users/${id}`, 'DELETE');
       return Promise.resolve();
     },

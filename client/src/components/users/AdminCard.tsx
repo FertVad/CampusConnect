@@ -20,7 +20,7 @@ export interface Admin extends UserData {
 
 interface AdminCardProps {
   admin: Admin;
-  onClick?: (id: number) => void;
+  onClick?: (id: string) => void;
   onEdit?: (admin: Admin) => void;
 }
 

@@ -19,7 +19,7 @@ import DirectorCard, { Director } from '@/components/users/DirectorCard';
 
 // Интерфейс базового пользователя
 interface User {
-  id: number;
+  id: string;
   firstName: string;
   lastName: string;
   email: string;

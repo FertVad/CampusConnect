@@ -107,10 +107,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
   
   // Store active connections with user IDs
-  const connections = new Map<number, WebSocket>();
+  const connections = new Map<string, WebSocket>();
   
   wss.on('connection', (ws) => {
-    let userId: number | null = null;
+    let userId: string | null = null;
     
     ws.on('message', async (message) => {
       try {
@@ -118,7 +118,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Handle authentication
         if (data.type === 'auth') {
-          userId = Number(data.userId);
+          userId = data.userId as string;
           connections.set(userId, ws);
           logger.info(`User ${userId} connected to WebSocket`);
           

@@ -64,7 +64,7 @@ export interface Student extends UserData {
 
 interface StudentCardProps {
   student: Student;
-  onClick?: (id: number) => void;
+  onClick?: (id: string) => void;
   onEdit?: (student: Student) => void;
 }
 

@@ -6,7 +6,7 @@ import StudentCard, { Student, UpcomingLesson } from '@/components/students/Stud
 import { Task } from '@/components/students/StudentTaskItem';
 
 interface UserData {
-  id: number;
+  id: string;
   firstName: string;
   lastName: string;
   email: string;
