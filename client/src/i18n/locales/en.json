@@ -1,6 +1,7 @@
 {
   "common": {
     "locale": "en",
+    "close": "Close",
     "actions": {
       "add": "Add",
       "edit": "Edit",
@@ -514,6 +515,9 @@
     "taskCompleted": "Task completed: {{title}}",
     "taskStatusUpdate": "Task status updated: {{title}}",
     "taskDeleted": "Task deleted: {{title}}",
+    "TaskCompleted": "Task Completed",
+    "TaskDeleted": "Task Deleted",
+    "NewTaskAssigned": "New Task Assigned",
     "titles": {
       "TaskStatusUpdated": "Task Status Updated",
       "TaskCompleted": "Task Completed",
