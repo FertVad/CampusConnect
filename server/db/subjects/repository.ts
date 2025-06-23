@@ -2,6 +2,7 @@ import { db } from '../index';
 import * as schema from '@shared/schema';
 import { eq } from 'drizzle-orm';
 import { Subject, InsertSubject } from '@shared/schema';
+import { uuidToId } from '../utils';
 
 export class SubjectsRepository {
   async getSubjects(): Promise<Subject[]> {
@@ -24,7 +25,12 @@ export class SubjectsRepository {
 
   async createSubject(subjectData: InsertSubject): Promise<Subject> {
     const [subject] = await db.insert(schema.subjects)
-      .values(subjectData)
+      .values({
+        ...subjectData,
+        teacherId: subjectData.teacherId
+          ? uuidToId(subjectData.teacherId)
+          : undefined,
+      })
       .returning();
     return subject;
   }

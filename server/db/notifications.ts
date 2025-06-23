@@ -2,6 +2,7 @@ import { db } from './index';
 import * as schema from '@shared/schema';
 import { eq, desc, and } from 'drizzle-orm';
 import { Notification, InsertNotification } from '@shared/schema';
+import { uuidToId } from './utils';
 
 export async function getNotifications(): Promise<Notification[]> {
   return db.select().from(schema.notifications);
@@ -38,6 +39,7 @@ export async function createNotification(notificationData: InsertNotification): 
   const [notification] = await db.insert(schema.notifications)
     .values({
       ...notificationData,
+      userId: uuidToId(notificationData.userId),
       isRead: false,
       createdAt: new Date(),
     })
