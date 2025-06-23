@@ -567,6 +567,8 @@
     "TaskCompleted": "Задача завершена",
     "TaskDeleted": "Задача удалена",
     "NewTaskAssigned": "Назначена новая задача",
+    "UserUpdated": "Пользователь обновлен",
+    "TaskStatusUpdated": "Статус задачи обновлен",
     "titles": {
       "TaskStatusUpdated": "Статус задачи обновлен",
       "TaskCompleted": "Задача завершена",
