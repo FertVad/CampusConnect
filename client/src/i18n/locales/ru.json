@@ -22,6 +22,7 @@
   },
   "common": {
     "locale": "ru",
+    "close": "Закрыть",
     "actions": {
       "add": "Добавить",
       "edit": "Редактировать",
@@ -563,6 +564,9 @@
     "taskCompleted": "Задача завершена: {{title}}",
     "taskStatusUpdate": "Статус задачи обновлен: {{title}}",
     "taskDeleted": "Задача удалена: {{title}}",
+    "TaskCompleted": "Задача завершена",
+    "TaskDeleted": "Задача удалена",
+    "NewTaskAssigned": "Назначена новая задача",
     "titles": {
       "TaskStatusUpdated": "Статус задачи обновлен",
       "TaskCompleted": "Задача завершена",
