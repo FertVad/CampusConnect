@@ -1,6 +1,7 @@
 import { db } from '../index';
 import * as schema from '@shared/schema';
 import { eq, and, or, desc, asc, sql, isNotNull } from 'drizzle-orm';
+import { uuidToId } from '../utils';
 import { aliasedTable } from 'drizzle-orm/alias';
 import { Task, InsertTask, UserSummary } from '@shared/schema';
 
@@ -415,7 +416,11 @@ export class TasksRepository {
 
   async createTask(taskData: InsertTask): Promise<Task> {
     const [task] = await db.insert(schema.tasks)
-      .values(taskData)
+      .values({
+        ...taskData,
+        clientId: uuidToId(taskData.clientId),
+        executorId: uuidToId(taskData.executorId),
+      })
       .returning();
     return task;
   }
