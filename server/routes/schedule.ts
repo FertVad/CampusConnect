@@ -10,15 +10,15 @@ import path from "path";
 import fs from "fs";
 import { z } from "zod";
 
-async function getDefaultTeacherId(): Promise<number> {
+async function getDefaultTeacherId(): Promise<string> {
   try {
     const teachers = await getStorage().getUsersByRole('teacher');
     if (teachers.length > 0) {
-      return teachers[0].id;
+      return teachers[0].authUserId ?? String(teachers[0].id);
     }
-    return 2;
+    return '2';
   } catch {
-    return 2;
+    return '2';
   }
 }
 
@@ -67,10 +67,10 @@ app.get('/api/subjects/teacher', authenticateUser, async (req, res) => {
   // Get subjects taught by a specific teacher
   app.get('/api/subjects/teacher/:teacherId', authenticateUser, async (req, res) => {
     try {
-      const teacherId = parseInt(req.params.teacherId);
+      const teacherId = req.params.teacherId;
 
       // Ensure the teacher exists
-      const teacher = await getStorage().getUser(teacherId);
+      const teacher = await getStorage().getUserByAuthId(teacherId);
       if (!teacher || teacher.role !== 'teacher') {
         return res.status(404).json({ message: "Teacher not found" });
       }
@@ -303,13 +303,13 @@ app.get('/api/schedule/student', authenticateUser, async (req, res) => {
 
 app.get('/api/schedule/teacher/:teacherId', authenticateUser, async (req, res) => {
   try {
-    const teacherId = parseInt(req.params.teacherId);
-    
+    const teacherId = req.params.teacherId;
+
     // Teachers can only view their own schedule unless they're admins
     if (req.user!.id !== teacherId && req.user!.role !== 'admin') {
       return res.status(403).json({ message: "Forbidden" });
     }
-    
+
     const schedule = await getStorage().getScheduleItemsByTeacher(teacherId);
     res.json(schedule);
   } catch (error) {
