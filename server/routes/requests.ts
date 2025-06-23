@@ -76,7 +76,7 @@ export function registerRequestRoutes(app: Express, { authenticateUser, requireR
       const updatedRequest = await getStorage().updateRequestStatus(
         requestId,
         status as 'approved' | 'rejected',
-        req.user!.publicId,
+        req.user!.id,
         resolution
       );
 
