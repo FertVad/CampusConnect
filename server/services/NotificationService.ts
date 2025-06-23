@@ -1,5 +1,5 @@
 export interface CreateNotificationData {
-  userId: number;
+  userId: string;
   title: string;
   message: string;
   type?: 'task_update' | 'task_assigned' | 'system' | 'reminder';
