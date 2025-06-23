@@ -29,7 +29,7 @@ interface DocumentPageProps {
 const documentFormSchema = insertDocumentSchema.extend({
   title: z.string().min(3, 'Title must be at least 3 characters'),
   type: z.string().min(1, 'Document type is required'),
-  userId: z.number().positive('Please select a user'),
+  userId: z.string().min(1, 'Please select a user'),
 });
 
 export default function DocumentPage({ documentType, title, icon: Icon }: DocumentPageProps) {
@@ -51,7 +51,7 @@ export default function DocumentPage({ documentType, title, icon: Icon }: Docume
 
   const form = useForm<z.infer<typeof documentFormSchema>>({
     resolver: zodResolver(documentFormSchema),
-    defaultValues: { title: '', type: documentType, userId: 0 },
+    defaultValues: { title: '', type: documentType, userId: '' },
   });
 
   const createDocumentMutation = useMutation({
@@ -64,7 +64,7 @@ export default function DocumentPage({ documentType, title, icon: Icon }: Docume
         description: `The ${documentType} has been created successfully.`,
       });
       setIsDialogOpen(false);
-      form.reset({ title: '', type: documentType, userId: 0 });
+      form.reset({ title: '', type: documentType, userId: '' });
     },
     onError: () => {
       setError(`Failed to create ${documentType}. Please try again.`);
@@ -76,7 +76,7 @@ export default function DocumentPage({ documentType, title, icon: Icon }: Docume
     const formData = new FormData();
     formData.append('title', data.title);
     formData.append('type', data.type);
-    formData.append('userId', data.userId.toString());
+    formData.append('userId', data.userId);
     createDocumentMutation.mutate(formData);
   };
 
@@ -130,7 +130,7 @@ export default function DocumentPage({ documentType, title, icon: Icon }: Docume
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Student</FormLabel>
-                          <Select onValueChange={(value) => field.onChange(parseInt(value))} defaultValue={field.value ? field.value.toString() : undefined}>
+                          <Select onValueChange={field.onChange} defaultValue={field.value || undefined}>
                             <FormControl>
                               <SelectTrigger>
                                 <SelectValue placeholder="Select a student" />
@@ -229,7 +229,7 @@ export default function DocumentPage({ documentType, title, icon: Icon }: Docume
                   <CardContent>
                     <p className="text-sm text-neutral-500">{documentType === 'invoice' ? 'Created' : 'Issued'}: {formatDate(document.createdAt)}</p>
                     {isAdmin && (
-                      <p className="text-sm text-neutral-500">For: {users.find(u => u.id === document.userId)?.firstName} {users.find(u => u.id === document.userId)?.lastName}</p>
+                      <p className="text-sm text-neutral-500">For: {users.find(u => u.authUserId === document.userId)?.firstName} {users.find(u => u.authUserId === document.userId)?.lastName}</p>
                     )}
                   </CardContent>
                   <CardFooter className="flex justify-end">

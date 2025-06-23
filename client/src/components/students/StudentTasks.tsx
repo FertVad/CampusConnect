@@ -4,7 +4,7 @@ import StudentTaskItem, { Task } from './StudentTaskItem';
 import { AlertCircle } from 'lucide-react';
 
 interface StudentTasksProps {
-  userId: number;
+  userId: string;
   tasks: Task[];
   isLoading: boolean;
 }
