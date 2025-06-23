@@ -200,7 +200,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   registerNotificationRoutes(app, ctx);
 
   // Временное отключение второстепенных модулей
-  // registerRequestRoutes(app, ctx);
+  registerRequestRoutes(app, ctx);
   // registerDocumentRoutes(app, ctx);
   // registerActivityLogRoutes(app, ctx);
   // registerCurriculumRoutes(app, ctx);
