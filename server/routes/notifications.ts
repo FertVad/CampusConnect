@@ -2,11 +2,10 @@ import { Express } from "express";
 import { getStorage } from "../storage";
 import type { RouteContext } from "./index";
 import { z } from "zod";
-import { getDbUserBySupabaseUser } from "../utils/userMapping";
 
 // Validation schema for creating notifications
 const createNotificationSchema = z.object({
-  userId: z.number(),
+  userId: z.string(),
   title: z.string().min(1).max(255),
   message: z.string().optional(),
   type: z.enum(["task_assigned", "task_updated", "general"]).default("general"),
@@ -17,7 +16,7 @@ export function registerNotificationRoutes(app: Express, { authenticateUser, req
   // GET /api/notifications
   app.get('/api/notifications', authenticateUser, async (req, res) => {
     try {
-      const { id: userId } = await getDbUserBySupabaseUser(req.user!);
+      const userId = req.user!.id;
       const notifications = await getStorage().getNotificationsByUser(userId);
       res.json(notifications);
     } catch (error) {
@@ -31,7 +30,7 @@ export function registerNotificationRoutes(app: Express, { authenticateUser, req
 
   app.get('/api/notifications/unread', authenticateUser, async (req, res) => {
     try {
-      const { id: userId } = await getDbUserBySupabaseUser(req.user!);
+      const userId = req.user!.id;
       const notifications = await getStorage().getUnreadNotificationsByUser(userId);
       res.json(notifications);
     } catch {
@@ -46,7 +45,7 @@ export function registerNotificationRoutes(app: Express, { authenticateUser, req
       if (!notification) {
         return res.status(404).json({ message: "Notification not found" });
       }
-      const { id: userId } = await getDbUserBySupabaseUser(req.user!);
+      const userId = req.user!.id;
       if (notification.userId !== userId) {
         return res.status(403).json({ message: "You don't have permission to delete this notification" });
       }
@@ -88,7 +87,7 @@ export function registerNotificationRoutes(app: Express, { authenticateUser, req
       if (!notification) {
         return res.status(404).json({ message: "Notification not found" });
       }
-      const { id: userId } = await getDbUserBySupabaseUser(req.user!);
+      const userId = req.user!.id;
       if (userId !== notification.userId) {
         return res.status(403).json({ message: "Forbidden" });
       }
@@ -101,7 +100,7 @@ export function registerNotificationRoutes(app: Express, { authenticateUser, req
 
   app.patch('/api/notifications/read-all', authenticateUser, async (req, res) => {
     try {
-      const { id: userId } = await getDbUserBySupabaseUser(req.user!);
+      const userId = req.user!.id;
       await getStorage().markAllNotificationsAsRead(userId);
       res.json({ success: true, message: "All notifications marked as read" });
     } catch {
@@ -111,8 +110,8 @@ export function registerNotificationRoutes(app: Express, { authenticateUser, req
 
   app.get('/api/notifications/user/:userId', authenticateUser, async (req, res) => {
     try {
-      const userId = parseInt(req.params.userId);
-      const { id: currentUserId } = await getDbUserBySupabaseUser(req.user!);
+      const userId = req.params.userId;
+      const currentUserId = req.user!.id;
       if (currentUserId !== userId) {
         return res.status(403).json({ message: "Forbidden" });
       }
@@ -125,8 +124,8 @@ export function registerNotificationRoutes(app: Express, { authenticateUser, req
 
   app.get('/api/notifications/unread/user/:userId', authenticateUser, async (req, res) => {
     try {
-      const userId = parseInt(req.params.userId);
-      const { id: currentUserId } = await getDbUserBySupabaseUser(req.user!);
+      const userId = req.params.userId;
+      const currentUserId = req.user!.id;
       if (currentUserId !== userId) {
         return res.status(403).json({ message: "Forbidden" });
       }

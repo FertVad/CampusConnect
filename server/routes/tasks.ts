@@ -28,9 +28,10 @@ app.get('/api/tasks', authenticateUser, async (req, res) => {
 
 app.get('/api/tasks/client/:clientId', authenticateUser, async (req, res) => {
   try {
-    const clientId = parseInt(req.params.clientId);
-    
-    const { id: userId, role: userRole } = await getDbUserBySupabaseUser(req.user!);
+    const clientId = req.params.clientId;
+
+    const userId = req.user!.id;
+    const userRole = req.user!.role;
     const isAdmin = userRole === 'admin';
     // Только клиент или администратор может просматривать задачи клиента
     if (!isAdmin && userId !== clientId) {
@@ -53,9 +54,10 @@ app.get('/api/tasks/client/:clientId', authenticateUser, async (req, res) => {
 
 app.get('/api/tasks/executor/:executorId', authenticateUser, async (req, res) => {
   try {
-    const executorId = parseInt(req.params.executorId);
-    
-    const { id: userId, role: userRole } = await getDbUserBySupabaseUser(req.user!);
+    const executorId = req.params.executorId;
+
+    const userId = req.user!.id;
+    const userRole = req.user!.role;
     const isAdmin = userRole === 'admin';
     // Только исполнитель или администратор может просматривать задачи исполнителя
     if (!isAdmin && userId !== executorId) {
@@ -442,9 +444,10 @@ app.get('/api/tasks/:id', authenticateUser, async (req, res) => {
 // GET /api/users/:id/tasks - получить все задачи пользователя (как клиента, так и исполнителя)
 app.get('/api/users/:id/tasks', authenticateUser, async (req, res) => {
   try {
-    const userId = parseInt(req.params.id);
-    
-    const { id: currentUserId, role: currentUserRole } = await getDbUserBySupabaseUser(req.user!);
+    const userId = req.params.id;
+
+    const currentUserId = req.user!.id;
+    const currentUserRole = req.user!.role;
     // Админ может видеть задачи любых пользователей
     // Другие пользователи - только свои
     if (currentUserRole !== 'admin' && currentUserId !== userId) {
@@ -473,9 +476,10 @@ app.get('/api/users/:id/tasks', authenticateUser, async (req, res) => {
 // GET /api/users/:id/notifications - получить все уведомления пользователя
 app.get('/api/users/:id/notifications', authenticateUser, async (req, res) => {
   try {
-    const userId = parseInt(req.params.id);
-    
-    const { id: currentUserId, role: currentUserRole } = await getDbUserBySupabaseUser(req.user!);
+    const userId = req.params.id;
+
+    const currentUserId = req.user!.id;
+    const currentUserRole = req.user!.role;
     // Админ может видеть уведомления любых пользователей
     // Другие пользователи - только свои
     if (currentUserRole !== 'admin' && currentUserId !== userId) {
