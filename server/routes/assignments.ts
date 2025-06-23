@@ -331,7 +331,7 @@ export function registerAssignmentRoutes(app: Express, { authenticateUser, requi
   // Grade Routes
   app.get('/api/grades/student/:studentId', authenticateUser, async (req, res) => {
     try {
-      const studentId = parseInt(req.params.studentId);
+      const studentId = req.params.studentId;
 
       if (req.user!.id !== studentId && req.user!.role === 'student') {
         return res.status(403).json({ message: "Forbidden" });
