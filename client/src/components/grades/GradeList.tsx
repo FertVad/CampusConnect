@@ -12,13 +12,13 @@ interface GradeListProps {
 
 const GradeList: React.FC<GradeListProps> = ({ grades, subjects }) => {
   // Helper function to find subject name by ID
-  const getSubjectName = (subjectId: number) => {
+  const getSubjectName = (subjectId: string) => {
     const subject = subjects.find(s => s.id === subjectId);
     return subject ? subject.name : `Subject ${subjectId}`;
   };
   
   // Group grades by subject
-  const gradesBySubject: Record<number, Grade[]> = {};
+  const gradesBySubject: Record<string, Grade[]> = {};
   
   grades.forEach(grade => {
     if (!gradesBySubject[grade.subjectId]) {
@@ -69,7 +69,7 @@ const GradeList: React.FC<GradeListProps> = ({ grades, subjects }) => {
             <Card key={subjectId}>
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle className="text-md font-heading">
-                  {getSubjectName(parseInt(subjectId))}
+                  {getSubjectName(subjectId)}
                 </CardTitle>
                 <div className={`text-lg font-bold ${getGpaColor(subjectGpa)}`}>
                   GPA: {subjectGpa}
