@@ -849,7 +849,7 @@ export class SupabaseStorage {
   }
 
   async getTask(id: number): Promise<(Task & { client?: UserSummary; executor?: UserSummary }) | undefined> {
-    return this.tasksRepo.getTask(id);
+    return this.tasksRepo.getTask(String(id));
   }
 
   async getTasksByClient(clientId: string): Promise<(Task & { client?: UserSummary; executor?: UserSummary })[]> {
@@ -873,11 +873,11 @@ export class SupabaseStorage {
   }
 
   async updateTask(id: number, taskData: Partial<InsertTask>): Promise<Task | undefined> {
-    return this.tasksRepo.updateTask(id, taskData);
+    return this.tasksRepo.updateTask(String(id), taskData);
   }
 
   async deleteTask(id: number): Promise<boolean> {
-    return this.tasksRepo.deleteTask(id);
+    return this.tasksRepo.deleteTask(String(id));
   }
 
   // Методы для работы с учебными планами
@@ -892,7 +892,7 @@ export class SupabaseStorage {
   async getCurriculumPlan(id: number): Promise<schema.CurriculumPlan | undefined> {
     logger.info(`SupabaseStorage: Getting curriculum plan with ID: ${id}`);
     const plans = await db.select().from(schema.curriculumPlans)
-      .where(eq(schema.curriculumPlans.id, id));
+      .where(eq(schema.curriculumPlans.id, String(id)));
     
     return plans.length > 0 ? plans[0] : undefined;
   }
@@ -930,7 +930,7 @@ export class SupabaseStorage {
     
     const result = await db.update(schema.curriculumPlans)
       .set(updateData)
-      .where(eq(schema.curriculumPlans.id, id))
+      .where(eq(schema.curriculumPlans.id, String(id)))
       .returning();
     
     return result.length > 0 ? result[0] : undefined;
@@ -938,7 +938,7 @@ export class SupabaseStorage {
 
   async deleteCurriculumPlan(id: number): Promise<boolean> {
     const result = await db.delete(schema.curriculumPlans)
-      .where(eq(schema.curriculumPlans.id, id));
+      .where(eq(schema.curriculumPlans.id, String(id)));
 
     return (result.rowCount ?? 0) > 0;
   }
