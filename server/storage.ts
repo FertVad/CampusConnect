@@ -1162,7 +1162,7 @@ export class MemStorage implements IStorage {
     // Создаем новый курс
     return this.createCourse({
       number,
-      specialtyId: Number(specialtyId),
+      specialtyId,
       academicYear
     });
   }
@@ -1180,7 +1180,7 @@ export class MemStorage implements IStorage {
     // Создаем новую группу
     return this.createGroup({
       name,
-      courseId: Number(courseId)
+      courseId
     });
   }
   
@@ -1537,52 +1537,52 @@ export class MemStorage implements IStorage {
     // Создаем курсы
     const cs1 = this.createCourse({
       number: 1,
-      specialtyId: 1, // Информатика, 1-й курс
+      specialtyId: computerScience.id, // Информатика, 1-й курс
       academicYear: "2024-2025"
     });
     
     const cs2 = this.createCourse({
       number: 2,
-      specialtyId: 1, // Информатика, 2-й курс
+      specialtyId: computerScience.id, // Информатика, 2-й курс
       academicYear: "2024-2025"
     });
     
     const econ1 = this.createCourse({
       number: 1,
-      specialtyId: 2, // Экономика, 1-й курс
+      specialtyId: economics.id, // Экономика, 1-й курс
       academicYear: "2024-2025"
     });
     
     const swe1 = this.createCourse({
       number: 1,
-      specialtyId: 3, // Программная инженерия, 1-й курс
+      specialtyId: softwareEngineering.id, // Программная инженерия, 1-й курс
       academicYear: "2024-2025"
     });
     
     // Создаем группы
     const csGroup1 = this.createGroup({
       name: "ИВТ-101",
-      courseId: 1 // Информатика, 1-й курс
+      courseId: cs1.id // Информатика, 1-й курс
     });
     
     const csGroup2 = this.createGroup({
       name: "ИВТ-102",
-      courseId: 1 // Информатика, 1-й курс
+      courseId: cs1.id // Информатика, 1-й курс
     });
     
     const csGroup3 = this.createGroup({
       name: "ИВТ-201",
-      courseId: 2 // Информатика, 2-й курс
+      courseId: cs2.id // Информатика, 2-й курс
     });
     
     const econGroup1 = this.createGroup({
       name: "ЭКО-101",
-      courseId: 3 // Экономика, 1-й курс
+      courseId: econ1.id // Экономика, 1-й курс
     });
     
     const sweGroup1 = this.createGroup({
       name: "ПИ-101",
-      courseId: 4 // Программная инженерия, 1-й курс
+      courseId: swe1.id // Программная инженерия, 1-й курс
     });
     
     // Создаем тестовые учебные планы

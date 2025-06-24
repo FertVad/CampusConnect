@@ -205,7 +205,7 @@ export const activityLogs = pgTable("activity_logs", {
   description: text("description").notNull(),
   userId: uuid("user_id").references(() => users.id).notNull(), // Who performed the action
   timestamp: timestamp("timestamp").defaultNow(),
-  entityId: integer("entity_id"), // ID of the affected entity (file, user, subject, etc.)
+  entityId: uuid("entity_id"), // ID of the affected entity (file, user, subject, etc.)
   entityType: text("entity_type"), // Type of the affected entity
   metadata: text("metadata"), // JSON string with additional data if needed
 });
