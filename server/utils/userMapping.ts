@@ -18,7 +18,6 @@ export async function getDbUserBySupabaseUser(supabaseUser: Pick<User, 'email' |
     const user = await getStorage().getUserByEmail(email);
     console.log('🔍 [DEBUG] getUserByEmail result:', user ? {
       id: user.id,
-      authUserId: user.authUserId,
       email: user.email,
       role: user.role
     } : 'null');
@@ -29,7 +28,7 @@ export async function getDbUserBySupabaseUser(supabaseUser: Pick<User, 'email' |
     }
 
     const result = {
-      id: user.authUserId || user.id,
+      id: user.id,
       firstName: user.firstName,
       lastName: user.lastName,
       email: user.email,

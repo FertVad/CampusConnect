@@ -8,7 +8,7 @@ export class SubjectsRepository {
     return db.select().from(schema.subjects);
   }
 
-  async getSubject(id: number): Promise<Subject | undefined> {
+  async getSubject(id: string): Promise<Subject | undefined> {
     const subjects = await db.select()
       .from(schema.subjects)
       .where(eq(schema.subjects.id, id))
@@ -32,7 +32,7 @@ export class SubjectsRepository {
     return subject;
   }
 
-  async updateSubject(id: number, subjectData: Partial<InsertSubject>): Promise<Subject | undefined> {
+  async updateSubject(id: string, subjectData: Partial<InsertSubject>): Promise<Subject | undefined> {
     const [subject] = await db.update(schema.subjects)
       .set(subjectData)
       .where(eq(schema.subjects.id, id))
@@ -40,7 +40,7 @@ export class SubjectsRepository {
     return subject;
   }
 
-  async deleteSubject(id: number): Promise<boolean> {
+  async deleteSubject(id: string): Promise<boolean> {
     const result = await db.delete(schema.subjects)
       .where(eq(schema.subjects.id, id));
     return (result.rowCount ?? 0) > 0;

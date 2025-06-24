@@ -30,8 +30,8 @@ export class TasksRepository {
       executorRole: executorsTable.role
     })
     .from(schema.tasks)
-    .leftJoin(clientsTable, eq(schema.tasks.clientId, clientsTable.authUserId))
-    .leftJoin(executorsTable, eq(schema.tasks.executorId, executorsTable.authUserId))
+    .leftJoin(clientsTable, eq(schema.tasks.clientId, clientsTable.id))
+    .leftJoin(executorsTable, eq(schema.tasks.executorId, executorsTable.id))
     .orderBy(
       sql`CASE
           WHEN ${schema.tasks.status} = 'new' THEN 1
@@ -86,7 +86,7 @@ export class TasksRepository {
     });
   }
 
-  async getTask(id: number): Promise<(Task & { client?: UserSummary; executor?: UserSummary }) | undefined> {
+  async getTask(id: string): Promise<(Task & { client?: UserSummary; executor?: UserSummary }) | undefined> {
     const clientsTable = aliasedTable(schema.users, 'clients');
     const executorsTable = aliasedTable(schema.users, 'executors');
 
@@ -111,8 +111,8 @@ export class TasksRepository {
       executorRole: executorsTable.role
     })
     .from(schema.tasks)
-    .leftJoin(clientsTable, eq(schema.tasks.clientId, clientsTable.authUserId))
-    .leftJoin(executorsTable, eq(schema.tasks.executorId, executorsTable.authUserId))
+    .leftJoin(clientsTable, eq(schema.tasks.clientId, clientsTable.id))
+    .leftJoin(executorsTable, eq(schema.tasks.executorId, executorsTable.id))
     .where(eq(schema.tasks.id, id))
     .limit(1);
 
@@ -178,8 +178,8 @@ export class TasksRepository {
       executorRole: executorsTable.role
     })
     .from(schema.tasks)
-    .leftJoin(clientsTable, eq(schema.tasks.clientId, clientsTable.authUserId))
-    .leftJoin(executorsTable, eq(schema.tasks.executorId, executorsTable.authUserId))
+    .leftJoin(clientsTable, eq(schema.tasks.clientId, clientsTable.id))
+    .leftJoin(executorsTable, eq(schema.tasks.executorId, executorsTable.id))
     .where(eq(schema.tasks.clientId, clientId))
     .orderBy(
       sql`CASE
@@ -260,8 +260,8 @@ export class TasksRepository {
       executorRole: executorsTable.role
     })
     .from(schema.tasks)
-    .leftJoin(clientsTable, eq(schema.tasks.clientId, clientsTable.authUserId))
-    .leftJoin(executorsTable, eq(schema.tasks.executorId, executorsTable.authUserId))
+    .leftJoin(clientsTable, eq(schema.tasks.clientId, clientsTable.id))
+    .leftJoin(executorsTable, eq(schema.tasks.executorId, executorsTable.id))
     .where(eq(schema.tasks.executorId, executorId))
     .orderBy(
       sql`CASE
@@ -351,8 +351,8 @@ export class TasksRepository {
       executorRole: executorsTable.role
     })
     .from(schema.tasks)
-    .leftJoin(clientsTable, eq(schema.tasks.clientId, clientsTable.authUserId))
-    .leftJoin(executorsTable, eq(schema.tasks.executorId, executorsTable.authUserId))
+    .leftJoin(clientsTable, eq(schema.tasks.clientId, clientsTable.id))
+    .leftJoin(executorsTable, eq(schema.tasks.executorId, executorsTable.id))
     .where(
       and(
         or(
@@ -424,7 +424,7 @@ export class TasksRepository {
     return task;
   }
 
-  async updateTask(id: number, taskData: Partial<InsertTask>): Promise<Task | undefined> {
+  async updateTask(id: string, taskData: Partial<InsertTask>): Promise<Task | undefined> {
     const [task] = await db.update(schema.tasks)
       .set({
         ...taskData,
@@ -435,7 +435,7 @@ export class TasksRepository {
     return task;
   }
 
-  async deleteTask(id: number): Promise<boolean> {
+  async deleteTask(id: string): Promise<boolean> {
     const result = await db.delete(schema.tasks)
       .where(eq(schema.tasks.id, id));
     return (result.rowCount ?? 0) > 0;

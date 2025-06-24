@@ -20,6 +20,7 @@ import {
 } from "@shared/schema";
 import { eq, and, desc, asc } from "drizzle-orm";
 import { db } from "./db/index";
+import { randomUUID } from 'crypto';
 
 import { logger } from "./utils/logger";
 import { getOrSet } from "./utils/cache";
@@ -28,158 +29,157 @@ import { getOrSet } from "./utils/cache";
 export interface IStorage {
   // User management
   getUsers(): Promise<User[]>;
-  getUser(id: number): Promise<User | undefined>;
+  getUser(id: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
-  getUserByAuthId(authUserId: string): Promise<User | undefined>;
   getUsersByRole(
     role: 'student' | 'teacher' | 'admin' | 'director'
   ): Promise<User[]>;
   getAllAdminUsers(): Promise<User[]>;
   createUser(user: InsertUser): Promise<User>;
-  updateUser(id: number, userData: Partial<InsertUser>): Promise<User | undefined>;
-  deleteUser(id: number): Promise<boolean>;
+  updateUser(id: string, userData: Partial<InsertUser>): Promise<User | undefined>;
+  deleteUser(id: string): Promise<boolean>;
   authenticate(credentials: LoginCredentials): Promise<User | undefined>;
   
   // Subjects
   getSubjects(): Promise<Subject[]>;
-  getSubject(id: number): Promise<Subject | undefined>;
+  getSubject(id: string): Promise<Subject | undefined>;
   getSubjectsByTeacher(teacherId: string): Promise<Subject[]>; // UUID
   createSubject(subject: InsertSubject): Promise<Subject>;
-  updateSubject(id: number, subjectData: Partial<InsertSubject>): Promise<Subject | undefined>;
-  deleteSubject(id: number): Promise<boolean>;
+  updateSubject(id: string, subjectData: Partial<InsertSubject>): Promise<Subject | undefined>;
+  deleteSubject(id: string): Promise<boolean>;
   
   // Enrollments
   getEnrollments(): Promise<Enrollment[]>;
   getEnrollmentsByStudent(studentId: string): Promise<Enrollment[]>; // UUID
-  getEnrollmentsBySubject(subjectId: number): Promise<Enrollment[]>;
-  getStudentsBySubject(subjectId: number): Promise<User[]>;
+  getEnrollmentsBySubject(subjectId: string): Promise<Enrollment[]>;
+  getStudentsBySubject(subjectId: string): Promise<User[]>;
   getSubjectsByStudent(studentId: string): Promise<Subject[]>; // UUID
   createEnrollment(enrollment: InsertEnrollment): Promise<Enrollment>;
-  deleteEnrollment(id: number): Promise<boolean>;
+  deleteEnrollment(id: string): Promise<boolean>;
   
   // Schedule
   getScheduleItems(): Promise<ScheduleItem[]>;
-  getScheduleItem(id: number): Promise<ScheduleItem | undefined>;
-  getScheduleItemsBySubject(subjectId: number): Promise<ScheduleItem[]>;
+  getScheduleItem(id: string): Promise<ScheduleItem | undefined>;
+  getScheduleItemsBySubject(subjectId: string): Promise<ScheduleItem[]>;
   getScheduleItemsByStudent(studentId: string): Promise<(ScheduleItem & { subject: Subject })[]>; // UUID
   getScheduleItemsByTeacher(teacherId: string): Promise<(ScheduleItem & { subject: Subject })[]>; // UUID
   createScheduleItem(scheduleItem: InsertScheduleItem): Promise<ScheduleItem>;
-  updateScheduleItem(id: number, scheduleItemData: Partial<InsertScheduleItem>): Promise<ScheduleItem | undefined>;
-  deleteScheduleItem(id: number): Promise<boolean>;
+  updateScheduleItem(id: string, scheduleItemData: Partial<InsertScheduleItem>): Promise<ScheduleItem | undefined>;
+  deleteScheduleItem(id: string): Promise<boolean>;
   
   // Assignments
   getAssignments(): Promise<Assignment[]>;
-  getAssignment(id: number): Promise<Assignment | undefined>;
-  getAssignmentsBySubject(subjectId: number): Promise<Assignment[]>;
+  getAssignment(id: string): Promise<Assignment | undefined>;
+  getAssignmentsBySubject(subjectId: string): Promise<Assignment[]>;
   getAssignmentsByTeacher(teacherId: string): Promise<Assignment[]>; // UUID
   getAssignmentsByStudent(studentId: string): Promise<Assignment[]>; // UUID
   createAssignment(assignment: InsertAssignment): Promise<Assignment>;
-  updateAssignment(id: number, assignmentData: Partial<InsertAssignment>): Promise<Assignment | undefined>;
-  deleteAssignment(id: number): Promise<boolean>;
+  updateAssignment(id: string, assignmentData: Partial<InsertAssignment>): Promise<Assignment | undefined>;
+  deleteAssignment(id: string): Promise<boolean>;
   
   // Submissions
   getSubmissions(): Promise<Submission[]>;
-  getSubmission(id: number): Promise<Submission | undefined>;
-  getSubmissionsByAssignment(assignmentId: number): Promise<Submission[]>;
+  getSubmission(id: string): Promise<Submission | undefined>;
+  getSubmissionsByAssignment(assignmentId: string): Promise<Submission[]>;
   getSubmissionsByStudent(studentId: string): Promise<Submission[]>; // UUID
-  getSubmissionByAssignmentAndStudent(assignmentId: number, studentId: string): Promise<Submission | undefined>;
+  getSubmissionByAssignmentAndStudent(assignmentId: string, studentId: string): Promise<Submission | undefined>;
   createSubmission(submission: InsertSubmission): Promise<Submission>;
-  updateSubmission(id: number, submissionData: Partial<InsertSubmission>): Promise<Submission | undefined>;
-  deleteSubmission(id: number): Promise<boolean>;
+  updateSubmission(id: string, submissionData: Partial<InsertSubmission>): Promise<Submission | undefined>;
+  deleteSubmission(id: string): Promise<boolean>;
   
   // Grades
   getGrades(): Promise<Grade[]>;
-  getGrade(id: number): Promise<Grade | undefined>;
+  getGrade(id: string): Promise<Grade | undefined>;
   getGradesByStudent(studentId: string): Promise<Grade[]>; // UUID
-  getGradesBySubject(subjectId: number): Promise<Grade[]>;
-  getGradesByStudentAndSubject(studentId: string, subjectId: number): Promise<Grade[]>;
+  getGradesBySubject(subjectId: string): Promise<Grade[]>;
+  getGradesByStudentAndSubject(studentId: string, subjectId: string): Promise<Grade[]>;
   createGrade(grade: InsertGrade): Promise<Grade>;
-  updateGrade(id: number, gradeData: Partial<InsertGrade>): Promise<Grade | undefined>;
-  deleteGrade(id: number): Promise<boolean>;
+  updateGrade(id: string, gradeData: Partial<InsertGrade>): Promise<Grade | undefined>;
+  deleteGrade(id: string): Promise<boolean>;
   
   // Requests
   getRequests(): Promise<Request[]>;
-  getRequest(id: number): Promise<Request | undefined>;
+  getRequest(id: string): Promise<Request | undefined>;
   getRequestsByStudent(studentId: string): Promise<Request[]>; // UUID
   getPendingRequests(): Promise<Request[]>;
   createRequest(request: InsertRequest): Promise<Request>;
-  updateRequestStatus(id: number, status: 'pending' | 'approved' | 'rejected', resolvedBy: number, resolution?: string): Promise<Request | undefined>;
-  deleteRequest(id: number): Promise<boolean>;
+  updateRequestStatus(id: string, status: 'pending' | 'approved' | 'rejected', resolvedBy: string, resolution?: string): Promise<Request | undefined>;
+  deleteRequest(id: string): Promise<boolean>;
   
   // Documents
   getDocuments(): Promise<Document[]>;
-  getDocument(id: number): Promise<Document | undefined>;
+  getDocument(id: string): Promise<Document | undefined>;
   getDocumentsByUser(userId: string): Promise<Document[]>; // UUID
   getDocumentsByType(userId: string, type: string): Promise<Document[]>; // UUID
   createDocument(document: InsertDocument): Promise<Document>;
-  updateDocument(id: number, documentData: Partial<InsertDocument>): Promise<Document | undefined>;
-  deleteDocument(id: number): Promise<boolean>;
+  updateDocument(id: string, documentData: Partial<InsertDocument>): Promise<Document | undefined>;
+  deleteDocument(id: string): Promise<boolean>;
   
   // Messages
   getMessages(): Promise<Message[]>;
-  getMessage(id: number): Promise<Message | undefined>;
+  getMessage(id: string): Promise<Message | undefined>;
   getMessagesByUser(userId: string): Promise<Message[]>; // UUID
   getMessagesBetweenUsers(fromUserId: string, toUserId: string): Promise<Message[]>; // UUIDs
   createMessage(message: InsertMessage): Promise<Message>;
-  updateMessageStatus(id: number, status: 'delivered' | 'read'): Promise<Message | undefined>;
-  deleteMessage(id: number): Promise<boolean>;
+  updateMessageStatus(id: string, status: 'delivered' | 'read'): Promise<Message | undefined>;
+  deleteMessage(id: string): Promise<boolean>;
   
   // Notifications
   getNotifications(): Promise<Notification[]>;
-  getNotification(id: number): Promise<Notification | undefined>;
+  getNotification(id: string): Promise<Notification | undefined>;
   getNotificationsByUser(userId: string): Promise<Notification[]>; // UUID
   getUnreadNotificationsByUser(userId: string): Promise<Notification[]>; // UUID
   createNotification(notification: InsertNotification): Promise<Notification>;
-  markNotificationAsRead(id: number): Promise<Notification | undefined>;
+  markNotificationAsRead(id: string): Promise<Notification | undefined>;
   markAllNotificationsAsRead(userId: string): Promise<void>;
-  deleteNotification(id: number): Promise<boolean>;
+  deleteNotification(id: string): Promise<boolean>;
   
   // Специальности
   getSpecialties(): Promise<Specialty[]>;
-  getSpecialty(id: number): Promise<Specialty | undefined>;
+  getSpecialty(id: string): Promise<Specialty | undefined>;
   createSpecialty(specialty: InsertSpecialty): Promise<Specialty>;
-  updateSpecialty(id: number, specialtyData: Partial<InsertSpecialty>): Promise<Specialty | undefined>;
-  deleteSpecialty(id: number): Promise<boolean>;
+  updateSpecialty(id: string, specialtyData: Partial<InsertSpecialty>): Promise<Specialty | undefined>;
+  deleteSpecialty(id: string): Promise<boolean>;
   
   // Курсы
   getCourses(): Promise<Course[]>;
-  getCourse(id: number): Promise<Course | undefined>;
-  getCoursesBySpecialty(specialtyId: number): Promise<Course[]>;
+  getCourse(id: string): Promise<Course | undefined>;
+  getCoursesBySpecialty(specialtyId: string): Promise<Course[]>;
   createCourse(course: InsertCourse): Promise<Course>;
-  updateCourse(id: number, courseData: Partial<InsertCourse>): Promise<Course | undefined>;
-  deleteCourse(id: number): Promise<boolean>;
+  updateCourse(id: string, courseData: Partial<InsertCourse>): Promise<Course | undefined>;
+  deleteCourse(id: string): Promise<boolean>;
   
   // Группы
   getGroups(): Promise<Group[]>;
-  getGroup(id: number): Promise<Group | undefined>;
-  getGroupsByCourse(courseId: number): Promise<Group[]>;
+  getGroup(id: string): Promise<Group | undefined>;
+  getGroupsByCourse(courseId: string): Promise<Group[]>;
   createGroup(group: InsertGroup): Promise<Group>;
-  updateGroup(id: number, groupData: Partial<InsertGroup>): Promise<Group | undefined>;
-  deleteGroup(id: number): Promise<boolean>;
+  updateGroup(id: string, groupData: Partial<InsertGroup>): Promise<Group | undefined>;
+  deleteGroup(id: string): Promise<boolean>;
   
   // Расписание для групп
   getScheduleEntries(): Promise<ScheduleEntry[]>;
-  getScheduleEntry(id: number): Promise<ScheduleEntry | undefined>;
-  getScheduleEntriesByGroup(groupId: number): Promise<ScheduleEntry[]>;
+  getScheduleEntry(id: string): Promise<ScheduleEntry | undefined>;
+  getScheduleEntriesByGroup(groupId: string): Promise<ScheduleEntry[]>;
   getScheduleEntriesByTeacher(teacherId: string): Promise<ScheduleEntry[]>; // UUID
-  getScheduleEntriesBySubject(subjectId: number): Promise<ScheduleEntry[]>;
+  getScheduleEntriesBySubject(subjectId: string): Promise<ScheduleEntry[]>;
   createScheduleEntry(scheduleEntry: InsertScheduleEntry): Promise<ScheduleEntry>;
-  updateScheduleEntry(id: number, scheduleEntryData: Partial<InsertScheduleEntry>): Promise<ScheduleEntry | undefined>;
-  deleteScheduleEntry(id: number): Promise<boolean>;
+  updateScheduleEntry(id: string, scheduleEntryData: Partial<InsertScheduleEntry>): Promise<ScheduleEntry | undefined>;
+  deleteScheduleEntry(id: string): Promise<boolean>;
   
   // Поиск и обслуживание расписания
   getTeacherByName(fullName: string): Promise<User | undefined>;
   getOrCreateSubject(name: string, teacherId?: string, roomNumber?: string): Promise<Subject>;
   getOrCreateSpecialty(name: string, code?: string): Promise<Specialty>;
-  getOrCreateCourse(number: number, specialtyId: number, academicYear: string): Promise<Course>;
-  getOrCreateGroup(name: string, courseId: number): Promise<Group>;
+  getOrCreateCourse(number: number, specialtyId: string, academicYear: string): Promise<Course>;
+  getOrCreateGroup(name: string, courseId: string): Promise<Group>;
   
   // Импортированные файлы
   getImportedFiles(): Promise<ImportedFile[]>;
-  getImportedFile(id: number): Promise<ImportedFile | undefined>;
+  getImportedFile(id: string): Promise<ImportedFile | undefined>;
   getImportedFilesByUser(userId: string): Promise<ImportedFile[]>; // UUID
   createImportedFile(fileData: InsertImportedFile): Promise<ImportedFile>;
-  deleteImportedFile(id: number): Promise<boolean>;
+  deleteImportedFile(id: string): Promise<boolean>;
   getImportedFilesByType(type: 'csv' | 'google-sheets'): Promise<ImportedFile[]>;
   
   // Activity Logs
@@ -190,71 +190,52 @@ export interface IStorage {
   
   // Tasks
   getTasks(): Promise<Task[]>;
-  getTask(id: number): Promise<Task | undefined>;
-  getTaskById(id: number): Promise<Task | null>; // Добавляем другой формат возврата для совместимости
+  getTask(id: string): Promise<Task | undefined>;
+  getTaskById(id: string): Promise<Task | null>; // Добавляем другой формат возврата для совместимости
   getTasksByClient(clientId: string): Promise<Task[]>; // UUID
   getTasksByExecutor(executorId: string): Promise<Task[]>; // UUID
   getTasksByStatus(status: string): Promise<Task[]>;
   getTasksDueSoon(days: number): Promise<Task[]>;
   createTask(taskData: InsertTask): Promise<Task>;
-  updateTask(id: number, taskData: Partial<InsertTask>): Promise<Task | undefined>;
-  deleteTask(id: number): Promise<boolean>;
+  updateTask(id: string, taskData: Partial<InsertTask>): Promise<Task | undefined>;
+  deleteTask(id: string): Promise<boolean>;
   
   // Curriculum Plans (Учебные планы)
   getCurriculumPlans(): Promise<CurriculumPlan[]>;
-  getCurriculumPlan(id: number): Promise<CurriculumPlan | undefined>;
+  getCurriculumPlan(id: string): Promise<CurriculumPlan | undefined>;
   getCurriculumPlansByEducationLevel(
     level: 'СПО' | 'ВО' | 'Магистратура' | 'Аспирантура'
   ): Promise<CurriculumPlan[]>;
   createCurriculumPlan(planData: InsertCurriculumPlan): Promise<CurriculumPlan>;
-  updateCurriculumPlan(id: number, planData: Partial<InsertCurriculumPlan>): Promise<CurriculumPlan | undefined>;
-  deleteCurriculumPlan(id: number): Promise<boolean>;
+  updateCurriculumPlan(id: string, planData: Partial<InsertCurriculumPlan>): Promise<CurriculumPlan | undefined>;
+  deleteCurriculumPlan(id: string): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
-  private users: Map<number, User>;
-  private subjects: Map<number, Subject>;
-  private enrollments: Map<number, Enrollment>;
-  private scheduleItems: Map<number, ScheduleItem>;
-  private assignments: Map<number, Assignment>;
-  private submissions: Map<number, Submission>;
-  private grades: Map<number, Grade>;
-  private requests: Map<number, Request>;
-  private documents: Map<number, Document>;
-  private messages: Map<number, Message>;
-  private notifications: Map<number, Notification>;
+  private users: Map<string, User>;
+  private subjects: Map<string, Subject>;
+  private enrollments: Map<string, Enrollment>;
+  private scheduleItems: Map<string, ScheduleItem>;
+  private assignments: Map<string, Assignment>;
+  private submissions: Map<string, Submission>;
+  private grades: Map<string, Grade>;
+  private requests: Map<string, Request>;
+  private documents: Map<string, Document>;
+  private messages: Map<string, Message>;
+  private notifications: Map<string, Notification>;
   
   // Новые модели
-  private specialties: Map<number, Specialty>;
-  private courses: Map<number, Course>;
-  private groups: Map<number, Group>;
-  private scheduleEntries: Map<number, ScheduleEntry>;
-  private importedFiles: Map<number, ImportedFile>;
-  private activityLogs: Map<number, ActivityLog>;
-  private tasks: Map<number, Task>;
-  private curriculumPlans: Map<number, CurriculumPlan>;
+  private specialties: Map<string, Specialty>;
+  private courses: Map<string, Course>;
+  private groups: Map<string, Group>;
+  private scheduleEntries: Map<string, ScheduleEntry>;
+  private importedFiles: Map<string, ImportedFile>;
+  private activityLogs: Map<string, ActivityLog>;
+  private tasks: Map<string, Task>;
+  private curriculumPlans: Map<string, CurriculumPlan>;
   
-  private userIdCounter: number;
-  private subjectIdCounter: number;
-  private enrollmentIdCounter: number;
-  private scheduleItemIdCounter: number;
-  private assignmentIdCounter: number;
-  private submissionIdCounter: number;
-  private gradeIdCounter: number;
-  private requestIdCounter: number;
-  private documentIdCounter: number;
-  private messageIdCounter: number;
-  private notificationIdCounter: number;
   
   // Счетчики для новых моделей
-  private specialtyIdCounter: number;
-  private courseIdCounter: number;
-  private groupIdCounter: number;
-  private scheduleEntryIdCounter: number;
-  private importedFileIdCounter: number;
-  private activityLogIdCounter: number;
-  private taskIdCounter: number;
-  private curriculumPlanIdCounter: number;
   
   constructor() {
     this.users = new Map();
@@ -279,27 +260,8 @@ export class MemStorage implements IStorage {
     this.tasks = new Map();
     this.curriculumPlans = new Map();
     
-    this.userIdCounter = 1;
-    this.subjectIdCounter = 1;
-    this.enrollmentIdCounter = 1;
-    this.scheduleItemIdCounter = 1;
-    this.assignmentIdCounter = 1;
-    this.submissionIdCounter = 1;
-    this.gradeIdCounter = 1;
-    this.requestIdCounter = 1;
-    this.documentIdCounter = 1;
-    this.messageIdCounter = 1;
-    this.notificationIdCounter = 2000; // Используем очень большое число для уникальности ID уведомлений
     
     // Инициализация счетчиков для новых моделей
-    this.specialtyIdCounter = 1;
-    this.courseIdCounter = 1;
-    this.groupIdCounter = 1;
-    this.scheduleEntryIdCounter = 1;
-    this.importedFileIdCounter = 1;
-    this.activityLogIdCounter = 1;
-    this.taskIdCounter = 1;
-    this.curriculumPlanIdCounter = 1;
     
     // Add some seed data
     this.seedData();
@@ -310,7 +272,7 @@ export class MemStorage implements IStorage {
     return Array.from(this.users.values());
   }
   
-  async getUser(id: number): Promise<User | undefined> {
+  async getUser(id: string): Promise<User | undefined> {
     return this.users.get(id);
   }
   
@@ -318,19 +280,15 @@ export class MemStorage implements IStorage {
     return Array.from(this.users.values()).find(user => user.email === email);
   }
 
-  async getUserByAuthId(authUserId: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(user => user.authUserId === authUserId);
-  }
-  
   async createUser(userData: InsertUser): Promise<User> {
-    const id = this.userIdCounter++;
+    const id = randomUUID();
     const createdAt = new Date();
     const user: User = { ...userData, id, createdAt };
     this.users.set(id, user);
     return user;
   }
   
-  async updateUser(id: number, userData: Partial<InsertUser>): Promise<User | undefined> {
+  async updateUser(id: string, userData: Partial<InsertUser>): Promise<User | undefined> {
     logger.info(`🔄 updateUser called for ID ${id} with data:`, JSON.stringify(userData));
     
     const user = this.users.get(id);
@@ -348,7 +306,7 @@ export class MemStorage implements IStorage {
     return updatedUser;
   }
   
-  async deleteUser(id: number): Promise<boolean> {
+  async deleteUser(id: string): Promise<boolean> {
     return this.users.delete(id);
   }
   
@@ -376,7 +334,7 @@ export class MemStorage implements IStorage {
     return Array.from(this.subjects.values());
   }
   
-  async getSubject(id: number): Promise<Subject | undefined> {
+  async getSubject(id: string): Promise<Subject | undefined> {
     return this.subjects.get(id);
   }
   
@@ -385,7 +343,7 @@ export class MemStorage implements IStorage {
   }
   
   async createSubject(subjectData: InsertSubject): Promise<Subject> {
-    const id = this.subjectIdCounter++;
+    const id = randomUUID();
     const subject: Subject = {
       id,
       name: subjectData.name,
@@ -399,7 +357,7 @@ export class MemStorage implements IStorage {
     return subject;
   }
   
-  async updateSubject(id: number, subjectData: Partial<InsertSubject>): Promise<Subject | undefined> {
+  async updateSubject(id: string, subjectData: Partial<InsertSubject>): Promise<Subject | undefined> {
     const subject = this.subjects.get(id);
     if (!subject) return undefined;
     
@@ -408,7 +366,7 @@ export class MemStorage implements IStorage {
     return updatedSubject;
   }
   
-  async deleteSubject(id: number): Promise<boolean> {
+  async deleteSubject(id: string): Promise<boolean> {
     return this.subjects.delete(id);
   }
   
@@ -421,11 +379,11 @@ export class MemStorage implements IStorage {
     return Array.from(this.enrollments.values()).filter(enrollment => enrollment.studentId === studentId);
   }
   
-  async getEnrollmentsBySubject(subjectId: number): Promise<Enrollment[]> {
+  async getEnrollmentsBySubject(subjectId: string): Promise<Enrollment[]> {
     return Array.from(this.enrollments.values()).filter(enrollment => enrollment.subjectId === subjectId);
   }
   
-  async getStudentsBySubject(subjectId: number): Promise<User[]> {
+  async getStudentsBySubject(subjectId: string): Promise<User[]> {
     const enrollments = await this.getEnrollmentsBySubject(subjectId);
     const studentIds = enrollments.map(enrollment => enrollment.studentId);
     
@@ -442,13 +400,13 @@ export class MemStorage implements IStorage {
   }
   
   async createEnrollment(enrollmentData: InsertEnrollment): Promise<Enrollment> {
-    const id = this.enrollmentIdCounter++;
+    const id = randomUUID();
     const enrollment: Enrollment = { ...enrollmentData, id };
     this.enrollments.set(id, enrollment);
     return enrollment;
   }
   
-  async deleteEnrollment(id: number): Promise<boolean> {
+  async deleteEnrollment(id: string): Promise<boolean> {
     return this.enrollments.delete(id);
   }
   
@@ -459,11 +417,11 @@ export class MemStorage implements IStorage {
     });
   }
   
-  async getScheduleItem(id: number): Promise<ScheduleItem | undefined> {
+  async getScheduleItem(id: string): Promise<ScheduleItem | undefined> {
     return this.scheduleItems.get(id);
   }
   
-  async getScheduleItemsBySubject(subjectId: number): Promise<ScheduleItem[]> {
+  async getScheduleItemsBySubject(subjectId: string): Promise<ScheduleItem[]> {
     return Array.from(this.scheduleItems.values())
       .filter(item => item.subjectId === subjectId);
   }
@@ -527,7 +485,7 @@ export class MemStorage implements IStorage {
   }
   
   async createScheduleItem(scheduleItemData: InsertScheduleItem): Promise<ScheduleItem> {
-    const id = this.scheduleItemIdCounter++;
+    const id = randomUUID();
     const scheduleItem: ScheduleItem = {
       id,
       subjectId: scheduleItemData.subjectId,
@@ -542,7 +500,7 @@ export class MemStorage implements IStorage {
     return scheduleItem;
   }
   
-  async updateScheduleItem(id: number, scheduleItemData: Partial<InsertScheduleItem>): Promise<ScheduleItem | undefined> {
+  async updateScheduleItem(id: string, scheduleItemData: Partial<InsertScheduleItem>): Promise<ScheduleItem | undefined> {
     const scheduleItem = this.scheduleItems.get(id);
     if (!scheduleItem) return undefined;
     
@@ -551,7 +509,7 @@ export class MemStorage implements IStorage {
     return updatedScheduleItem;
   }
   
-  async deleteScheduleItem(id: number): Promise<boolean> {
+  async deleteScheduleItem(id: string): Promise<boolean> {
     return this.scheduleItems.delete(id);
   }
   
@@ -560,11 +518,11 @@ export class MemStorage implements IStorage {
     return Array.from(this.assignments.values());
   }
   
-  async getAssignment(id: number): Promise<Assignment | undefined> {
+  async getAssignment(id: string): Promise<Assignment | undefined> {
     return this.assignments.get(id);
   }
   
-  async getAssignmentsBySubject(subjectId: number): Promise<Assignment[]> {
+  async getAssignmentsBySubject(subjectId: string): Promise<Assignment[]> {
     return Array.from(this.assignments.values())
       .filter(assignment => assignment.subjectId === subjectId);
   }
@@ -573,20 +531,20 @@ export class MemStorage implements IStorage {
     const subjects = await this.getSubjectsByTeacher(teacherId);
     const subjectIds = subjects.map(subject => subject.id);
     
-    return Array.from(this.assignments.values())
-      .filter(assignment => subjectIds.includes(assignment.subjectId));
+      return Array.from(this.assignments.values())
+        .filter(assignment => subjectIds.includes(String(assignment.subjectId)));
   }
   
   async getAssignmentsByStudent(studentId: string): Promise<Assignment[]> {
     const subjects = await this.getSubjectsByStudent(studentId);
     const subjectIds = subjects.map(subject => subject.id);
     
-    return Array.from(this.assignments.values())
-      .filter(assignment => subjectIds.includes(assignment.subjectId));
+      return Array.from(this.assignments.values())
+        .filter(assignment => subjectIds.includes(String(assignment.subjectId)));
   }
   
   async createAssignment(assignmentData: InsertAssignment): Promise<Assignment> {
-    const id = this.assignmentIdCounter++;
+    const id = randomUUID();
     const createdAt = new Date();
     const assignment: Assignment = {
       id,
@@ -601,7 +559,7 @@ export class MemStorage implements IStorage {
     return assignment;
   }
   
-  async updateAssignment(id: number, assignmentData: Partial<InsertAssignment>): Promise<Assignment | undefined> {
+  async updateAssignment(id: string, assignmentData: Partial<InsertAssignment>): Promise<Assignment | undefined> {
     const assignment = this.assignments.get(id);
     if (!assignment) return undefined;
     
@@ -610,7 +568,7 @@ export class MemStorage implements IStorage {
     return updatedAssignment;
   }
   
-  async deleteAssignment(id: number): Promise<boolean> {
+  async deleteAssignment(id: string): Promise<boolean> {
     return this.assignments.delete(id);
   }
   
@@ -619,13 +577,13 @@ export class MemStorage implements IStorage {
     return Array.from(this.submissions.values());
   }
   
-  async getSubmission(id: number): Promise<Submission | undefined> {
+  async getSubmission(id: string): Promise<Submission | undefined> {
     return this.submissions.get(id);
   }
   
-  async getSubmissionsByAssignment(assignmentId: number): Promise<Submission[]> {
-    return Array.from(this.submissions.values())
-      .filter(submission => submission.assignmentId === assignmentId);
+  async getSubmissionsByAssignment(assignmentId: string): Promise<Submission[]> {
+      return Array.from(this.submissions.values())
+        .filter(submission => String(submission.assignmentId) === assignmentId);
   }
   
   async getSubmissionsByStudent(studentId: string): Promise<Submission[]> {
@@ -633,14 +591,14 @@ export class MemStorage implements IStorage {
       .filter(submission => submission.studentId === studentId);
   }
   
-  async getSubmissionByAssignmentAndStudent(assignmentId: number, studentId: string): Promise<Submission | undefined> {
-    return Array.from(this.submissions.values()).find(
-      submission => submission.assignmentId === assignmentId && submission.studentId === studentId
-    );
+  async getSubmissionByAssignmentAndStudent(assignmentId: string, studentId: string): Promise<Submission | undefined> {
+      return Array.from(this.submissions.values()).find(
+        submission => String(submission.assignmentId) === assignmentId && submission.studentId === studentId
+      );
   }
   
   async createSubmission(submissionData: InsertSubmission): Promise<Submission> {
-    const id = this.submissionIdCounter++;
+    const id = randomUUID();
     const submittedAt = new Date();
     const submission: Submission = {
       id,
@@ -657,7 +615,7 @@ export class MemStorage implements IStorage {
     return submission;
   }
   
-  async updateSubmission(id: number, submissionData: Partial<InsertSubmission>): Promise<Submission | undefined> {
+  async updateSubmission(id: string, submissionData: Partial<InsertSubmission>): Promise<Submission | undefined> {
     const submission = this.submissions.get(id);
     if (!submission) return undefined;
     
@@ -666,7 +624,7 @@ export class MemStorage implements IStorage {
     return updatedSubmission;
   }
   
-  async deleteSubmission(id: number): Promise<boolean> {
+  async deleteSubmission(id: string): Promise<boolean> {
     return this.submissions.delete(id);
   }
   
@@ -675,7 +633,7 @@ export class MemStorage implements IStorage {
     return Array.from(this.grades.values());
   }
   
-  async getGrade(id: number): Promise<Grade | undefined> {
+  async getGrade(id: string): Promise<Grade | undefined> {
     return this.grades.get(id);
   }
   
@@ -684,18 +642,18 @@ export class MemStorage implements IStorage {
       .filter(grade => grade.studentId === studentId);
   }
   
-  async getGradesBySubject(subjectId: number): Promise<Grade[]> {
+  async getGradesBySubject(subjectId: string): Promise<Grade[]> {
     return Array.from(this.grades.values())
-      .filter(grade => grade.subjectId === subjectId);
+      .filter(grade => String(grade.subjectId) === subjectId);
   }
   
-  async getGradesByStudentAndSubject(studentId: string, subjectId: number): Promise<Grade[]> {
+  async getGradesByStudentAndSubject(studentId: string, subjectId: string): Promise<Grade[]> {
     return Array.from(this.grades.values())
-      .filter(grade => grade.studentId === studentId && grade.subjectId === subjectId);
+      .filter(grade => grade.studentId === studentId && String(grade.subjectId) === subjectId);
   }
   
   async createGrade(gradeData: InsertGrade): Promise<Grade> {
-    const id = this.gradeIdCounter++;
+    const id = randomUUID();
     const now = new Date();
     const grade: Grade = {
       id,
@@ -712,7 +670,7 @@ export class MemStorage implements IStorage {
     return grade;
   }
   
-  async updateGrade(id: number, gradeData: Partial<InsertGrade>): Promise<Grade | undefined> {
+  async updateGrade(id: string, gradeData: Partial<InsertGrade>): Promise<Grade | undefined> {
     const grade = this.grades.get(id);
     if (!grade) return undefined;
     
@@ -726,7 +684,7 @@ export class MemStorage implements IStorage {
     return updatedGrade;
   }
   
-  async deleteGrade(id: number): Promise<boolean> {
+  async deleteGrade(id: string): Promise<boolean> {
     return this.grades.delete(id);
   }
   
@@ -735,7 +693,7 @@ export class MemStorage implements IStorage {
     return Array.from(this.requests.values());
   }
   
-  async getRequest(id: number): Promise<Request | undefined> {
+  async getRequest(id: string): Promise<Request | undefined> {
     return this.requests.get(id);
   }
   
@@ -750,11 +708,11 @@ export class MemStorage implements IStorage {
   }
   
   async createRequest(requestData: InsertRequest): Promise<Request> {
-    const id = this.requestIdCounter++;
+    const id = randomUUID();
     const createdAt = new Date();
-    
-    const request: Request = { 
-      ...requestData, 
+
+    const request: Request = {
+      ...requestData,
       id,
       status: 'pending',
       createdAt,
@@ -767,7 +725,7 @@ export class MemStorage implements IStorage {
     return request;
   }
   
-  async updateRequestStatus(id: number, status: 'pending' | 'approved' | 'rejected', resolvedBy: number, resolution?: string): Promise<Request | undefined> {
+  async updateRequestStatus(id: string, status: 'pending' | 'approved' | 'rejected', resolvedBy: string, resolution?: string): Promise<Request | undefined> {
     const request = this.requests.get(id);
     if (!request) return undefined;
     
@@ -783,7 +741,7 @@ export class MemStorage implements IStorage {
     return updatedRequest;
   }
   
-  async deleteRequest(id: number): Promise<boolean> {
+  async deleteRequest(id: string): Promise<boolean> {
     return this.requests.delete(id);
   }
   
@@ -792,7 +750,7 @@ export class MemStorage implements IStorage {
     return Array.from(this.documents.values());
   }
   
-  async getDocument(id: number): Promise<Document | undefined> {
+  async getDocument(id: string): Promise<Document | undefined> {
     return this.documents.get(id);
   }
   
@@ -807,7 +765,7 @@ export class MemStorage implements IStorage {
   }
   
   async createDocument(documentData: InsertDocument): Promise<Document> {
-    const id = this.documentIdCounter++;
+    const id = randomUUID();
     const createdAt = new Date();
 
     const document: Document = {
@@ -824,7 +782,7 @@ export class MemStorage implements IStorage {
     return document;
   }
   
-  async updateDocument(id: number, documentData: Partial<InsertDocument>): Promise<Document | undefined> {
+  async updateDocument(id: string, documentData: Partial<InsertDocument>): Promise<Document | undefined> {
     const document = this.documents.get(id);
     if (!document) return undefined;
     
@@ -833,7 +791,7 @@ export class MemStorage implements IStorage {
     return updatedDocument;
   }
   
-  async deleteDocument(id: number): Promise<boolean> {
+  async deleteDocument(id: string): Promise<boolean> {
     return this.documents.delete(id);
   }
   
@@ -842,7 +800,7 @@ export class MemStorage implements IStorage {
     return Array.from(this.messages.values());
   }
   
-  async getMessage(id: number): Promise<Message | undefined> {
+  async getMessage(id: string): Promise<Message | undefined> {
     return this.messages.get(id);
   }
   
@@ -861,11 +819,11 @@ export class MemStorage implements IStorage {
   }
   
   async createMessage(messageData: InsertMessage): Promise<Message> {
-    const id = this.messageIdCounter++;
+    const id = randomUUID();
     const sentAt = new Date();
-    
-    const message: Message = { 
-      ...messageData, 
+
+    const message: Message = {
+      ...messageData,
       id,
       sentAt,
       status: 'sent'
@@ -875,7 +833,7 @@ export class MemStorage implements IStorage {
     return message;
   }
   
-  async updateMessageStatus(id: number, status: 'delivered' | 'read'): Promise<Message | undefined> {
+  async updateMessageStatus(id: string, status: 'delivered' | 'read'): Promise<Message | undefined> {
     const message = this.messages.get(id);
     if (!message) return undefined;
     
@@ -884,7 +842,7 @@ export class MemStorage implements IStorage {
     return updatedMessage;
   }
   
-  async deleteMessage(id: number): Promise<boolean> {
+  async deleteMessage(id: string): Promise<boolean> {
     return this.messages.delete(id);
   }
   
@@ -893,7 +851,7 @@ export class MemStorage implements IStorage {
     return Array.from(this.notifications.values());
   }
   
-  async getNotification(id: number): Promise<Notification | undefined> {
+  async getNotification(id: string): Promise<Notification | undefined> {
     return this.notifications.get(id);
   }
   
@@ -913,7 +871,7 @@ export class MemStorage implements IStorage {
     try {
       logger.info('📣 Creating notification:', JSON.stringify(notificationData));
       
-      const id = this.notificationIdCounter++;
+      const id = randomUUID();
       const createdAt = new Date();
       
       // Convert undefined to null for optional fields
@@ -945,7 +903,7 @@ export class MemStorage implements IStorage {
     }
   }
   
-  async markNotificationAsRead(id: number): Promise<Notification | undefined> {
+  async markNotificationAsRead(id: string): Promise<Notification | undefined> {
     const notification = this.notifications.get(id);
     if (!notification) return undefined;
     
@@ -967,7 +925,7 @@ export class MemStorage implements IStorage {
     logger.info(`MEM: Marked ${userNotifications.length} notifications as read for user ${userId}`);
   }
   
-  async deleteNotification(id: number): Promise<boolean> {
+  async deleteNotification(id: string): Promise<boolean> {
     return this.notifications.delete(id);
   }
   
@@ -977,12 +935,12 @@ export class MemStorage implements IStorage {
     return Array.from(this.specialties.values());
   }
   
-  async getSpecialty(id: number): Promise<Specialty | undefined> {
+  async getSpecialty(id: string): Promise<Specialty | undefined> {
     return this.specialties.get(id);
   }
   
   async createSpecialty(specialtyData: InsertSpecialty): Promise<Specialty> {
-    const id = this.specialtyIdCounter++;
+    const id = randomUUID();
     const specialty: Specialty = {
       id,
       createdAt: new Date(),
@@ -994,7 +952,7 @@ export class MemStorage implements IStorage {
     return specialty;
   }
   
-  async updateSpecialty(id: number, specialtyData: Partial<InsertSpecialty>): Promise<Specialty | undefined> {
+  async updateSpecialty(id: string, specialtyData: Partial<InsertSpecialty>): Promise<Specialty | undefined> {
     const specialty = this.specialties.get(id);
     if (!specialty) return undefined;
     
@@ -1003,7 +961,7 @@ export class MemStorage implements IStorage {
     return updatedSpecialty;
   }
   
-  async deleteSpecialty(id: number): Promise<boolean> {
+  async deleteSpecialty(id: string): Promise<boolean> {
     return this.specialties.delete(id);
   }
   
@@ -1012,26 +970,26 @@ export class MemStorage implements IStorage {
     return Array.from(this.courses.values());
   }
   
-  async getCourse(id: number): Promise<Course | undefined> {
+  async getCourse(id: string): Promise<Course | undefined> {
     return this.courses.get(id);
   }
   
-  async getCoursesBySpecialty(specialtyId: number): Promise<Course[]> {
+  async getCoursesBySpecialty(specialtyId: string): Promise<Course[]> {
     return Array.from(this.courses.values()).filter(course => course.specialtyId === specialtyId);
   }
   
   async createCourse(courseData: InsertCourse): Promise<Course> {
-    const id = this.courseIdCounter++;
-    const course: Course = { 
-      ...courseData, 
-      id, 
-      createdAt: new Date() 
+    const id = randomUUID();
+    const course: Course = {
+      ...courseData,
+      id,
+      createdAt: new Date()
     };
     this.courses.set(id, course);
     return course;
   }
   
-  async updateCourse(id: number, courseData: Partial<InsertCourse>): Promise<Course | undefined> {
+  async updateCourse(id: string, courseData: Partial<InsertCourse>): Promise<Course | undefined> {
     const course = this.courses.get(id);
     if (!course) return undefined;
     
@@ -1040,7 +998,7 @@ export class MemStorage implements IStorage {
     return updatedCourse;
   }
   
-  async deleteCourse(id: number): Promise<boolean> {
+  async deleteCourse(id: string): Promise<boolean> {
     return this.courses.delete(id);
   }
   
@@ -1049,26 +1007,26 @@ export class MemStorage implements IStorage {
     return Array.from(this.groups.values());
   }
   
-  async getGroup(id: number): Promise<Group | undefined> {
+  async getGroup(id: string): Promise<Group | undefined> {
     return this.groups.get(id);
   }
   
-  async getGroupsByCourse(courseId: number): Promise<Group[]> {
+  async getGroupsByCourse(courseId: string): Promise<Group[]> {
     return Array.from(this.groups.values()).filter(group => group.courseId === courseId);
   }
   
   async createGroup(groupData: InsertGroup): Promise<Group> {
-    const id = this.groupIdCounter++;
-    const group: Group = { 
-      ...groupData, 
-      id, 
-      createdAt: new Date() 
+    const id = randomUUID();
+    const group: Group = {
+      ...groupData,
+      id,
+      createdAt: new Date()
     };
     this.groups.set(id, group);
     return group;
   }
   
-  async updateGroup(id: number, groupData: Partial<InsertGroup>): Promise<Group | undefined> {
+  async updateGroup(id: string, groupData: Partial<InsertGroup>): Promise<Group | undefined> {
     const group = this.groups.get(id);
     if (!group) return undefined;
     
@@ -1077,7 +1035,7 @@ export class MemStorage implements IStorage {
     return updatedGroup;
   }
   
-  async deleteGroup(id: number): Promise<boolean> {
+  async deleteGroup(id: string): Promise<boolean> {
     return this.groups.delete(id);
   }
   
@@ -1086,32 +1044,32 @@ export class MemStorage implements IStorage {
     return Array.from(this.scheduleEntries.values());
   }
   
-  async getScheduleEntry(id: number): Promise<ScheduleEntry | undefined> {
+  async getScheduleEntry(id: string): Promise<ScheduleEntry | undefined> {
     return this.scheduleEntries.get(id);
   }
   
-  async getScheduleEntriesByGroup(groupId: number): Promise<ScheduleEntry[]> {
-    return Array.from(this.scheduleEntries.values()).filter(entry => entry.groupId === groupId);
+  async getScheduleEntriesByGroup(groupId: string): Promise<ScheduleEntry[]> {
+    return Array.from(this.scheduleEntries.values()).filter(entry => String(entry.groupId) === groupId);
   }
   
   async getScheduleEntriesByTeacher(teacherId: string): Promise<ScheduleEntry[]> {
     const subjects = await this.getSubjectsByTeacher(teacherId);
     const subjectIds = subjects.map(subject => subject.id);
     
-    return Array.from(this.scheduleEntries.values())
-      .filter(entry => subjectIds.includes(entry.subjectId));
+      return Array.from(this.scheduleEntries.values())
+        .filter(entry => subjectIds.includes(String(entry.subjectId)));
   }
   
-  async getScheduleEntriesBySubject(subjectId: number): Promise<ScheduleEntry[]> {
+  async getScheduleEntriesBySubject(subjectId: string): Promise<ScheduleEntry[]> {
     return Array.from(this.scheduleEntries.values())
-      .filter(entry => entry.subjectId === subjectId);
+      .filter(entry => String(entry.subjectId) === subjectId);
   }
   
   async createScheduleEntry(scheduleEntryData: InsertScheduleEntry): Promise<ScheduleEntry> {
-    const id = this.scheduleEntryIdCounter++;
-    const scheduleEntry: ScheduleEntry = { 
-      ...scheduleEntryData, 
-      id, 
+    const id = randomUUID();
+    const scheduleEntry: ScheduleEntry = {
+      ...scheduleEntryData,
+      id,
       createdAt: new Date(),
       teacherId: scheduleEntryData.teacherId || null,
       roomNumber: scheduleEntryData.roomNumber || null
@@ -1120,7 +1078,7 @@ export class MemStorage implements IStorage {
     return scheduleEntry;
   }
   
-  async updateScheduleEntry(id: number, scheduleEntryData: Partial<InsertScheduleEntry>): Promise<ScheduleEntry | undefined> {
+  async updateScheduleEntry(id: string, scheduleEntryData: Partial<InsertScheduleEntry>): Promise<ScheduleEntry | undefined> {
     const scheduleEntry = this.scheduleEntries.get(id);
     if (!scheduleEntry) return undefined;
     
@@ -1129,7 +1087,7 @@ export class MemStorage implements IStorage {
     return updatedScheduleEntry;
   }
   
-  async deleteScheduleEntry(id: number): Promise<boolean> {
+  async deleteScheduleEntry(id: string): Promise<boolean> {
     return this.scheduleEntries.delete(id);
   }
   
@@ -1189,11 +1147,11 @@ export class MemStorage implements IStorage {
     });
   }
   
-  async getOrCreateCourse(number: number, specialtyId: number, academicYear: string): Promise<Course> {
+  async getOrCreateCourse(number: number, specialtyId: string, academicYear: string): Promise<Course> {
     // Ищем курс по номеру, специальности и учебному году
     const existingCourse = Array.from(this.courses.values()).find(
-      course => course.number === number && 
-               course.specialtyId === specialtyId && 
+      course => course.number === number &&
+               String(course.specialtyId) === specialtyId &&
                course.academicYear === academicYear
     );
     
@@ -1204,15 +1162,15 @@ export class MemStorage implements IStorage {
     // Создаем новый курс
     return this.createCourse({
       number,
-      specialtyId,
+      specialtyId: Number(specialtyId),
       academicYear
     });
   }
   
-  async getOrCreateGroup(name: string, courseId: number): Promise<Group> {
+  async getOrCreateGroup(name: string, courseId: string): Promise<Group> {
     // Ищем группу по названию и курсу
     const existingGroup = Array.from(this.groups.values()).find(
-      group => group.name === name && group.courseId === courseId
+      group => group.name === name && String(group.courseId) === courseId
     );
     
     if (existingGroup) {
@@ -1222,7 +1180,7 @@ export class MemStorage implements IStorage {
     // Создаем новую группу
     return this.createGroup({
       name,
-      courseId
+      courseId: Number(courseId)
     });
   }
   
@@ -1231,7 +1189,7 @@ export class MemStorage implements IStorage {
     return Array.from(this.importedFiles.values());
   }
   
-  async getImportedFile(id: number): Promise<ImportedFile | undefined> {
+  async getImportedFile(id: string): Promise<ImportedFile | undefined> {
     return this.importedFiles.get(id);
   }
   
@@ -1246,7 +1204,7 @@ export class MemStorage implements IStorage {
   }
   
   async createImportedFile(fileData: InsertImportedFile): Promise<ImportedFile> {
-    const id = this.importedFileIdCounter++;
+    const id = randomUUID();
     const uploadedAt = new Date();
 
     const importedFile: ImportedFile = {
@@ -1286,7 +1244,7 @@ export class MemStorage implements IStorage {
     return importedFile;
   }
   
-  async deleteImportedFile(id: number): Promise<boolean> {
+  async deleteImportedFile(id: string): Promise<boolean> {
     try {
       logger.info(`In-Memory: Deleting imported file with ID: ${id}`);
       
@@ -1359,9 +1317,9 @@ export class MemStorage implements IStorage {
   }
   
   async createActivityLog(logData: InsertActivityLog): Promise<ActivityLog> {
-    const id = this.activityLogIdCounter++;
+    const id = randomUUID();
     const now = new Date();
-    
+
     const log: ActivityLog = {
       ...logData,
       id,
@@ -1406,11 +1364,11 @@ export class MemStorage implements IStorage {
     return Array.from(this.tasks.values());
   }
   
-  async getTask(id: number): Promise<Task | undefined> {
+  async getTask(id: string): Promise<Task | undefined> {
     return this.tasks.get(id);
   }
   
-  async getTaskById(id: number): Promise<Task | null> {
+  async getTaskById(id: string): Promise<Task | null> {
     const task = this.tasks.get(id);
     return task || null;
   }
@@ -1449,7 +1407,7 @@ export class MemStorage implements IStorage {
   }
   
   async createTask(taskData: InsertTask): Promise<Task> {
-    const id = this.taskIdCounter++;
+    const id = randomUUID();
     const now = new Date();
 
     const task: Task = {
@@ -1469,7 +1427,7 @@ export class MemStorage implements IStorage {
     return task;
   }
   
-  async updateTask(id: number, taskData: Partial<InsertTask>): Promise<Task | undefined> {
+  async updateTask(id: string, taskData: Partial<InsertTask>): Promise<Task | undefined> {
     const task = this.tasks.get(id);
     if (!task) return undefined;
     
@@ -1483,7 +1441,7 @@ export class MemStorage implements IStorage {
     return updatedTask;
   }
   
-  async deleteTask(id: number): Promise<boolean> {
+  async deleteTask(id: string): Promise<boolean> {
     return this.tasks.delete(id);
   }
   
@@ -1494,7 +1452,7 @@ export class MemStorage implements IStorage {
     });
   }
 
-  async getCurriculumPlan(id: number): Promise<CurriculumPlan | undefined> {
+  async getCurriculumPlan(id: string): Promise<CurriculumPlan | undefined> {
     return this.curriculumPlans.get(id);
   }
 
@@ -1507,7 +1465,7 @@ export class MemStorage implements IStorage {
   }
 
   async createCurriculumPlan(planData: InsertCurriculumPlan): Promise<CurriculumPlan> {
-    const id = this.curriculumPlanIdCounter++;
+    const id = randomUUID();
     const now = new Date();
     const plan: CurriculumPlan = {
       id,
@@ -1530,7 +1488,7 @@ export class MemStorage implements IStorage {
     return plan;
   }
 
-  async updateCurriculumPlan(id: number, planData: Partial<InsertCurriculumPlan>): Promise<CurriculumPlan | undefined> {
+  async updateCurriculumPlan(id: string, planData: Partial<InsertCurriculumPlan>): Promise<CurriculumPlan | undefined> {
     const plan = this.curriculumPlans.get(id);
     if (!plan) return undefined;
 
@@ -1543,7 +1501,7 @@ export class MemStorage implements IStorage {
     return updatedPlan;
   }
 
-  async deleteCurriculumPlan(id: number): Promise<boolean> {
+  async deleteCurriculumPlan(id: string): Promise<boolean> {
     return this.curriculumPlans.delete(id);
   }
   

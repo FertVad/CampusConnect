@@ -11,7 +11,7 @@ export class UsersRepository {
     return this.database.select().from(schema.users);
   }
 
-  async getUser(id: number): Promise<User | undefined> {
+  async getUser(id: string): Promise<User | undefined> {
     const users = await this.database.select()
       .from(schema.users)
       .where(eq(schema.users.id, id))
@@ -27,13 +27,6 @@ export class UsersRepository {
     return users[0];
   }
 
-  async getUserByAuthId(authUserId: string): Promise<User | undefined> {
-    const users = await this.database.select()
-      .from(schema.users)
-      .where(eq(schema.users.authUserId, authUserId))
-      .limit(1);
-    return users[0];
-  }
 
   async getUsersByRole(role: string): Promise<User[]> {
     return this.database.select()
@@ -52,7 +45,7 @@ export class UsersRepository {
     return user;
   }
 
-  async updateUser(id: number, userData: Partial<InsertUser>): Promise<User | undefined> {
+  async updateUser(id: string, userData: Partial<InsertUser>): Promise<User | undefined> {
     if (userData.password) {
       userData.password = await this.hashPassword(userData.password);
     }
@@ -63,7 +56,7 @@ export class UsersRepository {
     return user;
   }
 
-  async deleteUser(id: number): Promise<boolean> {
+  async deleteUser(id: string): Promise<boolean> {
     const result = await this.database.delete(schema.users)
       .where(eq(schema.users.id, id));
     return (result.rowCount ?? 0) > 0;
