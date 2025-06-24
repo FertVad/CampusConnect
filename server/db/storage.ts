@@ -125,7 +125,7 @@ export class SupabaseStorage {
   async getEnrollmentsBySubject(subjectId: number): Promise<Enrollment[]> {
     return db.select()
       .from(schema.enrollments)
-      .where(eq(schema.enrollments.subjectId, subjectId));
+      .where(eq(schema.enrollments.subjectId, String(subjectId)));
   }
 
   async getStudentsBySubject(subjectId: number): Promise<User[]> {
@@ -135,7 +135,7 @@ export class SupabaseStorage {
         schema.enrollments,
         and(
           eq(schema.users.id, schema.enrollments.studentId),
-          eq(schema.enrollments.subjectId, subjectId)
+          eq(schema.enrollments.subjectId, String(subjectId))
         )
       )
       .where(eq(schema.users.role, 'student'))
@@ -172,7 +172,7 @@ export class SupabaseStorage {
 
   async deleteEnrollment(id: number): Promise<boolean> {
     const result = await db.delete(schema.enrollments)
-      .where(eq(schema.enrollments.id, id));
+      .where(eq(schema.enrollments.id, String(id)));
 
     return (result.rowCount ?? 0) > 0;
   }
@@ -187,7 +187,7 @@ export class SupabaseStorage {
   async getScheduleItem(id: number): Promise<ScheduleItem | undefined> {
     const items = await db.select()
       .from(schema.scheduleItems)
-      .where(eq(schema.scheduleItems.id, id))
+      .where(eq(schema.scheduleItems.id, String(id)))
       .limit(1);
     return items[0];
   }
@@ -195,7 +195,7 @@ export class SupabaseStorage {
   async getScheduleItemsBySubject(subjectId: number): Promise<ScheduleItem[]> {
     return db.select()
       .from(schema.scheduleItems)
-      .where(eq(schema.scheduleItems.subjectId, subjectId));
+      .where(eq(schema.scheduleItems.subjectId, String(subjectId)));
   }
 
   async getScheduleItemsByStudent(studentId: string): Promise<(ScheduleItem & { subject: Subject })[]> {
@@ -213,7 +213,7 @@ export class SupabaseStorage {
         eq(schema.scheduleItems.subjectId, schema.subjects.id)
       )
       .where(
-        or(...subjectIds.map(id => eq(schema.scheduleItems.subjectId, id)))
+        or(...subjectIds.map(id => eq(schema.scheduleItems.subjectId, String(id))))
       );
     
     const results = await query;
@@ -254,7 +254,7 @@ export class SupabaseStorage {
   async updateScheduleItem(id: number, scheduleItemData: Partial<InsertScheduleItem>): Promise<ScheduleItem | undefined> {
     const [item] = await db.update(schema.scheduleItems)
       .set(scheduleItemData)
-      .where(eq(schema.scheduleItems.id, id))
+      .where(eq(schema.scheduleItems.id, String(id)))
       .returning();
     
     return item;
@@ -262,7 +262,7 @@ export class SupabaseStorage {
 
   async deleteScheduleItem(id: number): Promise<boolean> {
     const result = await db.delete(schema.scheduleItems)
-      .where(eq(schema.scheduleItems.id, id));
+      .where(eq(schema.scheduleItems.id, String(id)));
 
     return (result.rowCount ?? 0) > 0;
   }
@@ -305,7 +305,7 @@ export class SupabaseStorage {
     return db.select()
       .from(schema.assignments)
       .where(
-        or(...subjectIds.map(id => eq(schema.assignments.subjectId, id)))
+        or(...subjectIds.map(id => eq(schema.assignments.subjectId, String(id))))
       );
   }
 
@@ -331,7 +331,7 @@ export class SupabaseStorage {
 
   async deleteAssignment(id: number): Promise<boolean> {
     const result = await db.delete(schema.assignments)
-      .where(eq(schema.assignments.id, id));
+      .where(eq(schema.assignments.id, String(id)));
 
     return (result.rowCount ?? 0) > 0;
   }
@@ -509,7 +509,7 @@ export class SupabaseStorage {
     const [request] = await db.update(schema.requests)
         .set({
           status,
-          resolvedBy,
+          resolvedBy: String(resolvedBy),
           resolvedAt: new Date(),
           resolution
         })
