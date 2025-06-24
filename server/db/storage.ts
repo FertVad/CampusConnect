@@ -291,7 +291,7 @@ export class SupabaseStorage {
       .from(schema.assignments)
       .where(eq(schema.assignments.createdBy, teacherId));
 
-    return results.map(r => r.assignments);
+    return results;
   }
 
   async getAssignmentsByStudent(studentId: string): Promise<Assignment[]> {
@@ -419,7 +419,7 @@ export class SupabaseStorage {
       .from(schema.grades)
       .where(eq(schema.grades.studentId, studentId));
 
-    return results.map(r => r.grades);
+    return results;
   }
 
   async getGradesBySubject(subjectId: number): Promise<Grade[]> {
@@ -438,7 +438,7 @@ export class SupabaseStorage {
         )
       );
 
-    return results.map(r => r.grades);
+    return results;
   }
 
   async createGrade(gradeData: InsertGrade): Promise<Grade> {
