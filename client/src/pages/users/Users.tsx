@@ -207,7 +207,7 @@ export default function Users() {
 
 
   // Filter users based on search query and role filter
-  const filteredUsers = users.filter(user => {
+  const filteredUsers = users.filter((user: User) => {
     const matchesSearch = 
       searchQuery === '' || 
       user.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -476,7 +476,7 @@ export default function Users() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {currentUsers.map((user) => (
+                  {currentUsers.map((user: User) => (
                     <TableRow 
                       key={user.id} 
                       className="cursor-pointer hover:bg-secondary/50"
