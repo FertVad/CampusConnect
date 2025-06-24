@@ -90,7 +90,7 @@ function calcEndYear(startYear: number, years: number, months: number = 0): numb
 // Компонент редактирования учебного плана
 function EditCurriculumPlanContent(): React.ReactNode {
   const { id } = useParams();
-  const planId = id ? parseInt(id) : NaN;
+  const planId = id || '';
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -136,14 +136,14 @@ function EditCurriculumPlanContent(): React.ReactNode {
   // Получаем данные о учебном плане
   const { data: plan, isLoading, error } = useQuery<CurriculumPlan>({
     queryKey: [`/api/curriculum-plans/${planId}`],
-    enabled: !isNaN(planId),
+    enabled: !!planId,
     refetchOnWindowFocus: false,
   });
 
   // Мутация для обновления учебного плана (унифицированная версия)
   const updateMutation = useMutation({
     mutationFn: (updatedPlan: Partial<CurriculumFormValues> & {
-      id: number,
+      id: string,
       calendarData?: string,
       curriculumPlanData?: string,
       // Новые поля для унифицированного сохранения
@@ -972,7 +972,7 @@ function EditCurriculumPlanContent(): React.ReactNode {
     navigate("/curriculum-plans");
   };
 
-  if (isNaN(planId)) {
+  if (!planId) {
     return (
       <Alert variant="destructive" className="mb-4">
         <AlertCircle className="h-4 w-4" />
@@ -1344,7 +1344,7 @@ function EditCurriculumPlanContent(): React.ReactNode {
                           planYear={plan.startYear || new Date().getFullYear()}
                           yearsOfStudy={planYearsOfStudy} // Используем локальное состояние вместо значения из плана
                           initialData={plan.calendarData ? JSON.parse(plan.calendarData as string) : {}}
-                          planId={planId.toString()} // Явно указываем planId из родительского компонента
+                          planId={planId} // Явно указываем planId из родительского компонента
                           autosavePaused={autosavePaused} // Передаем флаг паузы автосохранения
                           onChange={(data) => {
 
@@ -1430,7 +1430,7 @@ function EditCurriculumPlanContent(): React.ReactNode {
                   initialData={plan?.curriculumPlanData ? JSON.parse(plan.curriculumPlanData) : undefined}
                   onPlanChange={(planData) => {
                     // Сохраняем данные через единую функцию saveCurriculum
-                    if (planId && !isNaN(planId)) {
+                    if (planId) {
                       logger.info({
                         nodesCount: planData.length,
                         firstNode: planData[0]?.title || 'unknown',

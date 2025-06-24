@@ -33,7 +33,7 @@ const GradeForm: React.FC<GradeFormProps> = ({ students, subjects, onSubmit }) =
     resolver: zodResolver(gradeFormSchema),
     defaultValues: {
       studentId: '',
-      subjectId: 0,
+      subjectId: '',
       assignmentId: null,
       score: 0,
       maxScore: 100,
@@ -101,8 +101,8 @@ const GradeForm: React.FC<GradeFormProps> = ({ students, subjects, onSubmit }) =
                   <FormItem>
                     <FormLabel>Subject</FormLabel>
                     <Select
-                      onValueChange={(value) => field.onChange(parseInt(value))}
-                      defaultValue={field.value.toString()}
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
                     >
                       <FormControl>
                         <SelectTrigger>
