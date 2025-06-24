@@ -3,7 +3,7 @@ export interface CreateNotificationData {
   title: string;
   message: string;
   type?: 'task_update' | 'task_assigned' | 'system' | 'reminder';
-  relatedId?: number;
+  relatedId?: string;
   relatedType?: 'task' | 'user' | 'project';
 }
 
