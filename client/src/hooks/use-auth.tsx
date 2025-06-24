@@ -7,7 +7,7 @@ import {
 } from "@tanstack/react-query";
 
 // Строгие типы ролей
-export type UserRole = 'admin' | 'teacher' | 'student';
+export type UserRole = 'admin' | 'teacher' | 'student' | 'director';
 
 // Тип пользователя, возвращаемого эндпоинтом /api/user
 export interface AuthUser {

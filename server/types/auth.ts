@@ -1,4 +1,4 @@
-export type UserRole = 'admin' | 'teacher' | 'student';
+export type UserRole = 'admin' | 'teacher' | 'student' | 'director';
 
 export interface AuthenticatedUser {
   id: string; // Supabase UUID
