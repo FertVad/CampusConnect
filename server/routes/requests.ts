@@ -41,7 +41,7 @@ export function registerRequestRoutes(app: Express, { authenticateUser, requireR
       if (req.user) {
         for (const admin of admins) {
           await getStorage().createNotification({
-            userId: admin.authUserId,
+            userId: admin.authUserId!,
             title: "New Student Request",
             content: `${req.user.firstName} ${req.user.lastName} has submitted a ${requestData.type} request.`,
             relatedId: request.id,
