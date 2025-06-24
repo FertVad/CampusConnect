@@ -161,7 +161,7 @@ const UserDetail: React.FC = () => {
     }
     
     // Общий обработчик клика на карточке
-    const handleCardClick = (userId: number) => {
+    const handleCardClick = (userId: string) => {
     };
     
     // Выбираем компонент карточки в зависимости от роли
