@@ -95,7 +95,7 @@ export function registerCurriculumRoutes(app: Express, { authenticateUser, requi
       const admins = await storage.getUsersByRole('admin');
       for (const admin of admins) {
         if (admin.id !== req.user?.id) {
-          await storage.createNotification({ userId: admin.authUserId!, title: "Создан учебный план", content: `Учебный план \"${plan.specialtyName}\" (${plan.specialtyCode}) был создан`, relatedId: plan.id, relatedType: "curriculum_plan" });
+          await storage.createNotification({ userId: admin.id, title: "Создан учебный план", content: `Учебный план \"${plan.specialtyName}\" (${plan.specialtyCode}) был создан`, relatedId: plan.id, relatedType: "curriculum_plan" });
         }
       }
       res.status(201).json(plan);
@@ -130,7 +130,7 @@ export function registerCurriculumRoutes(app: Express, { authenticateUser, requi
       const admins = await storage.getUsersByRole('admin');
       for (const admin of admins) {
         if (admin.id !== req.user?.id) {
-          await storage.createNotification({ userId: admin.authUserId!, title: "Обновлен учебный план", content: `Учебный план \"${plan.specialtyName}\" (${plan.specialtyCode}) был обновлен`, relatedId: plan.id, relatedType: "curriculum_plan" });
+          await storage.createNotification({ userId: admin.id, title: "Обновлен учебный план", content: `Учебный план \"${plan.specialtyName}\" (${plan.specialtyCode}) был обновлен`, relatedId: plan.id, relatedType: "curriculum_plan" });
         }
       }
       res.json(updatedPlan);
@@ -170,7 +170,7 @@ export function registerCurriculumRoutes(app: Express, { authenticateUser, requi
       const admins = await storage.getUsersByRole('admin');
       for (const admin of admins) {
         if (admin.id !== req.user?.id) {
-          await storage.createNotification({ userId: admin.authUserId!, title: "Удален учебный план", content: `Учебный план \"${plan.specialtyName}\" (${plan.specialtyCode}) был удален`, relatedType: "curriculum_plan" });
+          await storage.createNotification({ userId: admin.id, title: "Удален учебный план", content: `Учебный план \"${plan.specialtyName}\" (${plan.specialtyCode}) был удален`, relatedType: "curriculum_plan" });
         }
       }
       res.status(200).json({ message: "Curriculum plan deleted successfully", planId });

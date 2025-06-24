@@ -14,7 +14,7 @@ async function getDefaultTeacherId(): Promise<string> {
   try {
     const teachers = await getStorage().getUsersByRole('teacher');
     if (teachers.length > 0) {
-      return teachers[0].authUserId ?? String(teachers[0].id);
+      return String(teachers[0].id);
     }
     return '2';
   } catch {
@@ -70,7 +70,7 @@ app.get('/api/subjects/teacher', authenticateUser, async (req, res) => {
       const teacherId = req.params.teacherId;
 
       // Ensure the teacher exists
-      const teacher = await getStorage().getUserByAuthId(teacherId);
+      const teacher = await getStorage().getUser(teacherId);
       if (!teacher || teacher.role !== 'teacher') {
         return res.status(404).json({ message: "Teacher not found" });
       }

@@ -55,9 +55,6 @@ export class SupabaseStorage {
     return this.usersRepo.getUserByEmail(email);
   }
 
-  async getUserByAuthId(authUserId: string): Promise<User | undefined> {
-    return this.usersRepo.getUserByAuthId(authUserId);
-  }
   
   async getUsersByRole(role: string): Promise<User[]> {
     return this.usersRepo.getUsersByRole(role);
@@ -137,7 +134,7 @@ export class SupabaseStorage {
       .innerJoin(
         schema.enrollments,
         and(
-          eq(schema.users.authUserId, schema.enrollments.studentId),
+          eq(schema.users.id, schema.enrollments.studentId),
           eq(schema.enrollments.subjectId, subjectId)
         )
       )
