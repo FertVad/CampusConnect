@@ -75,4 +75,12 @@ export function registerMessageRoutes(app: Express, { authenticateUser }: RouteC
       res.status(500).json({ message: "Server error" });
     }
   });
+
+  // 🔍 [DEBUG] Log all registered routes for verification
+  console.log('🔍 [DEBUG] All registered routes:');
+  (app as any)._router.stack.forEach((middleware, index) => {
+    if (middleware.route) {
+      console.log(`Route ${index}: ${middleware.route.path}`);
+    }
+  });
 }

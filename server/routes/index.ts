@@ -99,6 +99,22 @@ async function getDefaultTeacherId(): Promise<number> {
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
+
+  // Global middleware to trace chat and user requests
+  app.use('/api/users/chat', (req, res, next) => {
+    console.log('🚨 [GLOBAL] /api/users/chat intercepted!');
+    console.log('🚨 [GLOBAL] Method:', req.method);
+    console.log('🚨 [GLOBAL] Headers:', req.headers);
+    console.log('🚨 [GLOBAL] User:', (req as any).user);
+    next();
+  });
+
+  // Log all /api/users requests
+  app.use('/api/users', (req, _res, next) => {
+    console.log('🔍 [GLOBAL] /api/users/* hit:', req.path);
+    console.log('🔍 [GLOBAL] Full URL:', req.url);
+    next();
+  });
   
   // Set up WebSockets for real-time chat
   const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
