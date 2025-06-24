@@ -29,7 +29,7 @@ const taskFormSchema = z.object({
   title: z.string().min(1),
   description: z.string().optional(),
   priority: z.enum(['high', 'medium', 'low']),
-  status: z.enum(['new', 'in_progress', 'on_hold']),
+  status: z.enum(['new', 'in_progress', 'on_hold', 'completed']),
   executorId: z.string(),
   dueDate: z.date().nullable().optional(),
 });
