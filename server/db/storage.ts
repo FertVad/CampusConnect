@@ -592,7 +592,7 @@ export class SupabaseStorage {
   async getMessage(id: number): Promise<Message | undefined> {
     const messages = await db.select()
       .from(schema.messages)
-      .where(eq(schema.messages.id, id))
+      .where(eq(schema.messages.id, String(id)))
       .limit(1);
     return messages[0];
   }
@@ -643,7 +643,7 @@ export class SupabaseStorage {
   async updateMessageStatus(id: number, status: 'delivered' | 'read'): Promise<Message | undefined> {
     const [message] = await db.update(schema.messages)
       .set({ status })
-      .where(eq(schema.messages.id, id))
+      .where(eq(schema.messages.id, String(id)))
       .returning();
     
     return message;
@@ -651,7 +651,7 @@ export class SupabaseStorage {
 
   async deleteMessage(id: number): Promise<boolean> {
     const result = await db.delete(schema.messages)
-      .where(eq(schema.messages.id, id));
+      .where(eq(schema.messages.id, String(id)));
 
     return (result.rowCount ?? 0) > 0;
   }
