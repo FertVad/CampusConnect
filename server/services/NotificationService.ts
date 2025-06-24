@@ -21,7 +21,6 @@ export class NotificationService {
         type: data.type ?? 'system',
         relatedId: data.relatedId,
         relatedType: data.relatedType,
-        createdAt: new Date(),
       });
       logger.info(`[INFO] Notification created: ${notification.title} for user ${data.userId}`);
       return notification;

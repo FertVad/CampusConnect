@@ -40,7 +40,6 @@ export async function createNotification(notificationData: InsertNotification): 
       ...notificationData,
       userId: notificationData.userId,
       isRead: false,
-      createdAt: new Date(),
     })
     .returning();
   return notification;
