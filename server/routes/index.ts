@@ -206,13 +206,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth Routes are handled in server/auth.ts
 
   const ctx: RouteContext = { authenticateUser, requireRole, upload };
+  // Register chat-related routes before user routes to avoid conflicts
+  registerMessageRoutes(app, ctx);
   registerUserRoutes(app, ctx);
   registerScheduleRoutes(app, ctx);
   registerTaskRoutes(app, ctx);
 
   // Основные разделы
   registerAssignmentRoutes(app, ctx);
-  registerMessageRoutes(app, ctx);
   registerNotificationRoutes(app, ctx);
 
   // Временное отключение второстепенных модулей
