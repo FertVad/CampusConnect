@@ -29,7 +29,7 @@ import { Button } from '@/components/ui/button';
 
 // Интерфейс для данных студента
 interface StudentProfile {
-  id: number;
+  id: string;
   firstName: string;
   lastName: string;
   email: string;

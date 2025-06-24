@@ -229,7 +229,7 @@ export default function DocumentPage({ documentType, title, icon: Icon }: Docume
                   <CardContent>
                     <p className="text-sm text-neutral-500">{documentType === 'invoice' ? 'Created' : 'Issued'}: {formatDate(document.createdAt)}</p>
                     {isAdmin && (
-                      <p className="text-sm text-neutral-500">For: {users.find(u => u.authUserId === document.userId)?.firstName} {users.find(u => u.authUserId === document.userId)?.lastName}</p>
+                      <p className="text-sm text-neutral-500">For: {users.find(u => u.id === document.userId)?.firstName} {users.find(u => u.id === document.userId)?.lastName}</p>
                     )}
                   </CardContent>
                   <CardFooter className="flex justify-end">

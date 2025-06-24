@@ -33,7 +33,7 @@ import EditStudentProfileModal from './EditStudentProfileModal';
 
 // Интерфейс для данных студента
 export interface Student {
-  id: number;
+  id: string;
   firstName: string;
   lastName: string;
   email: string;
@@ -65,7 +65,7 @@ export interface UpcomingLesson {
 
 interface StudentCardProps {
   student: Student;
-  onClick?: (id: number) => void;
+  onClick?: (id: string) => void;
 }
 
 /**
