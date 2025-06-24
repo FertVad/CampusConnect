@@ -205,7 +205,9 @@ export const activityLogs = pgTable("activity_logs", {
   description: text("description").notNull(),
   userId: uuid("user_id").references(() => users.id).notNull(), // Who performed the action
   timestamp: timestamp("timestamp").defaultNow(),
-  entityId: uuid("entity_id"), // ID of the affected entity (file, user, subject, etc.)
+  // Entity IDs may come from various tables that use UUID primary keys.
+  // Use text type to avoid strict UUID validation for legacy or external IDs.
+  entityId: text("entity_id"),
   entityType: text("entity_type"), // Type of the affected entity
   metadata: text("metadata"), // JSON string with additional data if needed
 });
