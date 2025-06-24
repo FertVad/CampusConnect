@@ -699,7 +699,7 @@ export class SupabaseStorage {
   async getImportedFile(id: number): Promise<ImportedFile | undefined> {
     const files = await db.select()
       .from(schema.importedFiles)
-      .where(eq(schema.importedFiles.id, id))
+      .where(eq(schema.importedFiles.id, String(id)))
       .limit(1);
     return files[0];
   }
@@ -741,13 +741,13 @@ export class SupabaseStorage {
           // Step 1: Delete all schedule items associated with this imported file
           logger.info(`Deleting schedule items with importedFileId = ${id}`);
           const deleteItemsResult = await tx.delete(schema.scheduleItems)
-            .where(eq(schema.scheduleItems.importedFileId, id));
+            .where(eq(schema.scheduleItems.importedFileId, String(id)));
           logger.info(`Successfully deleted ${deleteItemsResult.rowCount || 0} schedule items`);
           
           // Step 2: Delete the file record
           logger.info(`Now deleting the imported file record with ID: ${id}`);
           const result = await tx.delete(schema.importedFiles)
-            .where(eq(schema.importedFiles.id, id));
+            .where(eq(schema.importedFiles.id, String(id)));
           
           if ((result.rowCount || 0) === 0) {
             // If no rows were affected, roll back the transaction
