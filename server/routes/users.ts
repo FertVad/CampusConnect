@@ -84,7 +84,7 @@ app.post('/api/users', authenticateUser, requireRole(['admin']), async (req, res
     for (const admin of admins) {
       if (admin.id !== req.user?.id) {
         await getStorage().createNotification({
-          userId: admin.id,
+          userId: admin.authUserId,
           title: "New User Registered",
           content: `A new user ${fullName} has been registered with role: ${user.role}`,
           relatedId: user.id,
@@ -130,7 +130,7 @@ app.put('/api/users/:id', authenticateUser, requireRole(['admin']), async (req, 
       if (req.user && req.user.id !== updatedUser.id) {
         logger.info(`📨 Creating notification for updated user (ID: ${updatedUser.id})`);
         const userNotification = await storage.createNotification({
-          userId: updatedUser.id,
+          userId: updatedUser.authUserId,
           title: "User Updated",
           content: `Ваш профиль был обновлён администратором.`,
           relatedType: "user",
@@ -163,7 +163,7 @@ app.put('/api/users/:id', authenticateUser, requireRole(['admin']), async (req, 
           if (admin.id !== req.user.id) {
             logger.info(`📨 Creating notification for other admin (ID: ${admin.id})`);
             const otherAdminNotification = await storage.createNotification({
-              userId: admin.id,
+              userId: admin.authUserId,
               title: "User Updated",
               content: `Профиль пользователя ${fullName} был обновлён.`,
               relatedType: "user",
