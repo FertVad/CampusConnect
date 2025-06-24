@@ -12,61 +12,6 @@ import { testConnection } from "./db/index";
 // Import storage helpers and interface
 import { IStorage, setStorage, getStorage, DatabaseStorage } from "./storage";
 
-export const mockData: { requests: SelectRequest[]; users: any[] } = {
-  requests: [
-    {
-      id: 1,
-      studentId: 1,
-      type: "general",
-      description: "Example request 1",
-      status: "pending",
-      createdAt: new Date(),
-      resolvedBy: null,
-      resolvedAt: null,
-      resolution: null,
-    },
-    {
-      id: 2,
-      studentId: 2,
-      type: "financial",
-      description: "Example request 2",
-      status: "approved",
-      createdAt: new Date(),
-      resolvedBy: 1,
-      resolvedAt: new Date(),
-      resolution: "Approved",
-    },
-  ],
-  users: [
-    {
-      id: 1,
-      first_name: 'petr',
-      last_name: 'petrovich',
-      email: 'petr@example.com',
-      role: 'student',
-      password: 'mock',
-      created_at: new Date(),
-    },
-    {
-      id: 2,
-      first_name: 'Vadim',
-      last_name: 'Fertik',
-      email: 'vadim@example.com',
-      role: 'admin',
-      password: 'mock',
-      created_at: new Date(),
-    },
-    {
-      id: 3,
-      first_name: '',
-      last_name: '',
-      email: 'unknown@example.com',
-      role: 'student',
-      password: 'mock',
-      created_at: new Date(),
-    },
-  ],
-};
 
 declare global {
   namespace Express {
@@ -267,14 +212,14 @@ export const authRoutes = {
         .order('created_at', { ascending: false });
 
       if (error) {
-        logger.warn('Requests fetch error, returning mock data:', error);
-        return res.json(mockData.requests);
+        logger.error('Requests fetch error:', error);
+        return res.status(500).json({ message: 'Failed to fetch requests' });
       }
 
-      return res.json(data || mockData.requests);
+      return res.json(data || []);
     } catch (error) {
       logger.error('Error in /api/requests:', error);
-      return res.json(mockData.requests);
+      return res.status(500).json({ message: 'Failed to fetch requests' });
     }
   },
 };

@@ -5,7 +5,6 @@ import { z } from "zod";
 import type { RouteContext } from "./index";
 import { logger } from "../utils/logger";
 import { supabase } from "../supabaseClient";
-import { mockData } from "../auth";
 import { db } from "../db/index";
 import * as schema from "@shared/schema";
 import { getDbUserBySupabaseUser } from "../utils/userMapping";
@@ -38,13 +37,7 @@ export function registerUserRoutes(app: Express, { authenticateUser, requireRole
       return res.json(users);
     } catch (error) {
       logger.error('Error in /api/users:', error);
-      const formattedMockUsers = mockData.users.map(user => ({
-        id: user.id,
-        firstName: user.first_name,
-        lastName: user.last_name,
-        role: user.role,
-      }));
-      return res.json(formattedMockUsers);
+      return res.status(500).json({ message: 'Failed to fetch users' });
     }
   });
 
