@@ -409,7 +409,7 @@ export class SupabaseStorage {
   async getGrade(id: number): Promise<Grade | undefined> {
     const grades = await db.select()
       .from(schema.grades)
-      .where(eq(schema.grades.id, id))
+      .where(eq(schema.grades.id, String(id)))
       .limit(1);
     return grades[0];
   }
@@ -425,7 +425,7 @@ export class SupabaseStorage {
   async getGradesBySubject(subjectId: number): Promise<Grade[]> {
     return db.select()
       .from(schema.grades)
-      .where(eq(schema.grades.subjectId, subjectId));
+      .where(eq(schema.grades.subjectId, String(subjectId)));
   }
 
   async getGradesByStudentAndSubject(studentId: string, subjectId: number): Promise<Grade[]> {
@@ -434,7 +434,7 @@ export class SupabaseStorage {
       .where(
         and(
           eq(schema.grades.studentId, studentId),
-          eq(schema.grades.subjectId, subjectId)
+          eq(schema.grades.subjectId, String(subjectId))
         )
       );
 
@@ -455,7 +455,7 @@ export class SupabaseStorage {
   async updateGrade(id: number, gradeData: Partial<InsertGrade>): Promise<Grade | undefined> {
     const [grade] = await db.update(schema.grades)
       .set(gradeData)
-      .where(eq(schema.grades.id, id))
+      .where(eq(schema.grades.id, String(id)))
       .returning();
     
     return grade;
@@ -463,7 +463,7 @@ export class SupabaseStorage {
 
   async deleteGrade(id: number): Promise<boolean> {
     const result = await db.delete(schema.grades)
-      .where(eq(schema.grades.id, id));
+      .where(eq(schema.grades.id, String(id)));
 
     return (result.rowCount ?? 0) > 0;
   }
