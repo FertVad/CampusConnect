@@ -275,7 +275,7 @@ export class SupabaseStorage {
   async getAssignment(id: number): Promise<Assignment | undefined> {
     const assignments = await db.select()
       .from(schema.assignments)
-      .where(eq(schema.assignments.id, id))
+      .where(eq(schema.assignments.id, String(id)))
       .limit(1);
     return assignments[0];
   }
@@ -283,7 +283,7 @@ export class SupabaseStorage {
   async getAssignmentsBySubject(subjectId: number): Promise<Assignment[]> {
     return db.select()
       .from(schema.assignments)
-      .where(eq(schema.assignments.subjectId, subjectId));
+      .where(eq(schema.assignments.subjectId, String(subjectId)));
   }
 
   async getAssignmentsByTeacher(teacherId: string): Promise<Assignment[]> {
@@ -323,7 +323,7 @@ export class SupabaseStorage {
   async updateAssignment(id: number, assignmentData: Partial<InsertAssignment>): Promise<Assignment | undefined> {
     const [assignment] = await db.update(schema.assignments)
       .set(assignmentData)
-      .where(eq(schema.assignments.id, id))
+      .where(eq(schema.assignments.id, String(id)))
       .returning();
     
     return assignment;
@@ -344,7 +344,7 @@ export class SupabaseStorage {
   async getSubmission(id: number): Promise<Submission | undefined> {
     const submissions = await db.select()
       .from(schema.submissions)
-      .where(eq(schema.submissions.id, id))
+      .where(eq(schema.submissions.id, String(id)))
       .limit(1);
     return submissions[0];
   }
@@ -352,7 +352,7 @@ export class SupabaseStorage {
   async getSubmissionsByAssignment(assignmentId: number): Promise<Submission[]> {
     return db.select()
       .from(schema.submissions)
-      .where(eq(schema.submissions.assignmentId, assignmentId));
+      .where(eq(schema.submissions.assignmentId, String(assignmentId)));
   }
 
   async getSubmissionsByStudent(studentId: string): Promise<Submission[]> {
@@ -366,7 +366,7 @@ export class SupabaseStorage {
       .from(schema.submissions)
       .where(
         and(
-          eq(schema.submissions.assignmentId, assignmentId),
+          eq(schema.submissions.assignmentId, String(assignmentId)),
           eq(schema.submissions.studentId, studentId)
         )
       )
@@ -388,7 +388,7 @@ export class SupabaseStorage {
   async updateSubmission(id: number, submissionData: Partial<InsertSubmission>): Promise<Submission | undefined> {
     const [submission] = await db.update(schema.submissions)
       .set(submissionData)
-      .where(eq(schema.submissions.id, id))
+      .where(eq(schema.submissions.id, String(id)))
       .returning();
     
     return submission;
@@ -396,7 +396,7 @@ export class SupabaseStorage {
 
   async deleteSubmission(id: number): Promise<boolean> {
     const result = await db.delete(schema.submissions)
-      .where(eq(schema.submissions.id, id));
+      .where(eq(schema.submissions.id, String(id)));
 
     return (result.rowCount ?? 0) > 0;
   }
