@@ -353,7 +353,9 @@ export const insertCurriculumPlanSchema = createInsertSchema(curriculumPlans).om
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
-export type UserSummary = Pick<User, 'id' | 'firstName' | 'lastName' | 'email' | 'role'>;
+export interface UserSummary extends Pick<User, 'firstName' | 'lastName' | 'email' | 'role'> {
+  id: string;
+}
 
 export type Subject = typeof subjects.$inferSelect;
 export type InsertSubject = z.infer<typeof insertSubjectSchema>;
