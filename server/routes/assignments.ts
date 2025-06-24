@@ -72,6 +72,9 @@ export function registerAssignmentRoutes(app: Express, { authenticateUser, requi
   });
 
   app.get('/api/assignments/teacher/:teacherId', authenticateUser, async (req, res) => {
+    console.log('🔍 [DEBUG] /api/assignments/teacher/:teacherId called');
+    console.log('🔍 [DEBUG] teacherId param:', req.params.teacherId);
+    console.log('🔍 [DEBUG] req.user:', req.user);
     try {
       const teacherId = req.params.teacherId;
 
@@ -82,11 +85,14 @@ export function registerAssignmentRoutes(app: Express, { authenticateUser, requi
       const assignments = await getStorage().getAssignmentsByTeacher(teacherId);
       res.json(assignments);
     } catch (error) {
+      console.log('🚨 [ERROR] Assignment teacher endpoint error:', error);
       res.status(500).json({ message: "Server error" });
     }
   });
 
   app.get('/api/assignments/teacher', authenticateUser, async (req, res) => {
+    console.log('🔍 [DEBUG] /api/assignments/teacher called');
+    console.log('🔍 [DEBUG] req.user:', req.user);
     try {
       if (req.user!.role !== 'teacher' && req.user!.role !== 'admin') {
         return res.status(403).json({ message: "Access denied" });
@@ -108,6 +114,7 @@ export function registerAssignmentRoutes(app: Express, { authenticateUser, requi
 
       res.json(assignmentsWithDetails);
     } catch (error) {
+      console.log('🚨 [ERROR] Assignment teacher endpoint error:', error);
       res.status(500).json({ message: "Server error" });
     }
   });
