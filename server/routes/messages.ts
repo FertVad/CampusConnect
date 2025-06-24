@@ -35,7 +35,7 @@ export function registerMessageRoutes(app: Express, { authenticateUser }: RouteC
       if (!req.user) {
         return res.status(401).json({ message: "Unauthorized" });
       }
-      const otherUserId = parseInt(req.params.userId);
+      const otherUserId = req.params.userId;
       const messages = await getStorage().getMessagesBetweenUsers(req.user!.id, otherUserId);
       res.json(messages);
     } catch {
@@ -78,7 +78,7 @@ export function registerMessageRoutes(app: Express, { authenticateUser }: RouteC
 
   // 🔍 [DEBUG] Log all registered routes for verification
   console.log('🔍 [DEBUG] All registered routes:');
-  (app as any)._router.stack.forEach((middleware, index) => {
+  (app as any)._router.stack.forEach((middleware, index: number) => {
     if (middleware.route) {
       console.log(`Route ${index}: ${middleware.route.path}`);
     }

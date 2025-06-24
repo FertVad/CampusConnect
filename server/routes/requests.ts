@@ -61,7 +61,7 @@ export function registerRequestRoutes(app: Express, { authenticateUser, requireR
 
   app.put('/api/requests/:id/status', authenticateUser, requireRole(['admin', 'teacher']), async (req, res) => {
     try {
-      const requestId = parseInt(req.params.id);
+      const requestId = req.params.id;
       const { status, resolution } = req.body;
 
       if (!['approved', 'rejected'].includes(status)) {

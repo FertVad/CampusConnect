@@ -40,7 +40,7 @@ export function registerNotificationRoutes(app: Express, { authenticateUser, req
 
   app.delete('/api/notifications/:id', authenticateUser, async (req, res) => {
     try {
-      const notificationId = parseInt(req.params.id);
+      const notificationId = req.params.id;
       const notification = await getStorage().getNotification(notificationId);
       if (!notification) {
         return res.status(404).json({ message: "Notification not found" });
@@ -82,7 +82,7 @@ export function registerNotificationRoutes(app: Express, { authenticateUser, req
 
   app.patch('/api/notifications/:id/read', authenticateUser, async (req, res) => {
     try {
-      const notificationId = parseInt(req.params.id);
+      const notificationId = req.params.id;
       const notification = await getStorage().getNotification(notificationId);
       if (!notification) {
         return res.status(404).json({ message: "Notification not found" });
