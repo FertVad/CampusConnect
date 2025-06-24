@@ -4,7 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 
 // Пример данных студента для тестирования
 const mockStudent: Student = {
-  id: 1,
+  id: '1',
   firstName: 'Алексей',
   lastName: 'Иванов',
   email: 'alexey.ivanov@example.com',
@@ -23,7 +23,7 @@ const mockStudent: Student = {
 
 // Второй студент для демонстрации вариантов
 const mockStudent2: Student = {
-  id: 2,
+  id: '2',
   firstName: 'Екатерина',
   lastName: 'Смирнова',
   email: 'kat.smirnova@example.com',
@@ -40,7 +40,7 @@ const mockStudent2: Student = {
 
 // Пример студента с низкой успеваемостью
 const mockStudent3: Student = {
-  id: 3,
+  id: '3',
   firstName: 'Дмитрий',
   lastName: 'Петров',
   email: 'dima.petrov@example.com',
@@ -59,7 +59,7 @@ const mockStudent3: Student = {
 const StudentExample: React.FC = () => {
   const { toast } = useToast();
 
-  const handleStudentClick = (id: number) => {
+  const handleStudentClick = (id: string) => {
     toast({
       title: 'Студент выбран',
       description: `Вы выбрали студента с ID: ${id}`,
