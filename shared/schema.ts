@@ -40,19 +40,19 @@ export const subjects = pgTable("subjects", {
 export const enrollments = pgTable("enrollments", {
   id: uuid("id").primaryKey().defaultRandom(),
   studentId: uuid("student_id").references(() => users.id).notNull(),
-  subjectId: integer("subject_id").references(() => subjects.id).notNull(),
+  subjectId: uuid("subject_id").references(() => subjects.id).notNull(),
 });
 
 // Schedule Items
 export const scheduleItems = pgTable("schedule_items", {
   id: uuid("id").primaryKey().defaultRandom(),
-  subjectId: integer("subject_id").references(() => subjects.id).notNull(),
+  subjectId: uuid("subject_id").references(() => subjects.id).notNull(),
   dayOfWeek: integer("day_of_week").notNull(), // 0 = Sunday, 1 = Monday, etc.
   startTime: time("start_time").notNull(),
   endTime: time("end_time").notNull(),
   roomNumber: text("room_number"),
   teacherName: text("teacher_name"), // Имя преподавателя как строка, без связи с пользователями
-  importedFileId: integer("imported_file_id"), // Связь с файлом импорта, если запись была импортирована
+  importedFileId: uuid("imported_file_id"), // Связь с файлом импорта, если запись была импортирована
 });
 
 // Assignments Table
@@ -60,7 +60,7 @@ export const assignments = pgTable("assignments", {
   id: uuid("id").primaryKey().defaultRandom(),
   title: text("title").notNull(),
   description: text("description"),
-  subjectId: integer("subject_id").references(() => subjects.id).notNull(),
+  subjectId: uuid("subject_id").references(() => subjects.id).notNull(),
   dueDate: timestamp("due_date").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   createdBy: uuid("created_by").references(() => users.id).notNull(),
@@ -69,7 +69,7 @@ export const assignments = pgTable("assignments", {
 // Assignment Submissions
 export const submissions = pgTable("submissions", {
   id: uuid("id").primaryKey().defaultRandom(),
-  assignmentId: integer("assignment_id").references(() => assignments.id).notNull(),
+  assignmentId: uuid("assignment_id").references(() => assignments.id).notNull(),
   studentId: uuid("student_id").references(() => users.id).notNull(),
   submittedAt: timestamp("submitted_at").defaultNow(),
   content: text("content"),
@@ -83,8 +83,8 @@ export const submissions = pgTable("submissions", {
 export const grades = pgTable("grades", {
   id: uuid("id").primaryKey().defaultRandom(),
   studentId: uuid("student_id").references(() => users.id).notNull(),
-  subjectId: integer("subject_id").references(() => subjects.id).notNull(),
-  assignmentId: integer("assignment_id").references(() => assignments.id),
+  subjectId: uuid("subject_id").references(() => subjects.id).notNull(),
+  assignmentId: uuid("assignment_id").references(() => assignments.id),
   score: integer("score").notNull(),
   maxScore: integer("max_score").notNull(),
   comments: text("comments"),
@@ -135,7 +135,7 @@ export const notifications = pgTable("notifications", {
   type: text("type").default('system').notNull(),
   isRead: boolean("is_read").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
-  relatedId: integer("related_id"),
+  relatedId: uuid("related_id"),
   relatedType: text("related_type"),
 });
 
@@ -154,7 +154,7 @@ export const specialties = pgTable("specialties", {
 export const courses = pgTable("courses", {
   id: uuid("id").primaryKey().defaultRandom(),
   number: integer("number").notNull(), // номер курса (1, 2, 3, 4 и т.д.)
-  specialtyId: integer("specialty_id").references(() => specialties.id).notNull(),
+  specialtyId: uuid("specialty_id").references(() => specialties.id).notNull(),
   academicYear: varchar("academic_year", { length: 20 }).notNull(), // учебный год в формате "2023-2024"
   createdAt: timestamp("created_at").defaultNow(),
 });
@@ -163,18 +163,18 @@ export const courses = pgTable("courses", {
 export const groups = pgTable("groups", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: varchar("name", { length: 50 }).notNull().unique(), // например, "ИП-21-1"
-  courseId: integer("course_id").references(() => courses.id).notNull(),
+  courseId: uuid("course_id").references(() => courses.id).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
 // Записи расписания для групп
 export const scheduleEntries = pgTable("schedule_entries", {
   id: uuid("id").primaryKey().defaultRandom(),
-  groupId: integer("group_id").references(() => groups.id).notNull(),
+  groupId: uuid("group_id").references(() => groups.id).notNull(),
   dayOfWeek: dayOfWeekEnum("day_of_week").notNull(),
   startTime: time("start_time").notNull(),
   endTime: time("end_time").notNull(),
-  subjectId: integer("subject_id").references(() => subjects.id).notNull(),
+  subjectId: uuid("subject_id").references(() => subjects.id).notNull(),
   teacherId: uuid("teacher_id").references(() => users.id),
   roomNumber: varchar("room_number", { length: 50 }),
   createdAt: timestamp("created_at").defaultNow(),
