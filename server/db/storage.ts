@@ -476,7 +476,7 @@ export class SupabaseStorage {
   async getRequest(id: number): Promise<Request | undefined> {
     const requests = await db.select()
       .from(schema.requests)
-      .where(eq(schema.requests.id, id))
+      .where(eq(schema.requests.id, String(id)))
       .limit(1);
     return requests[0];
   }
@@ -513,7 +513,7 @@ export class SupabaseStorage {
           resolvedAt: new Date(),
           resolution
         })
-      .where(eq(schema.requests.id, id))
+      .where(eq(schema.requests.id, String(id)))
       .returning();
     
     return request;
@@ -521,7 +521,7 @@ export class SupabaseStorage {
 
   async deleteRequest(id: number): Promise<boolean> {
     const result = await db.delete(schema.requests)
-      .where(eq(schema.requests.id, id));
+      .where(eq(schema.requests.id, String(id)));
 
     return (result.rowCount ?? 0) > 0;
   }
@@ -534,7 +534,7 @@ export class SupabaseStorage {
   async getDocument(id: number): Promise<Document | undefined> {
     const documents = await db.select()
       .from(schema.documents)
-      .where(eq(schema.documents.id, id))
+      .where(eq(schema.documents.id, String(id)))
       .limit(1);
     return documents[0];
   }
@@ -571,7 +571,7 @@ export class SupabaseStorage {
   async updateDocument(id: number, documentData: Partial<InsertDocument>): Promise<Document | undefined> {
     const [document] = await db.update(schema.documents)
       .set(documentData)
-      .where(eq(schema.documents.id, id))
+      .where(eq(schema.documents.id, String(id)))
       .returning();
     
     return document;
@@ -579,7 +579,7 @@ export class SupabaseStorage {
 
   async deleteDocument(id: number): Promise<boolean> {
     const result = await db.delete(schema.documents)
-      .where(eq(schema.documents.id, id));
+      .where(eq(schema.documents.id, String(id)));
 
     return (result.rowCount ?? 0) > 0;
   }
