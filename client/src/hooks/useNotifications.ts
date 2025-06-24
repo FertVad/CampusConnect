@@ -22,7 +22,7 @@ export function useNotifications() {
     refetchIntervalInBackground: false,
     refetchOnWindowFocus: true,
     staleTime: 0,
-    cacheTime: 1000 * 60 * 2,
+    gcTime: 1000 * 60 * 2,
   });
 
   // Mark a single notification as read
