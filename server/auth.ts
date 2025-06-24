@@ -188,18 +188,18 @@ export function setupAuth(app: Express) {
     const { data: publicUser, error } = await supabase
       .from("users")
       .select("*")
-      .eq("auth_user_id", authUser.id)
+      .eq("id", authUser.id)
       .single();
 
     res.json({
-      auth_user_exists: !!authUser,
-      auth_user_id: authUser.id,
-      auth_user_email: authUser.email,
-      auth_user_metadata: authUser.user_metadata,
+      user_exists: !!authUser,
+      user_id: authUser.id,
+      user_email: authUser.email,
+      user_metadata: authUser.user_metadata,
       public_user_exists: !!publicUser,
       public_user_data: publicUser,
-    error: error?.message
-  });
+      error: error?.message,
+    });
   });
 }
 

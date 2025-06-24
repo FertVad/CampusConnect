@@ -48,13 +48,13 @@ const RequestList: React.FC<RequestListProps> = ({
   }, [error, toast, t]);
   
   const getStudentName = (studentId: string) => {
-    const student = users.find(user => user.authUserId === studentId);
+    const student = users.find(user => user.id === studentId);
     return student ? `${student.firstName} ${student.lastName}` : `Student ID: ${studentId}`;
   };
 
   const getResolverName = (userId: string | null) => {
     if (!userId) return 'N/A';
-    const user = users.find(user => user.authUserId === userId);
+    const user = users.find(user => user.id === userId);
     return user ? `${user.firstName} ${user.lastName}` : `User ID: ${userId}`;
   };
   
