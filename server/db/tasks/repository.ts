@@ -2,7 +2,9 @@ import { db } from '../index';
 import * as schema from '@shared/schema';
 import { eq, and, or, desc, asc, sql, isNotNull } from 'drizzle-orm';
 import { aliasedTable } from 'drizzle-orm/alias';
-import { Task, InsertTask, UserSummary } from '@shared/schema';
+import { Task, InsertTask, UserSummary as BaseUserSummary } from '@shared/schema';
+
+type UserSummary = Omit<BaseUserSummary, 'id'> & { id: string };
 
 export class TasksRepository {
   async getTasks(): Promise<(Task & { client?: UserSummary; executor?: UserSummary })[]> {
