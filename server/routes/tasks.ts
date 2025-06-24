@@ -218,7 +218,7 @@ app.post('/api/tasks', authenticateUser, async (req, res) => {
 // Endpoint для удаления задачи
 app.delete('/api/tasks/:id', authenticateUser, async (req, res) => {
   try {
-    const taskId = parseInt(req.params.id);
+    const taskId = req.params.id;
     const task = await getStorage().getTask(taskId);
     
     if (!task) {
@@ -285,7 +285,7 @@ app.delete('/api/tasks/:id', authenticateUser, async (req, res) => {
 
 app.put('/api/tasks/:id', authenticateUser, async (req, res) => {
   try {
-    const taskId = parseInt(req.params.id);
+    const taskId = req.params.id;
     const task = await getStorage().getTask(taskId);
     
     if (!task) {
@@ -401,14 +401,7 @@ app.put('/api/tasks/:id', authenticateUser, async (req, res) => {
 // чтобы избежать конфликтов с маршрутами tasks/client, tasks/executor и т.д.
 app.get('/api/tasks/:id', authenticateUser, async (req, res) => {
   try {
-    const taskId = parseInt(req.params.id);
-    
-    if (isNaN(taskId)) {
-      return res.status(400).json({
-        message: "Invalid task ID",
-        details: "Task ID must be a valid number"
-      });
-    }
+    const taskId = req.params.id;
     
     const task = await getStorage().getTask(taskId);
     
@@ -497,7 +490,7 @@ app.get('/api/users/:id/notifications', authenticateUser, async (req, res) => {
 // PATCH /api/tasks/:id/status - обновить статус задачи
 app.patch('/api/tasks/:id/status', authenticateUser, async (req, res) => {
   try {
-    const taskId = parseInt(req.params.id);
+    const taskId = req.params.id;
     const { status } = req.body;
     
     if (!status || !['new', 'in_progress', 'completed', 'on_hold'].includes(status)) {

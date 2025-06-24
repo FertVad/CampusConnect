@@ -17,7 +17,7 @@ export function registerAssignmentRoutes(app: Express, { authenticateUser, requi
 
   app.get('/api/assignments/:id', authenticateUser, async (req, res) => {
     try {
-      const assignmentId = parseInt(req.params.id);
+      const assignmentId = req.params.id;
       const assignment = await getStorage().getAssignment(assignmentId);
 
       if (!assignment) {
@@ -102,7 +102,7 @@ export function registerAssignmentRoutes(app: Express, { authenticateUser, requi
 
   app.put('/api/assignments/:id', authenticateUser, requireRole(['admin', 'teacher']), async (req, res) => {
     try {
-      const assignmentId = parseInt(req.params.id);
+      const assignmentId = req.params.id;
       const assignment = await getStorage().getAssignment(assignmentId);
 
       if (!assignment) {
@@ -127,7 +127,7 @@ export function registerAssignmentRoutes(app: Express, { authenticateUser, requi
 
   app.delete('/api/assignments/:id', authenticateUser, requireRole(['admin', 'teacher']), async (req, res) => {
     try {
-      const assignmentId = parseInt(req.params.id);
+      const assignmentId = req.params.id;
       const assignment = await getStorage().getAssignment(assignmentId);
 
       if (!assignment) {
@@ -148,7 +148,7 @@ export function registerAssignmentRoutes(app: Express, { authenticateUser, requi
   // Submission Routes
   app.get('/api/submissions/assignment/:assignmentId', authenticateUser, async (req, res) => {
     try {
-      const assignmentId = parseInt(req.params.assignmentId);
+      const assignmentId = req.params.assignmentId;
 
       const assignment = await getStorage().getAssignment(assignmentId);
       if (!assignment) {
@@ -188,7 +188,7 @@ export function registerAssignmentRoutes(app: Express, { authenticateUser, requi
 
   app.post('/api/submissions', authenticateUser, requireRole(['student']), upload.single('file'), async (req, res) => {
     try {
-      const assignmentId = parseInt(req.body.assignmentId);
+      const assignmentId = req.body.assignmentId;
       const studentId = req.user!.id;
 
       const assignment = await getStorage().getAssignment(assignmentId);
@@ -242,7 +242,7 @@ export function registerAssignmentRoutes(app: Express, { authenticateUser, requi
 
   app.put('/api/submissions/:id/grade', authenticateUser, requireRole(['admin', 'teacher']), async (req, res) => {
     try {
-      const submissionId = parseInt(req.params.id);
+      const submissionId = req.params.id;
       const { grade, feedback } = req.body;
 
       const submission = await getStorage().getSubmission(submissionId);
@@ -309,7 +309,7 @@ export function registerAssignmentRoutes(app: Express, { authenticateUser, requi
 
   app.get('/api/grades/subject/:subjectId', authenticateUser, requireRole(['admin', 'teacher']), async (req, res) => {
     try {
-      const subjectId = parseInt(req.params.subjectId);
+      const subjectId = req.params.subjectId;
 
       if (req.user!.role === 'teacher') {
         const subject = await getStorage().getSubject(subjectId);
@@ -357,7 +357,7 @@ export function registerAssignmentRoutes(app: Express, { authenticateUser, requi
 
   app.put('/api/grades/:id', authenticateUser, requireRole(['admin', 'teacher']), async (req, res) => {
     try {
-      const gradeId = parseInt(req.params.id);
+      const gradeId = req.params.id;
       const grade = await getStorage().getGrade(gradeId);
 
       if (!grade) {

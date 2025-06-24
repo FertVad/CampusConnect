@@ -11,7 +11,7 @@ export function registerDocumentRoutes(app: Express, { authenticateUser, require
     '/api/documents/user/:userId',
     authenticateUser,
     asyncHandler(async (req, res) => {
-      const userId = parseInt(req.params.userId);
+      const userId = req.params.userId;
       if (req.user!.id !== userId && req.user!.role === 'student') {
         return res.status(403).json({
           message: 'Forbidden',
@@ -27,7 +27,7 @@ export function registerDocumentRoutes(app: Express, { authenticateUser, require
     '/api/documents/user/:userId/type/:type',
     authenticateUser,
     asyncHandler(async (req, res) => {
-      const userId = parseInt(req.params.userId);
+      const userId = req.params.userId;
       const type = req.params.type;
       if (req.user!.id !== userId && req.user!.role === 'student') {
         return res.status(403).json({

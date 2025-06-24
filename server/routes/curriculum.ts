@@ -60,10 +60,7 @@ export function registerCurriculumRoutes(app: Express, { authenticateUser, requi
 
   app.get('/api/curriculum-plans/:id', authenticateUser, async (req, res) => {
     try {
-      const planId = parseInt(req.params.id);
-      if (isNaN(planId)) {
-        return res.status(400).json({ message: "Invalid curriculum plan ID", details: "Curriculum plan ID must be a valid number" });
-      }
+      const planId = req.params.id;
       const storage = getStorage();
       let plan: any = null;
       if (typeof storage.getCurriculumPlan === 'function') {
@@ -110,10 +107,7 @@ export function registerCurriculumRoutes(app: Express, { authenticateUser, requi
 
   const updateCurriculumPlan = async (req: any, res: any) => {
     try {
-      const planId = parseInt(req.params.id);
-      if (isNaN(planId)) {
-        return res.status(400).json({ message: "Invalid curriculum plan ID", details: "Curriculum plan ID must be a valid number" });
-      }
+      const planId = req.params.id;
       const plan = await getStorage().getCurriculumPlan(planId);
       if (!plan) {
         return res.status(404).json({ message: "Curriculum plan not found", details: `No curriculum plan exists with ID ${planId}` });
@@ -154,10 +148,7 @@ export function registerCurriculumRoutes(app: Express, { authenticateUser, requi
 
   app.delete('/api/curriculum-plans/:id', authenticateUser, requireRole(['admin']), async (req, res) => {
     try {
-      const planId = parseInt(req.params.id);
-      if (isNaN(planId)) {
-        return res.status(400).json({ message: "Invalid curriculum plan ID", details: "Curriculum plan ID must be a valid number" });
-      }
+      const planId = req.params.id;
       const plan = await getStorage().getCurriculumPlan(planId);
       if (!plan) {
         return res.status(404).json({ message: "Curriculum plan not found", details: `No curriculum plan exists with ID ${planId}` });
@@ -182,7 +173,7 @@ export function registerCurriculumRoutes(app: Express, { authenticateUser, requi
 
   app.get('/api/documents', authenticateUser, async (req, res) => {
     try {
-      const userId = req.query.userId ? parseInt(req.query.userId as string) : undefined;
+      const userId = req.query.userId ? (req.query.userId as string) : undefined;
       res.json([]);
     } catch (error) {
       logger.error('Error getting documents:', error);
@@ -196,10 +187,7 @@ export function registerCurriculumRoutes(app: Express, { authenticateUser, requi
       if (!planId) {
         return res.status(400).json({ message: "Missing plan ID", details: "A planId is required" });
       }
-      const id = parseInt(planId);
-      if (isNaN(id)) {
-        return res.status(400).json({ message: "Invalid plan ID", details: "Plan ID must be a valid number" });
-      }
+      const id = planId;
       const plan = await getStorage().getCurriculumPlan(id);
       if (!plan) {
         return res.status(404).json({ message: "Curriculum plan not found", details: `No plan found with ID ${id}` });

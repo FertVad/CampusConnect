@@ -37,7 +37,7 @@ app.get('/api/subjects', authenticateUser, async (req, res) => {
 
 app.get('/api/subjects/:id', authenticateUser, async (req, res) => {
   try {
-    const subjectId = parseInt(req.params.id);
+    const subjectId = req.params.id;
     const subject = await getStorage().getSubject(subjectId);
     
     if (!subject) {
@@ -102,7 +102,7 @@ app.post('/api/subjects', authenticateUser, requireRole(['admin']), async (req, 
 
 app.put('/api/subjects/:id', authenticateUser, requireRole(['admin']), async (req, res) => {
   try {
-    const subjectId = parseInt(req.params.id);
+    const subjectId = req.params.id;
     const subjectData = insertSubjectSchema.partial().parse(req.body);
     const updatedSubject = await getStorage().updateSubject(subjectId, subjectData);
     
@@ -121,7 +121,7 @@ app.put('/api/subjects/:id', authenticateUser, requireRole(['admin']), async (re
 
 app.delete('/api/subjects/:id', authenticateUser, requireRole(['admin']), async (req, res) => {
   try {
-    const subjectId = parseInt(req.params.id);
+    const subjectId = req.params.id;
     const success = await getStorage().deleteSubject(subjectId);
     
     if (!success) {
@@ -146,7 +146,7 @@ app.get('/api/enrollments', authenticateUser, requireRole(['admin', 'teacher']),
 
 app.get('/api/enrollments/student/:studentId', authenticateUser, async (req, res) => {
   try {
-    const studentId = parseInt(req.params.studentId);
+    const studentId = req.params.studentId;
     
     // Students can only view their own enrollments unless they're admins/teachers
     if (req.user!.id !== studentId && req.user!.role === 'student') {
@@ -162,7 +162,7 @@ app.get('/api/enrollments/student/:studentId', authenticateUser, async (req, res
 
 app.get('/api/enrollments/subject/:subjectId', authenticateUser, async (req, res) => {
   try {
-    const subjectId = parseInt(req.params.subjectId);
+    const subjectId = req.params.subjectId;
     const enrollments = await getStorage().getEnrollmentsBySubject(subjectId);
     res.json(enrollments);
   } catch (error) {
@@ -185,7 +185,7 @@ app.post('/api/enrollments', authenticateUser, requireRole(['admin']), async (re
 
 app.delete('/api/enrollments/:id', authenticateUser, requireRole(['admin']), async (req, res) => {
   try {
-    const enrollmentId = parseInt(req.params.id);
+    const enrollmentId = req.params.id;
     const success = await getStorage().deleteEnrollment(enrollmentId);
     
     if (!success) {
@@ -350,7 +350,7 @@ app.post('/api/schedule', authenticateUser, requireRole(['admin']), async (req, 
 
 app.put('/api/schedule/:id', authenticateUser, requireRole(['admin']), async (req, res) => {
   try {
-    const scheduleId = parseInt(req.params.id);
+    const scheduleId = req.params.id;
     const scheduleData = insertScheduleItemSchema.partial().parse(req.body);
     const updatedSchedule = await getStorage().updateScheduleItem(scheduleId, scheduleData);
     
@@ -369,7 +369,7 @@ app.put('/api/schedule/:id', authenticateUser, requireRole(['admin']), async (re
 
 app.delete('/api/schedule/:id', authenticateUser, requireRole(['admin']), async (req, res) => {
   try {
-    const scheduleId = parseInt(req.params.id);
+    const scheduleId = req.params.id;
     const success = await getStorage().deleteScheduleItem(scheduleId);
     
     if (!success) {
@@ -775,7 +775,7 @@ app.get('/api/imported-files', authenticateUser, requireRole(['admin']), async (
 
 app.get('/api/imported-files/:id', authenticateUser, requireRole(['admin']), async (req, res) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = req.params.id;
     const file = await getStorage().getImportedFile(id);
     
     if (!file) {
@@ -790,7 +790,7 @@ app.get('/api/imported-files/:id', authenticateUser, requireRole(['admin']), asy
 
 app.get('/api/imported-files/user/:userId', authenticateUser, requireRole(['admin']), async (req, res) => {
   try {
-    const userId = parseInt(req.params.userId);
+    const userId = req.params.userId;
     const files = await getStorage().getImportedFilesByUser(userId);
     res.json(files);
   } catch (error) {
@@ -815,15 +815,8 @@ app.get('/api/imported-files/type/:type', authenticateUser, requireRole(['admin'
 
 app.delete('/api/imported-files/:id', authenticateUser, requireRole(['admin']), async (req, res) => {
   try {
-    const id = parseInt(req.params.id);
-    if (isNaN(id)) {
-      logger.error('Invalid file ID provided:', req.params.id);
-      return res.status(400).json({ 
-        error: true,
-        message: "Invalid file ID", 
-        details: "The file ID must be a valid number"
-      });
-    }
+    const id = req.params.id;
+
     
     logger.info(`[DELETE FILE] Processing delete request for imported file ID: ${id}`);
     

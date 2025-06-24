@@ -43,7 +43,7 @@ export function registerUserRoutes(app: Express, { authenticateUser, requireRole
 
 app.get('/api/users/:id', authenticateUser, async (req, res) => {
   try {
-    const userId = parseInt(req.params.id);
+    const userId = req.params.id;
     
     // Users can only view their own profile unless they're admins
     if (req.user!.id !== userId && req.user!.role !== 'admin') {
@@ -98,7 +98,7 @@ app.post('/api/users', authenticateUser, requireRole(['admin']), async (req, res
 
 app.put('/api/users/:id', authenticateUser, requireRole(['admin']), async (req, res) => {
   try {
-    const userId = parseInt(req.params.id);
+    const userId = req.params.id;
     logger.info(`🔄 PUT /api/users/${userId} - Updating user profile. Admin ID: ${req.user?.id}`);
     
     const userData = insertUserSchema.partial().parse(req.body);
@@ -195,7 +195,7 @@ app.put('/api/users/:id', authenticateUser, requireRole(['admin']), async (req, 
 
 app.delete('/api/users/:id', authenticateUser, requireRole(['admin']), async (req, res) => {
   try {
-    const userId = parseInt(req.params.id);
+    const userId = req.params.id;
     const success = await getStorage().deleteUser(userId);
     
     if (!success) {
