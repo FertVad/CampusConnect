@@ -83,7 +83,7 @@ export function registerAssignmentRoutes(app: Express, { authenticateUser, requi
       const students = await getStorage().getStudentsBySubject(assignmentData.subjectId);
       for (const student of students) {
         await getStorage().createNotification({
-          userId: student.id,
+          userId: student.authUserId,
           title: "New Assignment",
           content: `A new assignment "${assignment.title}" has been posted for ${assignment.subjectId}.`,
           relatedId: assignment.id,
