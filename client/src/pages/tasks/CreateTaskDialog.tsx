@@ -87,7 +87,7 @@ export default function CreateTaskDialog({ open, onOpenChange, form, loading, us
                 <FormItem>
                   <FormLabel>{t('task.assignee')}</FormLabel>
                   <Select
-                    onValueChange={value => field.onChange(parseInt(value))}
+                    onValueChange={value => field.onChange(value)}
                     defaultValue={field.value ? String(field.value) : undefined}
                   >
                     <FormControl>
