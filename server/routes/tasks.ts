@@ -4,28 +4,16 @@ import { insertTaskSchema } from "@shared/schema";
 import { z } from "zod";
 import type { RouteContext } from "./index";
 import { logger } from "../utils/logger";
-import { getDbUserBySupabaseUser } from "../utils/userMapping";
+import { requireRole } from "../middleware/requireRole";
 import { NotificationService } from "../services/NotificationService";
 import { getTaskStatusLabel } from '@shared/utils';
 
-export function registerTaskRoutes(app: Express, { authenticateUser, requireRole }: RouteContext) {
+export function registerTaskRoutes(app: Express, { authenticateUser }: RouteContext) {
 // Tasks Routes
-app.get('/api/tasks', authenticateUser, async (req, res) => {
+// GET /api/tasks - list all tasks (admin only)
+app.get('/api/tasks', authenticateUser, requireRole(['admin']), async (_req, res) => {
   try {
     const tasks = await getStorage().getTasks();
-
-    const { id: userId, role: userRole } = await getDbUserBySupabaseUser(req.user!);
-
-    if (userRole !== 'admin') {
-      const filteredTasks = tasks.filter(task =>
-        task.clientId === userId || task.executorId === userId
-      );
-      if (filteredTasks.length === 0) {
-        return res.status(403).json({ message: 'Forbidden' });
-      }
-      return res.json(filteredTasks);
-    }
-
     res.json(tasks);
   } catch (error) {
     logger.error('Error fetching tasks:', error);
@@ -106,7 +94,7 @@ app.get('/api/tasks/status/:status', authenticateUser, async (req, res) => {
     
     const tasks = await getStorage().getTasksByStatus(status);
 
-    const { id: userId, role: userRole } = await getDbUserBySupabaseUser(req.user!);
+    const { id: userId, role: userRole } = req.user!;
 
     // Если пользователь не админ, фильтруем только те задачи, которые относятся к нему
     if (userRole !== 'admin') {
@@ -142,7 +130,7 @@ app.get('/api/tasks/due-soon/:days', authenticateUser, async (req, res) => {
     
     const tasks = await getStorage().getTasksDueSoon(days);
 
-    const { id: userId, role: userRole } = await getDbUserBySupabaseUser(req.user!);
+    const { id: userId, role: userRole } = req.user!;
 
     // Если пользователь не админ, фильтруем только те задачи, которые относятся к нему
     if (userRole !== 'admin') {
@@ -165,7 +153,9 @@ app.get('/api/tasks/due-soon/:days', authenticateUser, async (req, res) => {
   }
 });
 
-app.post('/api/tasks', authenticateUser, async (req, res) => {
+// POST /api/tasks - create a new task
+// Allowed roles: admin, teacher, student, director
+app.post('/api/tasks', authenticateUser, requireRole(['admin', 'teacher', 'student', 'director']), async (req, res) => {
   try {
     // Модифицируем схему вставки задачи для преобразования строки даты в объект Date
     const modifiedTaskSchema = insertTaskSchema.extend({
@@ -175,10 +165,8 @@ app.post('/api/tasks', authenticateUser, async (req, res) => {
     logger.info('Request body:', req.body);
     const taskData = modifiedTaskSchema.parse(req.body);
     logger.info('Parsed task data:', taskData);
-    const dbUser = await getDbUserBySupabaseUser(req.user!);
-    logger.info("DB user:", dbUser);
 
-    const { id: userId, role: userRole } = dbUser;
+    const { id: userId, role: userRole } = req.user!;
 
     logger.info('User permissions check:', {
       email: req.user!.email,
@@ -229,7 +217,8 @@ app.post('/api/tasks', authenticateUser, async (req, res) => {
 });
 
 // Endpoint для удаления задачи
-app.delete('/api/tasks/:id', authenticateUser, async (req, res) => {
+// DELETE /api/tasks/:id - delete a task (admin only)
+app.delete('/api/tasks/:id', authenticateUser, requireRole(['admin']), async (req, res) => {
   try {
     const taskId = req.params.id;
     const task = await getStorage().getTask(taskId);
@@ -241,31 +230,8 @@ app.delete('/api/tasks/:id', authenticateUser, async (req, res) => {
       });
     }
     
-    const { id: userId, role: userRole } = await getDbUserBySupabaseUser(req.user!);
-    const canDelete = userRole === 'admin' || task.clientId === userId;
+    const userId = req.user!.id;
 
-    logger.info('User permissions check:', {
-      email: req.user!.email,
-      dbUserId: userId,
-      dbUserRole: userRole,
-      taskId: task.id,
-      taskClientId: task.clientId,
-      canDelete
-    });
-
-    if (!canDelete) {
-      return res.status(403).json({
-        message: 'Forbidden - Only task creators or admins can delete tasks',
-        details: {
-          taskId: task.id,
-          userId,
-          userRole,
-          taskClientId: task.clientId,
-          canDelete
-        }
-      });
-    }
-    
     // Удаляем задачу
     await getStorage().deleteTask(taskId);
     
@@ -296,7 +262,9 @@ app.delete('/api/tasks/:id', authenticateUser, async (req, res) => {
   }
 });
 
-app.put('/api/tasks/:id', authenticateUser, async (req, res) => {
+// PUT /api/tasks/:id - update a task
+// Allowed roles: admin, teacher, student, director
+app.put('/api/tasks/:id', authenticateUser, requireRole(['admin', 'teacher', 'student', 'director']), async (req, res) => {
   try {
     const taskId = req.params.id;
     const task = await getStorage().getTask(taskId);
@@ -309,9 +277,7 @@ app.put('/api/tasks/:id', authenticateUser, async (req, res) => {
     }
     
     logger.info("Request body:", req.body);
-    const dbUser = await getDbUserBySupabaseUser(req.user!);
-    logger.info("DB user:", dbUser);
-    const { id: userId, role: userRole } = dbUser;
+    const { id: userId, role: userRole } = req.user!;
     const isAdmin = userRole === 'admin';
     const isCreator = task.clientId === userId;
     const isExecutor = task.executorId === userId;
@@ -425,7 +391,7 @@ app.get('/api/tasks/:id', authenticateUser, async (req, res) => {
       });
     }
     
-    const { id: currentUserId, role: currentUserRole } = await getDbUserBySupabaseUser(req.user!);
+    const { id: currentUserId, role: currentUserRole } = req.user!;
     // Проверяем, имеет ли пользователь право на просмотр этой задачи
     if (currentUserRole !== 'admin' && currentUserId !== task.clientId && currentUserId !== task.executorId) {
       return res.status(403).json({
@@ -501,7 +467,9 @@ app.get('/api/users/:id/notifications', authenticateUser, async (req, res) => {
 });
 
 // PATCH /api/tasks/:id/status - обновить статус задачи
-app.patch('/api/tasks/:id/status', authenticateUser, async (req, res) => {
+// PATCH /api/tasks/:id/status - update task status
+// Allowed roles: admin, teacher, student, director
+app.patch('/api/tasks/:id/status', authenticateUser, requireRole(['admin', 'teacher', 'student', 'director']), async (req, res) => {
   try {
     const taskId = req.params.id;
     const { status } = req.body;
@@ -517,7 +485,7 @@ app.patch('/api/tasks/:id/status', authenticateUser, async (req, res) => {
       return res.status(404).json({ message: "Task not found" });
     }
     
-    const { id: currentUserId, role: currentUserRole } = await getDbUserBySupabaseUser(req.user!);
+    const { id: currentUserId, role: currentUserRole } = req.user!;
     // Проверяем права доступа: только админ, клиент или исполнитель задачи могут менять статус
     if (currentUserRole !== 'admin' && currentUserId !== task.clientId && currentUserId !== task.executorId) {
       return res.status(403).json({ message: "Forbidden" });
