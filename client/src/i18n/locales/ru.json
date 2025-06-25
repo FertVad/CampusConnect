@@ -55,6 +55,7 @@
     "total": "Всего",
     "added": "Добавлен:",
     "taskManager": "Менеджер задач",
+    "loading": "Загрузка...",
     "status": {
       "loading": "Загрузка...",
       "success": "Успешно",
@@ -303,6 +304,7 @@
       "needGrading": "Заданий требуют оценки",
       "studentActivity": "Активность студентов",
       "studentHelp": "Студентам требуется помощь",
+        "allActive": "Все студенты активны",
       "newRequests": "Новых запросов от студентов",
       "assignNewTask": "Назначить задание",
       "totalStudents": "Всего студентов"
@@ -395,7 +397,9 @@
     "addSuccess": "Занятие успешно добавлено",
     "addError": "Ошибка добавления занятия: {{message}}",
     "updateSuccess": "Занятие успешно обновлено",
-    "updateError": "Ошибка обновления занятия: {{message}}"
+    "updateError": "Ошибка обновления занятия: {{message}}",
+    "noClassesToday": "Сегодня у вас нет занятий",
+    "viewFull": "Просмотреть полное расписание"
   },
   "settings": {
     "language": "Язык",
@@ -416,7 +420,9 @@
     "appearance": "Внешний вид"
   },
   "assignments": {
-    "title": "Задания"
+    "title": "Задания",
+    "status": "Статус",
+    "noActiveAssignments": "У вас нет активных заданий"
   },
   "grades": {
     "title": "Оценки"
@@ -432,6 +438,7 @@
 
   "requests": {
     "title": "Запросы",
+    "pending": "Активные заявки",
     "noRequests": "Заявки отсутствуют",
     "addSuccess": "Запрос успешно создан"
   },

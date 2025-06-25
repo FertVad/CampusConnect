@@ -34,9 +34,10 @@
     "total": "Total",
     "added": "Added:",
     "taskManager": "Task Manager",
+    "loading": "Loading...",
     "status": {
-      "loading": "Loading...",
       "success": "Success",
+      "loading": "Loading...",
       "error": "Error",
       "pending": "Pending",
       "completed": "Completed",
@@ -283,7 +284,9 @@
     "addSuccess": "Schedule item added successfully",
     "addError": "Error adding schedule item: {{message}}",
     "updateSuccess": "Schedule item updated successfully",
-    "updateError": "Error updating schedule item: {{message}}"
+    "updateError": "Error updating schedule item: {{message}}",
+    "noClassesToday": "You have no classes today",
+    "viewFull": "View full schedule"
   },
   "assignments": {
     "title": "Assignments",
@@ -302,6 +305,7 @@
     "assignedBy": "Assigned by",
     "maxScore": "Maximum score",
     "status": "Status",
+    "noActiveAssignments": "You have no active assignments",
     "attachments": "Attachments",
     "submissions": "Submissions",
     "actions": "Actions",
@@ -363,6 +367,7 @@
   },
   "requests": {
     "title": "Requests",
+    "pending": "Active requests",
     "list": "Request list",
     "add": "Add request",
     "edit": "Edit request",
