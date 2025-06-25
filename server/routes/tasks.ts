@@ -7,11 +7,12 @@ import { logger } from "../utils/logger";
 import { requireRole } from "../middleware/requireRole";
 import { NotificationService } from "../services/NotificationService";
 import { getTaskStatusLabel } from '@shared/utils';
+import { taskPermissions } from '../types/auth';
 
 export function registerTaskRoutes(app: Express, { authenticateUser }: RouteContext) {
 // Tasks Routes
 // GET /api/tasks - list all tasks (admin only)
-app.get('/api/tasks', authenticateUser, requireRole(['admin']), async (_req, res) => {
+app.get('/api/tasks', authenticateUser, requireRole(taskPermissions.view), async (_req, res) => {
   try {
     const tasks = await getStorage().getTasks();
     res.json(tasks);
@@ -155,7 +156,7 @@ app.get('/api/tasks/due-soon/:days', authenticateUser, async (req, res) => {
 
 // POST /api/tasks - create a new task
 // Allowed roles: admin, teacher, student, director
-app.post('/api/tasks', authenticateUser, requireRole(['admin', 'teacher', 'student', 'director']), async (req, res) => {
+app.post('/api/tasks', authenticateUser, requireRole(taskPermissions.create), async (req, res) => {
   try {
     // Модифицируем схему вставки задачи для преобразования строки даты в объект Date
     const modifiedTaskSchema = insertTaskSchema.extend({
@@ -218,7 +219,7 @@ app.post('/api/tasks', authenticateUser, requireRole(['admin', 'teacher', 'stude
 
 // Endpoint для удаления задачи
 // DELETE /api/tasks/:id - delete a task (admin only)
-app.delete('/api/tasks/:id', authenticateUser, requireRole(['admin']), async (req, res) => {
+app.delete('/api/tasks/:id', authenticateUser, requireRole(taskPermissions.delete), async (req, res) => {
   try {
     const taskId = req.params.id;
     const task = await getStorage().getTask(taskId);
@@ -264,7 +265,7 @@ app.delete('/api/tasks/:id', authenticateUser, requireRole(['admin']), async (re
 
 // PUT /api/tasks/:id - update a task
 // Allowed roles: admin, teacher, student, director
-app.put('/api/tasks/:id', authenticateUser, requireRole(['admin', 'teacher', 'student', 'director']), async (req, res) => {
+app.put('/api/tasks/:id', authenticateUser, requireRole(taskPermissions.update), async (req, res) => {
   try {
     const taskId = req.params.id;
     const task = await getStorage().getTask(taskId);
@@ -469,7 +470,7 @@ app.get('/api/users/:id/notifications', authenticateUser, async (req, res) => {
 // PATCH /api/tasks/:id/status - обновить статус задачи
 // PATCH /api/tasks/:id/status - update task status
 // Allowed roles: admin, teacher, student, director
-app.patch('/api/tasks/:id/status', authenticateUser, requireRole(['admin', 'teacher', 'student', 'director']), async (req, res) => {
+app.patch('/api/tasks/:id/status', authenticateUser, requireRole(taskPermissions.update), async (req, res) => {
   try {
     const taskId = req.params.id;
     const { status } = req.body;

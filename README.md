@@ -89,3 +89,9 @@ npm run dev:client
 The server will automatically use `SupabaseStorage` for all data access.
 
 Note: The API is available at http://localhost:3001.
+
+## Student capabilities
+
+Students can create tasks for themselves, update the details or status of tasks
+they own, and view tasks assigned to them. They cannot delete tasks or view
+other users' information unless explicitly shared with them.

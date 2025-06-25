@@ -7,7 +7,6 @@ import { logger } from "../utils/logger";
 import { supabase } from "../supabaseClient";
 import { db } from "../db/index";
 import * as schema from "@shared/schema";
-import { getDbUserBySupabaseUser } from "../utils/userMapping";
 
 export function registerUserRoutes(app: Express, { authenticateUser, requireRole }: RouteContext) {
   // User Routes
@@ -19,8 +18,7 @@ export function registerUserRoutes(app: Express, { authenticateUser, requireRole
     }
 
     try {
-      const { role } = await getDbUserBySupabaseUser(req.user);
-      if (role !== 'admin') {
+      if (req.user.role !== 'admin') {
         return res.status(403).json({ message: 'Forbidden - Admin access required' });
       }
 
