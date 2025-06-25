@@ -15,21 +15,6 @@ export function registerAssignmentRoutes(app: Express, { authenticateUser, requi
     }
   });
 
-  app.get('/api/assignments/:id', authenticateUser, async (req, res) => {
-    try {
-      const assignmentId = req.params.id;
-      const assignment = await getStorage().getAssignment(assignmentId);
-
-      if (!assignment) {
-        return res.status(404).json({ message: "Assignment not found" });
-      }
-
-      res.json(assignment);
-    } catch (error) {
-      res.status(500).json({ message: "Server error" });
-    }
-  });
-
   app.get('/api/assignments/student/:studentId', authenticateUser, async (req, res) => {
     try {
       const studentId = req.params.studentId;
@@ -66,6 +51,72 @@ export function registerAssignmentRoutes(app: Express, { authenticateUser, requi
       });
 
       res.json(assignmentsWithSubmissions);
+    } catch (error) {
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
+  // Teacher-specific assignments endpoint (teacher can view their assignments)
+  app.get('/api/assignments/teacher/:teacherId', authenticateUser, async (req, res) => {
+    console.log('🔍 [DEBUG] /api/assignments/teacher/:teacherId called');
+    console.log('🔍 [DEBUG] teacherId param:', req.params.teacherId);
+    console.log('🔍 [DEBUG] req.user:', req.user);
+    try {
+      const teacherId = req.params.teacherId;
+
+      if (req.user!.id !== teacherId && req.user!.role !== 'admin') {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+
+      const assignments = await getStorage().getAssignmentsByTeacher(teacherId);
+      res.json(assignments);
+    } catch (error) {
+      console.log('🚨 [ERROR] Assignment teacher endpoint error:', error);
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
+  app.get('/api/assignments/teacher', authenticateUser, async (req, res) => {
+    console.log('🔍 [DEBUG] /api/assignments/teacher called');
+    console.log('🔍 [DEBUG] req.user:', req.user);
+    try {
+      if (req.user!.role !== 'teacher' && req.user!.role !== 'admin') {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const assignments = await getStorage().getAssignmentsByTeacher(req.user!.id);
+
+      const assignmentsWithDetails = await Promise.all(assignments.map(async assignment => {
+        const submissions = await getStorage().getSubmissionsByAssignment(assignment.id);
+        const subject = await getStorage().getSubject(assignment.subjectId);
+        const students = await getStorage().getStudentsBySubject(assignment.subjectId);
+        return {
+          ...assignment,
+          subject,
+          submissions,
+          studentCount: students.length
+        };
+      }));
+
+      res.json(assignmentsWithDetails);
+    } catch (error) {
+      console.log('🚨 [ERROR] Assignment teacher endpoint error:', error);
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
+
+
+  app.get('/api/assignments/:id', authenticateUser, async (req, res) => {
+    try {
+      const assignmentId = req.params.id;
+      const assignment = await getStorage().getAssignment(assignmentId);
+
+      if (!assignment) {
+        return res.status(404).json({ message: "Assignment not found" });
+      }
+
+      res.json(assignment);
     } catch (error) {
       res.status(500).json({ message: "Server error" });
     }
@@ -383,53 +434,5 @@ export function registerAssignmentRoutes(app: Express, { authenticateUser, requi
     }
   });
 
-  // Teacher-specific assignments endpoint (teacher can view their assignments)
-  app.get('/api/assignments/teacher/:teacherId', authenticateUser, async (req, res) => {
-    console.log('🔍 [DEBUG] /api/assignments/teacher/:teacherId called');
-    console.log('🔍 [DEBUG] teacherId param:', req.params.teacherId);
-    console.log('🔍 [DEBUG] req.user:', req.user);
-    try {
-      const teacherId = req.params.teacherId;
-
-      if (req.user!.id !== teacherId && req.user!.role !== 'admin') {
-        return res.status(403).json({ message: "Forbidden" });
-      }
-
-      const assignments = await getStorage().getAssignmentsByTeacher(teacherId);
-      res.json(assignments);
-    } catch (error) {
-      console.log('🚨 [ERROR] Assignment teacher endpoint error:', error);
-      res.status(500).json({ message: "Server error" });
-    }
-  });
-
-  app.get('/api/assignments/teacher', authenticateUser, async (req, res) => {
-    console.log('🔍 [DEBUG] /api/assignments/teacher called');
-    console.log('🔍 [DEBUG] req.user:', req.user);
-    try {
-      if (req.user!.role !== 'teacher' && req.user!.role !== 'admin') {
-        return res.status(403).json({ message: "Access denied" });
-      }
-
-      const assignments = await getStorage().getAssignmentsByTeacher(req.user!.id);
-
-      const assignmentsWithDetails = await Promise.all(assignments.map(async assignment => {
-        const submissions = await getStorage().getSubmissionsByAssignment(assignment.id);
-        const subject = await getStorage().getSubject(assignment.subjectId);
-        const students = await getStorage().getStudentsBySubject(assignment.subjectId);
-        return {
-          ...assignment,
-          subject,
-          submissions,
-          studentCount: students.length
-        };
-      }));
-
-      res.json(assignmentsWithDetails);
-    } catch (error) {
-      console.log('🚨 [ERROR] Assignment teacher endpoint error:', error);
-      res.status(500).json({ message: "Server error" });
-    }
-  });
 }
 
