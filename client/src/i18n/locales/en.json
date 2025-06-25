@@ -183,7 +183,10 @@
     "messages": "Messages",
     "settings": "Settings",
     "help": "Help",
-    "logout": "Logout"
+    "logout": "Logout",
+    "teacher": {
+      "studentInactivity": "Student Inactivity"
+    }
   },
   "users": {
     "title": "Users",
@@ -291,7 +294,7 @@
   "assignments": {
     "title": "Assignments",
     "list": "Assignment list",
-    "add": "Add assignment",
+    "add": "Add Assignment",
     "edit": "Edit assignment",
     "delete": "Delete assignment",
     "details": "Assignment details",
@@ -335,7 +338,8 @@
     "addSuccess": "Assignment added successfully",
     "addError": "Error adding assignment: {{message}}",
     "updateSuccess": "Assignment updated successfully",
-    "updateError": "Error updating assignment: {{message}}"
+    "updateError": "Error updating assignment: {{message}}",
+    "viewAll": "View All"
   },
   "grades": {
     "title": "Grades",
@@ -368,6 +372,7 @@
   "requests": {
     "title": "Requests",
     "pending": "Active requests",
+    "noPending": "No Pending Requests",
     "list": "Request list",
     "add": "Add request",
     "edit": "Edit request",

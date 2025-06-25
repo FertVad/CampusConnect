@@ -303,6 +303,7 @@
       "pendingSubmissions": "Ожидающие проверки работы",
       "needGrading": "Заданий требуют оценки",
       "studentActivity": "Активность студентов",
+      "studentInactivity": "Неактивность студентов",
       "studentHelp": "Студентам требуется помощь",
         "allActive": "Все студенты активны",
       "newRequests": "Новых запросов от студентов",
@@ -422,7 +423,9 @@
   "assignments": {
     "title": "Задания",
     "status": "Статус",
-    "noActiveAssignments": "У вас нет активных заданий"
+    "noActiveAssignments": "У вас нет активных заданий",
+    "add": "Добавить задание",
+    "viewAll": "Посмотреть все"
   },
   "grades": {
     "title": "Оценки"
@@ -439,6 +442,7 @@
   "requests": {
     "title": "Запросы",
     "pending": "Активные заявки",
+    "noPending": "Нет ожидающих запросов",
     "noRequests": "Заявки отсутствуют",
     "addSuccess": "Запрос успешно создан"
   },
