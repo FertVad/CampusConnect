@@ -7,10 +7,10 @@ export async function getNotifications(): Promise<Notification[]> {
   return db.select().from(schema.notifications);
 }
 
-export async function getNotification(id: number): Promise<Notification | undefined> {
+export async function getNotification(id: string): Promise<Notification | undefined> {
   const notifications = await db.select()
     .from(schema.notifications)
-    .where(eq(schema.notifications.id, id))
+    .where(eq(schema.notifications.id, String(id)))
     .limit(1);
   return notifications[0];
 }
@@ -45,17 +45,17 @@ export async function createNotification(notificationData: InsertNotification): 
   return notification;
 }
 
-export async function markNotificationAsRead(id: number): Promise<Notification | undefined> {
+export async function markNotificationAsRead(id: string): Promise<Notification | undefined> {
   const [notification] = await db.update(schema.notifications)
     .set({ isRead: true })
-    .where(eq(schema.notifications.id, id))
+    .where(eq(schema.notifications.id, String(id)))
     .returning();
   return notification;
 }
 
-export async function deleteNotification(id: number): Promise<boolean> {
+export async function deleteNotification(id: string): Promise<boolean> {
   const result = await db.delete(schema.notifications)
-    .where(eq(schema.notifications.id, id));
+    .where(eq(schema.notifications.id, String(id)));
   return (result.rowCount || 0) > 0;
 }
 

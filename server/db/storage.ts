@@ -47,8 +47,8 @@ export class SupabaseStorage {
     return this.usersRepo.getUsers();
   }
 
-  async getUser(id: number): Promise<User | undefined> {
-    return this.usersRepo.getUser(id);
+  async getUser(id: string): Promise<User | undefined> {
+    return this.usersRepo.getUser(String(id));
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
@@ -64,12 +64,12 @@ export class SupabaseStorage {
     return this.usersRepo.createUser(userData);
   }
 
-  async updateUser(id: number, userData: Partial<InsertUser>): Promise<User | undefined> {
-    return this.usersRepo.updateUser(id, userData);
+  async updateUser(id: string, userData: Partial<InsertUser>): Promise<User | undefined> {
+    return this.usersRepo.updateUser(String(id), userData);
   }
 
-  async deleteUser(id: number): Promise<boolean> {
-    return this.usersRepo.deleteUser(id);
+  async deleteUser(id: string): Promise<boolean> {
+    return this.usersRepo.deleteUser(String(id));
   }
 
   async authenticate(credentials: LoginCredentials): Promise<User | undefined> {
@@ -91,8 +91,8 @@ export class SupabaseStorage {
     return this.subjectsRepo.getSubjects();
   }
 
-  async getSubject(id: number): Promise<Subject | undefined> {
-    return this.subjectsRepo.getSubject(id);
+  async getSubject(id: string): Promise<Subject | undefined> {
+    return this.subjectsRepo.getSubject(String(id));
   }
 
   async getSubjectsByTeacher(teacherId: string): Promise<Subject[]> {
@@ -103,12 +103,12 @@ export class SupabaseStorage {
     return this.subjectsRepo.createSubject(subjectData);
   }
 
-  async updateSubject(id: number, subjectData: Partial<InsertSubject>): Promise<Subject | undefined> {
-    return this.subjectsRepo.updateSubject(id, subjectData);
+  async updateSubject(id: string, subjectData: Partial<InsertSubject>): Promise<Subject | undefined> {
+    return this.subjectsRepo.updateSubject(String(id), subjectData);
   }
 
-  async deleteSubject(id: number): Promise<boolean> {
-    return this.subjectsRepo.deleteSubject(id);
+  async deleteSubject(id: string): Promise<boolean> {
+    return this.subjectsRepo.deleteSubject(String(id));
   }
 
   // Enrollments
