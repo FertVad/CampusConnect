@@ -12,3 +12,10 @@ import type { Request } from 'express';
 export interface AuthenticatedRequest extends Request {
   user?: AuthenticatedUser;
 }
+
+export const taskPermissions = {
+  create: ['admin', 'teacher', 'student', 'director'] as UserRole[],
+  update: ['admin', 'teacher', 'student', 'director'] as UserRole[],
+  delete: ['admin'] as UserRole[],
+  view: ['admin'] as UserRole[],
+};
