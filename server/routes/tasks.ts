@@ -13,13 +13,26 @@ export function registerTaskRoutes(app: Express, { authenticateUser, requireRole
 app.get('/api/tasks', authenticateUser, async (req, res) => {
   try {
     const tasks = await getStorage().getTasks();
+
+    const { id: userId, role: userRole } = await getDbUserBySupabaseUser(req.user!);
+
+    if (userRole !== 'admin') {
+      const filteredTasks = tasks.filter(task =>
+        task.clientId === userId || task.executorId === userId
+      );
+      if (filteredTasks.length === 0) {
+        return res.status(403).json({ message: 'Forbidden' });
+      }
+      return res.json(filteredTasks);
+    }
+
     res.json(tasks);
   } catch (error) {
     logger.error('Error fetching tasks:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     logger.error('Detailed error:', errorMessage);
-    res.status(500).json({ 
-      message: "Error fetching tasks", 
+    res.status(500).json({
+      message: "Error fetching tasks",
       details: errorMessage,
       timestamp: new Date().toISOString()
     });
