@@ -5,20 +5,35 @@ import { z } from "zod";
 import type { RouteContext } from "./index";
 
 export function registerAssignmentRoutes(app: Express, { authenticateUser, requireRole, upload }: RouteContext) {
+  console.log('🚀 [DEBUG] Starting registerAssignmentRoutes function...');
+
   // Assignment Routes
   // Student-specific endpoints must come before generic ID handlers
   app.get('/api/assignments/student/:studentId', authenticateUser, async (req, res) => {
+    console.log('🎯 [DEBUG] Student assignment route HIT:', req.params.studentId);
+    console.log('🔍 [DEBUG] req.user:', req.user);
+    console.log('🔍 [DEBUG] storage available:', !!getStorage());
     try {
       const studentId = req.params.studentId;
+      console.log('📝 [DEBUG] Getting assignments for student:', studentId);
 
       if (req.user!.id !== studentId && req.user!.role === 'student') {
         return res.status(403).json({ message: "Forbidden" });
       }
 
       const assignments = await getStorage().getAssignmentsByStudent(studentId);
+      console.log('✅ [DEBUG] Found assignments count:', assignments.length);
       res.json(assignments);
-    } catch (error) {
-      res.status(500).json({ message: "Server error" });
+      console.log('🎊 [DEBUG] Student assignments response sent successfully');
+    } catch (error: any) {
+      console.error('❌ [CRITICAL] Student assignment handler error:', error);
+      console.error('❌ [ERROR_NAME]:', error.name);
+      console.error('❌ [ERROR_MESSAGE]:', error.message);
+      console.error('❌ [STACK]:', error.stack);
+      res.status(500).json({
+        error: 'Failed to fetch student assignments',
+        details: error.message
+      });
     }
   });
 
@@ -50,21 +65,25 @@ export function registerAssignmentRoutes(app: Express, { authenticateUser, requi
 
   // Teacher-specific assignments endpoint (teacher can view their assignments)
   app.get('/api/assignments/teacher/:teacherId', authenticateUser, async (req, res) => {
-    console.log('🔍 [DEBUG] /api/assignments/teacher/:teacherId called');
-    console.log('🔍 [DEBUG] teacherId param:', req.params.teacherId);
-    console.log('🔍 [DEBUG] req.user:', req.user);
+    console.log('🎯 [DEBUG] Teacher assignment route HIT:', req.params.teacherId);
     try {
       const teacherId = req.params.teacherId;
+      console.log('📝 [DEBUG] Getting assignments for teacher:', teacherId);
 
       if (req.user!.id !== teacherId && req.user!.role !== 'admin') {
         return res.status(403).json({ message: "Forbidden" });
       }
 
       const assignments = await getStorage().getAssignmentsByTeacher(teacherId);
+      console.log('✅ [DEBUG] Found teacher assignments count:', assignments.length);
       res.json(assignments);
-    } catch (error) {
-      console.log('🚨 [ERROR] Assignment teacher endpoint error:', error);
-      res.status(500).json({ message: "Server error" });
+      console.log('🎊 [DEBUG] Teacher assignments response sent successfully');
+    } catch (error: any) {
+      console.error('❌ [CRITICAL] Teacher assignment handler error:', error);
+      res.status(500).json({
+        error: 'Failed to fetch teacher assignments',
+        details: error.message
+      });
     }
   });
 
@@ -101,17 +120,25 @@ export function registerAssignmentRoutes(app: Express, { authenticateUser, requi
 
   // Generic assignment lookup by ID should be registered after the specific student/teacher routes
   app.get('/api/assignments/:id', authenticateUser, async (req, res) => {
+    console.log('🎯 [DEBUG] Generic assignment route HIT:', req.params.id);
+    console.log('🚨 [WARNING] This should NOT be hit for student/teacher requests!');
     try {
       const assignmentId = req.params.id;
-      const assignment = await getStorage().getAssignment(assignmentId);
 
-      if (!assignment) {
-        return res.status(404).json({ message: "Assignment not found" });
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (!uuidRegex.test(assignmentId)) {
+        console.log('❌ [DEBUG] Invalid UUID format:', assignmentId);
+        return res.status(400).json({ error: 'Invalid assignment ID format' });
       }
 
+      const assignment = await getStorage().getAssignment(assignmentId);
       res.json(assignment);
-    } catch (error) {
-      res.status(500).json({ message: "Server error" });
+    } catch (error: any) {
+      console.error('❌ [CRITICAL] Generic assignment handler error:', error);
+      res.status(500).json({
+        error: 'Failed to fetch assignment',
+        details: error.message
+      });
     }
   });
 
@@ -437,5 +464,6 @@ export function registerAssignmentRoutes(app: Express, { authenticateUser, requi
     }
   });
 
+  console.log('🎊 [DEBUG] All assignment routes registered successfully');
 }
 
