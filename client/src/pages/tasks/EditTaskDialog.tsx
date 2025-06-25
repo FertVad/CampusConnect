@@ -69,7 +69,7 @@ export default function EditTaskDialog({ open, onOpenChange, form, onSubmit, loa
                 <FormItem>
                   <FormLabel>{t('task.assignee')}</FormLabel>
                   <Select
-                    onValueChange={value => field.onChange(parseInt(value))}
+                    onValueChange={value => field.onChange(value)}
                     defaultValue={field.value ? String(field.value) : undefined}
                   >
                     <FormControl>
