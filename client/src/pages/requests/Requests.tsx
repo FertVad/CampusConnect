@@ -62,7 +62,7 @@ const Requests = () => {
   
   // Mutation for updating request status (admin/teacher)
   const updateRequestStatusMutation = useMutation({
-    mutationFn: ({ requestId, status, resolution }: { requestId: number; status: 'approved' | 'rejected'; resolution: string }) => {
+    mutationFn: ({ requestId, status, resolution }: { requestId: string; status: 'approved' | 'rejected'; resolution: string }) => {
       return putData(`/api/requests/${requestId}/status`, { status, resolution });
     },
     onSuccess: () => {
@@ -85,7 +85,7 @@ const Requests = () => {
     await createRequestMutation.mutateAsync(data);
   };
   
-  const handleUpdateRequestStatus = async (requestId: number, status: 'approved' | 'rejected', resolution: string) => {
+  const handleUpdateRequestStatus = async (requestId: string, status: 'approved' | 'rejected', resolution: string) => {
     await updateRequestStatusMutation.mutateAsync({ requestId, status, resolution });
   };
   

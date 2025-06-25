@@ -14,7 +14,7 @@ import { cn } from '@/lib/utils';
 
 interface NotificationListProps {
   notifications: Notification[];
-  onMarkAsRead?: (id: number) => void;
+  onMarkAsRead?: (id: string) => void;
   onMarkAllAsRead?: () => void;
   onViewAll?: () => void;
 }

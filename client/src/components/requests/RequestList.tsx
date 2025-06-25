@@ -14,7 +14,7 @@ interface RequestListProps {
   requests: Request[];
   users?: User[];
   isAdmin?: boolean;
-  onUpdateStatus?: (requestId: number, status: 'approved' | 'rejected', resolution: string) => Promise<void>;
+  onUpdateStatus?: (requestId: string, status: 'approved' | 'rejected', resolution: string) => Promise<void>;
   isLoading?: boolean;
   error?: Error | null;
   onRetry?: () => void;

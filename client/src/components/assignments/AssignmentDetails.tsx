@@ -17,7 +17,7 @@ interface AssignmentDetailsProps {
   creator?: User;
   isTeacher: boolean;
   onSubmit: (formData: FormData) => Promise<any>;
-  onGrade?: (submissionId: number, grade: number, feedback: string) => Promise<any>;
+  onGrade?: (submissionId: string, grade: number, feedback: string) => Promise<any>;
 }
 
 const AssignmentDetails: React.FC<AssignmentDetailsProps> = ({
