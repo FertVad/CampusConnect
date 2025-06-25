@@ -213,7 +213,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   registerTaskRoutes(app, ctx);
 
   // Основные разделы
-  registerAssignmentRoutes(app, ctx);
+  console.log('🔍 [DEBUG] About to register assignment routes...');
+  try {
+    registerAssignmentRoutes(app, ctx);
+    console.log('✅ [DEBUG] Assignment routes registered successfully');
+  } catch (error) {
+    console.error('❌ [CRITICAL] Assignment routes registration FAILED:', error);
+    // error may not have stack if it's not Error; guard
+    if (error && (error as any).stack) {
+      console.error('❌ [STACK]', (error as any).stack);
+    }
+  }
   registerNotificationRoutes(app, ctx);
 
   // Временное отключение второстепенных модулей
