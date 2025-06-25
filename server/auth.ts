@@ -195,7 +195,6 @@ export function setupAuth(app: Express) {
       user_exists: !!authUser,
       user_id: authUser.id,
       user_email: authUser.email,
-      user_metadata: authUser.user_metadata,
       public_user_exists: !!publicUser,
       public_user_data: publicUser,
       error: error?.message,

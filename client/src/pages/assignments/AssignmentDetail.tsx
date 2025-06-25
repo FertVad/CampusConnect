@@ -75,7 +75,7 @@ const AssignmentDetail = () => {
   
   // Mutation for grading assignment (teacher)
   const gradeAssignmentMutation = useMutation({
-    mutationFn: ({ submissionId, grade, feedback }: { submissionId: number; grade: number; feedback: string }) => {
+    mutationFn: ({ submissionId, grade, feedback }: { submissionId: string; grade: number; feedback: string }) => {
       return putData(`/api/submissions/${submissionId}/grade`, { grade, feedback });
     },
     onSuccess: () => {
@@ -99,7 +99,7 @@ const AssignmentDetail = () => {
     await submitAssignmentMutation.mutateAsync(formData);
   };
   
-  const handleGrade = async (submissionId: number, grade: number, feedback: string) => {
+  const handleGrade = async (submissionId: string, grade: number, feedback: string) => {
     await gradeAssignmentMutation.mutateAsync({ submissionId, grade, feedback });
   };
   

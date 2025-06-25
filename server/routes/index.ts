@@ -79,21 +79,21 @@ const authenticateUser = verifySupabaseJwt;
 
 
 // Вспомогательная функция для получения ID преподавателя по умолчанию
-async function getDefaultTeacherId(): Promise<number> {
+async function getDefaultTeacherId(): Promise<string> {
   try {
     // Пытаемся найти пользователя с ролью "teacher"
     const teachers = await getStorage().getUsersByRole('teacher');
     if (teachers && teachers.length > 0) {
       logger.info(`Found ${teachers.length} teachers, using ${teachers[0].firstName} ${teachers[0].lastName} (ID: ${teachers[0].id}) as default`);
-      return teachers[0].id;
+      return String(teachers[0].id);
     }
     
     // Если учителей нет, создаем тестового преподавателя
     logger.info('No teachers found, using fallback teacher ID 2');
-    return 2; // ID тестового преподавателя
+    return '2'; // ID тестового преподавателя
   } catch (error) {
     logger.error('Error getting default teacher:', error);
-    return 2; // В случае ошибки возвращаем ID тестового преподавателя
+    return '2'; // В случае ошибки возвращаем ID тестового преподавателя
   }
 }
 

@@ -82,7 +82,7 @@ export function registerCurriculumRoutes(app: Express, { authenticateUser, requi
   app.post('/api/curriculum-plans', authenticateUser, requireRole(['admin']), async (req, res) => {
     try {
       const { insertCurriculumPlanSchema } = await import('@shared/schema');
-      const modifiedSchema = insertCurriculumPlanSchema.extend({ createdBy: z.number().optional() });
+      const modifiedSchema = insertCurriculumPlanSchema.extend({ createdBy: z.string().uuid().optional() });
       const planData = modifiedSchema.parse(req.body);
       if (!planData.createdBy) {
         planData.createdBy = req.user!.id;

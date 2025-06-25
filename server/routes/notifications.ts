@@ -9,7 +9,7 @@ const createNotificationSchema = z.object({
   title: z.string().min(1).max(255),
   message: z.string().optional(),
   type: z.enum(["task_assigned", "task_updated", "general"]).default("general"),
-  taskId: z.number().optional(),
+  taskId: z.string().optional(),
 });
 
 export function registerNotificationRoutes(app: Express, { authenticateUser, requireRole }: RouteContext) {
