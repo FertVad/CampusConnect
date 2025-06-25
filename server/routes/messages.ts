@@ -78,7 +78,7 @@ export function registerMessageRoutes(app: Express, { authenticateUser }: RouteC
 
   // 🔍 [DEBUG] Log all registered routes for verification
   console.log('🔍 [DEBUG] All registered routes:');
-  (app as any)._router.stack.forEach((middleware, index: number) => {
+  (app as any)._router.stack.forEach((middleware: { route?: { path: string } }, index: number) => {
     if (middleware.route) {
       console.log(`Route ${index}: ${middleware.route.path}`);
     }

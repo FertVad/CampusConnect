@@ -661,7 +661,7 @@ export class SupabaseStorage {
     return notificationQueries.getNotifications();
   }
 
-  async getNotification(id: number): Promise<Notification | undefined> {
+  async getNotification(id: string): Promise<Notification | undefined> {
     return notificationQueries.getNotification(id);
   }
 
@@ -678,11 +678,11 @@ export class SupabaseStorage {
     return notificationQueries.createNotification(notificationData);
   }
 
-  async markNotificationAsRead(id: number): Promise<Notification | undefined> {
+  async markNotificationAsRead(id: string): Promise<Notification | undefined> {
     return notificationQueries.markNotificationAsRead(id);
   }
 
-  async deleteNotification(id: number): Promise<boolean> {
+  async deleteNotification(id: string): Promise<boolean> {
     return notificationQueries.deleteNotification(id);
   }
 

@@ -371,7 +371,7 @@ export async function parseCsvToScheduleItems(
 // Функция валидации элементов расписания
 export async function validateScheduleItems(
   scheduleItems: Partial<InsertScheduleItem>[],
-  validateSubject: (subjectId: number) => Promise<boolean>
+  validateSubject: (subjectId: string) => Promise<boolean>
 ): Promise<{ validItems: InsertScheduleItem[], errors: ScheduleImportError[] }> {
   const validItems: InsertScheduleItem[] = [];
   const errors: ScheduleImportError[] = [];
