@@ -123,7 +123,7 @@ const StudentDashboard = () => {
   })[0];
   
   // Mark notification as read
-  const handleMarkAsRead = async (id: number) => {
+  const handleMarkAsRead = async (id: string) => {
     await apiRequest(`/api/notifications/${id}/read`, 'PUT', {});
   };
   
