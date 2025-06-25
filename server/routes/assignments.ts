@@ -6,15 +6,7 @@ import type { RouteContext } from "./index";
 
 export function registerAssignmentRoutes(app: Express, { authenticateUser, requireRole, upload }: RouteContext) {
   // Assignment Routes
-  app.get('/api/assignments', authenticateUser, requireRole(['admin', 'teacher']), async (req, res) => {
-    try {
-      const assignments = await getStorage().getAssignments();
-      res.json(assignments);
-    } catch (error) {
-      res.status(500).json({ message: "Server error" });
-    }
-  });
-
+  // Student-specific endpoints must come before generic ID handlers
   app.get('/api/assignments/student/:studentId', authenticateUser, async (req, res) => {
     try {
       const studentId = req.params.studentId;
@@ -107,6 +99,7 @@ export function registerAssignmentRoutes(app: Express, { authenticateUser, requi
 
 
 
+  // Generic assignment lookup by ID should be registered after the specific student/teacher routes
   app.get('/api/assignments/:id', authenticateUser, async (req, res) => {
     try {
       const assignmentId = req.params.id;
@@ -122,6 +115,16 @@ export function registerAssignmentRoutes(app: Express, { authenticateUser, requi
     }
   });
 
+
+  // List all assignments (admin/teacher only)
+  app.get('/api/assignments', authenticateUser, requireRole(['admin', 'teacher']), async (req, res) => {
+    try {
+      const assignments = await getStorage().getAssignments();
+      res.json(assignments);
+    } catch (error) {
+      res.status(500).json({ message: "Server error" });
+    }
+  });
 
   app.post('/api/assignments', authenticateUser, requireRole(['admin', 'teacher']), async (req, res) => {
     try {
