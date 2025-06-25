@@ -1505,9 +1505,9 @@ export class MemStorage implements IStorage {
     return this.curriculumPlans.delete(id);
   }
   
-  private seedData() {
+  private async seedData() {
     // Create admin user
-    const adminUser = this.createUser({
+    const adminUser = await this.createUser({
       firstName: "Admin",
       lastName: "User",
       password: "admin123",
@@ -1516,71 +1516,71 @@ export class MemStorage implements IStorage {
     });
     
     // Создаем базовые специальности
-    const computerScience = this.createSpecialty({
+    const computerScience = await this.createSpecialty({
       name: "Информатика и вычислительная техника",
       code: "09.03.01",
       description: "Бакалавриат по информатике и вычислительной технике"
     });
     
-    const economics = this.createSpecialty({
+    const economics = await this.createSpecialty({
       name: "Экономика",
       code: "38.03.01",
       description: "Бакалавриат по экономике"
     });
     
-    const softwareEngineering = this.createSpecialty({
+    const softwareEngineering = await this.createSpecialty({
       name: "Программная инженерия",
       code: "09.03.04",
       description: "Бакалавриат по программной инженерии"
     });
     
     // Создаем курсы
-    const cs1 = this.createCourse({
+    const cs1 = await this.createCourse({
       number: 1,
       specialtyId: computerScience.id, // Информатика, 1-й курс
       academicYear: "2024-2025"
     });
     
-    const cs2 = this.createCourse({
+    const cs2 = await this.createCourse({
       number: 2,
       specialtyId: computerScience.id, // Информатика, 2-й курс
       academicYear: "2024-2025"
     });
     
-    const econ1 = this.createCourse({
+    const econ1 = await this.createCourse({
       number: 1,
       specialtyId: economics.id, // Экономика, 1-й курс
       academicYear: "2024-2025"
     });
     
-    const swe1 = this.createCourse({
+    const swe1 = await this.createCourse({
       number: 1,
       specialtyId: softwareEngineering.id, // Программная инженерия, 1-й курс
       academicYear: "2024-2025"
     });
     
     // Создаем группы
-    const csGroup1 = this.createGroup({
+    const csGroup1 = await this.createGroup({
       name: "ИВТ-101",
       courseId: cs1.id // Информатика, 1-й курс
     });
     
-    const csGroup2 = this.createGroup({
+    const csGroup2 = await this.createGroup({
       name: "ИВТ-102",
       courseId: cs1.id // Информатика, 1-й курс
     });
     
-    const csGroup3 = this.createGroup({
+    const csGroup3 = await this.createGroup({
       name: "ИВТ-201",
       courseId: cs2.id // Информатика, 2-й курс
     });
     
-    const econGroup1 = this.createGroup({
+    const econGroup1 = await this.createGroup({
       name: "ЭКО-101",
       courseId: econ1.id // Экономика, 1-й курс
     });
     
-    const sweGroup1 = this.createGroup({
+    const sweGroup1 = await this.createGroup({
       name: "ПИ-101",
       courseId: swe1.id // Программная инженерия, 1-й курс
     });
