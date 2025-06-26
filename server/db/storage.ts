@@ -690,6 +690,39 @@ export class SupabaseStorage {
     return notificationQueries.markAllNotificationsAsRead(userId);
   }
 
+  // User Preferences
+  async getUserPreferences(userId: string): Promise<schema.UserPreferences | undefined> {
+    const prefs = await db.select().from(schema.userPreferences)
+      .where(eq(schema.userPreferences.userId, userId)).limit(1);
+    return prefs[0];
+  }
+
+  async createUserPreferences(userId: string, prefs: schema.InsertUserPreferences): Promise<schema.UserPreferences> {
+    const now = new Date();
+    const [record] = await db.insert(schema.userPreferences)
+      .values({
+        ...prefs,
+        userId,
+        createdAt: now,
+        updatedAt: now,
+      })
+      .returning();
+    return record;
+  }
+
+  async updateUserPreferences(userId: string, prefs: Partial<schema.InsertUserPreferences>): Promise<schema.UserPreferences | undefined> {
+    if (Object.keys(prefs).length === 0) {
+      const existing = await this.getUserPreferences(userId);
+      return existing;
+    }
+    const now = new Date();
+    const [record] = await db.update(schema.userPreferences)
+      .set({ ...prefs, updatedAt: now })
+      .where(eq(schema.userPreferences.userId, userId))
+      .returning();
+    return record;
+  }
+
   // Imported Files
   async getImportedFiles(): Promise<ImportedFile[]> {
     return db.select().from(schema.importedFiles)
