@@ -39,7 +39,7 @@ const TaskCard = ({ task, onStatusChange, onEditClick, onDeleteClick, onViewDeta
 
   return (
     <Card
-      className="h-full flex flex-col border border-gray-200 dark:border-gray-800 shadow-sm bg-white dark:bg-gray-900 cursor-pointer hover:border-primary hover:shadow-md transition-all duration-200 card-hover"
+      className="h-full min-h-[20rem] flex flex-col border border-gray-200 dark:border-gray-800 shadow-sm bg-white dark:bg-gray-900 cursor-pointer hover:border-primary hover:shadow-md transition-all duration-200 card-hover"
       onClick={handleCardClick}
     >
       <CardHeader className="pb-2 space-y-2">
@@ -54,7 +54,7 @@ const TaskCard = ({ task, onStatusChange, onEditClick, onDeleteClick, onViewDeta
         </div>
       </CardHeader>
       <CardContent className="flex-grow">
-        <p className="text-sm mb-3 line-clamp-3 hide-md" title={task.description || t('task.no_description')}>
+        <p className="text-sm mb-3 line-clamp-4 hide-md" title={task.description || t('task.no_description')}>
           {task.description || t('task.no_description')}
         </p>
         <div className="space-y-2 text-sm">
@@ -79,11 +79,8 @@ const TaskCard = ({ task, onStatusChange, onEditClick, onDeleteClick, onViewDeta
         </div>
       </CardContent>
       <CardFooter className="flex flex-col gap-2 pt-2 border-t border-gray-200 dark:border-gray-800">
-        <div className="flex justify-between w-full items-center">
-          <div className="text-xs text-muted-foreground">
-            {t('task.created')}: {new Date(task.createdAt).toLocaleDateString()}
-          </div>
-          <div className="text-xs text-muted-foreground">ID: {task.id}</div>
+        <div className="text-xs text-muted-foreground">
+          {t('task.created')}: {new Date(task.createdAt).toLocaleDateString()}
         </div>
         <div className="flex flex-row gap-2 w-full">
           {(isExecutor || isAdmin) && (
