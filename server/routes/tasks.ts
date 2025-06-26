@@ -28,6 +28,23 @@ app.get('/api/tasks', authenticateUser, requireRole(taskPermissions.view), async
   }
 });
 
+// GET /api/tasks/my - get user's tasks (filtered)
+app.get('/api/tasks/my', authenticateUser, requireRole(['teacher', 'student', 'admin', 'director']), async (req, res) => {
+  try {
+    const userId = req.user!.id;
+    const tasks = await getStorage().getTasksByUser(userId);
+    res.json(tasks);
+  } catch (error) {
+    logger.error('Error fetching user tasks:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    res.status(500).json({
+      message: 'Error fetching user tasks',
+      details: errorMessage,
+      timestamp: new Date().toISOString(),
+    });
+  }
+});
+
 app.get('/api/tasks/client/:clientId', authenticateUser, async (req, res) => {
   try {
     const clientId = req.params.clientId;

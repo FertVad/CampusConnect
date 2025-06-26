@@ -317,6 +317,88 @@ export class TasksRepository {
     });
   }
 
+  async getTasksByUser(userId: string): Promise<(Task & { client?: UserSummary; executor?: UserSummary })[]> {
+    const clientsTable = aliasedTable(schema.users, 'clients');
+    const executorsTable = aliasedTable(schema.users, 'executors');
+
+    const result = await db.select({
+      id: schema.tasks.id,
+      title: schema.tasks.title,
+      description: schema.tasks.description,
+      status: schema.tasks.status,
+      priority: schema.tasks.priority,
+      createdAt: schema.tasks.createdAt,
+      updatedAt: schema.tasks.updatedAt,
+      dueDate: schema.tasks.dueDate,
+      clientId: schema.tasks.clientId,
+      executorId: schema.tasks.executorId,
+      clientFirstName: clientsTable.firstName,
+      clientLastName: clientsTable.lastName,
+      clientEmail: clientsTable.email,
+      clientRole: clientsTable.role,
+      executorFirstName: executorsTable.firstName,
+      executorLastName: executorsTable.lastName,
+      executorEmail: executorsTable.email,
+      executorRole: executorsTable.role
+    })
+    .from(schema.tasks)
+    .leftJoin(clientsTable, eq(schema.tasks.clientId, clientsTable.id))
+    .leftJoin(executorsTable, eq(schema.tasks.executorId, executorsTable.id))
+    .where(or(eq(schema.tasks.clientId, userId), eq(schema.tasks.executorId, userId)))
+    .orderBy(
+      sql`CASE
+          WHEN ${schema.tasks.status} = 'new' THEN 1
+          WHEN ${schema.tasks.status} = 'in_progress' THEN 2
+          WHEN ${schema.tasks.status} = 'on_hold' THEN 3
+          WHEN ${schema.tasks.status} = 'completed' THEN 4
+          ELSE 5
+        END`,
+      sql`CASE
+          WHEN ${schema.tasks.priority} = 'high' THEN 1
+          WHEN ${schema.tasks.priority} = 'medium' THEN 2
+          WHEN ${schema.tasks.priority} = 'low' THEN 3
+          ELSE 4
+        END`,
+      desc(schema.tasks.createdAt)
+    );
+
+    return result.map(task => {
+      const baseTask = {
+        id: task.id,
+        title: task.title,
+        description: task.description,
+        status: task.status,
+        priority: task.priority,
+        createdAt: task.createdAt,
+        updatedAt: task.updatedAt,
+        dueDate: task.dueDate,
+        clientId: task.clientId,
+        executorId: task.executorId
+      };
+      let client: UserSummary | undefined = undefined;
+      if (task.clientFirstName && task.clientLastName && task.clientEmail && task.clientRole) {
+        client = {
+          id: task.clientId,
+          firstName: task.clientFirstName,
+          lastName: task.clientLastName,
+          email: task.clientEmail,
+          role: task.clientRole
+        };
+      }
+      let executor: UserSummary | undefined = undefined;
+      if (task.executorFirstName && task.executorLastName && task.executorEmail && task.executorRole) {
+        executor = {
+          id: task.executorId,
+          firstName: task.executorFirstName,
+          lastName: task.executorLastName,
+          email: task.executorEmail,
+          role: task.executorRole
+        };
+      }
+      return { ...baseTask, client, executor };
+    });
+  }
+
   async getTasksByStatus(status: string): Promise<Task[]> {
     return db.select().from(schema.tasks)
       .where(eq(schema.tasks.status, status as any))

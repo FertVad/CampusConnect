@@ -194,6 +194,7 @@ export interface IStorage {
   getTaskById(id: string): Promise<Task | null>; // Добавляем другой формат возврата для совместимости
   getTasksByClient(clientId: string): Promise<Task[]>; // UUID
   getTasksByExecutor(executorId: string): Promise<Task[]>; // UUID
+  getTasksByUser(userId: string): Promise<Task[]>; // UUID
   getTasksByStatus(status: string): Promise<Task[]>;
   getTasksDueSoon(days: number): Promise<Task[]>;
   createTask(taskData: InsertTask): Promise<Task>;
@@ -1381,6 +1382,13 @@ export class MemStorage implements IStorage {
   async getTasksByExecutor(executorId: string): Promise<Task[]> {
     return Array.from(this.tasks.values())
       .filter(task => task.executorId === executorId);
+  }
+
+  async getTasksByUser(userId: string): Promise<Task[]> {
+    const clientTasks = await this.getTasksByClient(userId);
+    const executorTasks = await this.getTasksByExecutor(userId);
+    const all = [...clientTasks, ...executorTasks];
+    return all.filter((task, index, self) => self.findIndex(t => t.id === task.id) === index);
   }
   
   async getTasksByStatus(status: string): Promise<Task[]> {
