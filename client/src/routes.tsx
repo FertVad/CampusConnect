@@ -5,6 +5,7 @@ import AssignmentDetail from "@/pages/assignments/AssignmentDetail";
 import Schedule from "@/pages/schedule/Schedule";
 import Chat from "@/pages/chat/Chat";
 import TasksPage from "@/pages/tasks/Tasks";
+import SettingsPage from "@/pages/settings/Settings";
 import NotFound from "@/pages/not-found";
 import AuthPage from "@/pages/auth-page";
 import Users from "@/pages/users/Users";
@@ -60,6 +61,12 @@ const ProtectedTasks = () => (
   </MainLayout>
 );
 
+const ProtectedSettings = () => (
+  <MainLayout>
+    <SettingsPage />
+  </MainLayout>
+);
+
 const ProtectedUserDetail = () => (
   <MainLayout>
     <UserDetail />
@@ -78,6 +85,7 @@ export const routes: RouteDefinition[] = [
   { path: "/chat", component: ProtectedChat, protected: true },
   { path: "/chat/:id", component: ProtectedChat, protected: true },
   { path: "/tasks", component: ProtectedTasks, protected: true },
+  { path: "/settings", component: ProtectedSettings, protected: true },
   { component: NotFound },
 ];
 
