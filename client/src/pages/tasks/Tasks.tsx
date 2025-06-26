@@ -18,6 +18,9 @@ const TasksPage = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
   const queryClient = useQueryClient();
+
+  const canCreateTask =
+    user?.role === 'admin' || user?.role === 'director';
   const {
     tasks,
     tasksLoading,
@@ -111,14 +114,16 @@ const TasksPage = () => {
     <div className="container py-8 px-8">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold font-heading">{t('task.manager')}</h1>
-        <CreateTaskDialog
-          open={createDialogOpen}
-          onOpenChange={setCreateDialogOpen}
-          form={form}
-          loading={createTaskMutation.isPending}
-          users={users}
-          onSubmit={handleCreateTask}
-        />
+        {canCreateTask && (
+          <CreateTaskDialog
+            open={createDialogOpen}
+            onOpenChange={setCreateDialogOpen}
+            form={form}
+            loading={createTaskMutation.isPending}
+            users={users}
+            onSubmit={handleCreateTask}
+          />
+        )}
       </div>
 
         {/* Диалог редактирования задачи */}
