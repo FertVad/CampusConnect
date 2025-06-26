@@ -12,6 +12,7 @@ import Invoices from "@/pages/documents/Invoices";
 import Certificates from "@/pages/documents/Certificates";
 import ImportedFiles from "@/pages/admin/ImportedFiles";
 import TasksPage from "@/pages/tasks/Tasks";
+import SettingsPage from "@/pages/settings/Settings";
 import CurriculumPlans from "@/pages/curriculum/CurriculumPlans";
 import EditCurriculumPlan from "@/pages/curriculum/EditCurriculumPlan";
 import NotFound from "@/pages/not-found";
@@ -87,6 +88,12 @@ const ProtectedCertificates = () => (
 const ProtectedTasks = () => (
   <MainLayout>
     <TasksPage />
+  </MainLayout>
+);
+
+const ProtectedSettings = () => (
+  <MainLayout>
+    <SettingsPage />
   </MainLayout>
 );
 
@@ -177,7 +184,10 @@ function App() {
       
       {/* Tasks route */}
       <ProtectedRoute path="/tasks" component={ProtectedTasks} />
-      
+
+      {/* Settings route */}
+      <ProtectedRoute path="/settings" component={ProtectedSettings} />
+
       {/* Admin routes с проверкой на роль admin */}
       <ProtectedRoute path="/admin/imported-files" component={ProtectedImportedFiles} adminOnly={true} />
       <ProtectedRoute path="/curriculum-plans" component={ProtectedCurriculumPlans} adminOnly={true} />
