@@ -39,6 +39,7 @@ import { registerMessageRoutes } from "./messages";
 import { registerRequestRoutes } from "./requests";
 import { registerDocumentRoutes } from "./documents";
 import { registerNotificationRoutes } from "./notifications";
+import { registerUserPreferencesRoutes } from "./user-preferences";
 import { registerActivityLogRoutes } from "./activityLogs";
 import { registerCurriculumRoutes } from "./curriculum";
 import { verifySupabaseJwt } from "../middleware/verifySupabaseJwt";
@@ -225,6 +226,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   }
   registerNotificationRoutes(app, ctx);
+  registerUserPreferencesRoutes(app, ctx);
 
   // Временное отключение второстепенных модулей
   registerRequestRoutes(app, ctx);

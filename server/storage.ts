@@ -12,11 +12,13 @@ import {
   Task, InsertTask,
   // Curriculum Plans
   CurriculumPlan, InsertCurriculumPlan,
+  // User Preferences
+  UserPreferences, InsertUserPreferences, userPreferences,
   // Схемы таблиц для Drizzle
   users, subjects, enrollments, scheduleItems, assignments, submissions,
   grades, requests, documents, messages, notifications, specialties,
   courses, groups, scheduleEntries, importedFiles, activityLogs, tasks,
-  curriculumPlans
+  curriculumPlans, userPreferences
 } from "@shared/schema";
 import { eq, and, desc, asc } from "drizzle-orm";
 import { db } from "./db/index";
@@ -133,6 +135,11 @@ export interface IStorage {
   markNotificationAsRead(id: string): Promise<Notification | undefined>;
   markAllNotificationsAsRead(userId: string): Promise<void>;
   deleteNotification(id: string): Promise<boolean>;
+
+  // User Preferences
+  getUserPreferences(userId: string): Promise<UserPreferences | undefined>;
+  createUserPreferences(userId: string, prefs: InsertUserPreferences): Promise<UserPreferences>;
+  updateUserPreferences(userId: string, prefs: Partial<InsertUserPreferences>): Promise<UserPreferences | undefined>;
   
   // Специальности
   getSpecialties(): Promise<Specialty[]>;
@@ -224,6 +231,7 @@ export class MemStorage implements IStorage {
   private documents: Map<string, Document>;
   private messages: Map<string, Message>;
   private notifications: Map<string, Notification>;
+  private userPreferences: Map<string, UserPreferences>;
   
   // Новые модели
   private specialties: Map<string, Specialty>;
@@ -250,6 +258,7 @@ export class MemStorage implements IStorage {
     this.documents = new Map();
     this.messages = new Map();
     this.notifications = new Map();
+    this.userPreferences = new Map();
     
     // Инициализация новых хранилищ
     this.specialties = new Map();
@@ -928,6 +937,37 @@ export class MemStorage implements IStorage {
   
   async deleteNotification(id: string): Promise<boolean> {
     return this.notifications.delete(id);
+  }
+
+  // User Preferences
+  async getUserPreferences(userId: string): Promise<UserPreferences | undefined> {
+    return this.userPreferences.get(userId);
+  }
+
+  async createUserPreferences(userId: string, prefs: InsertUserPreferences): Promise<UserPreferences> {
+    const now = new Date();
+    const record: UserPreferences = {
+      userId,
+      theme: prefs.theme ?? 'light',
+      language: prefs.language ?? 'en',
+      notificationsEnabled: prefs.notificationsEnabled ?? true,
+      createdAt: now,
+      updatedAt: now,
+    };
+    this.userPreferences.set(userId, record);
+    return record;
+  }
+
+  async updateUserPreferences(userId: string, prefs: Partial<InsertUserPreferences>): Promise<UserPreferences | undefined> {
+    const existing = this.userPreferences.get(userId);
+    if (!existing) return undefined;
+    const updated: UserPreferences = {
+      ...existing,
+      ...prefs,
+      updatedAt: new Date(),
+    };
+    this.userPreferences.set(userId, updated);
+    return updated;
   }
   
   // Helper method to seed initial data

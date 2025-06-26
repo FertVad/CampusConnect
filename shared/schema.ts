@@ -226,6 +226,16 @@ export const tasks = pgTable("tasks", {
   executorId: uuid("executor_id").references(() => users.id).notNull(), // кто исполняет задачу
 });
 
+// User Preferences
+export const userPreferences = pgTable("user_preferences", {
+  userId: uuid("user_id").primaryKey().references(() => users.id),
+  theme: varchar("theme", { length: 20 }).notNull().default('light'),
+  language: varchar("language", { length: 10 }).notNull().default('en'),
+  notificationsEnabled: boolean("notifications_enabled").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Учебные планы (Curriculum Plans)
 export const curriculumPlans = pgTable("curriculum_plans", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -334,6 +344,12 @@ export const insertActivityLogSchema = createInsertSchema(activityLogs).omit({
   timestamp: true
 });
 
+export const insertUserPreferencesSchema = createInsertSchema(userPreferences).omit({
+  userId: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export const insertTaskSchema = createInsertSchema(tasks)
   .omit({
     id: true,
@@ -406,6 +422,9 @@ export type InsertImportedFile = z.infer<typeof insertImportedFileSchema>;
 
 export type ActivityLog = typeof activityLogs.$inferSelect;
 export type InsertActivityLog = z.infer<typeof insertActivityLogSchema>;
+
+export type UserPreferences = typeof userPreferences.$inferSelect;
+export type InsertUserPreferences = z.infer<typeof insertUserPreferencesSchema>;
 
 export type Task = typeof tasks.$inferSelect;
 export type InsertTask = z.infer<typeof insertTaskSchema>;
