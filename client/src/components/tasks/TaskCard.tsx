@@ -54,7 +54,10 @@ const TaskCard = ({ task, onStatusChange, onEditClick, onDeleteClick, onViewDeta
         </div>
       </CardHeader>
       <CardContent className="flex-grow">
-        <p className="text-sm mb-3 line-clamp-4 hide-md" title={task.description || t('task.no_description')}>
+        <p
+          className="text-sm mb-3 line-clamp-4"
+          title={task.description || t('task.no_description')}
+        >
           {task.description || t('task.no_description')}
         </p>
         <div className="space-y-2 text-sm">
