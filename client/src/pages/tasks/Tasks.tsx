@@ -5,6 +5,13 @@ import { useAuth } from '@/hooks/use-auth';
 
 
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { CheckCircle, Clock, AlertCircle, PauseCircle } from 'lucide-react';
 import TaskCard from '@/components/tasks/TaskCard';
 import CreateTaskDialog from './CreateTaskDialog';
@@ -156,15 +163,62 @@ const TasksPage = () => {
 
       {/* Фильтры */}
       <div className="mb-6">
-        <div className="flex flex-wrap gap-2">
+        {/* Mobile Dropdown */}
+        <div className="md:hidden">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline">
+                {t('common.filters', 'Фильтры')}
+                {statusFilter && <span className="ml-1">(1)</span>}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start">
+              <DropdownMenuItem onClick={() => setStatusFilter(null)}>
+                {t('task.all')}
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => setStatusFilter('new')}
+                className="flex items-center gap-2"
+              >
+                <AlertCircle className="h-4 w-4" />
+                {t('task.status.new')}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => setStatusFilter('in_progress')}
+                className="flex items-center gap-2"
+              >
+                <Clock className="h-4 w-4" />
+                {t('task.status.in_progress')}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => setStatusFilter('completed')}
+                className="flex items-center gap-2"
+              >
+                <CheckCircle className="h-4 w-4" />
+                {t('task.status.completed')}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => setStatusFilter('on_hold')}
+                className="flex items-center gap-2"
+              >
+                <PauseCircle className="h-4 w-4" />
+                {t('task.status.on_hold')}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
+        {/* Desktop Buttons */}
+        <div className="hidden md:flex flex-wrap gap-2">
           <Button
-            variant={statusFilter === null ? "default" : "outline"}
+            variant={statusFilter === null ? 'default' : 'outline'}
             onClick={() => setStatusFilter(null)}
           >
             {t('task.all')}
           </Button>
           <Button
-            variant={statusFilter === 'new' ? "default" : "outline"}
+            variant={statusFilter === 'new' ? 'default' : 'outline'}
             onClick={() => setStatusFilter('new')}
             className="flex items-center gap-2"
           >
@@ -172,7 +226,7 @@ const TasksPage = () => {
             {t('task.status.new')}
           </Button>
           <Button
-            variant={statusFilter === 'in_progress' ? "default" : "outline"}
+            variant={statusFilter === 'in_progress' ? 'default' : 'outline'}
             onClick={() => setStatusFilter('in_progress')}
             className="flex items-center gap-2"
           >
@@ -180,7 +234,7 @@ const TasksPage = () => {
             {t('task.status.in_progress')}
           </Button>
           <Button
-            variant={statusFilter === 'completed' ? "default" : "outline"}
+            variant={statusFilter === 'completed' ? 'default' : 'outline'}
             onClick={() => setStatusFilter('completed')}
             className="flex items-center gap-2"
           >
@@ -188,7 +242,7 @@ const TasksPage = () => {
             {t('task.status.completed')}
           </Button>
           <Button
-            variant={statusFilter === 'on_hold' ? "default" : "outline"}
+            variant={statusFilter === 'on_hold' ? 'default' : 'outline'}
             onClick={() => setStatusFilter('on_hold')}
             className="flex items-center gap-2"
           >
