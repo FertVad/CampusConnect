@@ -14,7 +14,7 @@ export interface AuthenticatedRequest extends Request {
 }
 
 export const taskPermissions = {
-  create: ['admin', 'teacher', 'student', 'director'] as UserRole[],
+  create: ['admin', 'director'] as UserRole[],
   update: ['admin', 'teacher', 'student', 'director'] as UserRole[],
   delete: ['admin'] as UserRole[],
   view: ['admin'] as UserRole[],
