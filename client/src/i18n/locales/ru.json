@@ -419,7 +419,12 @@
     "lightTheme": "Светлая тема",
     "darkTheme": "Тёмная тема",
     "systemTheme": "Системная тема",
-    "appearance": "Внешний вид"
+    "appearance": "Внешний вид",
+    "profile": "Профиль",
+    "notifications": "Уведомления",
+    "emailNotifications": "Email уведомления",
+    "browserNotifications": "Уведомления в браузере",
+    "soundNotifications": "Звуковые уведомления"
   },
   "assignments": {
     "title": "Задания",
