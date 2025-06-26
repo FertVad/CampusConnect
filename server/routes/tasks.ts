@@ -497,7 +497,7 @@ app.patch('/api/tasks/:id/status', authenticateUser, async (req, res) => {
     }
     
     // Получаем текущую задачу
-    const task = await getStorage().getTaskById(taskId);
+    const task = await getStorage().getTask(taskId);
     
     if (!task) {
       return res.status(404).json({ message: "Task not found" });
