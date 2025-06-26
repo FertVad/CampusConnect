@@ -106,7 +106,7 @@ export function useTasks() {
 
   const updateTaskStatusMutation = useMutation({
     mutationFn: async ({ id, status }: { id: number; status: string }) => {
-      const result = await apiRequest(`/api/tasks/${id}`, 'PUT', { status });
+      const result = await apiRequest(`/api/tasks/${id}/status`, 'PATCH', { status });
       return result;
     },
     onSuccess: () => {
