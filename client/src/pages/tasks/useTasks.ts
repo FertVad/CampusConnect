@@ -48,8 +48,13 @@ export function useTasks() {
     staleTime: 1000 * 60 * 5,
   });
 
+  const tasksEndpoint =
+    user?.role === 'admin' || user?.role === 'director'
+      ? '/api/tasks'
+      : '/api/tasks/my';
+
   const { data: tasks, isLoading: tasksLoading } = useQuery<Task[]>({
-    queryKey: ['/api/tasks'],
+    queryKey: [tasksEndpoint],
     enabled: !!user,
   });
 
@@ -83,7 +88,7 @@ export function useTasks() {
       return result;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/tasks'] });
+      queryClient.invalidateQueries({ queryKey: [tasksEndpoint] });
       toast({
         title: t('task.created_success'),
         description: t('task.created_description'),
@@ -105,7 +110,7 @@ export function useTasks() {
       return result;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/tasks'] });
+      queryClient.invalidateQueries({ queryKey: [tasksEndpoint] });
       // also refresh notifications when status changes
       queryClient.invalidateQueries({ queryKey: ['/api/notifications'] });
       setTimeout(() => {
@@ -132,7 +137,7 @@ export function useTasks() {
       return result;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/tasks'] });
+      queryClient.invalidateQueries({ queryKey: [tasksEndpoint] });
       toast({
         title: t('task.deleted_success'),
         description: t('task.deleted_description'),
@@ -163,7 +168,7 @@ export function useTasks() {
       return result;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/tasks'] });
+      queryClient.invalidateQueries({ queryKey: [tasksEndpoint] });
       // invalidate notifications so new updates appear instantly
       queryClient.invalidateQueries({ queryKey: ['/api/notifications'] });
       // perform a delayed refetch to ensure UI is up to date
