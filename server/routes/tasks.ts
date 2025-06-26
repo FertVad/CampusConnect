@@ -32,7 +32,7 @@ app.get('/api/tasks', authenticateUser, requireRole(taskPermissions.view), async
 app.get('/api/tasks/my', authenticateUser, requireRole(['teacher', 'student', 'admin', 'director']), async (req, res) => {
   try {
     const userId = req.user!.id;
-    const tasks = await getStorage().getTasksByUser(userId);
+    const tasks = await getStorage().getTasksByExecutor(userId);
     res.json(tasks);
   } catch (error) {
     logger.error('Error fetching user tasks:', error);
@@ -487,7 +487,7 @@ app.get('/api/users/:id/notifications', authenticateUser, async (req, res) => {
 // PATCH /api/tasks/:id/status - обновить статус задачи
 // PATCH /api/tasks/:id/status - update task status
 // Allowed roles: admin, teacher, student, director
-app.patch('/api/tasks/:id/status', authenticateUser, requireRole(taskPermissions.update), async (req, res) => {
+app.patch('/api/tasks/:id/status', authenticateUser, async (req, res) => {
   try {
     const taskId = req.params.id;
     const { status } = req.body;
@@ -503,10 +503,10 @@ app.patch('/api/tasks/:id/status', authenticateUser, requireRole(taskPermissions
       return res.status(404).json({ message: "Task not found" });
     }
     
-    const { id: currentUserId, role: currentUserRole } = req.user!;
-    // Проверяем права доступа: только админ, клиент или исполнитель задачи могут менять статус
-    if (currentUserRole !== 'admin' && currentUserId !== task.clientId && currentUserId !== task.executorId) {
-      return res.status(403).json({ message: "Forbidden" });
+    const user = req.user!;
+    // Check: executor permission OR god powers
+    if (!(task.executorId === user.id || ['admin', 'director'].includes(user.role))) {
+      return res.status(403).json({ error: "Only executor can change task status" });
     }
     
     // Обновляем статус задачи

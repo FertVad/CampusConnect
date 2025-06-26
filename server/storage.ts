@@ -1385,10 +1385,7 @@ export class MemStorage implements IStorage {
   }
 
   async getTasksByUser(userId: string): Promise<Task[]> {
-    const clientTasks = await this.getTasksByClient(userId);
-    const executorTasks = await this.getTasksByExecutor(userId);
-    const all = [...clientTasks, ...executorTasks];
-    return all.filter((task, index, self) => self.findIndex(t => t.id === task.id) === index);
+    return this.getTasksByExecutor(userId);
   }
   
   async getTasksByStatus(status: string): Promise<Task[]> {
