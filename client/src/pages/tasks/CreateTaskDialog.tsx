@@ -16,15 +16,28 @@ import { TaskFormData, type UserSummary } from './useTasks';
 import React from 'react';
 
 interface Props {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  form: UseFormReturn<TaskFormData>;
-  loading: boolean;
-  users: UserSummary[] | undefined;
-  onSubmit?: (data: TaskFormData) => void;
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  form: UseFormReturn<TaskFormData>
+  loading: boolean
+  users: UserSummary[] | undefined
+  onSubmit?: (data: TaskFormData) => void
+  /**
+   * Optional className applied to the trigger button. Allows consumers to
+   * adjust size or other styles depending on the layout.
+   */
+  triggerClassName?: string
 }
 
-export default function CreateTaskDialog({ open, onOpenChange, form, loading, users, onSubmit }: Props) {
+export default function CreateTaskDialog({
+  open,
+  onOpenChange,
+  form,
+  loading,
+  users,
+  onSubmit,
+  triggerClassName,
+}: Props) {
   const { t } = useTranslation();
 
 
@@ -40,9 +53,10 @@ export default function CreateTaskDialog({ open, onOpenChange, form, loading, us
       <DialogTrigger asChild>
         <Button
           onClick={() => {
-            onOpenChange(true);
+            onOpenChange(true)
           }}
           type="button"
+          className={triggerClassName}
         >
           {t('task.create_new')}
         </Button>
