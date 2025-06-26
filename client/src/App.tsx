@@ -14,7 +14,6 @@ import Users from "@/pages/users/Users";
 import UserDetail from "@/pages/users/UserDetail";
 
 import { MainLayout } from "@/components/layout/main-layout";
-// import StudentExample from "@/components/students/StudentExample";
 
 // Wrap components with MainLayout for protected routes
 const ProtectedDashboard = () => (
@@ -119,12 +118,6 @@ const ProtectedUserDetail = () => (
   </MainLayout>
 );
 
-// Student Example component for testing
-// const ProtectedStudentExample = () => (
-//   <MainLayout>
-//     <StudentExample />
-//   </MainLayout>
-// );
 
 function App() {
   const { user, isLoading } = useAuth();
@@ -180,7 +173,6 @@ function App() {
       {/** <ProtectedRoute path="/students/:id" component={ProtectedStudentDetail} /> **/}
 
       {/* Example routes для тестирования компонентов */}
-      {/** <ProtectedRoute path="/examples/students" component={ProtectedStudentExample} /> **/}
       
       {/* Fallback to 404 */}
       <Route component={NotFound} />
