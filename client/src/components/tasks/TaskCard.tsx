@@ -43,15 +43,19 @@ const TaskCard = ({ task, onStatusChange, onEditClick, onDeleteClick, onViewDeta
       onClick={handleCardClick}
     >
       <CardHeader className="pb-2 space-y-2">
-        <div className="flex justify-between items-start">
-          <CardTitle className="text-lg break-words" title={task.title}>
-            {task.title}
-          </CardTitle>
-          <div className="flex gap-1">
-            <PriorityBadge priority={task.priority} />
-            <StatusBadge status={task.status} />
-          </div>
+        <div className="flex gap-1 flex-wrap">
+          <PriorityBadge
+            priority={task.priority}
+            className="px-2 py-0.5 text-[10px]"
+          />
+          <StatusBadge
+            status={task.status}
+            className="px-2 py-0.5 text-[10px]"
+          />
         </div>
+        <CardTitle className="text-lg break-words" title={task.title}>
+          {task.title}
+        </CardTitle>
       </CardHeader>
       <CardContent className="flex-grow">
         <p

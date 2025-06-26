@@ -1,11 +1,13 @@
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 import { useTranslation } from 'react-i18next';
 
 interface StatusBadgeProps {
   status: string;
+  className?: string;
 }
 
-export function StatusBadge({ status }: StatusBadgeProps) {
+export function StatusBadge({ status, className }: StatusBadgeProps) {
   const { t } = useTranslation();
   const map: Record<string, { label: string; className: string }> = {
     new: {
@@ -31,7 +33,7 @@ export function StatusBadge({ status }: StatusBadgeProps) {
   };
   const info = map[status];
   return (
-    <Badge variant="outline" className={info?.className}>
+    <Badge variant="outline" className={cn(info?.className, className)}>
       {info ? info.label : status}
     </Badge>
   );
@@ -39,9 +41,10 @@ export function StatusBadge({ status }: StatusBadgeProps) {
 
 interface PriorityBadgeProps {
   priority: string;
+  className?: string;
 }
 
-export function PriorityBadge({ priority }: PriorityBadgeProps) {
+export function PriorityBadge({ priority, className }: PriorityBadgeProps) {
   const { t } = useTranslation();
   const map: Record<string, { label: string; className: string }> = {
     high: {
@@ -62,7 +65,7 @@ export function PriorityBadge({ priority }: PriorityBadgeProps) {
   };
   const info = map[priority];
   return (
-    <Badge variant="outline" className={info?.className}>
+    <Badge variant="outline" className={cn(info?.className, className)}>
       {info ? info.label : priority}
     </Badge>
   );
