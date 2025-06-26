@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { apiRequest } from '@/lib/queryClient';
 import { supabase } from '@/lib/supabase';
-import type { Notification } from '@/types/notifications';
+import type { Notification } from '@shared/schema';
 
 export function useNotifications() {
   const queryClient = useQueryClient();
@@ -27,7 +27,7 @@ export function useNotifications() {
 
   // Mark a single notification as read
   const markAsReadMutation = useMutation({
-    mutationFn: async (notificationId: number) => {
+    mutationFn: async (notificationId: string) => {
       await apiRequest(`/api/notifications/${notificationId}/read`, 'PATCH');
     },
     onSuccess: () => {
@@ -47,7 +47,7 @@ export function useNotifications() {
 
   // Delete a notification
   const deleteNotificationMutation = useMutation({
-    mutationFn: async (notificationId: number) => {
+    mutationFn: async (notificationId: string) => {
       await apiRequest(`/api/notifications/${notificationId}`, 'DELETE');
     },
     onSuccess: () => {

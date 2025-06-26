@@ -17,17 +17,8 @@ import { getTaskStatusLabel } from '@/lib/taskStatus';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 
-// Определение типа для уведомлений
-export interface Notification {
-  id: number;
-  userId: string;
-  title: string;
-  content: string;
-  isRead: boolean;
-  createdAt: string;
-  relatedId?: number | null;
-  relatedType?: string | null;
-}
+import type { Notification } from '@shared/schema';
+
 
 export const NotificationBell = () => {
   const { t, i18n } = useTranslation();
@@ -55,7 +46,7 @@ export const NotificationBell = () => {
   const unreadCount = notifications.filter(notification => !notification.isRead).length;
 
   // Обработчик для отметки уведомления как прочитанное
-  const markAsRead = async (id: number) => {
+  const markAsRead = async (id: string) => {
     try {
       await apiRequest(`/api/notifications/${id}/read`, 'PATCH');
       queryClient.invalidateQueries({ queryKey: ['/api/notifications'] });

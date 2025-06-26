@@ -1,7 +1,7 @@
 import React, { useCallback, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
-import { Notification } from '@/types/notifications';
+import { Notification } from '@shared/schema';
 import StudentCard, { Student, UpcomingLesson } from '@/components/students/StudentCard';
 import { Task } from '@/components/students/StudentTaskItem';
 
