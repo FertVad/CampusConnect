@@ -861,7 +861,7 @@ export class SupabaseStorage {
   }
 
   async getTasksByUser(userId: string): Promise<(Task & { client?: UserSummary; executor?: UserSummary })[]> {
-    return this.tasksRepo.getTasksByUser(userId);
+    return this.tasksRepo.getTasksByExecutor(userId);
   }
 
   async getTasksByStatus(status: string): Promise<Task[]> {
