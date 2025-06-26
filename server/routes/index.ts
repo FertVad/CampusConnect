@@ -226,7 +226,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   }
   registerNotificationRoutes(app, ctx);
-  registerUserPreferencesRoutes(app, ctx);
+
+  console.log('🔍 [DEBUG] About to register user preferences routes...');
+  try {
+    if (typeof registerUserPreferencesRoutes !== 'function') {
+      throw new Error('registerUserPreferencesRoutes is not a function');
+    }
+    registerUserPreferencesRoutes(app, ctx);
+    console.log('✅ [DEBUG] User preferences routes registered successfully');
+  } catch (error) {
+    console.error('❌ [CRITICAL] User preferences routes registration FAILED:', error);
+    if (error && (error as any).stack) {
+      console.error('❌ [STACK]', (error as any).stack);
+    }
+  }
 
   // Временное отключение второстепенных модулей
   registerRequestRoutes(app, ctx);
