@@ -47,6 +47,10 @@ const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const tasksEndpoint =
+    user?.role === 'admin' || user?.role === 'director'
+      ? '/api/tasks'
+      : '/api/tasks/my';
   const [isUpdating, setIsUpdating] = useState(false);
   
 
@@ -87,7 +91,7 @@ const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
 
       // Инвалидация кэша задач
       queryClient.invalidateQueries({ queryKey: ['/api/users', userId, 'tasks'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/tasks'] });
+      queryClient.invalidateQueries({ queryKey: [tasksEndpoint] });
       
       // Вызов пользовательского обработчика
       if (onStatusChange) {
