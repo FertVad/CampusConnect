@@ -52,13 +52,29 @@ export function MainLayout({ children, title, subtitle }: MainLayoutProps) {
   const getPageTitle = () => {
     // Если передан заголовок через параметр - используем его
     if (title) return title;
-    
-    // Иначе генерируем из текущего пути
-    const path = location === "/" ? "dashboard" : location.substring(1);
-    
-    // Капитализируем первую букву и заменяем дефисы пробелами
-    const generatedTitle = path.charAt(0).toUpperCase() + path.slice(1).replace(/-/g, ' ');
-    
+
+    // Определяем первый сегмент пути
+    const segment = location === '/' ? 'dashboard' : location.split('/')[1];
+
+    // Карта ключей переводов для заголовков страниц
+    const map: Record<string, string> = {
+      dashboard: 'dashboard.title',
+      schedule: 'schedule.title',
+      assignments: 'assignments.title',
+      chat: 'chat.title',
+      tasks: 'common.taskManager',
+      users: 'users.title',
+      settings: 'settings.title',
+      requests: 'requests.title',
+      grades: 'grades.title',
+    };
+
+    const key = map[segment];
+    if (key) return t(key);
+
+    // Фолбэк - генерируем заголовок из пути
+    const generatedTitle =
+      segment.charAt(0).toUpperCase() + segment.slice(1).replace(/-/g, ' ');
     return generatedTitle;
   };
   
@@ -68,7 +84,9 @@ export function MainLayout({ children, title, subtitle }: MainLayoutProps) {
       <div style={{ zIndex: 50 }} className="fixed top-0 left-0 right-0 glass-sidebar dark:bg-sidebar-background p-1 shadow-md md:ml-16 lg:ml-[4.5rem] border-b border-sidebar-border">
         <div className="flex items-center justify-between px-2">
           <div className="flex items-center h-14 pl-6">
-            <h2 className="font-semibold text-lg text-sidebar-foreground">{getPageTitle()}</h2>
+            <h2 className="font-semibold text-base md:text-lg text-sidebar-foreground">
+              {getPageTitle()}
+            </h2>
             {subtitle && <p className="text-sm text-sidebar-foreground ml-2 opacity-70">{subtitle}</p>}
           </div>
           <div className="flex items-center gap-4">

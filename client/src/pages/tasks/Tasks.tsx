@@ -119,8 +119,7 @@ const TasksPage = () => {
 
   return (
     <div className="container py-8 px-8">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold font-heading">{t('task.manager')}</h1>
+      <div className="flex justify-end items-center mb-6">
         {canCreateTask && (
           <CreateTaskDialog
             open={createDialogOpen}
