@@ -119,18 +119,6 @@ const TasksPage = () => {
 
   return (
     <div className="container py-8 px-8">
-      <div className="flex justify-end items-center mb-6">
-        {canCreateTask && (
-          <CreateTaskDialog
-            open={createDialogOpen}
-            onOpenChange={setCreateDialogOpen}
-            form={form}
-            loading={createTaskMutation.isPending}
-            users={users}
-            onSubmit={handleCreateTask}
-          />
-        )}
-      </div>
 
         {/* Диалог редактирования задачи */}
         <EditTaskDialog
@@ -160,9 +148,8 @@ const TasksPage = () => {
           onDelete={handleDeleteClick}
         />
 
-      {/* Фильтры */}
-      <div className="mb-6">
-        {/* Mobile Dropdown */}
+      {/* Filters and create button */}
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <div className="md:hidden">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -248,7 +235,19 @@ const TasksPage = () => {
             <PauseCircle className="h-4 w-4" />
             {t('task.status.on_hold')}
           </Button>
-        </div>
+      </div>
+
+        {canCreateTask && (
+          <CreateTaskDialog
+            open={createDialogOpen}
+            onOpenChange={setCreateDialogOpen}
+            form={form}
+            loading={createTaskMutation.isPending}
+            users={users}
+            onSubmit={handleCreateTask}
+            triggerClassName="h-9 px-3 text-sm md:h-11 md:px-4"
+          />
+        )}
       </div>
 
       {/* Содержимое */}
