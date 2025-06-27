@@ -6,6 +6,10 @@ Follow the steps below to configure the connection and run the app locally.
 ## 1. Install dependencies
 
 Run `npm install` to install all server and client packages.
+When switching between macOS and Linux you must reinstall dependencies so that
+the platform specific **esbuild** binary matches your system. Remove the
+`node_modules` folder and run `npm ci` again whenever you move the project
+between different operating systems.
 
 ## 2. Create a Supabase project
 
