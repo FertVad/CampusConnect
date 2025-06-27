@@ -28,11 +28,9 @@ export const setupRealtimeSubscription = async (callback: () => void) => {
     }
 
     if (!session) {
-      console.log('No active session found, skipping realtime subscription');
       return null;
     }
 
-    console.log('Session found, setting up realtime subscription');
     callback();
 
     return session;

@@ -5,27 +5,19 @@ import type { RouteContext } from "./index";
 export function registerMessageRoutes(app: Express, { authenticateUser }: RouteContext) {
   // Chat routes
   app.get('/api/users/chat', authenticateUser, async (req, res) => {
-    console.log('🔍 [DEBUG] /api/users/chat called');
-    console.log('🔍 [DEBUG] req.user:', req.user);
 
     try {
       if (!req.user) {
-        console.log('❌ [ERROR] No user in request');
         return res.status(401).json({ message: "Unauthorized" });
       }
 
-      console.log('🔍 [DEBUG] Getting users from storage...');
       const users = await getStorage().getUsers();
-      console.log('🔍 [DEBUG] Users count:', users.length);
 
       const filteredUsers = users.filter(user => user.id !== req.user?.id);
-      console.log('🔍 [DEBUG] Filtered users count:', filteredUsers.length);
 
       const sanitizedUsers = filteredUsers.map(({ password, ...rest }) => rest);
-      console.log('✅ [SUCCESS] Returning users for chat');
       res.json(sanitizedUsers);
     } catch (error) {
-      console.log('🚨 [ERROR] Chat endpoint error:', error);
       res.status(500).json({ message: "Server error" });
     }
   });
@@ -76,11 +68,4 @@ export function registerMessageRoutes(app: Express, { authenticateUser }: RouteC
     }
   });
 
-  // 🔍 [DEBUG] Log all registered routes for verification
-  console.log('🔍 [DEBUG] All registered routes:');
-  (app as any)._router.stack.forEach((middleware: { route?: { path: string } }, index: number) => {
-    if (middleware.route) {
-      console.log(`Route ${index}: ${middleware.route.path}`);
-    }
-  });
 }

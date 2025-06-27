@@ -101,21 +101,6 @@ async function getDefaultTeacherId(): Promise<string> {
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
 
-  // Global middleware to trace chat and user requests
-  app.use('/api/users/chat', (req, res, next) => {
-    console.log('🚨 [GLOBAL] /api/users/chat intercepted!');
-    console.log('🚨 [GLOBAL] Method:', req.method);
-    console.log('🚨 [GLOBAL] Headers:', req.headers);
-    console.log('🚨 [GLOBAL] User:', (req as any).user);
-    next();
-  });
-
-  // Log all /api/users requests
-  app.use('/api/users', (req, _res, next) => {
-    console.log('🔍 [GLOBAL] /api/users/* hit:', req.path);
-    console.log('🔍 [GLOBAL] Full URL:', req.url);
-    next();
-  });
   
   // Set up WebSockets for real-time chat
   const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
@@ -214,10 +199,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   registerTaskRoutes(app, ctx);
 
   // Основные разделы
-  console.log('🔍 [DEBUG] About to register assignment routes...');
   try {
     registerAssignmentRoutes(app, ctx);
-    console.log('✅ [DEBUG] Assignment routes registered successfully');
   } catch (error) {
     console.error('❌ [CRITICAL] Assignment routes registration FAILED:', error);
     // error may not have stack if it's not Error; guard
@@ -227,13 +210,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }
   registerNotificationRoutes(app, ctx);
 
-  console.log('🔍 [DEBUG] About to register user preferences routes...');
   try {
     if (typeof registerUserPreferencesRoutes !== 'function') {
       throw new Error('registerUserPreferencesRoutes is not a function');
     }
     registerUserPreferencesRoutes(app, ctx);
-    console.log('✅ [DEBUG] User preferences routes registered successfully');
   } catch (error) {
     console.error('❌ [CRITICAL] User preferences routes registration FAILED:', error);
     if (error && (error as any).stack) {
@@ -247,26 +228,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // registerActivityLogRoutes(app, ctx);
   // registerCurriculumRoutes(app, ctx);
 
-  // Lightweight Supabase-based endpoints
-
-  app.get('/api/debug/permissions', authenticateUser, async (req, res) => {
-    if (!req.user) {
-      return res.status(401).json({ message: 'Not authenticated' });
-    }
-
-    res.json({
-      user_id: req.user.id,
-      email: req.user.email,
-      role_from_jwt: (req.user as any).user_metadata?.role,
-      app_metadata: (req.user as any).app_metadata,
-      user_metadata: (req.user as any).user_metadata,
-      permissions: {
-        can_access_users: (req.user as any).user_metadata?.role === 'admin',
-        can_create_requests: true,
-        can_view_subjects: true,
-      },
-    });
-  });
 
   // Handle unknown /api routes with JSON 404
   app.use('/api', (_req, res) => {
