@@ -8,6 +8,7 @@ import {
   CardContent
 } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Mail, Phone, User, GraduationCap, Settings as SettingsIcon } from 'lucide-react';
 import {
   Accordion,
   AccordionItem,
@@ -27,6 +28,13 @@ export default function Settings() {
   const [editOpen, setEditOpen] = React.useState(false);
   const { preferences, updatePreferences } = useUserPreferences();
 
+  const roleIcons: Record<string, JSX.Element> = {
+    student: <User className="h-3.5 w-3.5 mr-1" />,
+    teacher: <GraduationCap className="h-3.5 w-3.5 mr-1" />,
+    admin: <SettingsIcon className="h-3.5 w-3.5 mr-1" />,
+    director: <SettingsIcon className="h-3.5 w-3.5 mr-1" />,
+  };
+
   const handleToggle = (field: keyof UserPreferences) => (value: boolean) => {
     updatePreferences({ [field]: value });
   };
@@ -36,7 +44,7 @@ export default function Settings() {
       <h1 className="text-3xl font-bold mb-6">{t('settings.title')}</h1>
 
       {user && (
-        <Card className="mb-6 shadow-sm">
+        <Card className="mb-6 shadow-sm max-w-md mx-auto">
           <CardContent className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4">
             <div className="flex items-center gap-4">
               <Avatar className="h-16 w-16">
@@ -45,14 +53,24 @@ export default function Settings() {
                   {user.lastName.charAt(0)}
                 </AvatarFallback>
               </Avatar>
-              <div>
+              <div className="space-y-1">
                 <h2 className="text-xl font-semibold">
                   {user.firstName} {user.lastName}
                 </h2>
-                <p className="text-sm text-muted-foreground">{user.email}</p>
-                <p className="text-sm text-muted-foreground">
+                <div className="flex items-center text-sm text-muted-foreground">
+                  <Mail className="mr-2 h-4 w-4" />
+                  {user.email}
+                </div>
+                {user.phone && (
+                  <div className="flex items-center text-sm text-muted-foreground">
+                    <Phone className="mr-2 h-4 w-4" />
+                    {user.phone}
+                  </div>
+                )}
+                <div className="flex items-center text-sm text-muted-foreground">
+                  {roleIcons[user.role]}
                   {t(`roles.${user.role}`)}
-                </p>
+                </div>
               </div>
             </div>
             <Button size="sm" onClick={() => setEditOpen(true)}>
@@ -64,8 +82,7 @@ export default function Settings() {
 
       <Accordion
         type="multiple"
-        defaultValue={["notifications"]}
-        className="space-y-4 max-w-md"
+        className="space-y-4 max-w-md mx-auto"
       >
 
         <AccordionItem value="notifications" className="border-none">
