@@ -18,7 +18,7 @@ import { ThemeToggle } from '@/components/theme/theme-toggle';
 import { Switch } from '@/components/ui/switch';
 import EditUserProfileModal from '@/components/users/EditUserProfileModal';
 import { useAuth } from '@/hooks/use-auth';
-import { useUserPreferences } from '@/hooks/useUserPreferences';
+import { useUserPreferences, UserPreferences } from '@/hooks/useUserPreferences';
 
 export default function Settings() {
   const { t } = useTranslation();
@@ -26,7 +26,7 @@ export default function Settings() {
   const [editOpen, setEditOpen] = React.useState(false);
   const { preferences, updatePreferences } = useUserPreferences();
 
-  const handleToggle = (field: keyof typeof preferences) => (value: boolean) => {
+  const handleToggle = (field: keyof UserPreferences) => (value: boolean) => {
     updatePreferences({ [field]: value });
   };
 
