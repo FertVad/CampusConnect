@@ -7,6 +7,7 @@ import {
   CardTitle,
   CardContent
 } from '@/components/ui/card';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
   Accordion,
   AccordionItem,
@@ -34,53 +35,38 @@ export default function Settings() {
     <div className="container mx-auto py-6">
       <h1 className="text-3xl font-bold mb-6">{t('settings.title')}</h1>
 
+      {user && (
+        <Card className="mb-6 shadow-sm">
+          <CardContent className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4">
+            <div className="flex items-center gap-4">
+              <Avatar className="h-16 w-16">
+                <AvatarFallback>
+                  {user.firstName.charAt(0)}
+                  {user.lastName.charAt(0)}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <h2 className="text-xl font-semibold">
+                  {user.firstName} {user.lastName}
+                </h2>
+                <p className="text-sm text-muted-foreground">{user.email}</p>
+                <p className="text-sm text-muted-foreground">
+                  {t(`roles.${user.role}`)}
+                </p>
+              </div>
+            </div>
+            <Button size="sm" onClick={() => setEditOpen(true)}>
+              {t('auth.profile.updateProfile')}
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
       <Accordion
         type="multiple"
-        defaultValue={["profile"]}
+        defaultValue={["notifications"]}
         className="space-y-4 max-w-md"
       >
-        <AccordionItem value="profile" className="border-none">
-          <Card>
-            <CardHeader>
-              <AccordionTrigger className="w-full text-left">
-                <CardTitle>{t('settings.myProfile')}</CardTitle>
-              </AccordionTrigger>
-            </CardHeader>
-            <AccordionContent>
-              <CardContent className="space-y-2">
-                {user && (
-                  <>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">
-                        {t('auth.profile.firstName', 'Name')}
-                      </span>
-                      <span className="font-medium">
-                        {user.firstName} {user.lastName}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">
-                        {t('user.email', 'Email')}
-                      </span>
-                      <span className="font-medium">{user.email}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">
-                        {t('auth.profile.role', 'Role')}
-                      </span>
-                      <span className="font-medium">
-                        {t(`roles.${user.role}`)}
-                      </span>
-                    </div>
-                    <Button size="sm" onClick={() => setEditOpen(true)}>
-                      {t('auth.profile.updateProfile')}
-                    </Button>
-                  </>
-                )}
-              </CardContent>
-            </AccordionContent>
-          </Card>
-        </AccordionItem>
 
         <AccordionItem value="notifications" className="border-none">
           <Card>
