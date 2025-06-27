@@ -135,7 +135,8 @@ export default function Settings() {
         </div>
       </CardContent>
         </Card>
-      
+      )}
+
       {user && editOpen && (
         <EditUserProfileModal
           isOpen={editOpen}
