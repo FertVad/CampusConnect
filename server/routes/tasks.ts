@@ -369,7 +369,6 @@ app.put('/api/tasks/:id', authenticateUser, requireRole(taskPermissions.update),
         relatedType: 'task'
       });
 
-      console.log(`[INFO] Notification created for task ${taskId} status change: ${task.status} -> ${taskData.status}`);
     }
     
     res.json(updatedTask);
@@ -535,7 +534,6 @@ app.patch('/api/tasks/:id/status', authenticateUser, async (req, res) => {
         relatedType: 'task'
       });
 
-      console.log(`[INFO] Notification created for task ${taskId} status change: ${task.status} -> ${status}`);
     }
     
     res.json(updatedTask);

@@ -178,28 +178,6 @@ export function setupAuth(app: Express) {
     res.json(responseUser);
   });
 
-  app.get("/api/debug/user-sync", verifySupabaseJwt, async (req, res) => {
-    if (!req.user) {
-      return res.status(401).json({ message: "Not authenticated" });
-    }
-
-    const authUser = req.user;
-
-    const { data: publicUser, error } = await supabase
-      .from("users")
-      .select("*")
-      .eq("id", authUser.id)
-      .single();
-
-    res.json({
-      user_exists: !!authUser,
-      user_id: authUser.id,
-      user_email: authUser.email,
-      public_user_exists: !!publicUser,
-      public_user_data: publicUser,
-      error: error?.message,
-    });
-  });
 }
 
 export const authRoutes = {
