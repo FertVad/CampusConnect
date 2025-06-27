@@ -404,6 +404,8 @@
     "viewFull": "Просмотреть полное расписание"
   },
   "settings": {
+    "myProfile": "Мой профиль",
+    "languageAndTheme": "Язык и тема",
     "language": "Язык",
     "languages": {
       "ru": "Русский",

@@ -561,6 +561,8 @@
   },
   "settings": {
     "title": "Settings",
+    "myProfile": "My Profile",
+    "languageAndTheme": "Language & Theme",
     "general": "General",
     "appearance": "Appearance",
     "profile": "Profile",
