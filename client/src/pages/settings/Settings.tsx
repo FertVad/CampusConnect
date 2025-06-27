@@ -8,6 +8,7 @@ import {
   CardContent
 } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 import {
   Mail,
   Phone,
@@ -60,23 +61,15 @@ export default function Settings() {
                     {user.lastName.charAt(0)}
                   </AvatarFallback>
                 </Avatar>
-                <div className="space-y-1">
-                  <h2 className="text-xl font-semibold">
+                <div>
+                  <CardTitle className="text-xl">
                     {user.firstName} {user.lastName}
-                  </h2>
-                  <div className="flex items-center text-sm text-muted-foreground">
-                    <Mail className="mr-2 h-4 w-4" />
-                    {user.email}
-                  </div>
-                  {user.phone && (
-                    <div className="flex items-center text-sm text-muted-foreground">
-                      <Phone className="mr-2 h-4 w-4" />
-                      {user.phone}
-                    </div>
-                  )}
-                  <div className="flex items-center text-sm text-muted-foreground">
-                    {roleIcons[user.role]}
-                    {t(`roles.${user.role}`)}
+                  </CardTitle>
+                  <div className="flex flex-wrap gap-2 mt-1">
+                    <Badge variant="secondary" className="flex items-center gap-1 text-sm">
+                      {roleIcons[user.role]}
+                      {t(`roles.${user.role}`)}
+                    </Badge>
                   </div>
                 </div>
               </div>
@@ -88,6 +81,18 @@ export default function Settings() {
           </CardHeader>
           <CardContent>
         <div className="space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <p className="text-sm text-muted-foreground">{t('user.email', 'Электронная почта')}</p>
+              <p className="font-medium">{user.email}</p>
+            </div>
+            {user.phone && (
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground">{t('user.phone', 'Телефон')}</p>
+                <p className="font-medium">{user.phone}</p>
+              </div>
+            )}
+          </div>
           <Accordion type="multiple">
             <AccordionItem value="notifications" className="pt-4 border-t">
               <AccordionTrigger className="w-full text-left">
