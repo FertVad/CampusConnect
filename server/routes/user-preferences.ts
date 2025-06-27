@@ -4,6 +4,7 @@ import type { RouteContext } from './index';
 import { insertUserPreferencesSchema } from '@shared/schema';
 import { updateUserPreferencesSchema } from '../types/user-preferences';
 import { z } from 'zod';
+import { logger } from '../utils/logger';
 
 export function registerUserPreferencesRoutes(app: Express, { authenticateUser }: RouteContext) {
   app.get('/api/user-preferences', authenticateUser, async (req, res) => {
@@ -21,8 +22,13 @@ export function registerUserPreferencesRoutes(app: Express, { authenticateUser }
         };
       }
       res.json(prefs);
-    } catch {
-      res.status(500).json({ message: 'Failed to fetch preferences' });
+    } catch (error) {
+      logger.error('Error fetching user preferences:', error);
+      const errorId = (error as any)?.id;
+      res.status(500).json({
+        message: 'Failed to fetch preferences',
+        ...(errorId ? { errorId } : {})
+      });
     }
   });
 
@@ -40,7 +46,12 @@ export function registerUserPreferencesRoutes(app: Express, { authenticateUser }
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: 'Validation error', errors: error.errors });
       }
-      res.status(500).json({ message: 'Failed to create preferences' });
+      logger.error('Error creating user preferences:', error);
+      const errorId = (error as any)?.id;
+      res.status(500).json({
+        message: 'Failed to create preferences',
+        ...(errorId ? { errorId } : {})
+      });
     }
   });
 
@@ -59,7 +70,12 @@ export function registerUserPreferencesRoutes(app: Express, { authenticateUser }
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: 'Validation error', errors: error.errors });
       }
-      res.status(500).json({ message: 'Failed to update preferences' });
+      logger.error('Error updating user preferences:', error);
+      const errorId = (error as any)?.id;
+      res.status(500).json({
+        message: 'Failed to update preferences',
+        ...(errorId ? { errorId } : {})
+      });
     }
   });
 }

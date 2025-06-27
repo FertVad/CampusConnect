@@ -55,6 +55,22 @@ const { port } = server.address();
     data = await resp.json();
     assert.strictEqual(data.notificationsEnabled, true);
 
+    // Force a failing database call to verify logging
+    const originalError = logger.error;
+    const errors = [];
+    logger.error = (...args) => { errors.push(args); };
+    storage.getUserPreferences = async () => {
+      throw { id: 'FAIL1', message: 'db failure' };
+    };
+
+    resp = await fetch(`http://localhost:${port}/api/user-preferences`);
+    assert.strictEqual(resp.status, 500);
+    data = await resp.json();
+    assert.strictEqual(data.message, 'Failed to fetch preferences');
+    assert.strictEqual(data.errorId, 'FAIL1');
+    assert.ok(errors.length > 0);
+    logger.error = originalError;
+
     logger.info('User preferences API tests passed');
   } finally {
     server.close();
