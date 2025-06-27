@@ -15,6 +15,7 @@ export interface AuthUser {
   firstName: string;
   lastName: string;
   email: string;
+  phone?: string;
   role: UserRole;
 }
 import { useToast } from "@/hooks/use-toast";
