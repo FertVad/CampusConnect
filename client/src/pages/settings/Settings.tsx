@@ -8,7 +8,14 @@ import {
   CardContent
 } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Mail, Phone, User, GraduationCap, Settings as SettingsIcon } from 'lucide-react';
+import {
+  Mail,
+  Phone,
+  User,
+  GraduationCap,
+  Settings as SettingsIcon,
+  Edit
+} from 'lucide-react';
 import {
   Accordion,
   AccordionItem,
@@ -41,102 +48,94 @@ export default function Settings() {
 
   return (
     <div className="container mx-auto py-6">
-      <h1 className="text-3xl font-bold mb-6">{t('settings.title')}</h1>
 
       {user && (
-        <Card className="mb-6 shadow-sm max-w-md mx-auto">
-          <CardContent className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4">
-            <div className="flex items-center gap-4">
-              <Avatar className="h-16 w-16">
-                <AvatarFallback>
-                  {user.firstName.charAt(0)}
-                  {user.lastName.charAt(0)}
-                </AvatarFallback>
-              </Avatar>
-              <div className="space-y-1">
-                <h2 className="text-xl font-semibold">
-                  {user.firstName} {user.lastName}
-                </h2>
-                <div className="flex items-center text-sm text-muted-foreground">
-                  <Mail className="mr-2 h-4 w-4" />
-                  {user.email}
-                </div>
-                {user.phone && (
+        <Card className="shadow-md hover:shadow-lg transition-shadow duration-300 max-w-md mx-auto">
+          <CardHeader className="pb-2">
+            <div className="flex justify-between items-start">
+              <div className="flex items-center space-x-4">
+                <Avatar className="h-16 w-16">
+                  <AvatarFallback>
+                    {user.firstName.charAt(0)}
+                    {user.lastName.charAt(0)}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="space-y-1">
+                  <h2 className="text-xl font-semibold">
+                    {user.firstName} {user.lastName}
+                  </h2>
                   <div className="flex items-center text-sm text-muted-foreground">
-                    <Phone className="mr-2 h-4 w-4" />
-                    {user.phone}
+                    <Mail className="mr-2 h-4 w-4" />
+                    {user.email}
                   </div>
-                )}
-                <div className="flex items-center text-sm text-muted-foreground">
-                  {roleIcons[user.role]}
-                  {t(`roles.${user.role}`)}
+                  {user.phone && (
+                    <div className="flex items-center text-sm text-muted-foreground">
+                      <Phone className="mr-2 h-4 w-4" />
+                      {user.phone}
+                    </div>
+                  )}
+                  <div className="flex items-center text-sm text-muted-foreground">
+                    {roleIcons[user.role]}
+                    {t(`roles.${user.role}`)}
+                  </div>
                 </div>
               </div>
+              <Button variant="outline" className="h-11" onClick={() => setEditOpen(true)}>
+                <Edit className="h-4 w-4 mr-1" />
+                {t('auth.profile.updateProfile')}
+              </Button>
             </div>
-            <Button size="sm" onClick={() => setEditOpen(true)}>
-              {t('auth.profile.updateProfile')}
-            </Button>
-          </CardContent>
-        </Card>
-      )}
-
-      <Accordion
-        type="multiple"
-        className="space-y-4 max-w-md mx-auto"
-      >
-
-        <AccordionItem value="notifications" className="border-none">
-          <Card>
-            <CardHeader>
+          </CardHeader>
+          <CardContent>
+        <div className="space-y-3">
+          <Accordion type="multiple">
+            <AccordionItem value="notifications" className="pt-4 border-t">
               <AccordionTrigger className="w-full text-left">
                 <CardTitle>{t('settings.notifications')}</CardTitle>
               </AccordionTrigger>
-            </CardHeader>
-            <AccordionContent>
-              <CardContent className="flex flex-col gap-4">
-                <div className="flex items-center justify-between">
-                  <span>{t('settings.emailNotifications')}</span>
-                  <Switch
-                    checked={preferences?.emailNotifications}
-                    onCheckedChange={handleToggle('emailNotifications')}
-                  />
+              <AccordionContent>
+                <div className="flex flex-col gap-4">
+                  <div className="flex items-center justify-between">
+                    <span>{t('settings.emailNotifications')}</span>
+                    <Switch
+                      checked={preferences?.emailNotifications}
+                      onCheckedChange={handleToggle('emailNotifications')}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>{t('settings.browserNotifications')}</span>
+                    <Switch
+                      checked={preferences?.browserNotifications}
+                      onCheckedChange={handleToggle('browserNotifications')}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>{t('settings.soundNotifications')}</span>
+                    <Switch
+                      checked={preferences?.soundNotifications}
+                      onCheckedChange={handleToggle('soundNotifications')}
+                    />
+                  </div>
                 </div>
-                <div className="flex items-center justify-between">
-                  <span>{t('settings.browserNotifications')}</span>
-                  <Switch
-                    checked={preferences?.browserNotifications}
-                    onCheckedChange={handleToggle('browserNotifications')}
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <span>{t('settings.soundNotifications')}</span>
-                  <Switch
-                    checked={preferences?.soundNotifications}
-                    onCheckedChange={handleToggle('soundNotifications')}
-                  />
-                </div>
-              </CardContent>
-            </AccordionContent>
-          </Card>
-        </AccordionItem>
+              </AccordionContent>
+            </AccordionItem>
 
-        <AccordionItem value="appearance" className="border-none">
-          <Card>
-            <CardHeader>
+            <AccordionItem value="appearance" className="pt-4 border-t">
               <AccordionTrigger className="w-full text-left">
                 <CardTitle>{t('settings.languageAndTheme')}</CardTitle>
               </AccordionTrigger>
-            </CardHeader>
-            <AccordionContent>
-              <CardContent className="flex items-center gap-4">
-                <LanguageSwitcher />
-                <ThemeToggle />
-              </CardContent>
-            </AccordionContent>
-          </Card>
-        </AccordionItem>
-      </Accordion>
-
+              <AccordionContent>
+                <div className="flex items-center gap-4">
+                  <LanguageSwitcher />
+                  <ThemeToggle />
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        </div>
+      </CardContent>
+        </Card>
+      
       {user && editOpen && (
         <EditUserProfileModal
           isOpen={editOpen}
