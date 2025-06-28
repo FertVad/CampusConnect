@@ -80,14 +80,14 @@ export default function Settings() {
           </CardHeader>
           <CardContent>
         <div className="space-y-3">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3">
             <div className="space-y-1">
               <p className="text-sm text-muted-foreground">{t('user.email', 'Электронная почта')}</p>
-              <p className="font-medium">{user.email}</p>
+              <p className="font-medium text-sm">{user.email}</p>
             </div>
             <div className="space-y-1">
               <p className="text-sm text-muted-foreground">{t('user.phone', 'Телефон')}</p>
-              <p className="font-medium">{user.phone || '—'}</p>
+              <p className="font-medium text-sm">{user.phone || '—'}</p>
             </div>
           </div>
         </div>
