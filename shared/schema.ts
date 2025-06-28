@@ -232,6 +232,11 @@ export const userPreferences = pgTable("user_preferences", {
   theme: varchar("theme", { length: 20 }).notNull().default('light'),
   language: varchar("language", { length: 10 }).notNull().default('en'),
   notificationsEnabled: boolean("notifications_enabled").notNull().default(true),
+  assignmentNotifications: boolean("assignment_notifications").notNull().default(true),
+  gradeNotifications: boolean("grade_notifications").notNull().default(true),
+  taskNotifications: boolean("task_notifications").notNull().default(true),
+  systemNotifications: boolean("system_notifications").notNull().default(true),
+  soundNotifications: boolean("sound_notifications").notNull().default(true),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
