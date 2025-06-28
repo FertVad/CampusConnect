@@ -85,12 +85,10 @@ export default function Settings() {
               <p className="text-sm text-muted-foreground">{t('user.email', 'Электронная почта')}</p>
               <p className="font-medium">{user.email}</p>
             </div>
-            {user.phone && (
-              <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">{t('user.phone', 'Телефон')}</p>
-                <p className="font-medium">{user.phone}</p>
-              </div>
-            )}
+            <div className="space-y-1">
+              <p className="text-sm text-muted-foreground">{t('user.phone', 'Телефон')}</p>
+              <p className="font-medium">{user.phone || '—'}</p>
+            </div>
           </div>
         </div>
       </CardContent>
@@ -102,7 +100,7 @@ export default function Settings() {
               <AccordionTrigger className="w-full text-left">
                 <CardTitle>{t('settings.notifications')}</CardTitle>
               </AccordionTrigger>
-              <AccordionContent>
+              <AccordionContent className="px-6">
                 <div className="flex flex-col gap-4">
                   <div className="flex items-center justify-between">
                     <span>{t('settings.emailNotifications')}</span>
@@ -137,7 +135,7 @@ export default function Settings() {
               <AccordionTrigger className="w-full text-left">
                 <CardTitle>{t('settings.languageAndTheme')}</CardTitle>
               </AccordionTrigger>
-              <AccordionContent>
+              <AccordionContent className="px-6">
                 <div className="flex items-center gap-4">
                   <LanguageSwitcher />
                   <ThemeToggle />
