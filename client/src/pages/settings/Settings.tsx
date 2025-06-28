@@ -30,9 +30,10 @@ import { useUserPreferences, UserPreferences } from '@/hooks/useUserPreferences'
 
 export default function Settings() {
   const { t } = useTranslation();
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const [editOpen, setEditOpen] = React.useState(false);
-  const { preferences, isLoading, updatePreferences } = useUserPreferences();
+  const { preferences, isLoading, updatePreferences } =
+    useUserPreferences({ enabled: !!user });
 
 
   const [notificationsEnabled, setNotificationsEnabled] = React.useState(true);
@@ -84,7 +85,7 @@ export default function Settings() {
   };
 
 
-  if (isLoading) {
+  if (authLoading || !user || isLoading) {
     return (
       <div className="py-4 text-center text-muted-foreground">
         {t('common.loading', 'Loading...')}
