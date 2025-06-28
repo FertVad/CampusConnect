@@ -10,8 +10,6 @@ import {
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import {
-  Mail,
-  Phone,
   User,
   GraduationCap,
   Settings as SettingsIcon,
@@ -51,7 +49,8 @@ export default function Settings() {
     <div className="container mx-auto py-6">
 
       {user && (
-        <Card className="shadow-md hover:shadow-lg transition-shadow duration-300 max-w-md mx-auto">
+        <>
+        <Card className="shadow-md hover:shadow-lg transition-shadow duration-300 w-full">
           <CardHeader className="pb-2">
             <div className="flex justify-between items-start">
               <div className="flex items-center space-x-4">
@@ -93,8 +92,13 @@ export default function Settings() {
               </div>
             )}
           </div>
-          <Accordion type="multiple">
-            <AccordionItem value="notifications" className="pt-4 border-t">
+        </div>
+      </CardContent>
+        </Card>
+
+        <Card className="shadow-md hover:shadow-lg transition-shadow duration-300 w-full mt-6">
+          <Accordion type="single" collapsible>
+            <AccordionItem value="notifications" className="border-b-0">
               <AccordionTrigger className="w-full text-left">
                 <CardTitle>{t('settings.notifications')}</CardTitle>
               </AccordionTrigger>
@@ -124,8 +128,12 @@ export default function Settings() {
                 </div>
               </AccordionContent>
             </AccordionItem>
+          </Accordion>
+        </Card>
 
-            <AccordionItem value="appearance" className="pt-4 border-t">
+        <Card className="shadow-md hover:shadow-lg transition-shadow duration-300 w-full mt-6">
+          <Accordion type="single" collapsible>
+            <AccordionItem value="appearance" className="border-b-0">
               <AccordionTrigger className="w-full text-left">
                 <CardTitle>{t('settings.languageAndTheme')}</CardTitle>
               </AccordionTrigger>
@@ -137,9 +145,8 @@ export default function Settings() {
               </AccordionContent>
             </AccordionItem>
           </Accordion>
-        </div>
-      </CardContent>
         </Card>
+        </>
       )}
 
       {user && editOpen && (
