@@ -1,27 +1,43 @@
-import React from "react";
-import { Switch, Route } from "wouter";
+import React, { useEffect } from "react";
+import { Switch, Route, useLocation } from "wouter";
 import AuthPage from "@/pages/auth-page";
 import { ProtectedRoute } from "@/lib/protected-route";
 import { useAuth } from "@/hooks/use-auth";
+import { Loader2 } from "lucide-react";
 import routes from "./routes";
+
+const PUBLIC_ROUTES = ["/login", "/register", "/forgot-password"];
 
 
 function App() {
   const { user, isLoading } = useAuth();
-  
-  // Если пользователь не авторизован и загрузка завершена, 
-  // сразу показываем страницу авторизации
-  if (!isLoading && !user) {
-    return <AuthPage />;
+  const [location, setLocation] = useLocation();
+
+  const isPublicRoute = PUBLIC_ROUTES.some((r) => location.startsWith(r));
+
+  useEffect(() => {
+    if (!isLoading && !user && !isPublicRoute) {
+      setLocation('/login');
+    }
+  }, [isLoading, user, isPublicRoute, setLocation]);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-border" />
+      </div>
+    );
   }
-  
+
   return (
     <Switch>
-      {routes.map(({ path, component, protected: requiresAuth, adminOnly }, idx) => {
+      {routes.map(({ path, component, adminOnly }, idx) => {
         if (!path) {
           return <Route key={idx} component={component} />;
         }
-        if (requiresAuth) {
+
+        const isPublic = PUBLIC_ROUTES.includes(path);
+        if (!isPublic) {
           return (
             <ProtectedRoute
               key={idx}

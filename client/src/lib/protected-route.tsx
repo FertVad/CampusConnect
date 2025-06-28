@@ -22,7 +22,7 @@ export function ProtectedRoute({ path, component: Component, adminOnly = false }
   // Сбрасываем флаг редиректа только при значимых изменениях пути
   useEffect(() => {
     // Проверяем, что изменение пути - это не часть бесконечного цикла
-    if (location !== '/auth' && location !== '/dashboard') {
+    if (location !== '/login' && location !== '/dashboard') {
       setRedirectAttempted(false);
     }
   }, [location]);
@@ -52,11 +52,11 @@ export function ProtectedRoute({ path, component: Component, adminOnly = false }
     }
 
     // Если пользователь не авторизован и это не страница авторизации
-    if (!user && !redirectAttempted && userChanged && location !== '/auth') {
+    if (!user && !redirectAttempted && userChanged && location !== '/login') {
       setRedirectAttempted(true);
-      
+
       // Используем setTimeout для избежания проблем с React 18 StrictMode
-      setTimeout(() => setLocation('/auth'), 0);
+      setTimeout(() => setLocation('/login'), 0);
       return;
     }
   }, [user, isLoading, adminOnly, redirectAttempted, location, setLocation]);
@@ -80,9 +80,9 @@ export function ProtectedRoute({ path, component: Component, adminOnly = false }
     );
   }
 
-  // Если пользователь не авторизован, показываем компонент страницы авторизации
+  // Если пользователь не авторизован, ничего не рендерим
   if (!user) {
-    return <Route path="/auth" component={() => <Component />} />;
+    return null;
   }
 
   // Показываем компонент только если пользователь авторизован и имеет нужные права
