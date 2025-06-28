@@ -55,7 +55,7 @@ const AccordionTrigger = React.forwardRef<
       ref={ref}
       onClick={toggle}
       className={cn(
-        "flex w-full items-center justify-between py-4 font-medium transition-all hover:underline",
+        "flex w-full items-center justify-between px-6 py-4 font-medium transition-all hover:no-underline",
         className
       )}
       {...props}
