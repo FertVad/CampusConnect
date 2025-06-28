@@ -5,11 +5,93 @@ import { cn } from "@/lib/utils"
 
 interface AccordionProps extends React.HTMLAttributes<HTMLDivElement> {
   type?: "single" | "multiple"
+  collapsible?: boolean
+  value?: string | string[]
+  defaultValue?: string | string[]
+  onValueChange?: (v: string | string[]) => void
 }
 
-const Accordion: React.FC<AccordionProps> = ({ className, ...props }) => (
-  <div className={cn("space-y-0", className)} {...props} />
-)
+interface AccordionContextValue {
+  type: "single" | "multiple"
+  openValues: string[]
+  toggle: (value: string) => void
+}
+
+const AccordionContext = React.createContext<AccordionContextValue | null>(null)
+
+const Accordion: React.FC<AccordionProps> = ({
+  className,
+  type = "single",
+  collapsible = false,
+  value,
+  defaultValue,
+  onValueChange,
+  children,
+  ...props
+}) => {
+  const controlled = value !== undefined
+  const [internalValue, setInternalValue] = React.useState<string | string[] | undefined>(
+    defaultValue
+  )
+
+  const currentValue = controlled ? value : internalValue
+
+  const openValues = React.useMemo<string[]>(() => {
+    if (Array.isArray(currentValue)) return currentValue
+    if (typeof currentValue === "string" && currentValue !== "") return [currentValue]
+    return []
+  }, [currentValue])
+
+  const updateValue = React.useCallback(
+    (vals: string[]) => {
+      const newVal = type === "single" ? (vals[0] ?? "") : vals
+      if (!controlled) {
+        setInternalValue(newVal)
+      }
+      onValueChange?.(newVal)
+    },
+    [controlled, onValueChange, type]
+  )
+
+  const toggle = React.useCallback(
+    (val: string) => {
+      let vals = [...openValues]
+      if (type === "multiple") {
+        if (vals.includes(val)) {
+          vals = vals.filter((v) => v !== val)
+          if (!collapsible && vals.length === 0) return
+        } else {
+          vals.push(val)
+        }
+      } else {
+        if (vals[0] === val) {
+          if (collapsible) {
+            vals = []
+          } else {
+            return
+          }
+        } else {
+          vals = [val]
+        }
+      }
+      updateValue(vals)
+    },
+    [openValues, type, collapsible, updateValue]
+  )
+
+  const contextValue = React.useMemo(
+    () => ({ type, openValues, toggle }),
+    [type, openValues, toggle]
+  )
+
+  return (
+    <AccordionContext.Provider value={contextValue}>
+      <div className={cn("space-y-0", className)} {...props}>
+        {children}
+      </div>
+    </AccordionContext.Provider>
+  )
+}
 
 interface AccordionItemContext {
   open: boolean
@@ -21,17 +103,23 @@ const AccordionItemContext = React.createContext<AccordionItemContext | null>(
 )
 
 interface AccordionItemProps extends React.HTMLAttributes<HTMLDivElement> {
-  defaultOpen?: boolean
+  value: string
 }
 
 const AccordionItem = React.forwardRef<HTMLDivElement, AccordionItemProps>(
-  ({ className, defaultOpen = false, children, ...props }, ref) => {
-    const [open, setOpen] = React.useState(defaultOpen)
-    const toggle = React.useCallback(() => setOpen((o) => !o), [])
+  ({ className, value, children, ...props }, ref) => {
+    const context = React.useContext(AccordionContext)
+    if (!context) {
+      return null
+    }
+    const { openValues, toggle } = context
+    const open = openValues.includes(value)
+
+    const handleToggle = React.useCallback(() => toggle(value), [toggle, value])
 
     return (
       <div ref={ref} className={cn("border-b", className)} {...props}>
-        <AccordionItemContext.Provider value={{ open, toggle }}>
+        <AccordionItemContext.Provider value={{ open, toggle: handleToggle }}>
           {children}
         </AccordionItemContext.Provider>
       </div>
