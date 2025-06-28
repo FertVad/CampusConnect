@@ -26,13 +26,18 @@ import { ThemeToggle } from '@/components/theme/theme-toggle';
 import { Switch } from '@/components/ui/switch';
 import EditUserProfileModal from '@/components/users/EditUserProfileModal';
 import { useAuth } from '@/hooks/use-auth';
-import { useUserPreferences, UserPreferences } from '@/hooks/useUserPreferences';
 
 export default function Settings() {
   const { t } = useTranslation();
   const { user } = useAuth();
   const [editOpen, setEditOpen] = React.useState(false);
-  const { preferences, updatePreferences } = useUserPreferences();
+
+  const [notificationsEnabled, setNotificationsEnabled] = React.useState(true);
+  const [assignmentNotifications, setAssignmentNotifications] = React.useState(true);
+  const [gradeNotifications, setGradeNotifications] = React.useState(true);
+  const [taskNotifications, setTaskNotifications] = React.useState(true);
+  const [systemNotifications, setSystemNotifications] = React.useState(true);
+  const [soundNotifications, setSoundNotifications] = React.useState(true);
 
   const roleIcons: Record<string, JSX.Element> = {
     student: <User className="h-3.5 w-3.5 mr-1" />,
@@ -41,9 +46,6 @@ export default function Settings() {
     director: <SettingsIcon className="h-3.5 w-3.5 mr-1" />,
   };
 
-  const handleToggle = (field: keyof UserPreferences) => (value: boolean) => {
-    updatePreferences({ [field]: value });
-  };
 
   return (
     <div className="container mx-auto py-6">
@@ -103,24 +105,50 @@ export default function Settings() {
               <AccordionContent className="px-6">
                 <div className="flex flex-col gap-4">
                   <div className="flex items-center justify-between">
-                    <span>{t('settings.emailNotifications')}</span>
+                    <span>{t('settings.notificationsEnabled')}</span>
                     <Switch
-                      checked={preferences?.emailNotifications}
-                      onCheckedChange={handleToggle('emailNotifications')}
+                      checked={notificationsEnabled}
+                      onCheckedChange={setNotificationsEnabled}
                     />
                   </div>
                   <div className="flex items-center justify-between">
-                    <span>{t('settings.browserNotifications')}</span>
+                    <span>{t('settings.assignmentNotifications')}</span>
                     <Switch
-                      checked={preferences?.browserNotifications}
-                      onCheckedChange={handleToggle('browserNotifications')}
+                      checked={assignmentNotifications}
+                      onCheckedChange={setAssignmentNotifications}
+                      disabled={!notificationsEnabled}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>{t('settings.gradeNotifications')}</span>
+                    <Switch
+                      checked={gradeNotifications}
+                      onCheckedChange={setGradeNotifications}
+                      disabled={!notificationsEnabled}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>{t('settings.taskNotifications')}</span>
+                    <Switch
+                      checked={taskNotifications}
+                      onCheckedChange={setTaskNotifications}
+                      disabled={!notificationsEnabled}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>{t('settings.systemNotifications')}</span>
+                    <Switch
+                      checked={systemNotifications}
+                      onCheckedChange={setSystemNotifications}
+                      disabled={!notificationsEnabled}
                     />
                   </div>
                   <div className="flex items-center justify-between">
                     <span>{t('settings.soundNotifications')}</span>
                     <Switch
-                      checked={preferences?.soundNotifications}
-                      onCheckedChange={handleToggle('soundNotifications')}
+                      checked={soundNotifications}
+                      onCheckedChange={setSoundNotifications}
+                      disabled={!notificationsEnabled}
                     />
                   </div>
                 </div>

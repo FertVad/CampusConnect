@@ -424,8 +424,11 @@
     "appearance": "Внешний вид",
     "profile": "Профиль",
     "notifications": "Уведомления",
-    "emailNotifications": "Email уведомления",
-    "browserNotifications": "Уведомления в браузере",
+    "notificationsEnabled": "Уведомления включены",
+    "assignmentNotifications": "Уведомления о заданиях",
+    "gradeNotifications": "Уведомления об оценках",
+    "taskNotifications": "Уведомления о задачах",
+    "systemNotifications": "Системные уведомления",
     "soundNotifications": "Звуковые уведомления"
   },
   "assignments": {
