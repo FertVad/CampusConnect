@@ -8,6 +8,7 @@ import TasksPage from "@/pages/tasks/Tasks";
 import SettingsPage from "@/pages/settings/Settings";
 import NotFound from "@/pages/not-found";
 import AuthPage from "@/pages/auth-page";
+import ForgotPassword from "@/pages/auth/ForgotPassword";
 import Users from "@/pages/users/Users";
 import UserDetail from "@/pages/users/UserDetail";
 import { MainLayout } from "@/components/layout/main-layout";
@@ -15,7 +16,6 @@ import { MainLayout } from "@/components/layout/main-layout";
 export interface RouteDefinition {
   path?: string;
   component: () => React.JSX.Element;
-  protected?: boolean;
   adminOnly?: boolean;
 }
 
@@ -74,18 +74,20 @@ const ProtectedUserDetail = () => (
 );
 
 export const routes: RouteDefinition[] = [
-  { path: "/auth", component: AuthPage },
-  { path: "/", component: ProtectedDashboard, protected: true },
-  { path: "/dashboard", component: ProtectedDashboard, protected: true },
-  { path: "/assignments", component: ProtectedAssignments, protected: true },
-  { path: "/assignments/:id", component: ProtectedAssignmentDetail, protected: true },
-  { path: "/schedule", component: ProtectedSchedule, protected: true },
-  { path: "/users", component: ProtectedUsers, protected: true, adminOnly: true },
-  { path: "/users/:id", component: ProtectedUserDetail, protected: true, adminOnly: true },
-  { path: "/chat", component: ProtectedChat, protected: true },
-  { path: "/chat/:id", component: ProtectedChat, protected: true },
-  { path: "/tasks", component: ProtectedTasks, protected: true },
-  { path: "/settings", component: ProtectedSettings, protected: true },
+  { path: "/login", component: AuthPage },
+  { path: "/register", component: AuthPage },
+  { path: "/forgot-password", component: ForgotPassword },
+  { path: "/", component: ProtectedDashboard },
+  { path: "/dashboard", component: ProtectedDashboard },
+  { path: "/assignments", component: ProtectedAssignments },
+  { path: "/assignments/:id", component: ProtectedAssignmentDetail },
+  { path: "/schedule", component: ProtectedSchedule },
+  { path: "/users", component: ProtectedUsers, adminOnly: true },
+  { path: "/users/:id", component: ProtectedUserDetail, adminOnly: true },
+  { path: "/chat", component: ProtectedChat },
+  { path: "/chat/:id", component: ProtectedChat },
+  { path: "/tasks", component: ProtectedTasks },
+  { path: "/settings", component: ProtectedSettings },
   { component: NotFound },
 ];
 
