@@ -15,7 +15,7 @@ export interface UserPreferences {
   browserNotifications?: boolean;
 }
 
-export function useUserPreferences() {
+export function useUserPreferences({ enabled = true } = {}) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -23,6 +23,7 @@ export function useUserPreferences() {
     queryKey: ['/api/user-preferences'],
     queryFn: async () =>
       (await apiRequest('/api/user-preferences')) as UserPreferences,
+    enabled,
   });
 
   const mutation = useMutation({
