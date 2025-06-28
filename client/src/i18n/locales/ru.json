@@ -241,7 +241,7 @@
       "currentPassword": "Текущий пароль",
       "newPassword": "Новый пароль",
       "confirmPassword": "Подтвердите пароль",
-      "updateProfile": "Обновить профиль",
+      "updateProfile": "Редактировать",
       "updateSuccess": "Профиль успешно обновлен",
       "updateError": "Ошибка обновления профиля: {{message}}"
     }
