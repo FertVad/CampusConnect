@@ -26,11 +26,21 @@ import { ThemeToggle } from '@/components/theme/theme-toggle';
 import { Switch } from '@/components/ui/switch';
 import EditUserProfileModal from '@/components/users/EditUserProfileModal';
 import { useAuth } from '@/hooks/use-auth';
+import { useUserPreferences, UserPreferences } from '@/hooks/useUserPreferences';
 
 export default function Settings() {
   const { t } = useTranslation();
   const { user } = useAuth();
   const [editOpen, setEditOpen] = React.useState(false);
+  const { preferences, isLoading, updatePreferences } = useUserPreferences();
+
+  const prevStates = React.useRef({
+    assignmentNotifications: true,
+    gradeNotifications: true,
+    taskNotifications: true,
+    systemNotifications: true,
+    soundNotifications: true,
+  });
 
   const [notificationsEnabled, setNotificationsEnabled] = React.useState(true);
   const [assignmentNotifications, setAssignmentNotifications] = React.useState(true);
@@ -39,6 +49,24 @@ export default function Settings() {
   const [systemNotifications, setSystemNotifications] = React.useState(true);
   const [soundNotifications, setSoundNotifications] = React.useState(true);
 
+  React.useEffect(() => {
+    if (preferences) {
+      setNotificationsEnabled(preferences.notificationsEnabled ?? true);
+      setAssignmentNotifications(preferences.assignmentNotifications ?? true);
+      setGradeNotifications(preferences.gradeNotifications ?? true);
+      setTaskNotifications(preferences.taskNotifications ?? true);
+      setSystemNotifications(preferences.systemNotifications ?? true);
+      setSoundNotifications(preferences.soundNotifications ?? true);
+      prevStates.current = {
+        assignmentNotifications: preferences.assignmentNotifications ?? true,
+        gradeNotifications: preferences.gradeNotifications ?? true,
+        taskNotifications: preferences.taskNotifications ?? true,
+        systemNotifications: preferences.systemNotifications ?? true,
+        soundNotifications: preferences.soundNotifications ?? true,
+      };
+    }
+  }, [preferences]);
+
   const roleIcons: Record<string, JSX.Element> = {
     student: <User className="h-3.5 w-3.5 mr-1" />,
     teacher: <GraduationCap className="h-3.5 w-3.5 mr-1" />,
@@ -46,6 +74,60 @@ export default function Settings() {
     director: <SettingsIcon className="h-3.5 w-3.5 mr-1" />,
   };
 
+  const handleUpdate = async (field: keyof UserPreferences, value: boolean) => {
+    const update: Partial<UserPreferences> = { [field]: value };
+    await updatePreferences(update);
+  };
+
+  const handleMasterToggle = async (value: boolean) => {
+    if (!value) {
+      prevStates.current = {
+        assignmentNotifications,
+        gradeNotifications,
+        taskNotifications,
+        systemNotifications,
+        soundNotifications,
+      };
+      setAssignmentNotifications(false);
+      setGradeNotifications(false);
+      setTaskNotifications(false);
+      setSystemNotifications(false);
+      setSoundNotifications(false);
+      setNotificationsEnabled(false);
+      await updatePreferences({
+        notificationsEnabled: false,
+        assignmentNotifications: false,
+        gradeNotifications: false,
+        taskNotifications: false,
+        systemNotifications: false,
+        soundNotifications: false,
+      });
+    } else {
+      setNotificationsEnabled(true);
+      setAssignmentNotifications(prevStates.current.assignmentNotifications);
+      setGradeNotifications(prevStates.current.gradeNotifications);
+      setTaskNotifications(prevStates.current.taskNotifications);
+      setSystemNotifications(prevStates.current.systemNotifications);
+      setSoundNotifications(prevStates.current.soundNotifications);
+      await updatePreferences({
+        notificationsEnabled: true,
+        assignmentNotifications: prevStates.current.assignmentNotifications,
+        gradeNotifications: prevStates.current.gradeNotifications,
+        taskNotifications: prevStates.current.taskNotifications,
+        systemNotifications: prevStates.current.systemNotifications,
+        soundNotifications: prevStates.current.soundNotifications,
+      });
+    }
+  };
+
+
+  if (isLoading) {
+    return (
+      <div className="py-4 text-center text-muted-foreground">
+        {t('common.loading', 'Loading...')}
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto py-6">
@@ -108,14 +190,17 @@ export default function Settings() {
                     <span>{t('settings.notificationsEnabled')}</span>
                     <Switch
                       checked={notificationsEnabled}
-                      onCheckedChange={setNotificationsEnabled}
+                      onCheckedChange={handleMasterToggle}
                     />
                   </div>
                   <div className="flex items-center justify-between">
                     <span>{t('settings.assignmentNotifications')}</span>
                     <Switch
                       checked={assignmentNotifications}
-                      onCheckedChange={setAssignmentNotifications}
+                      onCheckedChange={(v) => {
+                        setAssignmentNotifications(v);
+                        handleUpdate('assignmentNotifications', v);
+                      }}
                       disabled={!notificationsEnabled}
                     />
                   </div>
@@ -123,7 +208,10 @@ export default function Settings() {
                     <span>{t('settings.gradeNotifications')}</span>
                     <Switch
                       checked={gradeNotifications}
-                      onCheckedChange={setGradeNotifications}
+                      onCheckedChange={(v) => {
+                        setGradeNotifications(v);
+                        handleUpdate('gradeNotifications', v);
+                      }}
                       disabled={!notificationsEnabled}
                     />
                   </div>
@@ -131,7 +219,10 @@ export default function Settings() {
                     <span>{t('settings.taskNotifications')}</span>
                     <Switch
                       checked={taskNotifications}
-                      onCheckedChange={setTaskNotifications}
+                      onCheckedChange={(v) => {
+                        setTaskNotifications(v);
+                        handleUpdate('taskNotifications', v);
+                      }}
                       disabled={!notificationsEnabled}
                     />
                   </div>
@@ -139,7 +230,10 @@ export default function Settings() {
                     <span>{t('settings.systemNotifications')}</span>
                     <Switch
                       checked={systemNotifications}
-                      onCheckedChange={setSystemNotifications}
+                      onCheckedChange={(v) => {
+                        setSystemNotifications(v);
+                        handleUpdate('systemNotifications', v);
+                      }}
                       disabled={!notificationsEnabled}
                     />
                   </div>
@@ -147,7 +241,10 @@ export default function Settings() {
                     <span>{t('settings.soundNotifications')}</span>
                     <Switch
                       checked={soundNotifications}
-                      onCheckedChange={setSoundNotifications}
+                      onCheckedChange={(v) => {
+                        setSoundNotifications(v);
+                        handleUpdate('soundNotifications', v);
+                      }}
                       disabled={!notificationsEnabled}
                     />
                   </div>
