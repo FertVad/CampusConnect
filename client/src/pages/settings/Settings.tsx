@@ -34,13 +34,6 @@ export default function Settings() {
   const [editOpen, setEditOpen] = React.useState(false);
   const { preferences, isLoading, updatePreferences } = useUserPreferences();
 
-  const prevStates = React.useRef({
-    assignmentNotifications: true,
-    gradeNotifications: true,
-    taskNotifications: true,
-    systemNotifications: true,
-    soundNotifications: true,
-  });
 
   const [notificationsEnabled, setNotificationsEnabled] = React.useState(true);
   const [assignmentNotifications, setAssignmentNotifications] = React.useState(true);
@@ -57,13 +50,6 @@ export default function Settings() {
       setTaskNotifications(preferences.taskNotifications ?? true);
       setSystemNotifications(preferences.systemNotifications ?? true);
       setSoundNotifications(preferences.soundNotifications ?? true);
-      prevStates.current = {
-        assignmentNotifications: preferences.assignmentNotifications ?? true,
-        gradeNotifications: preferences.gradeNotifications ?? true,
-        taskNotifications: preferences.taskNotifications ?? true,
-        systemNotifications: preferences.systemNotifications ?? true,
-        soundNotifications: preferences.soundNotifications ?? true,
-      };
     }
   }, [preferences]);
 
@@ -80,44 +66,21 @@ export default function Settings() {
   };
 
   const handleMasterToggle = async (value: boolean) => {
-    if (!value) {
-      prevStates.current = {
-        assignmentNotifications,
-        gradeNotifications,
-        taskNotifications,
-        systemNotifications,
-        soundNotifications,
-      };
-      setAssignmentNotifications(false);
-      setGradeNotifications(false);
-      setTaskNotifications(false);
-      setSystemNotifications(false);
-      setSoundNotifications(false);
-      setNotificationsEnabled(false);
-      await updatePreferences({
-        notificationsEnabled: false,
-        assignmentNotifications: false,
-        gradeNotifications: false,
-        taskNotifications: false,
-        systemNotifications: false,
-        soundNotifications: false,
-      });
-    } else {
-      setNotificationsEnabled(true);
-      setAssignmentNotifications(prevStates.current.assignmentNotifications);
-      setGradeNotifications(prevStates.current.gradeNotifications);
-      setTaskNotifications(prevStates.current.taskNotifications);
-      setSystemNotifications(prevStates.current.systemNotifications);
-      setSoundNotifications(prevStates.current.soundNotifications);
-      await updatePreferences({
-        notificationsEnabled: true,
-        assignmentNotifications: prevStates.current.assignmentNotifications,
-        gradeNotifications: prevStates.current.gradeNotifications,
-        taskNotifications: prevStates.current.taskNotifications,
-        systemNotifications: prevStates.current.systemNotifications,
-        soundNotifications: prevStates.current.soundNotifications,
-      });
-    }
+    setNotificationsEnabled(value);
+    setAssignmentNotifications(value);
+    setGradeNotifications(value);
+    setTaskNotifications(value);
+    setSystemNotifications(value);
+    setSoundNotifications(value);
+
+    await updatePreferences({
+      notificationsEnabled: value,
+      assignmentNotifications: value,
+      gradeNotifications: value,
+      taskNotifications: value,
+      systemNotifications: value,
+      soundNotifications: value,
+    });
   };
 
 
@@ -186,24 +149,26 @@ export default function Settings() {
               </AccordionTrigger>
               <AccordionContent className="px-6">
                 <div className="flex flex-col gap-4">
-                  <div className="flex items-center justify-between">
-                    <span>{t('settings.notificationsEnabled')}</span>
+                  <div className="flex items-center justify-between p-4 border rounded-md bg-muted">
+                    <span className="font-bold text-base">{t('settings.notificationsEnabled')}</span>
                     <Switch
+                      className="scale-125"
                       checked={notificationsEnabled}
                       onCheckedChange={handleMasterToggle}
                     />
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span>{t('settings.assignmentNotifications')}</span>
-                    <Switch
-                      checked={assignmentNotifications}
-                      onCheckedChange={(v) => {
-                        setAssignmentNotifications(v);
-                        handleUpdate('assignmentNotifications', v);
-                      }}
-                      disabled={!notificationsEnabled}
-                    />
-                  </div>
+                  <div className="flex flex-col gap-4 p-4 border rounded-md mt-2">
+                    <div className="flex items-center justify-between">
+                      <span>{t('settings.assignmentNotifications')}</span>
+                      <Switch
+                        checked={assignmentNotifications}
+                        onCheckedChange={(v) => {
+                          setAssignmentNotifications(v);
+                          handleUpdate('assignmentNotifications', v);
+                        }}
+                        disabled={!notificationsEnabled}
+                      />
+                    </div>
                   <div className="flex items-center justify-between">
                     <span>{t('settings.gradeNotifications')}</span>
                     <Switch
