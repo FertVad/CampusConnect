@@ -105,6 +105,14 @@ export function setupAuth(app: Express) {
       const { data, error } = await supabase.auth.signUp({
         email: validated.email,
         password: validated.password,
+        options: {
+          data: {
+            first_name: validated.firstName,
+            last_name: validated.lastName,
+            role: validated.role,
+            phone: validated.phone ?? null,
+          }
+        }
       });
       if (error || !data.user) {
         return res.status(400).json({ message: error?.message || "Registration failed" });
@@ -115,6 +123,7 @@ export function setupAuth(app: Express) {
         firstName: validated.firstName,
         lastName: validated.lastName,
         email: validated.email,
+        phone: validated.phone,
         password: validated.password,
         role: validated.role,
       });
