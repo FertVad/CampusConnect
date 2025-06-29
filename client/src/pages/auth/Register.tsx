@@ -28,6 +28,7 @@ export default function Register({ onTabChange }: RegisterProps) {
       password: '',
       confirmPassword: '',
       email: '',
+      phone: '',
       firstName: '',
       lastName: '',
       role: 'student',
@@ -102,22 +103,13 @@ export default function Register({ onTabChange }: RegisterProps) {
             />
             <FormField
               control={form.control}
-              name="role"
+              name="phone"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t('auth.register.role')}</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger className="glass">
-                        <SelectValue placeholder={t('auth.placeholders.selectRole')} />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent className="glass-modal">
-                      <SelectItem value="student">{t('users.roles.student')}</SelectItem>
-                      <SelectItem value="teacher">{t('users.roles.teacher')}</SelectItem>
-                      <SelectItem value="admin">{t('users.roles.admin')}</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <FormLabel>{t('user.phone', 'Телефон')}</FormLabel>
+                  <FormControl>
+                    <Input placeholder="+7 (XXX) XXX-XX-XX" className="glass" {...field} />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -144,6 +136,28 @@ export default function Register({ onTabChange }: RegisterProps) {
                   <FormControl>
                     <Input type="password" placeholder="********" className="glass" {...field} />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="role"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('auth.register.role')}</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger className="glass">
+                        <SelectValue placeholder={t('auth.placeholders.selectRole')} />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent className="glass-modal">
+                      <SelectItem value="student">{t('users.roles.student')}</SelectItem>
+                      <SelectItem value="teacher">{t('users.roles.teacher')}</SelectItem>
+                      <SelectItem value="admin">{t('users.roles.admin')}</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}

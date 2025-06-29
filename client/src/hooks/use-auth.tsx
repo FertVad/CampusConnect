@@ -66,6 +66,7 @@ type RegisterData = {
   firstName: string;
   lastName: string;
   email: string;
+  phone?: string;
   password: string;
   role: string;
 };
@@ -218,7 +219,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           data: {
             first_name: userData.firstName,
             last_name: userData.lastName,
-            role: userData.role
+            role: userData.role,
+            phone: userData.phone ?? null
           }
         }
       });
