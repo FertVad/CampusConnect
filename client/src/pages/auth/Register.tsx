@@ -28,7 +28,6 @@ export default function Register({ onTabChange }: RegisterProps) {
       password: '',
       confirmPassword: '',
       email: '',
-      phone: '',
       firstName: '',
       lastName: '',
       role: 'student',
@@ -103,19 +102,6 @@ export default function Register({ onTabChange }: RegisterProps) {
             />
             <FormField
               control={form.control}
-              name="phone"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t('user.phone', 'Телефон')}</FormLabel>
-                  <FormControl>
-                    <Input placeholder="+7 (XXX) XXX-XX-XX" className="glass" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
               name="password"
               render={({ field }) => (
                 <FormItem>
@@ -162,6 +148,9 @@ export default function Register({ onTabChange }: RegisterProps) {
                 </FormItem>
               )}
             />
+            <p className="text-xs text-muted-foreground">
+              {t('auth.register.phoneLater', 'Телефон можно добавить в настройках профиля')}
+            </p>
             <Button type="submit" className="w-full bg-primary hover:bg-primary/80" disabled={registerMutation.isPending}>
               {registerMutation.isPending ? (
                 <>
