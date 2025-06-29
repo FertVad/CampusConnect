@@ -7,7 +7,7 @@ export const createLoginSchema = (t: any) => z.object({
 });
 
 export const createRegisterSchema = (t: any) =>
-  insertUserSchema.extend({
+  insertUserSchema.omit({ phone: true }).extend({
     firstName: z.string().min(2, t('auth.validations.firstNameLength')),
     lastName: z.string().min(2, t('auth.validations.lastNameLength')),
     password: z.string().min(6, t('auth.validations.passwordLength')),

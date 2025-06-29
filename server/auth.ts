@@ -110,7 +110,6 @@ export function setupAuth(app: Express) {
             first_name: validated.firstName,
             last_name: validated.lastName,
             role: validated.role,
-            phone: validated.phone ?? null,
           }
         }
       });
@@ -123,7 +122,6 @@ export function setupAuth(app: Express) {
         firstName: validated.firstName,
         lastName: validated.lastName,
         email: validated.email,
-        phone: validated.phone,
         password: validated.password,
         role: validated.role,
       });
