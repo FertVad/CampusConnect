@@ -26,6 +26,7 @@ import fs from 'fs';
 import path from 'path';
 import { log } from '../vite';
 import { logger } from '../utils/logger';
+import { supabase } from '../supabaseClient';
 
 type EducationLevel = (typeof schema.educationLevelEnum.enumValues)[number];
 
@@ -69,7 +70,12 @@ export class SupabaseStorage {
   }
 
   async deleteUser(id: string): Promise<boolean> {
-    return this.usersRepo.deleteUser(String(id));
+    const { error } = await supabase.auth.admin.deleteUser(id);
+    if (error) {
+      logger.error('Supabase admin deleteUser error:', error);
+      return false;
+    }
+    return true;
   }
 
   async authenticate(credentials: LoginCredentials): Promise<User | undefined> {
