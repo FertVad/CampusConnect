@@ -45,6 +45,7 @@ export async function verifySupabaseJwt(req: Request, res: Response, next: NextF
       email: data.user.email || '',
       firstName: dbUser.firstName,
       lastName: dbUser.lastName,
+      phone: dbUser.phone,
       role: dbUser.role,
     };
 
