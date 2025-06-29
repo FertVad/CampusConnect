@@ -63,7 +63,36 @@ app.get('/api/users/:id', authenticateUser, async (req, res) => {
 app.post('/api/users', authenticateUser, requireRole(['admin']), async (req, res) => {
   try {
     const userData = insertUserSchema.parse(req.body);
-    const user = await getStorage().createUser(userData);
+
+    const { data, error } = await supabase.auth.admin.createUser({
+      email: userData.email,
+      password: userData.password,
+      user_metadata: {
+        first_name: userData.firstName,
+        last_name: userData.lastName,
+        role: userData.role,
+      },
+    });
+
+    if (error || !data?.user) {
+      logger.error('Supabase admin createUser error:', error);
+      return res.status(400).json({ message: error?.message || 'Failed to create user' });
+    }
+
+    // Fetch the user record synced to public.users via trigger
+    let user = await getStorage().getUserByEmail(userData.email);
+    if (!user) {
+      // Fallback to metadata if trigger has not synced yet
+      user = {
+        id: data.user.id,
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        email: userData.email,
+        password: '',
+        role: userData.role,
+        createdAt: new Date().toISOString(),
+      } as any;
+    }
     
     // Отправляем уведомление всем администраторам кроме текущего пользователя
     const admins = await getStorage().getUsersByRole('admin');
