@@ -21,12 +21,11 @@
           hasSupabaseSession = !!data.session;
         }
       } catch (err) {
-        console.warn('Failed to obtain Supabase session:', err);
+        console.error('Failed to obtain Supabase session:', err);
       }
       
       // Helper function to create a fake WebSocket that gracefully fails
       function createFakeSocket(url, reason) {
-        console.warn('WebSocket interceptor:', reason, url);
         
         const fakeSocket = {
           addEventListener: function() {},
@@ -84,7 +83,6 @@
               // Silence connection errors for Replit system WebSockets
               const originalOnerror = socket.onerror;
               socket.onerror = function(event) {
-                console.warn('Silenced WebSocket error for:', url);
                 if (typeof originalOnerror === 'function') {
                   // Call the original handler with a modified event
                   const silentEvent = new Event('error');
@@ -102,7 +100,7 @@
           // For all other valid URLs, use the original WebSocket
           return new OriginalWebSocket(url, protocols);
         } catch (e) {
-          console.warn('WebSocket creation error:', e);
+          console.error('WebSocket creation error:', e);
           return createFakeSocket(url, e.message);
         }
       }

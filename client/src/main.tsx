@@ -39,8 +39,6 @@ function safelyInitializeApp() {
     // Get the root element - we'll handle the null case safely
     const rootElement = document.getElementById("root");
 
-    // Debug: Display rendering location
-
     if (!rootElement) {
       throw new Error("Root element not found in DOM");
     }
@@ -59,27 +57,7 @@ function safelyInitializeApp() {
         </React.StrictMode>
       );
 
-      // Remove debug element after successful render
-      const debugElement = document.getElementById('debug-message');
-      if (debugElement && debugElement.parentNode) {
-        debugElement.parentNode.removeChild(debugElement);
-      }
     };
-
-    // Add a simple message directly to the body to confirm script execution
-    const debugElement = document.createElement('div');
-    debugElement.id = 'debug-message';
-    debugElement.textContent = 'App initializing...';
-    debugElement.style.padding = '10px';
-    debugElement.style.backgroundColor = 'rgba(50, 50, 50, 0.8)';
-    debugElement.style.color = 'white';
-    debugElement.style.position = 'fixed';
-    debugElement.style.top = '0';
-    debugElement.style.left = '0';
-    debugElement.style.zIndex = '9999';
-    debugElement.style.borderRadius = '0 0 4px 0';
-    debugElement.style.fontSize = '12px';
-    document.body.appendChild(debugElement);
 
     // Use a small timeout to ensure DOM is fully processed
     // This helps with Safari's rendering issues
