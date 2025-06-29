@@ -5,6 +5,7 @@ export interface AuthenticatedUser {
   email: string;
   firstName: string;
   lastName: string;
+  phone?: string;
   role: UserRole;
 }
 
