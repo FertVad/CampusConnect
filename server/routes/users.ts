@@ -234,14 +234,16 @@ app.put('/api/users/:id', authenticateUser, async (req, res) => {
 app.delete('/api/users/:id', authenticateUser, requireRole(['admin']), async (req, res) => {
   try {
     const userId = req.params.id;
-    const success = await getStorage().deleteUser(userId);
-    
-    if (!success) {
-      return res.status(404).json({ message: "User not found" });
+    const { error } = await supabase.auth.admin.deleteUser(userId);
+
+    if (error) {
+      logger.error('Supabase admin deleteUser error:', error);
+      return res.status(400).json({ message: error.message || 'Failed to delete user' });
     }
-    
+
     res.status(204).end();
   } catch (error) {
+    logger.error('Error deleting user:', error);
     res.status(500).json({ message: "Server error" });
   }
 });
