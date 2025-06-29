@@ -94,12 +94,22 @@ app.post('/api/users', authenticateUser, requireRole(['admin']), async (req, res
   }
 });
 
-app.put('/api/users/:id', authenticateUser, requireRole(['admin']), async (req, res) => {
+app.put('/api/users/:id', authenticateUser, async (req, res) => {
   try {
     const userId = req.params.id;
-    logger.info(`🔄 PUT /api/users/${userId} - Updating user profile. Admin ID: ${req.user?.id}`);
-    
+    logger.info(`🔄 PUT /api/users/${userId} - Updating user profile. User ID: ${req.user?.id}`);
+
+    const isAdmin = req.user?.role === 'admin';
+    const isSelfEdit = req.user?.id === userId;
+
+    if (!isAdmin && !isSelfEdit) {
+      return res.status(403).json({ error: 'Insufficient permissions' });
+    }
+
     const userData = insertUserSchema.partial().parse(req.body);
+    if (!isAdmin) {
+      delete (userData as any).role;
+    }
     logger.info('📋 Update data:', JSON.stringify(userData));
     
     const updatedUser = await getStorage().updateUser(userId, userData);
