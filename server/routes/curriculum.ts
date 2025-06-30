@@ -173,7 +173,6 @@ export function registerCurriculumRoutes(app: Express, { authenticateUser, requi
 
   app.get('/api/documents', authenticateUser, async (req, res) => {
     try {
-      const userId = req.query.userId ? (req.query.userId as string) : undefined;
       res.json([]);
     } catch (error) {
       logger.error('Error getting documents:', error);
