@@ -54,6 +54,18 @@ export default function Settings() {
     }
   }, [preferences]);
 
+  // Reset local notification state when user logs out
+  React.useEffect(() => {
+    if (!user) {
+      setNotificationsEnabled(true);
+      setAssignmentNotifications(true);
+      setGradeNotifications(true);
+      setTaskNotifications(true);
+      setSystemNotifications(true);
+      setSoundNotifications(true);
+    }
+  }, [user]);
+
   const roleIcons: Record<string, JSX.Element> = {
     student: <User className="h-3.5 w-3.5 mr-1" />,
     teacher: <GraduationCap className="h-3.5 w-3.5 mr-1" />,
