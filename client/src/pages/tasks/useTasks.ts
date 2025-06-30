@@ -83,8 +83,8 @@ export function useTasks() {
   });
 
   const createTaskMutation = useMutation({
-    mutationFn: async (data: InsertTask) => {
-      const result = await apiRequest('/api/tasks', 'POST', data);
+    mutationFn: async (data: InsertTask, { signal }) => {
+      const result = await apiRequest('/api/tasks', 'POST', data, signal);
       return result;
     },
     onSuccess: () => {
@@ -105,8 +105,8 @@ export function useTasks() {
   });
 
   const updateTaskStatusMutation = useMutation({
-    mutationFn: async ({ id, status }: { id: number; status: string }) => {
-      const result = await apiRequest(`/api/tasks/${id}/status`, 'PATCH', { status });
+    mutationFn: async ({ id, status }: { id: number; status: string }, { signal }) => {
+      const result = await apiRequest(`/api/tasks/${id}/status`, 'PATCH', { status }, signal);
       return result;
     },
     onSuccess: () => {
@@ -132,8 +132,8 @@ export function useTasks() {
   });
 
   const deleteTaskMutation = useMutation({
-    mutationFn: async (id: number) => {
-      const result = await apiRequest(`/api/tasks/${id}`, 'DELETE');
+    mutationFn: async (id: number, { signal }) => {
+      const result = await apiRequest(`/api/tasks/${id}`, 'DELETE', undefined, signal);
       return result;
     },
     onSuccess: () => {
@@ -154,7 +154,8 @@ export function useTasks() {
   });
 
   const updateTaskMutation = useMutation({
-    mutationFn: async (data: {
+    mutationFn: async (
+      data: {
       id: number;
       title?: string;
       description?: string;
@@ -162,9 +163,11 @@ export function useTasks() {
       priority?: string;
       dueDate?: string | null;
       executorId?: string;
-    }) => {
+    },
+      { signal },
+    ) => {
       const { id, ...taskData } = data;
-      const result = await apiRequest(`/api/tasks/${id}`, 'PUT', taskData);
+      const result = await apiRequest(`/api/tasks/${id}`, 'PUT', taskData, signal);
       return result;
     },
     onSuccess: () => {

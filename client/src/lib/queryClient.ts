@@ -35,7 +35,10 @@ async function throwIfResNotOk(res: Response) {
 
 import { getAuthHeaders } from "./auth";
 
-export async function authFetch(url: string, options: RequestInit = {}): Promise<Response> {
+export async function authFetch(
+  url: string,
+  options: RequestInit & { signal?: AbortSignal } = {},
+): Promise<Response> {
   const { data: sessionData } = await supabase.auth.getSession();
   const token = sessionData.session?.access_token;
 
@@ -48,13 +51,14 @@ export async function authFetch(url: string, options: RequestInit = {}): Promise
     (headers as Record<string, string>)["Authorization"] = `Bearer ${token}`;
   }
 
-  return fetch(url, { ...options, headers, credentials: 'include' });
+  return fetch(url, { ...options, headers, credentials: 'include', signal: options.signal });
 }
 
 export async function apiRequest(
   url: string,
   method: string = 'GET',
   data?: unknown | undefined,
+  signal?: AbortSignal,
 ): Promise<any> {
   try {
     // Убедимся, что включены все необходимые заголовки для корректной работы
@@ -71,6 +75,14 @@ export async function apiRequest(
     // Максимальное время ожидания для запросов - 30 секунд
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000);
+
+    if (signal) {
+      if (signal.aborted) {
+        controller.abort();
+      } else {
+        signal.addEventListener('abort', () => controller.abort());
+      }
+    }
 
     // Более надежный запрос с параметрами безопасности и совместимости
     const res = await authFetch(url, {
@@ -110,7 +122,7 @@ export const getQueryFn: <T>(options: {
   on401: UnauthorizedBehavior;
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
-  async ({ queryKey }) => {
+  async ({ queryKey, signal }) => {
     try {
       // Запрос с улучшенными заголовками для кросс-браузерной совместимости
       const res = await authFetch(queryKey[0] as string, {
@@ -125,6 +137,7 @@ export const getQueryFn: <T>(options: {
         },
         mode: 'cors', // Для лучшей совместимости
         redirect: 'follow', // Следовать перенаправлениям
+        signal,
       });
 
       // Обработка ошибки авторизации

@@ -147,7 +147,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   });
 
   const loginMutation = useMutation({
-    mutationFn: async (credentials: LoginData) => {
+    mutationFn: async (credentials: LoginData, { signal }) => {
       const { error } = await supabase.auth.signInWithPassword(credentials);
       if (error) {
         throw new Error(error.message);
@@ -174,7 +174,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         headers: fetchOptions.headers,
       });
 
-      const res = await authFetch("/api/user", fetchOptions);
+      const res = await authFetch("/api/user", { ...fetchOptions, signal });
       if (!res.ok) {
         throw new Error('Failed to fetch user data');
       }
@@ -209,7 +209,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   });
 
   const registerMutation = useMutation({
-    mutationFn: async (userData: RegisterData) => {
+    mutationFn: async (userData: RegisterData, { signal }) => {
       const { email, password } = userData;
       const { error } = await supabase.auth.signUp({
         email,
@@ -247,7 +247,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         headers: fetchOptions.headers,
       });
 
-      const res = await authFetch('/api/user', fetchOptions);
+      const res = await authFetch('/api/user', { ...fetchOptions, signal });
       if (!res.ok) {
         throw new Error('Failed to fetch user data');
       }
