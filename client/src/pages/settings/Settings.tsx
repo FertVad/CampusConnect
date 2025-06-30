@@ -42,9 +42,14 @@ export default function Settings() {
   const [taskNotifications, setTaskNotifications] = React.useState(true);
   const [systemNotifications, setSystemNotifications] = React.useState(true);
   const [soundNotifications, setSoundNotifications] = React.useState(true);
+  const [touched, setTouched] = React.useState(false);
 
   React.useEffect(() => {
-    if (preferences) {
+    setTouched(false);
+  }, [user]);
+
+  React.useEffect(() => {
+    if (preferences && !touched) {
       setNotificationsEnabled(preferences.notificationsEnabled ?? true);
       setAssignmentNotifications(preferences.assignmentNotifications ?? true);
       setGradeNotifications(preferences.gradeNotifications ?? true);
@@ -52,7 +57,7 @@ export default function Settings() {
       setSystemNotifications(preferences.systemNotifications ?? true);
       setSoundNotifications(preferences.soundNotifications ?? true);
     }
-  }, [preferences]);
+  }, [preferences, touched]);
 
   const roleIcons: Record<string, JSX.Element> = {
     student: <User className="h-3.5 w-3.5 mr-1" />,
@@ -67,6 +72,7 @@ export default function Settings() {
   };
 
   const handleMasterToggle = async (value: boolean) => {
+    setTouched(true);
     setNotificationsEnabled(value);
     setAssignmentNotifications(value);
     setGradeNotifications(value);
@@ -164,6 +170,7 @@ export default function Settings() {
                       <Switch
                         checked={assignmentNotifications}
                         onCheckedChange={(v) => {
+                          setTouched(true);
                           setAssignmentNotifications(v);
                           handleUpdate('assignmentNotifications', v);
                         }}
@@ -175,6 +182,7 @@ export default function Settings() {
                     <Switch
                       checked={gradeNotifications}
                       onCheckedChange={(v) => {
+                        setTouched(true);
                         setGradeNotifications(v);
                         handleUpdate('gradeNotifications', v);
                       }}
@@ -186,6 +194,7 @@ export default function Settings() {
                     <Switch
                       checked={taskNotifications}
                       onCheckedChange={(v) => {
+                        setTouched(true);
                         setTaskNotifications(v);
                         handleUpdate('taskNotifications', v);
                       }}
@@ -197,6 +206,7 @@ export default function Settings() {
                     <Switch
                       checked={systemNotifications}
                       onCheckedChange={(v) => {
+                        setTouched(true);
                         setSystemNotifications(v);
                         handleUpdate('systemNotifications', v);
                       }}
@@ -208,6 +218,7 @@ export default function Settings() {
                     <Switch
                       checked={soundNotifications}
                       onCheckedChange={(v) => {
+                        setTouched(true);
                         setSoundNotifications(v);
                         handleUpdate('soundNotifications', v);
                       }}
