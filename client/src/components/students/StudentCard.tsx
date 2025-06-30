@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { formatDistanceToNow, format } from 'date-fns';
+import { formatDistanceToNow } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { useTranslation } from 'react-i18next';
 import { 
@@ -78,7 +78,7 @@ const getInitials = (firstName: string, lastName: string): string => {
 /**
  * Получает URL аватара Gravatar по email
  */
-const getGravatarUrl = (email: string): string => {
+const getGravatarUrl = (_email: string): string => {
   // Простой MD5 хеш в данном случае не применяем, используем дефолтный аватар
   return `https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y`;
 };

@@ -1,6 +1,5 @@
 import React, { useEffect } from "react";
 import { Switch, Route, useLocation } from "wouter";
-import AuthPage from "@/pages/auth-page";
 import { ProtectedRoute } from "@/lib/protected-route";
 import { useAuth } from "@/hooks/use-auth";
 import { Loader2 } from "lucide-react";

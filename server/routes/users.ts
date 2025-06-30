@@ -93,7 +93,7 @@ app.post('/api/users', authenticateUser, requireRole(['admin']), async (req, res
         password: '',
         phone: null,
         role: userData.role,
-        createdAt: new Date().toISOString(),
+        createdAt: new Date(),
       } as User;
     } else {
       user = existingUser;

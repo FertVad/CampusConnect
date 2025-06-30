@@ -1,8 +1,7 @@
-import React, { useState, useLayoutEffect, useEffect } from "react";
+import React, { useState, useLayoutEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { createPortal } from "react-dom";
 
 // Импортируем типы из общего модуля
 import { 
@@ -55,7 +54,7 @@ export function WeekActivityDialog({
   useLayoutEffect(() => {
     if (weekInfo && open) {
       // Используем даты начала и конца недели из параметра weekInfo
-      const { startDate, endDate } = weekInfo;
+      const { startDate } = weekInfo;
       
       // Создаем массив дней между startDate и endDate (включительно)
       const days: WeekDay[] = [];

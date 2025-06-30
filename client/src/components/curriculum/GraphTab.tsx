@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { StartDatePicker } from "@/components/ui/StartDatePicker";
-import { buildAcademicWeeks, getFirstWorkdayOfSeptember, buildWeeksWithMonths } from "@/utils/calendar";
+import { getFirstWorkdayOfSeptember, buildWeeksWithMonths } from "@/utils/calendar";
 import { AcademicCalendarTable } from "@/components/curriculum/AcademicCalendarTable";
 import { 
   Select,
@@ -37,16 +37,13 @@ export default function GraphTab({
   // Получаем количество лет и месяцев обучения из глобального хранилища
   const { 
     yearsOfStudy: storeYearsOfStudy, 
-    monthsOfStudy: storeMonthsOfStudy,
-    getEffectiveCourseCount 
+    monthsOfStudy: storeMonthsOfStudy
   } = useCurriculum();
   
   // Используем значения из хранилища, но если они 0, то используем переданные в пропсах
   const effectiveYearsOfStudy = storeYearsOfStudy > 0 ? storeYearsOfStudy : yearsOfStudy;
   const effectiveMonthsOfStudy = storeMonthsOfStudy >= 0 ? storeMonthsOfStudy : monthsOfStudy;
   
-  // Получаем эффективное количество курсов (с учетом дополнительных месяцев)
-  const effectiveCourseCount = getEffectiveCourseCount();
   // Получаем planId из пропсов, если передано, иначе из URL для обратной совместимости
   const urlParams = new URLSearchParams(window.location.search);
   const urlPlanId = urlParams.get('id') || '';
@@ -84,7 +81,7 @@ export default function GraphTab({
   }, [initialDataHash]);
   
 
-  // Создаем массив курсов в зависимости от effectiveCourseCount (годы + хвостовой курс, если есть месяцы)
+  // Создаем массив курсов на основе количества лет обучения и дополнительных месяцев
   const courses = useMemo(() => {
     const result = [];
     
@@ -111,7 +108,7 @@ export default function GraphTab({
     }
     
     return result;
-  }, [planYear, effectiveYearsOfStudy, effectiveMonthsOfStudy, effectiveCourseCount]);
+  }, [planYear, effectiveYearsOfStudy, effectiveMonthsOfStudy]);
   
   // Создаем дефолтный объект с датами старта для каждого курса
   const defaultStartDates = useMemo(() => {
@@ -183,10 +180,6 @@ export default function GraphTab({
     }
   };
   
-  // Возвращает текущие данные календаря из ref - только для внутреннего использования
-  const getCalendarData = (): CalendarData => {
-    return calendarDataRef.current;
-  };
 
   // Генерируем недели на основе даты старта первого курса с учетом месяцев
   const weeks = useMemo(() => 
@@ -230,7 +223,6 @@ export default function GraphTab({
         weeks={weeks} 
         yearsOfStudy={effectiveYearsOfStudy}
         monthsOfStudy={effectiveMonthsOfStudy}
-        effectiveCourseCount={effectiveCourseCount}
         courses={courses}
         initialData={calendarData}
         onChange={handleCalendarChange}

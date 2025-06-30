@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'wouter';
 import { Assignment, Submission, Subject } from '@shared/schema';
-import { formatDate, getStatusColor } from '@/lib/utils';
+import { getStatusColor } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 
 interface AssignmentWithSubmission extends Assignment {

@@ -18,7 +18,6 @@ import {
   useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useTranslation } from 'react-i18next';
@@ -100,11 +99,6 @@ interface NodeWithSums {
 }
 
 // Интерфейс для элемента при перетаскивании
-interface DragItem {
-  id: string;
-  type: 'section' | 'group' | 'subject';
-  parentId: string | null;
-}
 
 // Компонент для строки дисциплины (конечный узел дерева)
 const SubjectRow: React.FC<{
@@ -114,7 +108,6 @@ const SubjectRow: React.FC<{
   isSelected?: boolean; // Флаг для множественного выделения
   depth: number;
   rowBgClass?: string; // Класс для чередования фона строк
-  isMultiSelectMode?: boolean; // Режим множественного выбора
   onValueChange: (nodeId: string, semesterIndex: number, value: number, activityType?: keyof ActivityHours) => void;
   onCreditUnitsChange: (nodeId: string, value: number) => void;
   onControlTypeChange: (nodeId: string, controlType: string, semesterIndex: number) => void;
@@ -127,7 +120,6 @@ const SubjectRow: React.FC<{
   isSelected,
   depth, 
   rowBgClass = '',
-  isMultiSelectMode,
   onValueChange, 
   onCreditUnitsChange,
   onControlTypeChange,
@@ -135,11 +127,6 @@ const SubjectRow: React.FC<{
   onSelect
 }) => {
   // Обработчик потери фокуса для пересчета значений
-  const handleBlur = (e: React.FocusEvent<HTMLInputElement>, semesterIndex: number) => {
-    const value = parseInt(e.target.value) || 0;
-    onValueChange(node.id, semesterIndex, value);
-  };
-  
   // Обработчик для переименования
   const handleRename = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -282,7 +269,7 @@ const SubjectRow: React.FC<{
         ];
         
         // Возвращаем ячейки для каждого типа занятий
-        return activityTypes.map((activity, activityIndex) => (
+        return activityTypes.map((activity) => (
           <td 
             key={`${s}-${activity.key}`} 
             className="w-16 px-3 py-2 border-l border-t border-slate-700/20 dark:border-slate-600/40 text-center"
@@ -317,7 +304,6 @@ const GroupRow: React.FC<{
   depth: number;
   rowBgClass?: string; // Класс для чередования фона строк
   hasError?: boolean; // Флаг ошибки (например, пустая группа)
-  isMultiSelectMode?: boolean; // Режим множественного выбора
   onToggleCollapse: (id: string) => void;
   onAddChild: (parentId: string, type: 'section' | 'group' | 'subject') => void;
   onRename: (id: string) => void;
@@ -333,7 +319,6 @@ const GroupRow: React.FC<{
   depth, 
   rowBgClass = '',
   hasError,
-  isMultiSelectMode,
   onToggleCollapse, 
   onAddChild, 
   onRename, 
@@ -357,13 +342,6 @@ const GroupRow: React.FC<{
   // Расчет отступа в зависимости от глубины
   const paddingLeft = 8 + depth * 20;
 
-  // Стиль для фона в зависимости от наличия ошибки только
-  let bgClass = '';
-  
-  // Если есть ошибка, применяем стиль ошибки
-  if (hasError && !isSection) {
-    bgClass = 'bg-red-100 dark:bg-red-900/20';
-  }
 
   return (
     <tr
@@ -462,7 +440,7 @@ const GroupRow: React.FC<{
         ];
         
         // Для каждого типа занятий выводим сумму
-        return activityTypes.map((activity, activityIndex) => {
+        return activityTypes.map((activity) => {
           // Используем единую сумму для всех типов (пока нет детализации по типам для групп и разделов)
           const sum = node.sums?.[semesterIndex] || 0;
           
@@ -621,14 +599,6 @@ export const CurriculumPlanTable = React.forwardRef<
     setIsMultiSelectMode(false);
   }, []);
 
-  // Функция для активации режима множественного выбора
-  const enableMultiSelectMode = useCallback(() => {
-    setIsMultiSelectMode(true);
-    // Если есть выбранный узел, добавляем его в множественное выделение
-    if (selectedNodeId) {
-      setSelectedNodes(new Set([selectedNodeId]));
-    }
-  }, [selectedNodeId]);
 
   // Обработчик удаления узла (и всех его потомков)
   const handleDeleteNode = useCallback((nodeId: string) => {
@@ -975,10 +945,6 @@ export const CurriculumPlanTable = React.forwardRef<
             newParentId = overNodeData.parentId;
           }
           
-          // Получаем все узлы с таким же родителем
-          const siblingsWithSameParent = prevData
-            .filter(n => n.parentId === newParentId)
-            .sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
           
           // Определяем новый индекс сортировки
           let newOrderIndex: number;
@@ -1433,7 +1399,6 @@ export const CurriculumPlanTable = React.forwardRef<
                           semesters={semesters}
                           isActive={selectedNodeId === node.id}
                           isSelected={selectedNodes.has(node.id)}
-                          isMultiSelectMode={isMultiSelectMode}
                           depth={node.depth || 0}
                           rowBgClass={rowBgClass}
                           onValueChange={handleValueChange}
@@ -1455,7 +1420,6 @@ export const CurriculumPlanTable = React.forwardRef<
                           semesters={semesters}
                           isActive={selectedNodeId === node.id}
                           isSelected={selectedNodes.has(node.id)}
-                          isMultiSelectMode={isMultiSelectMode}
                           hasChildren={hasChildren}
                           isSection={isSection}
                           hasError={hasError}

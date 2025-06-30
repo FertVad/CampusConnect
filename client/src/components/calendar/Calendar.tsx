@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import CalendarDays from '@/components/ui/calendar-days';
-import { cn } from '@/lib/utils';
 
 interface CalendarEvent {
   date: Date;

@@ -2,14 +2,13 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import StatusCard from '@/components/cards/StatusCard';
-import AssignmentList from '@/components/assignments/AssignmentList';
 import ClassSchedule, { ScheduleItemWithSubject } from '@/components/schedule/ClassSchedule';
 import NotificationList from '@/components/notifications/NotificationList';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
-  BarChart2, BookOpen, Calendar, Users,
+  BookOpen, Calendar, Users,
   Clock, PenTool, MessageSquare,
   Bell, CheckCircle, XCircle, AlertCircle,
   PlusCircle, FileType
@@ -112,10 +111,6 @@ const TeacherDashboard = () => {
   };
   
   // Get upcoming assignments
-  const upcomingAssignments = assignments
-    .filter(assignment => new Date(assignment.dueDate) >= new Date())
-    .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
-    .slice(0, 4);
   
   // Filter students based on activity (inactive for X days)
   const inactiveStudents = allStudents.slice(0, 3); // This would be filtered based on actual activity data
