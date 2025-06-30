@@ -74,8 +74,10 @@ export const NotificationBell = () => {
   };
 
   // Форматирование даты уведомления в виде "X времени назад"
-  const formatNotificationDate = (date: string) => {
-    return formatDistanceToNow(new Date(date), { 
+  const formatNotificationDate = (date: string | Date | null) => {
+    if (!date) return '';
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    return formatDistanceToNow(dateObj, {
       addSuffix: true,
       locale: dateLocale
     });

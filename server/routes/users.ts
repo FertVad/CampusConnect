@@ -1,6 +1,6 @@
 import { Express } from "express";
 import { getStorage } from "../storage";
-import { insertUserSchema } from "@shared/schema";
+import { insertUserSchema, User } from "@shared/schema";
 import { z } from "zod";
 import type { RouteContext } from "./index";
 import { logger } from "../utils/logger";
@@ -81,8 +81,9 @@ app.post('/api/users', authenticateUser, requireRole(['admin']), async (req, res
     }
 
     // Fetch the user record synced to public.users via trigger
-    let user = await getStorage().getUserByEmail(userData.email);
-    if (!user) {
+    const existingUser = await getStorage().getUserByEmail(userData.email);
+    let user: User;
+    if (!existingUser) {
       // Fallback to metadata if trigger has not synced yet
       user = {
         id: data.user.id,
@@ -90,9 +91,12 @@ app.post('/api/users', authenticateUser, requireRole(['admin']), async (req, res
         lastName: userData.lastName,
         email: userData.email,
         password: '',
+        phone: null,
         role: userData.role,
         createdAt: new Date().toISOString(),
-      } as any;
+      } as User;
+    } else {
+      user = existingUser;
     }
     
     // Отправляем уведомление всем администраторам кроме текущего пользователя

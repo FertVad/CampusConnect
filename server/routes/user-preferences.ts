@@ -17,6 +17,11 @@ export function registerUserPreferencesRoutes(app: Express, { authenticateUser }
           theme: 'light',
           language: 'en',
           notificationsEnabled: true,
+          assignmentNotifications: true,
+          gradeNotifications: true,
+          taskNotifications: true,
+          systemNotifications: true,
+          soundNotifications: true,
           createdAt: new Date(),
           updatedAt: new Date(),
         };
