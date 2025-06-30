@@ -22,7 +22,7 @@ import { ru } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
 
 interface ImportedFile {
-  id: number;
+  id: string;
   originalName: string;
   uploadedAt: string;
   status: 'success' | 'error' | 'partial' | 'failed';
@@ -30,7 +30,7 @@ interface ImportedFile {
   successCount: number;
   errorCount: number;
   importType: 'csv' | 'google-sheets';
-  uploadedBy: number;
+  uploadedBy: string;
   uploadedByUser?: {
     firstName: string;
     lastName: string;
@@ -40,7 +40,7 @@ interface ImportedFile {
 
 const ImportedFiles = () => {
   const [activeFilter, setActiveFilter] = useState<'all' | 'csv' | 'google-sheets'>('all');
-  const [isProcessing, setIsProcessing] = useState<Record<number, boolean>>({});
+  const [isProcessing, setIsProcessing] = useState<Record<string, boolean>>({});
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -49,7 +49,7 @@ const ImportedFiles = () => {
     queryKey: ['/api/imported-files'],
   });
 
-  const handleDeleteFile = async (id: number) => {
+  const handleDeleteFile = async (id: string) => {
     if (window.confirm('Вы уверены, что хотите удалить этот файл?')) {
       setIsProcessing(prev => ({ ...prev, [id]: true }));
       
@@ -74,7 +74,7 @@ const ImportedFiles = () => {
     }
   };
 
-  const handleReimportFile = async (id: number) => {
+  const handleReimportFile = async (id: string) => {
     // Здесь будет логика для повторного импорта файла
     toast({
       title: 'Повторный импорт',
@@ -128,7 +128,7 @@ const ImportedFiles = () => {
         </Button>
       </div>
       
-      <Tabs defaultValue="all" onValueChange={(value) => setActiveFilter(value as any)}>
+      <Tabs defaultValue="all" onValueChange={(value: string) => setActiveFilter(value as 'all' | 'csv' | 'google-sheets')}>
         <div className="mb-4">
           <TabsList>
             <TabsTrigger value="all">Все файлы</TabsTrigger>

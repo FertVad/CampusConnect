@@ -6,12 +6,13 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { submitAssignmentSchema } from './useAssignments';
 import * as z from 'zod';
+import type { Assignment } from '@shared/schema';
 
 interface Props {
   open: boolean;
   onOpenChange: (v: boolean) => void;
-  selected: any | null;
-  submitAssignment: (data: z.infer<typeof submitAssignmentSchema> & { assignmentId: number }) => void;
+  selected: Assignment | null;
+  submitAssignment: (data: z.infer<typeof submitAssignmentSchema> & { assignmentId: string }) => void;
   loading: boolean;
 }
 

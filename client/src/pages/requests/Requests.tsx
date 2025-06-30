@@ -21,7 +21,7 @@ const Requests = () => {
   const [location, setLocation] = useLocation();
   
   // Parse the hash from the URL if any (for direct linking to a specific request)
-  const requestIdFromHash = location.includes('#') ? parseInt(location.split('#')[1]) : null;
+  const requestIdFromHash = location.includes('#') ? Number.parseInt(location.split('#')[1], 10) : null;
   
   // Get requests based on user role
   const {
@@ -40,7 +40,11 @@ const Requests = () => {
   });
   
   // Mutation for creating requests (student)
-  const createRequestMutation = useMutation({
+  const createRequestMutation = useMutation<
+    Request,
+    Error,
+    RequestFormData
+  >({
     mutationFn: (data: RequestFormData) => {
       return postData('/api/requests', data);
     },
@@ -61,7 +65,11 @@ const Requests = () => {
   });
   
   // Mutation for updating request status (admin/teacher)
-  const updateRequestStatusMutation = useMutation({
+  const updateRequestStatusMutation = useMutation<
+    Request,
+    Error,
+    { requestId: string; status: 'approved' | 'rejected'; resolution: string }
+  >({
     mutationFn: ({ requestId, status, resolution }: { requestId: string; status: 'approved' | 'rejected'; resolution: string }) => {
       return putData(`/api/requests/${requestId}/status`, { status, resolution });
     },
@@ -93,7 +101,9 @@ const Requests = () => {
   const isAdmin = user?.role === 'admin';
   
   // Set active tab based on user role
-  const [activeTab, setActiveTab] = React.useState(isStudent ? 'submit' : 'pending');
+  const [activeTab, setActiveTab] = React.useState<'submit' | 'history' | 'pending' | 'all'>(
+    isStudent ? 'submit' : 'pending'
+  );
   
   // Scroll to the requested element if hash is present
   useEffect(() => {
@@ -111,7 +121,7 @@ const Requests = () => {
       subtitle={isStudent ? "Submit and track your requests" : "Manage student requests"}
     >
       {isStudent ? (
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <Tabs value={activeTab} onValueChange={(v: string) => setActiveTab(v as 'submit' | 'history' | 'pending' | 'all')}>
           <TabsList>
             <TabsTrigger value="submit">Submit Request</TabsTrigger>
             <TabsTrigger value="history">Request History</TabsTrigger>
@@ -131,7 +141,7 @@ const Requests = () => {
           </TabsContent>
         </Tabs>
       ) : (
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <Tabs value={activeTab} onValueChange={(v: string) => setActiveTab(v as 'submit' | 'history' | 'pending' | 'all')}>
           <TabsList>
             <TabsTrigger value="pending">Pending Requests</TabsTrigger>
             <TabsTrigger value="all">All Requests</TabsTrigger>
