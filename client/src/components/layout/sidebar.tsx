@@ -3,12 +3,10 @@ import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from 'react-i18next';
 import { Button } from "@/components/ui/button";
-import { 
-  FileText as FileManagerIcon, 
-  Calendar, 
-  Award, 
-  Users, 
-  FileText, 
+import {
+  Calendar,
+  Users,
+  FileText,
   MessageSquare,
   LogOut,
   ChevronRight,

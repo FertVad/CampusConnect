@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { ScheduleItem, Subject, User } from '@shared/schema';
 import { formatTime, getDayName } from '@/lib/utils';
-import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Book, MapPin, User as UserIcon } from 'lucide-react';
 
