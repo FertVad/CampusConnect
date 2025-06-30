@@ -329,14 +329,6 @@ export function useAutoSave<T>(data: T, options: AutoSaveOptions) {
     setLastSavedHash(jsonHash(data));
   };
   
-  // В продакшн режиме уменьшаем количество логов
-  const consoleLogger = (message: string, ...args: any[]) => {
-    // В продакшн режиме не выводим логи
-    if (process.env.NODE_ENV === 'production') {
-      return;
-    }
-  };
-  
   return {
     isSaving,
     error,
@@ -352,6 +344,7 @@ export function useAutoSave<T>(data: T, options: AutoSaveOptions) {
     resume: () => {
       pausedRef.current = false;
       updateLastSavedHash();
-    } 
+    }
   };
 }
+
