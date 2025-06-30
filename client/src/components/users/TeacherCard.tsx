@@ -54,7 +54,6 @@ const TeacherCard: React.FC<TeacherCardProps> = ({ teacher, onClick, onEdit }) =
   };
 
   const {
-    id,
     firstName,
     lastName,
     email,

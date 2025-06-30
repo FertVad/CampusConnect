@@ -28,7 +28,6 @@ const AdminCard: React.FC<AdminCardProps> = ({ admin, onClick, onEdit }) => {
   const { t } = useTranslation();
 
   const {
-    id,
     firstName,
     lastName,
     email,

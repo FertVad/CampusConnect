@@ -18,7 +18,6 @@ import {
   ClipboardList,
   Bell,
   BarChart2,
-  UserCheck,
   MapPin,
   GraduationCap,
   FileText,
