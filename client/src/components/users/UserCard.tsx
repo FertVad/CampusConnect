@@ -25,7 +25,6 @@ const UserCard: React.FC<UserCardProps> = ({ user, onClick }) => {
   const { t } = useTranslation();
 
   const {
-    id,
     firstName,
     lastName,
     email,

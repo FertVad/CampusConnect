@@ -30,7 +30,6 @@ const DirectorCard: React.FC<DirectorCardProps> = ({ director, onClick, onEdit }
   const { t } = useTranslation();
 
   const {
-    id,
     firstName,
     lastName,
     email,
