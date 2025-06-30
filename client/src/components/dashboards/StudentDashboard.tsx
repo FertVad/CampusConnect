@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import { Link } from 'wouter';
 import { Badge } from '@/components/ui/badge';
-import { Assignment, Notification, Request, Grade, Submission } from '@shared/schema';
+import { Assignment, Notification, Request, Submission } from '@shared/schema';
 import { apiRequest } from '@/lib/queryClient';
 import { useAuth } from '@/hooks/use-auth';
 import DashboardSkeleton from './DashboardSkeleton';
@@ -152,7 +152,6 @@ const StudentDashboard = () => {
   if (error) {
     const handleRetry = () => {
       refetchAssignments();
-      refetchGrades();
       refetchSchedule();
       refetchNotifications();
       refetchRequests();
