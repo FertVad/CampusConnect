@@ -1,47 +1,27 @@
-import type { Express, Response, NextFunction, Request as ExpressRequest } from "express";
+import type { Express, Request as ExpressRequest } from "express";
 import { createServer, type Server } from "http";
 import { getStorage } from "../storage";
 import { WebSocketServer } from "ws";
 import { WebSocket } from "ws";
 import { logger } from "../utils/logger";
 import { setupAuth } from "../auth";
-import { 
-  loginSchema, insertUserSchema, 
-  insertSubjectSchema, insertEnrollmentSchema, 
-  insertScheduleItemSchema, insertAssignmentSchema,
-  insertSubmissionSchema, insertGradeSchema,
-  insertRequestSchema, insertDocumentSchema,
-  insertMessageSchema, insertNotificationSchema,
+import {
   insertTaskSchema, taskPriorityEnum, taskStatusEnum,
   User
 } from "@shared/schema";
-import { object, string, z } from "zod";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
-import { eq } from "drizzle-orm";
-import { db } from "../db/index";
-import { 
-  parseSheetDataToScheduleItems, 
-  fetchSheetData, 
-  authenticateWithGoogleSheets, 
-  ScheduleImportResult 
-} from "../utils/googleSheetsHelper";
-import { parseCsvToScheduleItems, validateScheduleItems, prepareImportResult } from "../utils/csvHelper";
+
 import { registerUserRoutes } from "./users";
 import { registerScheduleRoutes } from "./schedule";
 import { registerTaskRoutes } from "./tasks";
 
-import { supabase } from "../supabaseClient";
-
 import { registerAssignmentRoutes } from "./assignments";
 import { registerMessageRoutes } from "./messages";
 import { registerRequestRoutes } from "./requests";
-import { registerDocumentRoutes } from "./documents";
 import { registerNotificationRoutes } from "./notifications";
 import { registerUserPreferencesRoutes } from "./user-preferences";
-import { registerActivityLogRoutes } from "./activityLogs";
-import { registerCurriculumRoutes } from "./curriculum";
 import { verifySupabaseJwt } from "../middleware/verifySupabaseJwt";
 import { requireRole } from "../middleware/requireRole";
 import type { AuthenticatedUser } from "../types/auth";

@@ -1,4 +1,4 @@
-import { 
+import {
   User, InsertUser, Subject, InsertSubject, Enrollment, InsertEnrollment,
   ScheduleItem, InsertScheduleItem, Assignment, InsertAssignment,
   Submission, InsertSubmission, Grade, InsertGrade, Request, InsertRequest,
@@ -13,20 +13,11 @@ import {
   // Curriculum Plans
   CurriculumPlan, InsertCurriculumPlan,
   // User Preferences
-  UserPreferences, InsertUserPreferences, userPreferences,
-  // Схемы таблиц для Drizzle
-  users, subjects, enrollments, scheduleItems, assignments, submissions,
-  grades, requests, documents, messages, notifications, specialties,
-  courses, groups, scheduleEntries, importedFiles, activityLogs, tasks,
-  curriculumPlans, userPreferences
+  UserPreferences, InsertUserPreferences
 } from "@shared/schema";
-import { eq, and, desc, asc } from "drizzle-orm";
-import { db } from "./db/index";
-import { randomUUID } from 'crypto';
 import { SupabaseStorage } from "./db/storage";
 
 import { logger } from "./utils/logger";
-import { getOrSet } from "./utils/cache";
 
 // Storage interface
 export interface IStorage {
