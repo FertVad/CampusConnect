@@ -1,10 +1,10 @@
 import React, { useMemo } from 'react';
 
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import StatusCard from '@/components/cards/StatusCard';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Users, UserCircle, Briefcase, GraduationCap, MessageSquare, Loader2, ClipboardList, AlertCircle, Clock, CheckCircle, PauseCircle } from 'lucide-react';
+import { Briefcase, GraduationCap, MessageSquare, Loader2, ClipboardList, AlertCircle, Clock, CheckCircle, PauseCircle } from 'lucide-react';
 import { Link } from 'wouter';
 import { User, Request } from '@shared/schema';
 
@@ -28,7 +28,6 @@ import ErrorAlert from './ErrorAlert';
 
 const AdminDashboard = () => {
   const { t } = useTranslation();
-  const queryClient = useQueryClient();
 
   // Get all users with refetch on window focus and interval
   const {
@@ -42,19 +41,8 @@ const AdminDashboard = () => {
     refetchInterval: 30000, // Refresh every 30 seconds
   });
 
-  // Get all subjects
-  const {
-    data: subjects = [],
-    isLoading: isSubjectsLoading,
-    error: subjectsError,
-    refetch: refetchSubjects,
-  } = useQuery<any[]>({
-    queryKey: ['/api/subjects'],
-  });
-
   // Get pending requests
   const {
-    data: requests = [],
     isLoading: isRequestsLoading,
     error: requestsError,
     refetch: refetchRequests,
@@ -89,8 +77,6 @@ const AdminDashboard = () => {
   }, [users]);
 
   // Count pending requests
-  const pendingRequests = requests.filter(r => r.status === 'pending');
-
   // Рассчитываем статистику задач
   const taskStats = useMemo(() => {
     const totalTasks = tasks.length;
@@ -122,53 +108,15 @@ const AdminDashboard = () => {
   }, [tasks]);
 
   // Sort users by creation date (newest first)
-  const sortedUsers = useMemo(() => {
-    return [...users].sort((a, b) => {
-      if (b.createdAt && a.createdAt) {
-        return new Date(b.createdAt as Date).getTime() - new Date(a.createdAt as Date).getTime();
-      }
-      return 0;
-    });
-  }, [users]);
 
   // Get the 5 most recently added users
-  const recentUsers = sortedUsers.slice(0, 5);
-
-  // Get role badge styles
-  const getRoleBadgeStyles = (role: string) => {
-    switch (role) {
-      case 'admin':
-        return 'bg-primary';
-      case 'teacher':
-        return 'bg-secondary';
-      case 'student':
-        return 'bg-accent';
-      default:
-        return 'bg-neutral-500';
-    }
-  };
-
-  // Get role icon
-  const getRoleIcon = (role: string) => {
-    switch (role) {
-      case 'admin':
-        return <UserCircle className="h-6 w-6" />;
-      case 'teacher':
-        return <Briefcase className="h-6 w-6" />;
-      case 'student':
-        return <GraduationCap className="h-6 w-6" />;
-      default:
-        return <Users className="h-6 w-6" />;
-    }
-  };
 
   const isLoading =
     isLoadingUsers ||
-    isSubjectsLoading ||
     isRequestsLoading ||
     isLoadingTasks;
 
-  const error = usersError || subjectsError || requestsError || tasksError;
+  const error = usersError || requestsError || tasksError;
 
   if (isLoading) {
     return <DashboardSkeleton />;
@@ -177,7 +125,6 @@ const AdminDashboard = () => {
   if (error) {
     const handleRetry = () => {
       refetchUsers();
-      refetchSubjects();
       refetchRequests();
       refetchTasks();
     };

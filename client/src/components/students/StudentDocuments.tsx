@@ -4,9 +4,8 @@ import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
 import { 
-  FileText, 
-  Download, 
-  Upload,
+  FileText,
+  Download,
   AlertCircle
 } from 'lucide-react';
 
@@ -22,12 +21,11 @@ export interface Document {
 }
 
 interface StudentDocumentsProps {
-  userId: string;
   documents: Document[];
   isLoading: boolean;
 }
 
-const StudentDocuments: React.FC<StudentDocumentsProps> = ({ userId, documents, isLoading }) => {
+const StudentDocuments: React.FC<StudentDocumentsProps> = ({ documents, isLoading }) => {
   const { t } = useTranslation();
 
   // Форматирование даты

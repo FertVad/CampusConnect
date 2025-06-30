@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo } from "react";
-import { ACTIVITY_TYPES, ActivityType } from "./ActivityTypes";
+import React, { useMemo } from "react";
+import { ACTIVITY_TYPES } from "./ActivityTypes";
 import { SummaryRow } from "@/utils/buildSummary";
 
 export const SummaryTable: React.FC<{ summary: SummaryRow[]; courses: number }> = ({ summary = [], courses }) => {

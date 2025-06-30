@@ -6,13 +6,12 @@ import AssignmentList from '@/components/assignments/AssignmentList';
 import ClassSchedule, { ScheduleItemWithSubject } from '@/components/schedule/ClassSchedule';
 import NotificationList from '@/components/notifications/NotificationList';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { 
-  BarChart2, Book, Calendar as CalendarIcon, Clock, 
-  AlertCircle, BookOpen, FileText, Bell 
+import {
+  Book, Calendar as CalendarIcon, Clock,
+  AlertCircle, BookOpen, FileText, Bell
 } from 'lucide-react';
 import { Link } from 'wouter';
 import { Badge } from '@/components/ui/badge';
-import { calculateGPA } from '@/lib/utils';
 import { Assignment, Notification, Request, Grade, Submission } from '@shared/schema';
 import { apiRequest } from '@/lib/queryClient';
 import { useAuth } from '@/hooks/use-auth';
@@ -38,15 +37,6 @@ const StudentDashboard = () => {
     queryKey: ['/api/assignments/student/' + user?.id],
   });
   
-  // Get student grades
-  const {
-    data: grades = [],
-    isLoading: isGradesLoading,
-    error: gradesError,
-    refetch: refetchGrades,
-  } = useQuery<Grade[]>({
-    queryKey: ['/api/grades/student/' + user?.id],
-  });
   
   // Get schedule
   const {
@@ -84,8 +74,6 @@ const StudentDashboard = () => {
     refetchInterval: false // Не обновляем автоматически
   });
   
-  // Calculate GPA
-  const gpa = calculateGPA(grades);
   
   // Get upcoming assignments that haven't been completed
   const upcomingAssignments = assignments
@@ -147,14 +135,12 @@ const StudentDashboard = () => {
 
   const isLoading =
     isAssignmentsLoading ||
-    isGradesLoading ||
     isScheduleLoading ||
     isNotificationsLoading ||
     isRequestsLoading;
 
   const error =
     assignmentsError ||
-    gradesError ||
     scheduleError ||
     notificationsError ||
     requestsError;

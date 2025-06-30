@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import { WeekActivityDialog, WeekInfo } from "./CustomWeekActivityDialog";
-import { ActivityType, ACTIVITY_TYPES, ACTIVITY_COLORS, getActivityStyle } from "./ActivityTypes";
+import { ActivityType, ACTIVITY_TYPES, getActivityStyle } from "./ActivityTypes";
 import { Tooltip } from 'react-tooltip'; // Возвращаемся к react-tooltip, так как он проще в использовании
 import { WeekCell, getFirstWorkdayOfSeptember, buildAcademicWeeks } from "@/utils/calendar";
 import { format } from "date-fns";
@@ -11,7 +11,6 @@ import { useTranslation } from 'react-i18next';
 import { SaveButton } from "@/components/ui/save-button";
 import CourseRow from "./CourseRow";
 import { X } from "lucide-react";
-import clsx from "clsx";
 import { useCurriculum } from "@/lib/curriculumStore";
 
 // Количество курсов определяется из yearsOfStudy в props
@@ -41,7 +40,6 @@ interface AcademicCalendarTableProps {
   weeks: WeekCell[];            // Массив недель для отображения
   yearsOfStudy: number;         // Количество лет обучения
   monthsOfStudy?: number;       // Количество дополнительных месяцев
-  effectiveCourseCount?: number; // Эффективное количество курсов (yearsOfStudy + monthsOfStudy > 0 ? 1 : 0)
   courses?: Array<{              // Массив курсов для отображения
     id: string;
     name: string;
@@ -60,7 +58,6 @@ export function AcademicCalendarTable({
   weeks,
   yearsOfStudy = 4, // Оставляем для обратной совместимости, но будет перезаписано из глобального хранилища
   monthsOfStudy = 0, // Дополнительные месяцы
-  effectiveCourseCount,
   courses = [],
   onChange,
   initialData = {},
@@ -73,18 +70,12 @@ export function AcademicCalendarTable({
   // Получаем количество лет и месяцев обучения из глобального хранилища
   const { 
     yearsOfStudy: storeYearsOfStudy, 
-    monthsOfStudy: storeMonthsOfStudy,
-    getEffectiveCourseCount 
+    monthsOfStudy: storeMonthsOfStudy
   } = useCurriculum();
   
   // Используем значения из глобального хранилища, но если там 0, используем из пропсов для безопасности
   const effectiveYearsOfStudy = storeYearsOfStudy > 0 ? storeYearsOfStudy : yearsOfStudy;
   const effectiveMonthsOfStudy = storeMonthsOfStudy >= 0 ? storeMonthsOfStudy : monthsOfStudy;
-  
-  // Рассчитываем эффективное количество курсов с учетом месяцев, если не передано явно
-  const actualCourseCount = effectiveCourseCount !== undefined 
-    ? effectiveCourseCount 
-    : getEffectiveCourseCount();
   
 
   // Создаем ref для отслеживания предыдущего значения yearsOfStudy
@@ -173,7 +164,7 @@ export function AcademicCalendarTable({
     enabled: isValidPlanId,
     // Используем флаг паузы из пропсов для приостановки автосохранения
     paused: autosavePaused,
-    onSuccess: (data) => {
+    onSuccess: () => {
       // Данные успешно сохранены
     },
     onError: (error) => {
@@ -185,35 +176,6 @@ export function AcademicCalendarTable({
     }
   });
   
-  // Группируем недели только по месяцам (без учета года)
-  const monthGroups = useMemo(() => {
-    // Порядок месяцев учебного года, начиная с сентября
-    const academicMonthOrder = [
-      "сентябрь", "октябрь", "ноябрь", "декабрь", 
-      "январь", "февраль", "март", "апрель", 
-      "май", "июнь", "июль", "август"
-    ];
-    
-    // Сначала группируем по месяцам обычным способом
-    const grouped = weeks.reduce((acc, w) => {
-      // Используем только название месяца без года
-      const key = format(w.startDate, "LLLL", { locale: ru }); // «сентябрь»
-      (acc[key] ||= []).push(w);
-      return acc;
-    }, {} as Record<string, WeekCell[]>);
-    
-    // Затем создаем новый отсортированный объект
-    const sortedGroups = {} as Record<string, WeekCell[]>;
-    
-    // Добавляем месяцы в правильном порядке (начиная с сентября)
-    academicMonthOrder.forEach(month => {
-      if (grouped[month]) {
-        sortedGroups[month] = grouped[month];
-      }
-    });
-    
-    return sortedGroups;
-  }, [weeks]);
   
   // Состояние для модального окна и выбранной ячейки
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -387,37 +349,6 @@ export function AcademicCalendarTable({
   const headerRef = useRef<HTMLTableSectionElement>(null);
   const scrollWrapperRef = useRef<HTMLDivElement>(null);
   
-  // Получение границ прямоугольника выделения
-  const getSelectionRect = (selectedCells: Set<string>): { top: number, left: number, width: number, height: number } => {
-    if (selectedCells.size === 0) {
-      return { top: 0, left: 0, width: 0, height: 0 };
-    }
-    
-    let minLeft = Infinity;
-    let minTop = Infinity;
-    let maxRight = -Infinity;
-    let maxBottom = -Infinity;
-    
-    // Проходим по всем выделенным ячейкам и находим границы
-    Array.from(selectedCells).forEach(cellKey => {
-      const cell = document.querySelector(`[data-cell-key="${cellKey}"]`) as HTMLElement;
-      if (cell) {
-        const rect = cell.getBoundingClientRect();
-        minLeft = Math.min(minLeft, rect.left);
-        minTop = Math.min(minTop, rect.top);
-        maxRight = Math.max(maxRight, rect.right);
-        maxBottom = Math.max(maxBottom, rect.bottom);
-      }
-    });
-    
-    // Возвращаем прямоугольник, охватывающий все выделенные ячейки
-    return {
-      top: minTop,
-      left: minLeft,
-      width: maxRight - minLeft,
-      height: maxBottom - minTop
-    };
-  };
   
   // Использем новый компонент FloatingActionBar вместо встроенного ActionBar
   // Состояние и эффекты для позиционирования больше не нужны
@@ -517,9 +448,6 @@ export function AcademicCalendarTable({
           // Проверяем, является ли эта неделя концом месяца
           const isMonthEnd = isLastDayOfMonth(w.endDate);
           
-          // Проверяем, пересекает ли неделя границу месяцев
-          const isCrossingMonths = w.startDate.getMonth() !== w.endDate.getMonth();
-          
           // Если неделя пересекает месяцы, расчитываем количество дней в текущем и следующем месяце
           let bgClass = '';
           bgClass = isEvenMonth 
@@ -615,10 +543,8 @@ export function AcademicCalendarTable({
         <CourseRow
           key={`course-row-${course.id}`}
           course={course}
-          weeks={weeks} // Передаем базовые недели для заголовков (используемые для отображения)
           courseWeeks={course.weeks} // Передаем недели специфичные для этого курса (для расчета смещения)
           tableData={tableData}
-          selectedCellKey={selectedCellKey}
           selectedCells={selectedCells}
           onCellClick={handleCellClick}
           isLastDayOfMonth={isLastDayOfMonth}
@@ -682,10 +608,8 @@ export function AcademicCalendarTable({
       <CourseRow
         key={`course-row-${course.id}`}
         course={course}
-        weeks={weeks} // Передаем базовые недели для заголовков (используемые для отображения)
         courseWeeks={course.weeks} // Передаем недели специфичные для этого курса (для расчета смещения)
         tableData={tableData}
-        selectedCellKey={selectedCellKey}
         selectedCells={selectedCells}
         onCellClick={handleCellClick}
         isLastDayOfMonth={isLastDayOfMonth}
@@ -698,7 +622,6 @@ export function AcademicCalendarTable({
   const hasSelection = selectedCells.size > 0;
   
   // Рассчитываем высоту шапки таблицы для правильного позиционирования бара
-  const [headerHeight, setHeaderHeight] = useState(0);
   const dockBarRef = useRef<HTMLDivElement>(null);
   
   // Упрощенный код, без отслеживания высоты заголовка

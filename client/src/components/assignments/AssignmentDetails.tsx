@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { Assignment, Subject, Submission, User } from '@shared/schema';
 import { formatDate } from '@/lib/utils';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
-import { AlertCircle, Calendar, Clock, File, Upload, User as UserIcon } from 'lucide-react';
+import { AlertCircle, Calendar, Clock, File, User as UserIcon } from 'lucide-react';
 import FileUpload from '@/components/files/FileUpload';
 import { getStatusColor } from '@/lib/utils';
 

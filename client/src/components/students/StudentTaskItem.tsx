@@ -4,7 +4,6 @@ import { getTaskStatusLabel } from '@/lib/taskStatus';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import TaskDetailsModal, { TaskDetail } from '@/components/tasks/TaskDetailsModal';
 import { Clock } from 'lucide-react';
 

@@ -5,14 +5,11 @@ import { Label } from "@/components/ui/label";
 import { createPortal } from "react-dom";
 
 // Импортируем типы из общего модуля
-import { 
-  ActivityType, 
-  ACTIVITY_TYPES, 
-  ACTIVITY_COLORS, 
-  weekGradient 
+import {
+  ActivityType,
+  ACTIVITY_TYPES,
+  ACTIVITY_COLORS
 } from "./ActivityTypes";
-
-// Функция weekGradient теперь импортируется из ActivityTypes.ts
 
 // Интерфейс для дня недели
 interface WeekDay {
@@ -64,7 +61,7 @@ export function WeekActivityDialog({
     if (weekInfo) {
       // Используем даты начала и конца недели из параметра weekInfo
       // Неделя может начинаться с любого дня недели (не обязательно с понедельника)
-      const { startDate, endDate } = weekInfo;
+      const { startDate } = weekInfo;
       
       // Создаем массив дней между startDate и endDate (включительно)
       const days: WeekDay[] = [];
@@ -153,10 +150,6 @@ export function WeekActivityDialog({
 
   // Удаляем обработчик клика вне области - используем только двойной клик
   // для сброса выделения
-  const handleContainerClick = (e: React.MouseEvent) => {
-    // Оставляем пустую функцию, чтобы не было ошибок
-    // Сброс делаем только по двойному клику
-  };
 
   // Обработчик клика по дню недели
   const handleDayClick = (index: number) => {
@@ -211,9 +204,6 @@ export function WeekActivityDialog({
   };
 
   // Обработчик выбора активности
-  // helper — снимает выделение со всех дней
-  const clearSelection = (days: WeekDay[]) =>
-    days.map((d) => ({ ...d, selected: false }));
 
   // ===== 1. handleActivitySelect =====
   const handleActivitySelect = (value: string) => {

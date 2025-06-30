@@ -1,9 +1,8 @@
 import React from "react";
 import { WeekCell, buildAcademicWeeks } from "@/utils/calendar";
-import { format, getWeek, differenceInWeeks } from "date-fns";
+import { format } from "date-fns";
 import { ru } from "date-fns/locale/ru";
 import { ActivityType, ACTIVITY_COLORS, ACTIVITY_TYPES, weekGradient } from "./ActivityTypes";
-import { Tooltip } from "react-tooltip";
 
 // Интерфейс курса
 interface Course {
@@ -25,10 +24,7 @@ interface CellInfo {
 
 interface CourseRowProps {
   course: Course;
-  weeks: WeekCell[]; // Общие недели для заголовков (первый курс)
-  courseWeeks: WeekCell[]; // Недели специфичные для этого курса
   tableData: Record<string, ActivityType>;
-  selectedCellKey: string | null;
   selectedCells?: Set<string>; // Добавляем поддержку для множественного выделения
   onCellClick: (info: CellInfo, event: React.MouseEvent) => void;
   isLastDayOfMonth: (date: Date) => boolean;
@@ -38,10 +34,7 @@ interface CourseRowProps {
 // Функция для внутреннего использования
 function CourseRow({
   course,
-  weeks,
-  courseWeeks,
   tableData,
-  selectedCellKey,
   selectedCells = new Set(),
   onCellClick,
   isLastDayOfMonth,
@@ -69,15 +62,11 @@ function CourseRow({
       const weekNumber = weekInCourse.index;
       const cellKey = getCellKey(course.id, weekNumber);
       const activity = tableData[cellKey] || "";
-      const isSelected = cellKey === selectedCellKey;
       
       // Неделя пересекает границу месяца?
       const startMonthNum = weekInCourse.startDate.getMonth();
       const endMonthNum = weekInCourse.endDate.getMonth();
       const crossMonth = startMonthNum !== endMonthNum;
-      
-      // Определяем месяц для шахматного порядка (четный/нечетный месяц)
-      const startMonthName = format(weekInCourse.startDate, "LLLL", { locale: ru });
       
       // Используем фактический месяц (0-11) для определения четности/нечетности
       // Обратите внимание, что getMonth() возвращает 0 для января, 1 для февраля и т.д.
@@ -286,11 +275,6 @@ export default React.memo(CourseRow,
       .filter(key => key.includes(`course${next.course.id}`));
     
     if (prevSelectedKeys.length !== nextSelectedKeys.length) {
-      return false;
-    }
-    
-    // Проверяем количество недель - это важно для корректного отображения
-    if (prev.courseWeeks.length !== next.courseWeeks.length) {
       return false;
     }
     
