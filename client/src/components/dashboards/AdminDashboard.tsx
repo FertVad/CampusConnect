@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import StatusCard from '@/components/cards/StatusCard';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { FilePlus, Users, UserCircle, Briefcase, GraduationCap, FileText, MessageSquare, Loader2, ClipboardList, AlertCircle, Clock, CheckCircle, PauseCircle } from 'lucide-react';
+import { Users, UserCircle, Briefcase, GraduationCap, MessageSquare, Loader2, ClipboardList, AlertCircle, Clock, CheckCircle, PauseCircle } from 'lucide-react';
 import { Link } from 'wouter';
 import { User, Request } from '@shared/schema';
 
