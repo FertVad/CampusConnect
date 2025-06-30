@@ -55,7 +55,8 @@ export default function DocumentPage({ documentType, title, icon: Icon }: Docume
   });
 
   const createDocumentMutation = useMutation({
-    mutationFn: (formData: FormData) => uploadFile('/api/documents', formData),
+    mutationFn: (formData: FormData, { signal }) =>
+      uploadFile('/api/documents', formData, signal),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/documents'] });
       const capitalized = documentType.charAt(0).toUpperCase() + documentType.slice(1);

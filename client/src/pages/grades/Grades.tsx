@@ -40,8 +40,8 @@ const Grades = () => {
   
   // Mutation for creating grades
   const createGradeMutation = useMutation({
-    mutationFn: (data: z.infer<typeof insertGradeSchema>) => {
-      return postData('/api/grades', data);
+    mutationFn: (data: z.infer<typeof insertGradeSchema>, { signal }) => {
+      return postData('/api/grades', data, signal);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/grades'] });

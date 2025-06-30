@@ -141,14 +141,17 @@ function EditCurriculumPlanContent(): React.ReactNode {
 
   // Мутация для обновления учебного плана (унифицированная версия)
   const updateMutation = useMutation({
-    mutationFn: (updatedPlan: Partial<CurriculumFormValues> & {
+    mutationFn: (
+      updatedPlan: Partial<CurriculumFormValues> & {
       id: string,
       calendarData?: string,
       curriculumPlanData?: string,
       // Новые поля для унифицированного сохранения
       calendarJson?: string,
       planJson?: string
-    }) => {
+    },
+      { signal },
+    ) => {
       const { id, ...planData } = updatedPlan;
 
       // Сохраняем текущие данные yearsOfStudy для синхронизации между компонентами
@@ -204,7 +207,7 @@ function EditCurriculumPlanContent(): React.ReactNode {
       }
 
       // Используем PATCH метод для унифицированного сохранения
-      return apiRequest(`/api/curriculum-plans/${id}`, 'PATCH', JSON.stringify(planData));
+      return apiRequest(`/api/curriculum-plans/${id}`, 'PATCH', JSON.stringify(planData), signal);
     },
     onSuccess: (data) => {
       toast({

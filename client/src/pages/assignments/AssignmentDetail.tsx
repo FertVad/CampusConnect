@@ -51,10 +51,10 @@ const AssignmentDetail = () => {
   
   // Mutation for submitting assignment (student)
   const submitAssignmentMutation = useMutation({
-    mutationFn: (formData: FormData) => {
+    mutationFn: (formData: FormData, { signal }) => {
       formData.append('assignmentId', assignmentId.toString());
       formData.append('content', 'Submitted via file upload');
-      return uploadFile('/api/submissions', formData);
+      return uploadFile('/api/submissions', formData, signal);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/submissions/assignment/${assignmentId}`] });
@@ -75,8 +75,11 @@ const AssignmentDetail = () => {
   
   // Mutation for grading assignment (teacher)
   const gradeAssignmentMutation = useMutation({
-    mutationFn: ({ submissionId, grade, feedback }: { submissionId: string; grade: number; feedback: string }) => {
-      return putData(`/api/submissions/${submissionId}/grade`, { grade, feedback });
+    mutationFn: (
+      { submissionId, grade, feedback }: { submissionId: string; grade: number; feedback: string },
+      { signal },
+    ) => {
+      return putData(`/api/submissions/${submissionId}/grade`, { grade, feedback }, signal);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/submissions/assignment/${assignmentId}`] });

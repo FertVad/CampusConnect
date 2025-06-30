@@ -52,11 +52,12 @@ export function useAssignments() {
     Error,
     z.infer<typeof createAssignmentSchema>
   >({
-    mutationFn: async (data: z.infer<typeof createAssignmentSchema>) => {
+    mutationFn: async (data: z.infer<typeof createAssignmentSchema>, { signal }) => {
       const response = await authFetch('/api/assignments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...data, teacherId: user!.id }),
+        signal,
       });
       if (!response.ok) {
         const errorData = await response.json();
@@ -78,11 +79,12 @@ export function useAssignments() {
     Error,
     z.infer<typeof submitAssignmentSchema> & { assignmentId: string }
   >({
-    mutationFn: async (data) => {
+    mutationFn: async (data, { signal }) => {
       const response = await authFetch('/api/submissions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...data, studentId: user!.id }),
+        signal,
       });
       if (!response.ok) {
         const errorData = await response.json();

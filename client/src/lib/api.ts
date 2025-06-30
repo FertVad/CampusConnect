@@ -2,10 +2,15 @@ import { apiRequest, authFetch } from "./queryClient";
 import { getAuthHeaders } from "./auth";
 
 // Generic fetch function for GET requests with improved Safari compatibility
-export async function fetchData<T>(endpoint: string): Promise<T> {
+export async function fetchData<T>(endpoint: string, signal?: AbortSignal): Promise<T> {
   // Тайм-аут для запросов - 30 секунд
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 30000);
+  const fetchSignal = signal ? (() => {
+    if (signal.aborted) controller.abort();
+    else signal.addEventListener('abort', () => controller.abort());
+    return controller.signal;
+  })() : controller.signal;
   
   try {
     const response = await authFetch(endpoint, {
@@ -20,7 +25,7 @@ export async function fetchData<T>(endpoint: string): Promise<T> {
       },
       mode: 'cors', // Для лучшей совместимости
       redirect: 'follow', // Следуем за перенаправлениями
-      signal: controller.signal // Для тайм-аута
+      signal: fetchSignal // Для тайм-аута или отмены
     });
     
     // Очистим таймер
@@ -52,25 +57,30 @@ export async function fetchData<T>(endpoint: string): Promise<T> {
 }
 
 // Generic post function
-export async function postData<T>(endpoint: string, data: any): Promise<T> {
-  return await apiRequest(endpoint, 'POST', data) as T;
+export async function postData<T>(endpoint: string, data: any, signal?: AbortSignal): Promise<T> {
+  return await apiRequest(endpoint, 'POST', data, signal) as T;
 }
 
 // Generic put function
-export async function putData<T>(endpoint: string, data: any): Promise<T> {
-  return await apiRequest(endpoint, 'PUT', data) as T;
+export async function putData<T>(endpoint: string, data: any, signal?: AbortSignal): Promise<T> {
+  return await apiRequest(endpoint, 'PUT', data, signal) as T;
 }
 
 // Generic delete function
-export async function deleteData(endpoint: string): Promise<void> {
-  await apiRequest(endpoint, 'DELETE');
+export async function deleteData(endpoint: string, signal?: AbortSignal): Promise<void> {
+  await apiRequest(endpoint, 'DELETE', undefined, signal);
 }
 
 // Upload file with form data - improved Safari compatibility
-export async function uploadFile(endpoint: string, formData: FormData): Promise<any> {
+export async function uploadFile(endpoint: string, formData: FormData, signal?: AbortSignal): Promise<any> {
   // Тайм-аут для запросов - 60 секунд для больших файлов
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 60000);
+  const fetchSignal = signal ? (() => {
+    if (signal.aborted) controller.abort();
+    else signal.addEventListener('abort', () => controller.abort());
+    return controller.signal;
+  })() : controller.signal;
   
   try {
     // Получаем заголовки авторизации
@@ -97,7 +107,7 @@ export async function uploadFile(endpoint: string, formData: FormData): Promise<
       body: formData,
       mode: 'cors',
       redirect: 'follow',
-      signal: controller.signal // Для тайм-аута
+      signal: fetchSignal // Для тайм-аута
     });
     
     // Очистим таймер

@@ -45,8 +45,8 @@ const Requests = () => {
     Error,
     RequestFormData
   >({
-    mutationFn: (data: RequestFormData) => {
-      return postData('/api/requests', data);
+    mutationFn: (data: RequestFormData, { signal }) => {
+      return postData('/api/requests', data, signal);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/requests/student/${user?.id}`] });
@@ -70,8 +70,8 @@ const Requests = () => {
     Error,
     { requestId: string; status: 'approved' | 'rejected'; resolution: string }
   >({
-    mutationFn: ({ requestId, status, resolution }: { requestId: string; status: 'approved' | 'rejected'; resolution: string }) => {
-      return putData(`/api/requests/${requestId}/status`, { status, resolution });
+    mutationFn: ({ requestId, status, resolution }: { requestId: string; status: 'approved' | 'rejected'; resolution: string }, { signal }) => {
+      return putData(`/api/requests/${requestId}/status`, { status, resolution }, signal);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/requests'] });
