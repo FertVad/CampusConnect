@@ -135,8 +135,7 @@ export default function StudentDetail() {
               <div key="documents-container">
                 {(() => {
                   const DocumentsComponent = React.lazy(() => import('@/components/students/StudentDocuments'));
-                  return <DocumentsComponent 
-                    userId={userId}
+                  return <DocumentsComponent
                     documents={[]} // В будущем будем получать из API
                     isLoading={false}
                   />;
