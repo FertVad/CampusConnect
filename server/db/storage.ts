@@ -1,17 +1,13 @@
 import { db } from './index';
 import * as schema from '@shared/schema';
-import { eq, and, or, desc, asc, sql, isNotNull } from 'drizzle-orm';
-import { aliasedTable } from 'drizzle-orm/alias';
+import { eq, and, or, desc, asc } from 'drizzle-orm';
 import { IStorage } from '../storage';
 import { UsersRepository } from './users/repository';
 import { SubjectsRepository } from './subjects/repository';
 import { TasksRepository } from './tasks/repository';
-import pg from 'pg';
 import { getOrSet } from '../utils/cache';
 
 import * as notificationQueries from './notifications';
-
-const { Pool } = pg;
 import {
   User, InsertUser, Subject, InsertSubject, Enrollment, InsertEnrollment,
   ScheduleItem, InsertScheduleItem, Assignment, InsertAssignment,
@@ -22,8 +18,6 @@ import {
 } from '@shared/schema';
 import { testConnection } from './index';
 import bcrypt from 'bcrypt';
-import fs from 'fs';
-import path from 'path';
 import { log } from '../vite';
 import { logger } from '../utils/logger';
 import { supabase } from '../supabaseClient';
@@ -80,16 +74,6 @@ export class SupabaseStorage {
 
   async authenticate(credentials: LoginCredentials): Promise<User | undefined> {
     return this.usersRepo.authenticate(credentials);
-  }
-
-  // Helper methods for password hashing
-  private async hashPassword(password: string): Promise<string> {
-    const salt = await bcrypt.genSalt(10);
-    return bcrypt.hash(password, salt);
-  }
-
-  private async comparePasswords(supplied: string, stored: string): Promise<boolean> {
-    return bcrypt.compare(supplied, stored);
   }
 
   // Subjects
