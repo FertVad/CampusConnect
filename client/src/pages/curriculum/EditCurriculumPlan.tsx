@@ -150,7 +150,7 @@ function EditCurriculumPlanContent(): React.ReactNode {
       calendarJson?: string,
       planJson?: string
     },
-      { signal },
+      { signal } = {},
     ) => {
       const { id, ...planData } = updatedPlan;
 

@@ -83,7 +83,7 @@ export function useTasks() {
   });
 
   const createTaskMutation = useMutation({
-    mutationFn: async (data: InsertTask, { signal }) => {
+    mutationFn: async (data: InsertTask, { signal } = {}) => {
       const result = await apiRequest('/api/tasks', 'POST', data, signal);
       return result;
     },
@@ -105,7 +105,10 @@ export function useTasks() {
   });
 
   const updateTaskStatusMutation = useMutation({
-    mutationFn: async ({ id, status }: { id: number; status: string }, { signal }) => {
+    mutationFn: async (
+      { id, status }: { id: number; status: string },
+      { signal } = {}
+    ) => {
       const result = await apiRequest(`/api/tasks/${id}/status`, 'PATCH', { status }, signal);
       return result;
     },
@@ -132,7 +135,7 @@ export function useTasks() {
   });
 
   const deleteTaskMutation = useMutation({
-    mutationFn: async (id: number, { signal }) => {
+    mutationFn: async (id: number, { signal } = {}) => {
       const result = await apiRequest(`/api/tasks/${id}`, 'DELETE', undefined, signal);
       return result;
     },
@@ -164,7 +167,7 @@ export function useTasks() {
       dueDate?: string | null;
       executorId?: string;
     },
-      { signal },
+      { signal } = {},
     ) => {
       const { id, ...taskData } = data;
       const result = await apiRequest(`/api/tasks/${id}`, 'PUT', taskData, signal);

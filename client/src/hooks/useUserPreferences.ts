@@ -27,7 +27,7 @@ export function useUserPreferences({ enabled = true } = {}) {
   });
 
   const mutation = useMutation({
-    mutationFn: async (prefs: Partial<UserPreferences>, { signal }) =>
+    mutationFn: async (prefs: Partial<UserPreferences>, { signal } = {}) =>
       (await apiRequest('/api/user-preferences', 'PUT', prefs, signal)) as UserPreferences,
     onMutate: async (prefs: Partial<UserPreferences>) => {
       await queryClient.cancelQueries({ queryKey: ['/api/user-preferences'] });

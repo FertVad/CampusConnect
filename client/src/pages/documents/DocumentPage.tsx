@@ -55,7 +55,7 @@ export default function DocumentPage({ documentType, title, icon: Icon }: Docume
   });
 
   const createDocumentMutation = useMutation({
-    mutationFn: (formData: FormData, { signal }) =>
+    mutationFn: (formData: FormData, { signal } = {}) =>
       uploadFile('/api/documents', formData, signal),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/documents'] });

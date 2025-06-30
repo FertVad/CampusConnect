@@ -61,7 +61,7 @@ export default function CurriculumPlans() {
 
   // Мутация для создания нового учебного плана
   const createMutation = useMutation({
-    mutationFn: (newPlan: CurriculumFormValues, { signal }) =>
+    mutationFn: (newPlan: CurriculumFormValues, { signal } = {}) =>
       apiRequest('/api/curriculum-plans', 'POST', JSON.stringify(newPlan), signal),
     onSuccess: () => {
       toast({
@@ -84,7 +84,10 @@ export default function CurriculumPlans() {
 
   // Мутация для обновления учебного плана
   const updateMutation = useMutation({
-    mutationFn: (updatedPlan: Partial<CurriculumFormValues> & { id: string }, { signal }) => {
+    mutationFn: (
+      updatedPlan: Partial<CurriculumFormValues> & { id: string },
+      { signal } = {}
+    ) => {
       const { id, ...planData } = updatedPlan;
       return apiRequest(`/api/curriculum-plans/${id}`, 'PUT', JSON.stringify(planData), signal);
     },
@@ -109,7 +112,7 @@ export default function CurriculumPlans() {
 
   // Мутация для удаления учебного плана
   const deleteMutation = useMutation({
-    mutationFn: (id: string, { signal }) =>
+    mutationFn: (id: string, { signal } = {}) =>
       apiRequest(`/api/curriculum-plans/${id}`, 'DELETE', undefined, signal),
     onSuccess: () => {
       toast({
