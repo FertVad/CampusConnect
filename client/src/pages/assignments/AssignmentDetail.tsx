@@ -51,7 +51,7 @@ const AssignmentDetail = () => {
   
   // Mutation for submitting assignment (student)
   const submitAssignmentMutation = useMutation({
-    mutationFn: (formData: FormData, { signal }) => {
+    mutationFn: (formData: FormData, { signal } = {}) => {
       formData.append('assignmentId', assignmentId.toString());
       formData.append('content', 'Submitted via file upload');
       return uploadFile('/api/submissions', formData, signal);
@@ -77,7 +77,7 @@ const AssignmentDetail = () => {
   const gradeAssignmentMutation = useMutation({
     mutationFn: (
       { submissionId, grade, feedback }: { submissionId: string; grade: number; feedback: string },
-      { signal },
+      { signal } = {},
     ) => {
       return putData(`/api/submissions/${submissionId}/grade`, { grade, feedback }, signal);
     },

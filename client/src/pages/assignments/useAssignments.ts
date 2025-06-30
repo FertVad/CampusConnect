@@ -52,7 +52,7 @@ export function useAssignments() {
     Error,
     z.infer<typeof createAssignmentSchema>
   >({
-    mutationFn: async (data: z.infer<typeof createAssignmentSchema>, { signal }) => {
+    mutationFn: async (data: z.infer<typeof createAssignmentSchema>, { signal } = {}) => {
       const response = await authFetch('/api/assignments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -79,7 +79,7 @@ export function useAssignments() {
     Error,
     z.infer<typeof submitAssignmentSchema> & { assignmentId: string }
   >({
-    mutationFn: async (data, { signal }) => {
+    mutationFn: async (data, { signal } = {}) => {
       const response = await authFetch('/api/submissions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

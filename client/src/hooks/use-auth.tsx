@@ -147,7 +147,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   });
 
   const loginMutation = useMutation({
-    mutationFn: async (credentials: LoginData, { signal }) => {
+    mutationFn: async (credentials: LoginData, { signal } = {}) => {
       const { error } = await supabase.auth.signInWithPassword(credentials);
       if (error) {
         throw new Error(error.message);
@@ -209,7 +209,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   });
 
   const registerMutation = useMutation({
-    mutationFn: async (userData: RegisterData, { signal }) => {
+    mutationFn: async (userData: RegisterData, { signal } = {}) => {
       const { email, password } = userData;
       const { error } = await supabase.auth.signUp({
         email,

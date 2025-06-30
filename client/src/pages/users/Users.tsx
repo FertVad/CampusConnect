@@ -125,7 +125,7 @@ export default function Users() {
 
   // Create user mutation
   const createUserMutation = useMutation({
-    mutationFn: async (userData: InsertUser, { signal }) => {
+    mutationFn: async (userData: InsertUser, { signal } = {}) => {
       return await apiRequest('/api/users', 'POST', userData, signal) as User;
     },
     onSuccess: () => {
@@ -148,7 +148,10 @@ export default function Users() {
 
   // Update user mutation
   const updateUserMutation = useMutation({
-    mutationFn: async ({ id, userData }: { id: string, userData: Partial<InsertUser> }, { signal }) => {
+    mutationFn: async (
+      { id, userData }: { id: string, userData: Partial<InsertUser> },
+      { signal } = {}
+    ) => {
       return await apiRequest(`/api/users/${id}`, 'PUT', userData, signal) as User;
     },
     onSuccess: () => {
@@ -174,7 +177,7 @@ export default function Users() {
 
   // Delete user mutation
   const deleteUserMutation = useMutation({
-    mutationFn: async (id: string, { signal }) => {
+    mutationFn: async (id: string, { signal } = {}) => {
       await apiRequest(`/api/users/${id}`, 'DELETE', undefined, signal);
       return Promise.resolve();
     },

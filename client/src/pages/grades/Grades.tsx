@@ -40,7 +40,7 @@ const Grades = () => {
   
   // Mutation for creating grades
   const createGradeMutation = useMutation({
-    mutationFn: (data: z.infer<typeof insertGradeSchema>, { signal }) => {
+    mutationFn: (data: z.infer<typeof insertGradeSchema>, { signal } = {}) => {
       return postData('/api/grades', data, signal);
     },
     onSuccess: () => {

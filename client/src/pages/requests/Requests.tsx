@@ -45,7 +45,7 @@ const Requests = () => {
     Error,
     RequestFormData
   >({
-    mutationFn: (data: RequestFormData, { signal }) => {
+    mutationFn: (data: RequestFormData, { signal } = {}) => {
       return postData('/api/requests', data, signal);
     },
     onSuccess: () => {
@@ -70,7 +70,10 @@ const Requests = () => {
     Error,
     { requestId: string; status: 'approved' | 'rejected'; resolution: string }
   >({
-    mutationFn: ({ requestId, status, resolution }: { requestId: string; status: 'approved' | 'rejected'; resolution: string }, { signal }) => {
+    mutationFn: (
+      { requestId, status, resolution }: { requestId: string; status: 'approved' | 'rejected'; resolution: string },
+      { signal } = {}
+    ) => {
       return putData(`/api/requests/${requestId}/status`, { status, resolution }, signal);
     },
     onSuccess: () => {
