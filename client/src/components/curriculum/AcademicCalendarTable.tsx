@@ -543,7 +543,6 @@ export function AcademicCalendarTable({
         <CourseRow
           key={`course-row-${course.id}`}
           course={course}
-          courseWeeks={course.weeks} // Передаем недели специфичные для этого курса (для расчета смещения)
           tableData={tableData}
           selectedCells={selectedCells}
           onCellClick={handleCellClick}
@@ -608,7 +607,6 @@ export function AcademicCalendarTable({
       <CourseRow
         key={`course-row-${course.id}`}
         course={course}
-        courseWeeks={course.weeks} // Передаем недели специфичные для этого курса (для расчета смещения)
         tableData={tableData}
         selectedCells={selectedCells}
         onCellClick={handleCellClick}
