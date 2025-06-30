@@ -1,6 +1,6 @@
 import { Express } from "express";
 import { getStorage } from "../storage";
-import { insertAssignmentSchema, insertSubmissionSchema, insertGradeSchema } from "@shared/schema";
+import { insertAssignmentSchema, insertGradeSchema } from "@shared/schema";
 import { z } from "zod";
 import type { RouteContext } from "./index";
 

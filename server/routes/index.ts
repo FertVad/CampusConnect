@@ -5,10 +5,7 @@ import { WebSocketServer } from "ws";
 import { WebSocket } from "ws";
 import { logger } from "../utils/logger";
 import { setupAuth } from "../auth";
-import {
-  insertTaskSchema, taskPriorityEnum, taskStatusEnum,
-  User
-} from "@shared/schema";
+
 import multer from "multer";
 import path from "path";
 import fs from "fs";

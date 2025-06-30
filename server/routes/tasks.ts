@@ -6,7 +6,6 @@ import type { RouteContext } from "./index";
 import { logger } from "../utils/logger";
 import { requireRole } from "../middleware/requireRole";
 import { NotificationService } from "../services/NotificationService";
-import { getTaskStatusLabel } from '@shared/utils';
 import { taskPermissions } from '../types/auth';
 
 export function registerTaskRoutes(app: Express, { authenticateUser }: RouteContext) {
