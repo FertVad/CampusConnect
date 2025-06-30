@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import type { Assignment, Subject } from '@shared/schema';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { queryClient as globalClient, authFetch } from '@/lib/queryClient';
@@ -23,9 +24,9 @@ export function useAssignments() {
   const queryClient = useQueryClient();
   const isStudent = user?.role === 'student';
   const isTeacher = user?.role === 'teacher';
-  const [selectedAssignment, setSelectedAssignment] = useState<any>(null);
+  const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
 
-  const { data: assignments, isLoading, error } = useQuery({
+  const { data: assignments, isLoading, error } = useQuery<Assignment[]>({
     queryKey: [isStudent ? '/api/assignments/student' : '/api/assignments/teacher'],
     queryFn: async () => {
       const endpoint = isStudent ? '/api/assignments/student' : '/api/assignments/teacher';
@@ -36,7 +37,7 @@ export function useAssignments() {
     enabled: !!user,
   });
 
-  const { data: subjects } = useQuery({
+  const { data: subjects } = useQuery<Subject[]>({
     queryKey: [`/api/subjects/teacher/${user?.id}`],
     queryFn: async () => {
       const response = await authFetch(`/api/subjects/teacher/${user!.id}`);
@@ -46,7 +47,11 @@ export function useAssignments() {
     enabled: !!isTeacher,
   });
 
-  const createAssignmentMutation = useMutation({
+  const createAssignmentMutation = useMutation<
+    Assignment,
+    Error,
+    z.infer<typeof createAssignmentSchema>
+  >({
     mutationFn: async (data: z.infer<typeof createAssignmentSchema>) => {
       const response = await authFetch('/api/assignments', {
         method: 'POST',
@@ -68,8 +73,12 @@ export function useAssignments() {
     },
   });
 
-  const submitAssignmentMutation = useMutation({
-    mutationFn: async (data: z.infer<typeof submitAssignmentSchema> & { assignmentId: number }) => {
+  const submitAssignmentMutation = useMutation<
+    Assignment,
+    Error,
+    z.infer<typeof submitAssignmentSchema> & { assignmentId: string }
+  >({
+    mutationFn: async (data) => {
       const response = await authFetch('/api/submissions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

@@ -10,7 +10,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 // Add CORS headers for all requests to support Safari
-app.use((req, res, next) => {
+app.use((req: Request, res: Response, next: NextFunction): void => {
   // Allow the host that sent the request
   res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
   // Allow credentials (cookies, authorization headers, etc.)
@@ -22,7 +22,8 @@ app.use((req, res, next) => {
 
   // Handle preflight requests
   if (req.method === 'OPTIONS') {
-    return res.status(200).end();
+    res.status(200).end();
+    return;
   }
 
   next();
@@ -31,12 +32,12 @@ app.use((req, res, next) => {
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
-  let capturedJsonResponse: Record<string, any> | undefined = undefined;
+  let capturedJsonResponse: Record<string, unknown> | undefined = undefined;
 
-  const originalResJson = res.json;
-  res.json = function (bodyJson, ...args) {
-    capturedJsonResponse = bodyJson;
-    return originalResJson.apply(res, [bodyJson, ...args]);
+  const originalResJson = res.json.bind(res);
+  res.json = function (bodyJson: unknown) {
+    capturedJsonResponse = bodyJson as Record<string, unknown>;
+    return originalResJson(bodyJson);
   };
 
   res.on("finish", () => {
@@ -66,7 +67,7 @@ app.get("/api/health", (_req, res) => {
 // Requests endpoint used by the front-end
 app.get('/api/requests', verifySupabaseJwt, authRoutes.getRequests);
 
-(async () => {
+void (async () => {
   try {
     // Initialize the database before setting up routes
     log("Initializing database...");

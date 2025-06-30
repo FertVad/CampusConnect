@@ -1,4 +1,4 @@
-import { Express } from "express";
+import { Express, Request, Response } from "express";
 import bcrypt from "bcrypt";
 import { User as SelectUser, Request as SelectRequest, loginSchema, registerSchema } from "../shared/schema";
 import { z } from "zod";
@@ -95,7 +95,7 @@ export async function initializeDatabase(): Promise<boolean> {
   }
 }
 
-export function setupAuth(app: Express) {
+export function setupAuth(app: Express): void {
   // Authentication routes using Supabase
 
   app.post("/api/register", async (req, res) => {
@@ -189,7 +189,7 @@ export function setupAuth(app: Express) {
 }
 
 export const authRoutes = {
-  getRequests: async (_req: any, res: any) => {
+  getRequests: async (_req: Request, res: Response) => {
     try {
       const { data, error } = await supabase
         .from('requests')

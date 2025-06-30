@@ -7,12 +7,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { createAssignmentSchema } from './useAssignments';
+import type { Subject } from '@shared/schema';
 import * as z from 'zod';
 
 interface Props {
   open: boolean;
   onOpenChange: (v: boolean) => void;
-  subjects: any[] | undefined;
+  subjects: Subject[] | undefined;
   createAssignment: (data: z.infer<typeof createAssignmentSchema>) => void;
   loading: boolean;
 }
@@ -76,7 +77,7 @@ export default function CreateAssignmentDialog({ open, onOpenChange, subjects, c
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {subjects?.map((subject: any) => (
+                      {subjects?.map((subject: Subject) => (
                         <SelectItem key={subject.id} value={subject.id.toString()}>
                           {subject.name}
                         </SelectItem>
