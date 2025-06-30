@@ -8,9 +8,9 @@ import NotificationList from '@/components/notifications/NotificationList';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { 
-  BarChart2, BookOpen, Calendar, Users, 
-  Clock, PenTool, FileText, MessageSquare, 
+import {
+  BarChart2, BookOpen, Calendar, Users,
+  Clock, PenTool, MessageSquare,
   Bell, CheckCircle, XCircle, AlertCircle,
   PlusCircle, FileType
 } from 'lucide-react';

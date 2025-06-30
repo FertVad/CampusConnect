@@ -4,16 +4,14 @@ import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { LanguageSwitcher } from "@/components/theme/language-switcher";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
-import { 
-  BookOpen, 
-  Calendar, 
-  Award, 
-  Users, 
-  FileText, 
+import {
+  BookOpen,
+  Calendar,
+  Users,
+  FileText,
   MessageSquare,
   LogOut,
-  Menu,
-  X
+  Menu
 } from "lucide-react";
 import {
   Sheet,
