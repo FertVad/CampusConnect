@@ -3,7 +3,7 @@ import { BellIcon, BellRingIcon, ExternalLinkIcon } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/use-auth';
-import { useLocation, useRoute } from 'wouter';
+import { useLocation } from 'wouter';
 import {
   Popover,
   PopoverContent,
@@ -22,7 +22,7 @@ import type { Notification } from '@shared/schema';
 
 export const NotificationBell = () => {
   const { t, i18n } = useTranslation();
-  const { user, isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
   const [isOpen, setIsOpen] = useState(false);
   const [, setLocation] = useLocation();
