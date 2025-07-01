@@ -275,8 +275,6 @@
       "title": "Import schedule",
       "selectFile": "Select file",
       "uploadFile": "Upload file",
-      "googleSheets": "Import from Google Sheets",
-      "sheetsUrl": "Google Sheets URL",
       "sheetsId": "Sheet ID",
       "importSuccess": "Schedule imported successfully",
       "importError": "Error importing schedule: {{message}}",

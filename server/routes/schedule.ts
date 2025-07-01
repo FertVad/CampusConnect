@@ -1,7 +1,6 @@
 import { Express } from "express";
 import { getStorage } from "../storage";
 import { insertSubjectSchema, insertEnrollmentSchema, insertScheduleItemSchema } from "@shared/schema";
-import { parseSheetDataToScheduleItems, fetchSheetData, authenticateWithGoogleSheets } from "../utils/googleSheetsHelper";
 import { parseCsvToScheduleItems, validateScheduleItems, prepareImportResult } from "../utils/csvHelper";
 import { db } from "../db/index";
 import { logger } from "../utils/logger";
@@ -382,185 +381,6 @@ app.delete('/api/schedule/:id', authenticateUser, requireRole(['admin']), async 
   }
 });
 
-// Schedule Import Routes - Google Sheets (Option A)
-app.post('/api/schedule/import/google-sheets', authenticateUser, requireRole(['admin']), async (req, res) => {
-  try {
-    // Extract parameters from the request body
-    const { credentials, spreadsheetId, range = 'Sheet1!A1:E' } = req.body;
-    
-    if (!credentials || !spreadsheetId) {
-      return res.status(400).json({ 
-        message: "Missing required parameters. Please provide Google API credentials and spreadsheet ID."
-      });
-    }
-    
-    // Authenticate with Google Sheets API
-    const sheets = await authenticateWithGoogleSheets(credentials);
-    
-    // Fetch data from the specified sheet
-    const sheetData = await fetchSheetData(sheets, spreadsheetId, range);
-    
-    if (sheetData.length <= 1) { // Only header row or empty
-      return res.status(400).json({ message: "No data found in the specified range" });
-    }
-    
-    // Parse the sheet data to schedule items
-    const { scheduleItems, errors: parseErrors } = parseSheetDataToScheduleItems(sheetData);
-    
-    // Функция для генерации цвета из палитры предопределенных цветов
-    const getColorFromPalette = (index: number): string => {
-      const colors = [
-        '#4285F4', // Google Blue
-        '#34A853', // Google Green
-        '#FBBC05', // Google Yellow
-        '#EA4335', // Google Red
-        '#8E44AD', // Purple
-        '#2ECC71', // Emerald
-        '#E74C3C', // Red
-        '#3498DB', // Blue
-        '#F39C12', // Orange
-        '#1ABC9C', // Turquoise
-      ];
-      return colors[index % colors.length];
-    };
-    
-    // Счетчик новых предметов для равномерного распределения цветов
-    let newSubjectCounter = 0;
-    
-    // Обрабатываем предметы по их названиям
-    // Сначала получаем все существующие предметы
-    const allSubjects = await getStorage().getSubjects();
-    logger.info(`Existing subjects: ${allSubjects.length}`);
-    
-    // Обрабатываем каждый элемент расписания
-    for (const item of scheduleItems) {
-      try {
-        // Проверяем, есть ли у элемента информация о предмете
-        const subjectName = (item as any).subjectName;
-        if (!subjectName) {
-          continue; // Пропускаем элементы без названия предмета
-        }
-        
-        // Ищем предмет по названию среди существующих
-        const existingSubject = allSubjects.find(
-          s => s.name.toLowerCase() === subjectName.toLowerCase()
-        );
-        
-        if (existingSubject) {
-          // Если предмет найден, используем его ID
-          logger.info(`Found existing subject "${existingSubject.name}" with ID: ${existingSubject.id}`);
-          item.subjectId = existingSubject.id;
-        } else {
-          // Если предмет не найден, создаем новый
-          logger.info(`Creating new subject with name: "${subjectName}"`);
-          
-          // Увеличиваем счетчик для выбора цвета
-          newSubjectCounter++;
-            
-          // Создаем предмет
-          const newSubject = await getStorage().createSubject({
-            name: subjectName,
-            shortName: subjectName.substring(0, 10), // Берем первые 10 символов как сокращение
-            description: 'Автоматически созданный предмет из импорта расписания',
-            // Ищем ID первого преподавателя в системе
-            teacherId: await getDefaultTeacherId(),
-            color: getColorFromPalette(newSubjectCounter) // Выбираем цвет из палитры
-          });
-          
-          logger.info(`Created new subject: ${JSON.stringify(newSubject)}`);
-          
-          // Добавляем новый предмет в массив для будущих проверок
-          allSubjects.push(newSubject);
-          
-          // Устанавливаем ID предмета в элемент расписания
-          item.subjectId = newSubject.id;
-        }
-      } catch (error) {
-        logger.error(`Error processing subject for schedule item:`, error);
-      }
-    }
-    
-    // Проверяем наличие корректных элементов для импорта после обработки
-    // Validate the schedule items
-    const { validItems, errors: validationErrors } = await validateScheduleItems(
-      scheduleItems,
-      async (subjectId) => {
-        // Всегда возвращаем true, так как мы уже создали все необходимые предметы
-        // или проверили их существование на предыдущем шаге
-        return true;
-      }
-    );
-    
-    // Проверка на пустой импорт
-    if (validItems.length === 0) {
-      return res.status(400).json({ 
-        message: "Не удалось импортировать ни один элемент расписания", 
-        errors: [...parseErrors, ...validationErrors] 
-      });
-    }
-    
-    // Insert valid items into the database
-    const createdItems = [];
-    for (const item of validItems) {
-      // Удаляем временное поле с названием предмета перед созданием
-      const cleanItem = { ...item };
-      delete (cleanItem as any).subjectName;
-      
-      // Создаем элемент расписания
-      const created = await getStorage().createScheduleItem(cleanItem);
-      createdItems.push(created);
-    }
-    
-    // Prepare and return the import result
-    const result = prepareImportResult(
-      scheduleItems.length,
-      validItems,
-      [...parseErrors, ...validationErrors]
-    );
-    
-    // Сохраняем информацию о загруженном файле в базу данных
-    try {
-      const gsheetFileInfo = await getStorage().createImportedFile({
-        originalName: req.file!.originalname,
-        storedName: path.basename(req.file!.path),
-        filePath: req.file!.path,
-        fileSize: req.file!.size,
-        mimeType: req.file!.mimetype,
-        importType: 'csv',
-        status: result.success > 0 ? 'success' : 'error',
-        itemsCount: result.total,
-        successCount: result.success,
-        errorCount: result.total - result.success,
-        uploadedBy: req.user!!.id
-      });
-      
-      logger.info(`Created import file record: ${gsheetFileInfo.id}`);
-      
-      // Обновляем созданные элементы расписания, чтобы связать их с файлом
-      for (const item of createdItems) {
-        await getStorage().updateScheduleItem(item.id, {
-          ...item,
-          importedFileId: gsheetFileInfo.id
-        });
-        logger.info(`Linked schedule item ${item.id} with imported file ${gsheetFileInfo.id}`);
-      }
-    } catch (fileError) {
-      logger.error('Error saving file import record:', fileError);
-      // Не прерываем операцию, если не удалось сохранить информацию о файле
-    }
-    
-    res.status(200).json({
-      message: `Successfully imported ${result.success} out of ${result.total} schedule items.`,
-      result
-    });
-  } catch (error: any) {
-    logger.error('Error importing schedule from Google Sheets:', error);
-    res.status(500).json({ 
-      message: "Failed to import schedule from Google Sheets",
-      error: error.message || 'Unknown error'
-    });
-  }
-});
 
 // Schedule Import Routes - CSV Upload (Option B)
 app.post(
@@ -800,12 +620,12 @@ app.get('/api/imported-files/user/:userId', authenticateUser, requireRole(['admi
 
 app.get('/api/imported-files/type/:type', authenticateUser, requireRole(['admin']), async (req, res) => {
   try {
-    const type = req.params.type as 'csv' | 'google-sheets';
-    
-    if (type !== 'csv' && type !== 'google-sheets') {
-      return res.status(400).json({ message: "Invalid file type. Must be 'csv' or 'google-sheets'" });
+    const type = req.params.type as 'csv';
+
+    if (type !== 'csv') {
+      return res.status(400).json({ message: "Invalid file type. Must be 'csv'" });
     }
-    
+
     const files = await getStorage().getImportedFilesByType(type);
     res.json(files);
   } catch (error) {

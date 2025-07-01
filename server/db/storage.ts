@@ -809,7 +809,7 @@ export class SupabaseStorage {
     }
   }
 
-  async getImportedFilesByType(type: 'csv' | 'google-sheets'): Promise<ImportedFile[]> {
+  async getImportedFilesByType(type: 'csv'): Promise<ImportedFile[]> {
     return db.select()
       .from(schema.importedFiles)
       .where(eq(schema.importedFiles.importType, type))
