@@ -8,7 +8,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 
 interface FileUploadProps {
-  onUpload: (formData: FormData) => Promise<any>;
+  onUpload: (file: File) => Promise<any>;
   fieldName?: string;
   acceptedFileTypes?: string;
   maxFileSizeMB?: number;
@@ -90,18 +90,14 @@ const FileUpload: React.FC<FileUploadProps> = ({
   
   const handleUpload = async () => {
     if (files.length === 0) return;
-    
+
     setUploading(true);
     setProgress(0);
     setError(null);
-    
+
     try {
-      const formData = new FormData();
-      
-      files.forEach((file) => {
-        formData.append(fieldName, file);
-      });
-      
+      const file = files[0];
+
       // Simulate progress
       const interval = setInterval(() => {
         setProgress(prev => {
@@ -113,8 +109,8 @@ const FileUpload: React.FC<FileUploadProps> = ({
           return newProgress;
         });
       }, 100);
-      
-      await onUpload(formData);
+
+      await onUpload(file);
       
       clearInterval(interval);
       setProgress(100);
