@@ -16,7 +16,7 @@ interface AssignmentDetailsProps {
   submission?: Submission;
   creator?: User;
   isTeacher: boolean;
-  onSubmit: (formData: FormData) => Promise<any>;
+  onSubmit: (file: File) => Promise<any>;
   onGrade?: (submissionId: string, grade: number, feedback: string) => Promise<any>;
 }
 

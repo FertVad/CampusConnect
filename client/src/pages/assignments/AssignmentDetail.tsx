@@ -98,7 +98,9 @@ const AssignmentDetail = () => {
     },
   });
   
-  const handleSubmit = async (formData: FormData) => {
+  const handleSubmit = async (file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
     await submitAssignmentMutation.mutateAsync(formData);
   };
   

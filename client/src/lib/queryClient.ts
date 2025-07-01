@@ -47,6 +47,10 @@ export async function authFetch(
     ...(options.headers ?? {}),
   };
 
+  if (options.body instanceof FormData) {
+    delete (headers as Record<string, string>)['Content-Type'];
+  }
+
   if (token) {
     (headers as Record<string, string>)["Authorization"] = `Bearer ${token}`;
   }
