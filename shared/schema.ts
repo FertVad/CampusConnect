@@ -22,6 +22,9 @@ export const users = pgTable("users", {
   password: text("password").notNull(),
   email: text("email").notNull().unique(),
   phone: text("phone"),
+  group: text("group"),
+  major: text("major"),
+  course: integer("course"),
   role: roleEnum("role").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });
@@ -262,9 +265,13 @@ export const curriculumPlans = pgTable("curriculum_plans", {
 });
 
 // Insert Schemas
-export const insertUserSchema = createInsertSchema(users).omit({ 
+export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
   createdAt: true
+}).extend({
+  group: z.string().optional(),
+  major: z.string().optional(),
+  course: z.number().int().optional(),
 });
 
 export const insertSubjectSchema = createInsertSchema(subjects).omit({

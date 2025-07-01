@@ -135,9 +135,12 @@ const EditUserProfileModal: React.FC<EditUserProfileModalProps> = ({
         lastName: data.lastName,
         email: data.email,
       };
-      
-      // Добавляем только нужные поля в зависимости от роли
+
+      // Дополнительные поля профиля
       if (data.phone) formData.phone = data.phone;
+      if (data.group) formData.group = data.group;
+      if (data.major) formData.major = data.major;
+      if (data.course) formData.course = data.course;
 
       // Добавим предотвращение кеширования
       const cacheBuster = `?_t=${Date.now()}`;
@@ -158,21 +161,8 @@ const EditUserProfileModal: React.FC<EditUserProfileModalProps> = ({
       }
 
       // Обновляем дополнительные данные в зависимости от роли
-      // Для студента
-      if (data.role === 'student' && (data.group || data.major || data.course)) {
-        const studentData: Record<string, any> = {};
-        if (data.group) studentData.group = data.group;
-        if (data.major) studentData.major = data.major;
-        if (data.course) studentData.course = data.course;
-
-        try {
-          await apiRequest(`/api/students/${user.id}`, 'PUT', studentData);
-        } catch {
-          // Обработка ошибки обновления данных студента, но продолжаем работу
-        }
-      }
       // Для преподавателя
-      else if (data.role === 'teacher' && (data.specialty || data.experience)) {
+      if (data.role === 'teacher' && (data.specialty || data.experience)) {
         const teacherData: Record<string, any> = {};
         if (data.specialty) teacherData.specialty = data.specialty;
         if (data.experience) teacherData.experience = data.experience;
@@ -184,7 +174,7 @@ const EditUserProfileModal: React.FC<EditUserProfileModalProps> = ({
         }
       }
       // Для админа или директора
-      else if ((data.role === 'admin' || data.role === 'director') && 
+      if ((data.role === 'admin' || data.role === 'director') &&
                (data.department || data.title || data.organization)) {
         const adminData: Record<string, any> = {};
         if (data.department) adminData.department = data.department;
