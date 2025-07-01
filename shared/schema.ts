@@ -192,7 +192,7 @@ export const importedFiles = pgTable("imported_files", {
   filePath: text("file_path").notNull(),
   fileSize: integer("file_size").notNull(),
   mimeType: text("mime_type").notNull(),
-  importType: text("import_type").notNull(), // 'csv', 'google-sheets'
+  importType: text("import_type").notNull(), // 'csv'
   status: importStatusEnum("status").notNull(),
   itemsCount: integer("items_count").notNull().default(0),
   successCount: integer("success_count").notNull().default(0),

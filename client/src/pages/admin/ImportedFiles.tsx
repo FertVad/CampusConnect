@@ -29,7 +29,7 @@ interface ImportedFile {
   itemsCount: number;
   successCount: number;
   errorCount: number;
-  importType: 'csv' | 'google-sheets';
+  importType: 'csv';
   uploadedBy: string;
   uploadedByUser?: {
     firstName: string;
@@ -39,7 +39,7 @@ interface ImportedFile {
 }
 
 const ImportedFiles = () => {
-  const [activeFilter, setActiveFilter] = useState<'all' | 'csv' | 'google-sheets'>('all');
+  const [activeFilter, setActiveFilter] = useState<'all' | 'csv'>('all');
   const [isProcessing, setIsProcessing] = useState<Record<string, boolean>>({});
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -107,9 +107,7 @@ const ImportedFiles = () => {
     }
   };
 
-  const getImportTypeLabel = (type: ImportedFile['importType']) => {
-    return type === 'csv' ? 'CSV файл' : 'Google Sheets';
-  };
+  const getImportTypeLabel = () => 'CSV файл';
 
   const filteredFiles = activeFilter === 'all' 
     ? files 
@@ -128,12 +126,11 @@ const ImportedFiles = () => {
         </Button>
       </div>
       
-      <Tabs defaultValue="all" onValueChange={(value: string) => setActiveFilter(value as 'all' | 'csv' | 'google-sheets')}>
+      <Tabs defaultValue="all" onValueChange={(value: string) => setActiveFilter(value as 'all' | 'csv')}>
         <div className="mb-4">
           <TabsList>
             <TabsTrigger value="all">Все файлы</TabsTrigger>
             <TabsTrigger value="csv">CSV файлы</TabsTrigger>
-            <TabsTrigger value="google-sheets">Google Sheets</TabsTrigger>
           </TabsList>
         </div>
         

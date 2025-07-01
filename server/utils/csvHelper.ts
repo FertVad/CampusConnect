@@ -1,11 +1,22 @@
 import { createReadStream, readFileSync } from 'fs';
 import csvParser from 'csv-parser';
 import { InsertScheduleItem } from '@shared/schema';
-import { ScheduleImportError, ScheduleImportResult } from './googleSheetsHelper';
 import * as chardet from 'chardet';
 import fs from 'fs';
 import iconv from 'iconv-lite';
 import { logger } from './logger';
+
+export interface ScheduleImportError {
+  row: number;
+  error: string;
+}
+
+export interface ScheduleImportResult {
+  total: number;
+  success: number;
+  failed: number;
+  errors: ScheduleImportError[];
+}
 
 // Функция для нормализации и очистки значений строк
 function normalizeValue(value: string | undefined): string | undefined {

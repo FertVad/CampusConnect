@@ -386,8 +386,6 @@
       "title": "Импорт расписания",
       "selectFile": "Выберите файл",
       "uploadFile": "Загрузить файл",
-      "googleSheets": "Импорт из Google Sheets",
-      "sheetsUrl": "URL Google Sheets",
       "sheetsId": "ID листа",
       "importSuccess": "Расписание успешно импортировано",
       "importError": "Ошибка импорта расписания: {{message}}",

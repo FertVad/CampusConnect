@@ -179,7 +179,7 @@ export interface IStorage {
   getImportedFilesByUser(userId: string): Promise<ImportedFile[]>; // UUID
   createImportedFile(fileData: InsertImportedFile): Promise<ImportedFile>;
   deleteImportedFile(id: string): Promise<boolean>;
-  getImportedFilesByType(type: 'csv' | 'google-sheets'): Promise<ImportedFile[]>;
+  getImportedFilesByType(type: 'csv'): Promise<ImportedFile[]>;
   
   // Activity Logs
   getActivityLogs(limit?: number): Promise<ActivityLog[]>; 
