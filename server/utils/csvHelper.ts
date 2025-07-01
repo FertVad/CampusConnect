@@ -354,6 +354,11 @@ export async function parseCsvToScheduleItems(
           if (teacherName) {
             item.teacherName = teacherName.trim();
           }
+
+          // Сохраняем название группы, если указано
+          if (group) {
+            (item as any).groupName = group.trim();
+          }
           
           logger.info(`Extracted schedule item: ${JSON.stringify(item)}`);
           logger.info(`CSV Row: Day=${dayName}, Subject=${subjectName}, Start=${startTime}, End=${endTime}, Teacher=${teacherName || 'Not specified'}, Room=${roomNumber || 'Not specified'}`);
