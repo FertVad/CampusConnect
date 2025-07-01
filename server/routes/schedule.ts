@@ -252,7 +252,10 @@ app.get('/api/schedule', authenticateUser, async (req, res) => {
 app.get('/schedule-template.csv', (req, res) => {
   try {
     // Упрощенный CSV шаблон с заголовками и образцами данных
-    const csvTemplate = 'Subject,Day,Start Time,End Time,Room,Teacher\nMath,Monday,09:00,10:30,305,Anna Ivanova\nProgramming,Tuesday,11:00,12:30,412,Oleg Petrov';
+    const csvTemplate =
+      'Subject,Day,Start Time,End Time,Room,Teacher,Группа\n' +
+      'Math,Monday,09:00,10:30,305,Anna Ivanova,IS-101\n' +
+      'Programming,Tuesday,11:00,12:30,412,Oleg Petrov,IS-101';
     
     // Установка заголовков для скачивания файла
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
