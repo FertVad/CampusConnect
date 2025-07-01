@@ -3,7 +3,8 @@ import { Button } from '@/components/ui/button';
 import FileUpload from '@/components/files/FileUpload';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { authFetch, queryClient } from '@/lib/queryClient';
+import { queryClient } from '@/lib/queryClient';
+import { uploadFile } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { AlertCircle, CheckCircle, XCircle, ShieldAlert, Download } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
@@ -30,22 +31,7 @@ export default function ScheduleImport() {
   const userIsAdmin = user?.role === 'admin';
 
   const handleFileUpload = async (formData: FormData) => {
-    const response = await authFetch('/api/schedule/import/csv', {
-      method: 'POST',
-      body: formData,
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      toast({
-        title: 'Import Failed',
-        description: errorData.message || 'Failed to import file',
-        variant: 'destructive',
-      });
-      throw new Error(errorData.message || 'Import failed');
-    }
-
-    const result = (await response.json()) as ImportResponse;
+    const result = (await uploadFile('/api/schedule/import/csv', formData)) as ImportResponse;
     setImportResult(result.result);
 
     toast({ title: 'Import Completed', description: result.message });
