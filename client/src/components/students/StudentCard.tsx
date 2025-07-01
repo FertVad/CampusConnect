@@ -38,7 +38,7 @@ export interface Student {
   lastName: string;
   email: string;
   phone?: string;
-  group?: string;
+  group_name?: string;
   groupId?: number;
   major?: string;
   course?: number;
@@ -143,7 +143,7 @@ const StudentCard: React.FC<StudentCardProps> = ({ student, onClick }) => {
                   {student.firstName} {student.lastName}
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                  {student.group && `${student.group} • `}
+                  {student.group_name && `${student.group_name} • `}
                   {student.major && `${student.major} • `}
                   {student.course && `${student.course} курс`}
                 </p>
