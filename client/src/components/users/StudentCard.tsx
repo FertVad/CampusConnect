@@ -39,7 +39,7 @@ export interface UpcomingLesson {
 
 // Интерфейс для данных студента
 export interface Student extends UserData {
-  group?: string;
+  group_name?: string;
   groupId?: number;
   major?: string;
   course?: number;
@@ -183,9 +183,9 @@ const StudentCard: React.FC<StudentCardProps> = ({
                     <GraduationCap className="h-3.5 w-3.5" />
                     {t('roles.student', 'Студент')}
                   </Badge>
-                  {studentData.group && (
+                  {studentData.group_name && (
                     <Badge variant="outline" className="text-sm">
-                      {studentData.group}
+                      {studentData.group_name}
                     </Badge>
                   )}
                 </div>

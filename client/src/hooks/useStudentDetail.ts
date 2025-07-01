@@ -142,7 +142,7 @@ export function useStudentDetail(id: string | undefined) {
       email: userData.email,
       phone: userData.phone,
       groupId: userData.groupId,
-      group: 'ИС-101',
+      group_name: 'ИС-101',
       major: 'Информатика и ВТ',
       course: 3,
       lastLogin: userData.createdAt,

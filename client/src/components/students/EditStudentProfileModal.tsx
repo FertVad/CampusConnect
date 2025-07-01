@@ -34,7 +34,7 @@ interface StudentProfile {
   lastName: string;
   email: string;
   phone?: string;
-  group?: string;
+  group_name?: string;
   major?: string;
   course?: number;
 }
@@ -61,7 +61,7 @@ const EditStudentProfileModal: React.FC<EditStudentProfileModalProps> = ({
     lastName: z.string().min(1, 'Фамилия обязательна для заполнения'),
     email: z.string().email('Введите корректный email'),
     phone: z.string().optional(),
-    group: z.string().optional(),
+    group_name: z.string().optional(),
     major: z.string().optional(),
     course: z.coerce.number().int().positive().optional(),
   });
@@ -77,7 +77,7 @@ const EditStudentProfileModal: React.FC<EditStudentProfileModalProps> = ({
       lastName: student.lastName,
       email: student.email,
       phone: student.phone || '',
-      group: student.group || '',
+      group_name: student.group_name || '',
       major: student.major || '',
       course: student.course || undefined,
     },
@@ -190,7 +190,7 @@ const EditStudentProfileModal: React.FC<EditStudentProfileModalProps> = ({
               {/* Группа */}
               <FormField
                 control={form.control}
-                name="group"
+                name="group_name"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>{t('student.group', 'Группа')}</FormLabel>

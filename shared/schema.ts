@@ -22,7 +22,7 @@ export const users = pgTable("users", {
   password: text("password").notNull(),
   email: text("email").notNull().unique(),
   phone: text("phone"),
-  group: text("group"),
+  group_name: text("group_name"),
   major: text("major"),
   course: integer("course"),
   role: roleEnum("role").notNull(),
@@ -269,7 +269,7 @@ export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
   createdAt: true
 }).extend({
-  group: z.string().optional(),
+  group_name: z.string().optional(),
   major: z.string().optional(),
   course: z.number().int().optional(),
 });

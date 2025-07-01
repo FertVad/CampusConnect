@@ -47,7 +47,7 @@ export interface UserProfile {
   organization?: string;
   title?: string;
   // Специфичные поля для студента
-  group?: string;
+  group_name?: string;
   major?: string;
   course?: number;
   // Специфичные поля для преподавателя
@@ -87,7 +87,7 @@ const EditUserProfileModal: React.FC<EditUserProfileModalProps> = ({
     organization: z.string().optional(),
     title: z.string().optional(),
     // Поля для студента
-    group: z.string().optional(),
+    group_name: z.string().optional(),
     major: z.string().optional(),
     course: z.coerce.number().int().positive().optional(),
     // Поля для преподавателя
@@ -111,7 +111,7 @@ const EditUserProfileModal: React.FC<EditUserProfileModalProps> = ({
       organization: user.organization || '',
       title: user.title || '',
       // Поля для студента
-      group: user.group || '',
+      group_name: user.group_name || '',
       major: user.major || '',
       course: user.course,
       // Поля для преподавателя
@@ -138,7 +138,7 @@ const EditUserProfileModal: React.FC<EditUserProfileModalProps> = ({
 
       // Дополнительные поля профиля
       if (data.phone) formData.phone = data.phone;
-      if (data.group) formData.group = data.group;
+      if (data.group_name) formData.group_name = data.group_name;
       if (data.major) formData.major = data.major;
       if (data.course) formData.course = data.course;
 
@@ -377,7 +377,7 @@ const EditUserProfileModal: React.FC<EditUserProfileModalProps> = ({
                   {/* Группа */}
                   <FormField
                     control={form.control}
-                    name="group"
+                    name="group_name"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>{t('student.group', 'Группа')}</FormLabel>
