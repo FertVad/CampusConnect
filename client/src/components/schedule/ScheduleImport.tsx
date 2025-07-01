@@ -4,6 +4,7 @@ import FileUpload from '@/components/files/FileUpload';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { queryClient } from '@/lib/queryClient';
+import { uploadFile } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { AlertCircle, CheckCircle, XCircle, ShieldAlert, Download } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
@@ -33,21 +34,26 @@ export default function ScheduleImport() {
     const formData = new FormData();
     formData.append('csvFile', file);
 
-    const response = await fetch('/api/schedule/import/csv', {
-      method: 'POST',
-      body: formData
-    });
+    try {
+      const result = (await uploadFile('/api/schedule/import/csv', formData)) as ImportResponse;
+      setImportResult(result.result);
 
-    const result = (await response.json()) as ImportResponse;
-    setImportResult(result.result);
+      toast({ title: 'Import Completed', description: result.message });
 
-    toast({ title: 'Import Completed', description: result.message });
+      queryClient.invalidateQueries({ queryKey: ['/api/schedule'] });
 
-    queryClient.invalidateQueries({ queryKey: ['/api/schedule'] });
-
-    setTimeout(() => {
-      navigate('/schedule');
-    }, 1500);
+      setTimeout(() => {
+        navigate('/schedule');
+      }, 1500);
+    } catch (error) {
+      const description =
+        error instanceof Error && error.message.startsWith('401')
+          ? 'Unauthorized. Please log in again.'
+          : error instanceof Error
+            ? error.message
+            : 'Failed to upload file';
+      toast({ title: 'Import Failed', description, variant: 'destructive' });
+    }
   };
 
   if (!user) {
