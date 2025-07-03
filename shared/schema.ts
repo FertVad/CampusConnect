@@ -57,7 +57,7 @@ export const scheduleItems = pgTable("schedule_items", {
   roomNumber: text("room_number"),
   teacherName: text("teacher_name"), // Имя преподавателя как строка, без связи с пользователями
   // Название группы, поддерживает несколько групп через запятую
-  groupName: text("group_name"),
+  group_name: text("group_name"),
   importedFileId: uuid("imported_file_id"), // Связь с файлом импорта, если запись была импортирована
 });
 

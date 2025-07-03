@@ -208,7 +208,7 @@ app.get('/api/schedule', authenticateUser, async (req, res) => {
       // Students see schedule entries containing their group name
       const pattern = `%${req.user!.group_name}%`;
       schedule = await db.select().from(schema.scheduleItems)
-        .where(ilike(schema.scheduleItems.groupName, pattern));
+        .where(ilike(schema.scheduleItems.group_name, pattern));
     } else if (req.user!.role === 'teacher') {
       // Teachers see only classes matching their full name
       const pattern = `%${req.user!.firstName}%${req.user!.lastName}%`;
@@ -535,7 +535,7 @@ app.post(
           endTime: item.endTime,
           roomNumber: item.roomNumber,
           teacherName: item.teacherName || (item as any).teacherName || null,
-          groupName: (item as any).groupName || null
+          group_name: (item as any).group_name || null
         } as any;
         
         // Удаляем временное поле с названием предмета

@@ -357,7 +357,7 @@ export async function parseCsvToScheduleItems(
 
           // Сохраняем название группы, если указано
           if (group) {
-            (item as any).groupName = group.trim();
+            (item as any).group_name = group.trim();
           }
           
           logger.info(`Extracted schedule item: ${JSON.stringify(item)}`);
