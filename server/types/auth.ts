@@ -6,6 +6,8 @@ export interface AuthenticatedUser {
   firstName: string;
   lastName: string;
   phone?: string;
+  /** Optional group name from public.users for student filtering */
+  group_name?: string;
   role: UserRole;
 }
 
