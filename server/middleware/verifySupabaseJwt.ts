@@ -46,6 +46,7 @@ export async function verifySupabaseJwt(req: Request, res: Response, next: NextF
       firstName: dbUser.firstName,
       lastName: dbUser.lastName,
       phone: dbUser.phone,
+      group_name: (dbUser as any).group_name,
       role: dbUser.role,
     };
 

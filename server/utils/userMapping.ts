@@ -22,6 +22,7 @@ export async function getDbUserBySupabaseUser(
       lastName: user.lastName,
       email: user.email,
       phone: (user as any).phone,
+      group_name: (user as any).group_name,
       role: user.role,
       createdAt: (user as any).createdAt,
       updatedAt: (user as any).updatedAt,
