@@ -1,6 +1,8 @@
 import { Express } from "express";
 import { getStorage } from "../storage";
 import { insertSubjectSchema, insertEnrollmentSchema, insertScheduleItemSchema } from "@shared/schema";
+import * as schema from "@shared/schema";
+import { ilike } from "drizzle-orm";
 import { parseCsvToScheduleItems, validateScheduleItems, prepareImportResult } from "../utils/csvHelper";
 import { db } from "../db/index";
 import { logger } from "../utils/logger";
@@ -200,7 +202,22 @@ app.delete('/api/enrollments/:id', authenticateUser, requireRole(['admin']), asy
 // Schedule Routes
 app.get('/api/schedule', authenticateUser, async (req, res) => {
   try {
-    const schedule = await getStorage().getScheduleItems();
+    let schedule;
+    // Apply role-based filtering
+    if (req.user!.role === 'student') {
+      // Students see schedule entries containing their group name
+      const pattern = `%${req.user!.group_name}%`;
+      schedule = await db.select().from(schema.scheduleItems)
+        .where(ilike(schema.scheduleItems.groupName, pattern));
+    } else if (req.user!.role === 'teacher') {
+      // Teachers see only classes matching their full name
+      const pattern = `%${req.user!.firstName}%${req.user!.lastName}%`;
+      schedule = await db.select().from(schema.scheduleItems)
+        .where(ilike(schema.scheduleItems.teacherName, pattern));
+    } else {
+      // Admins see all schedule items
+      schedule = await getStorage().getScheduleItems();
+    }
     
     // Получаем информацию о предметах и преподавателях для каждого элемента расписания
     const enrichedSchedule = await Promise.all(schedule.map(async (item) => {
@@ -511,14 +528,15 @@ app.post(
       const createdItems = [];
       for (const item of validItems) {
         // Создаем чистый объект для вставки, но сохраняем teacherName если есть
-        const cleanItem = { 
+        const cleanItem = {
           subjectId: item.subjectId,
           dayOfWeek: item.dayOfWeek,
           startTime: item.startTime,
           endTime: item.endTime,
           roomNumber: item.roomNumber,
-          teacherName: item.teacherName || (item as any).teacherName || null
-        };
+          teacherName: item.teacherName || (item as any).teacherName || null,
+          groupName: (item as any).groupName || null
+        } as any;
         
         // Удаляем временное поле с названием предмета
         delete (cleanItem as any).subjectName;
