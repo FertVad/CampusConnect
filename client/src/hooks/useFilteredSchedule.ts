@@ -1,6 +1,15 @@
 import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear, eachDayOfInterval } from 'date-fns';
+import {
+  format,
+  startOfWeek,
+  endOfWeek,
+  startOfMonth,
+  endOfMonth,
+  startOfYear,
+  endOfYear,
+  eachDayOfInterval,
+} from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { useAuth } from '@/hooks/use-auth';
 import { isAdmin } from '@/lib/auth';
@@ -13,39 +22,25 @@ export type ViewPeriod = 'day' | 'week' | 'month' | 'year' | 'all';
 export function useFilteredSchedule() {
   const { user } = useAuth();
   const userIsAdmin = isAdmin(user?.role);
-  const isStudent = user?.role === 'student';
 
   const [viewPeriod, setViewPeriod] = useState<ViewPeriod>('all');
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
-  const allSchedule = useQuery({
-    queryKey: ['/api/schedule'],
+  const scheduleQuery = useQuery({
+    queryKey: ['/api/schedule', user?.role],
     queryFn: async () => {
       const response = await authFetch('/api/schedule');
-      if (!response.ok) {
-        throw new Error('Не удалось загрузить полное расписание');
-      }
-      return response.json();
-    },
-    enabled: !!user && userIsAdmin,
-  });
-
-  const roleBasedSchedule = useQuery({
-    queryKey: [isStudent ? '/api/schedule/student' : '/api/schedule/teacher'],
-    queryFn: async () => {
-      const endpoint = isStudent ? '/api/schedule/student' : '/api/schedule/teacher';
-      const response = await authFetch(endpoint);
       if (!response.ok) {
         throw new Error('Не удалось загрузить расписание');
       }
       return response.json();
     },
-    enabled: !!user && !userIsAdmin,
+    enabled: !!user,
   });
 
-  const scheduleItems = userIsAdmin ? allSchedule.data : roleBasedSchedule.data;
-  const isLoading = userIsAdmin ? allSchedule.isLoading : roleBasedSchedule.isLoading;
-  const error = userIsAdmin ? allSchedule.error : roleBasedSchedule.error;
+  const scheduleItems = scheduleQuery.data;
+  const isLoading = scheduleQuery.isLoading;
+  const error = scheduleQuery.error;
 
   const filteredItems = useMemo(() => {
     if (!scheduleItems) return [];
