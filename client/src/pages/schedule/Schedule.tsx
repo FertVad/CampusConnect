@@ -142,9 +142,16 @@ export default function Schedule() {
                         {item.subject?.name || 'Неизвестный предмет'}
                       </TableCell>
                       <TableCell>
-                        <div className="flex items-center gap-1">
+                        <div className="flex flex-wrap items-center gap-1">
                           <Clock className="h-4 w-4 text-muted-foreground" />
-                          {formatTime(item.startTime)} - {formatTime(item.endTime)}
+                          <span>
+                            {formatTime(item.startTime)} - {formatTime(item.endTime)}
+                          </span>
+                          {item.group_name && (
+                            <span className="text-xs text-muted-foreground sm:ml-2">
+                              {item.group_name}
+                            </span>
+                          )}
                         </div>
                       </TableCell>
                       <TableCell className="hide-md">
