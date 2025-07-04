@@ -19,9 +19,10 @@ export function formatDate(
 
 export function formatTime(time: string): string {
   if (!time) return 'N/A';
-  // Предполагаем, что время уже в формате HH:MM
-  // Поэтому возвращаем его как есть
-  return time;
+  const parts = time.split(':');
+  if (parts.length < 2) return time;
+  const [hours, minutes] = parts;
+  return `${hours}:${minutes}`;
 }
 
 export function getRelativeTime(date: Date | string): string {

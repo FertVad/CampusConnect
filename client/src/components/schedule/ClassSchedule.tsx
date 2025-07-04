@@ -113,8 +113,15 @@ const ClassSchedule: React.FC<ClassScheduleProps> = ({ scheduleItems }) => {
                         </div>
                       </div>
                       <div className="text-right flex flex-col justify-center">
-                        <p className="text-sm font-medium text-neutral-700">
-                          {formatTime(item.startTime)} - {formatTime(item.endTime)}
+                        <p className="text-sm font-medium text-neutral-700 flex flex-wrap items-center justify-end">
+                          <span>
+                            {formatTime(item.startTime)} - {formatTime(item.endTime)}
+                          </span>
+                          {item.group_name && (
+                            <span className="text-xs text-neutral-500 ml-2">
+                              {item.group_name}
+                            </span>
+                          )}
                         </p>
                         <p className="text-xs text-neutral-500 mt-1">{getDayName(item.dayOfWeek)}</p>
                       </div>
